@@ -31,7 +31,7 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
                  dtype=np.float64, tol=1e-8, max_iters=100):
-        super(self, ConstrainedIsotropicHMCSampler).__init__(
+        super(ConstrainedIsotropicHMCSampler, self).__init__(
             energy_func, energy_grad, prng, mom_resample_coeff, dtype)
         if constr_jacob is None and autograd_available:
             constr_jacob = jacobian(constr_func)
@@ -63,14 +63,14 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         pos = pos_n
         dc_dpos = self.constr_jacob(pos)
         for s in range(n_step):
-            mom_half -= dt * energy_grad(pos)
+            mom_half -= dt * self.energy_grad(pos)
             pos_n = pos + dt * mom_half
             project_onto_constraint_surface(
                 pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters)
             mom_half = (pos_n - pos) / dt
             pos = pos_n
             dc_dpos = self.constr_jacob(pos)
-        mom = mom_half - 0.5 * dt * energy_grad(pos)
+        mom = mom_half - 0.5 * dt * self.energy_grad(pos)
         project_onto_nullspace(mom, dc_dpos)
         return pos, mom, dc_dpos
 

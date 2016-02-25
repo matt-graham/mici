@@ -17,7 +17,7 @@ class AbstractHmcSampler(object):
     """ Abstract Hamiltonian Monte Carlo sampler base class. """
 
     def __init__(self, energy_func, energy_grad=None, prng=None,
-                 dtype=np.float64):
+                 mom_resample_coeff=1., dtype=np.float64):
         """
         Abstract HMC sampler constructor
 
