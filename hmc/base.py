@@ -115,7 +115,7 @@ class AbstractHmcSampler(object):
         """
         raise NotImplementedError()
 
-    def sample_independent_momentum_given_position(pos, cache):
+    def sample_independent_momentum_given_position(self, pos, cache):
         """
         Sample a momentum independently from the conditional given a position.
 
@@ -205,7 +205,7 @@ class AbstractHmcSampler(object):
         scalar
             Hamiltonian value at specified state pair.
         """
-        return self.energy_func(pos) + self.kinetic_energy(pos, mom)
+        return self.energy_func(pos) + self.kinetic_energy(pos, cache, mom)
 
     def get_samples(self, pos, dt, n_step_per_sample, n_sample, mom=None):
         """
@@ -240,11 +240,12 @@ class AbstractHmcSampler(object):
         """
         n_dim = pos.shape[0]
         pos_samples, mom_samples = np.empty((2, n_sample, n_dim), self.dtype)
+        cache = None
         if mom is None:
             mom = self.sample_independent_momentum_given_position(pos, cache)
-        pos_samples[0], mom_samples[0], cache = pos, mom, None
+        pos_samples[0], mom_samples[0] = pos, mom
 
-        if is_instance(n_step_per_sample, tuple):
+        if isinstance(n_step_per_sample, tuple):
             randomise_steps = True
             step_interval_lower, step_interval_upper = n_step_per_sample
             assert step_interval_lower < step_interval_upper
@@ -255,12 +256,13 @@ class AbstractHmcSampler(object):
         hamiltonian_c = self.hamiltonian(pos, cache, mom)
         n_reject = 0
 
-        for s in range(1, n_samples):
+        for s in range(1, n_sample):
             if randomise_steps:
                 n_step_per_sample = self.prng.random_integers(
                     step_interval_lower, step_interval_upper)
             pos_p, mom_p, cache_p = self.simulate_dynamic(
-                pos_samples[s-1], mom_samples[s-1], cache)
+                pos_samples[s-1], mom_samples[s-1], cache, dt,
+                n_step_per_sample)
             hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
             if self.prng.uniform() < np.exp(hamiltonian_c - hamiltonian_p):
                 pos_samples[s], mom_samples[s], cache = pos_p, mom_p, cache_p

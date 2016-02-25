@@ -29,7 +29,7 @@ class IsotropicHmcSampler(AbstractHmcSampler):
         mom -= 0.5 * dt * self.energy_grad(pos)
         return pos, mom, None
 
-    def sample_independent_momentum_given_position(pos, cache):
+    def sample_independent_momentum_given_position(self, pos, cache):
         return self.prng.normal(size=pos.shape[0]).astype(self.dtype)
 
 
@@ -55,6 +55,6 @@ class EuclideanMetricHamiltonianSampler(object):
         mom -= 0.5 * dt * self.energy_grad(pos)
         return pos, mom, None
 
-    def sample_independent_momentum_given_position(pos, cache):
+    def sample_independent_momentum_given_position(self, pos, cache):
         return (self.mass_matrix_chol.dot(
             self.prng.normal(size=pos.shape[0]))).astype(self.dtype)
