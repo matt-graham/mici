@@ -64,7 +64,7 @@ class AbstractHmcSampler(object):
 
     def kinetic_energy(self, pos, cache, mom):
         """
-        Value of 'kinetic' energy term at provided state pair.
+        Value of kinetic energy term at provided state pair.
 
         The kinetic energy here is defined as the negative log conditional
         density on the momentum given the position.
@@ -137,7 +137,7 @@ class AbstractHmcSampler(object):
         Returns
         -------
         mom : vector
-            Mmentum state sampled from conditional.
+            Momentum state sampled from conditional.
         """
         raise NotImplementedError()
 
@@ -245,6 +245,8 @@ class AbstractHmcSampler(object):
             mom = self.sample_independent_momentum_given_position(pos, cache)
         pos_samples[0], mom_samples[0] = pos, mom
 
+        # check if number of steps specified by tuple and if so extract
+        # interval bounds and check valid
         if isinstance(n_step_per_sample, tuple):
             randomise_steps = True
             step_interval_lower, step_interval_upper = n_step_per_sample
@@ -260,18 +262,23 @@ class AbstractHmcSampler(object):
             if randomise_steps:
                 n_step_per_sample = self.prng.random_integers(
                     step_interval_lower, step_interval_upper)
+            # simulate Hamiltonian dynamic to get new state pair proposal
             pos_p, mom_p, cache_p = self.simulate_dynamic(
                 pos_samples[s-1], mom_samples[s-1], cache, dt,
                 n_step_per_sample)
             hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
+            # Metropolis-Hastings accept step on proposed update
             if self.prng.uniform() < np.exp(hamiltonian_c - hamiltonian_p):
+                # acccept move
                 pos_samples[s], mom_samples[s], cache = pos_p, mom_p, cache_p
                 hamiltonian_c = hamiltonian_p
             else:
+                # reject move
                 pos_samples[s] = pos_samples[s-1]
                 # negate momentum on rejection to ensure reversibility
                 mom_samples[s] = -mom_samples[s-1]
                 n_reject += 1
+            # momentum update transition: leaves momentum conditional invariant
             mom_samples[s] = self.resample_momentum(
                 pos_samples[s], cache, mom_samples[s])
             if self.mom_resample_coeff != 0:
