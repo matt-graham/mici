@@ -31,8 +31,9 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
                  dtype=np.float64, tol=1e-8, max_iters=100):
-        super(ConstrainedIsotropicHMCSampler, self).__init__(
+        super(ConstrainedIsotropicHmcSampler, self).__init__(
             energy_func, energy_grad, prng, mom_resample_coeff, dtype)
+        self.constr_func = constr_func
         if constr_jacob is None and autograd_available:
             constr_jacob = jacobian(constr_func)
 
