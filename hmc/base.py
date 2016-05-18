@@ -263,12 +263,18 @@ class AbstractHmcSampler(object):
                 n_step_per_sample = self.prng.random_integers(
                     step_interval_lower, step_interval_upper)
             # simulate Hamiltonian dynamic to get new state pair proposal
-            pos_p, mom_p, cache_p = self.simulate_dynamic(
-                pos_samples[s-1], mom_samples[s-1], cache, dt,
-                n_step_per_sample)
-            hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
+            try:
+                pos_p, mom_p, cache_p = self.simulate_dynamic(
+                    pos_samples[s-1], mom_samples[s-1], cache, dt,
+                    n_step_per_sample)
+                hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
+                proposal_successful = True
+            except Exception as e:
+                print e.message
+                proposal_successful = False
             # Metropolis-Hastings accept step on proposed update
-            if self.prng.uniform() < np.exp(hamiltonian_c - hamiltonian_p):
+            if (proposal_successful and self.prng.uniform() <
+                    np.exp(hamiltonian_c - hamiltonian_p)):
                 # acccept move
                 pos_samples[s], mom_samples[s], cache = pos_p, mom_p, cache_p
                 hamiltonian_c = hamiltonian_p
