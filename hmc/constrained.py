@@ -6,6 +6,7 @@ __license__ = 'MIT'
 
 import numpy as np
 import scipy.linalg as la
+import scipy.optimize as opt
 from .unconstrained import IsotropicHmcSampler
 
 autograd_available = True
@@ -18,12 +19,12 @@ except ImportError:
 class ExceededMaxItersError(Exception):
     """Exception raised when iterative solver exceeds iteration limit."""
 
-    def __init__(self, max_iters, tol, error):
+    def __init__(self, solver, max_iters, tol, error):
         super(ExceededMaxItersError, self).__init__(
-            'Exceeded maximum number of iterations ({0}) without converging. '
-            'Maximum error for convergence: {1}. '
-            'Last maximum error: {2}'
-            .format(max_iters, tol, error))
+            'Solver ({0}) exceeded maximum number of iterations ({1}) without '
+            'converging. Maximum error for convergence: {2}. '
+            'Last maximum error: {3}'
+            .format(solver, max_iters, tol, error))
 
 
 class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
@@ -36,13 +37,14 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         self.constr_func = constr_func
         if constr_jacob is None and autograd_available:
             constr_jacob = jacobian(constr_func)
-
-            def constr_jacob_and_prod_chol(pos):
+            def constr_jacob_func(pos, calc_gram_chol=True):
                 jacob = constr_jacob(pos)
-                prod_chol = la.cho_factor(jacob.dot(jacob.T))
-                return jacob, prod_chol
-
-            self.constr_jacob = constr_jacob
+                if calc_gram_chol:
+                    prod_chol = la.cho_factor(jacob.dot(jacob.T))
+                    return jacob, prod_chol
+                else:
+                    return jacob
+            self.constr_jacob = constr_jacob_func
         elif constr_jacob is None and not autograd_available:
             raise ValueError('Autograd not available therefore constraint '
                              'Jacobian must be provided.')
@@ -59,7 +61,8 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         mom_half = mom - 0.5 * dt * self.energy_grad(pos)
         pos_n = pos + dt * mom_half
         project_onto_constraint_surface(
-            pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters)
+            pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
+            scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
         mom_half = (pos_n - pos) / dt
         pos = pos_n
         dc_dpos = self.constr_jacob(pos)
@@ -67,7 +70,8 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             mom_half -= dt * self.energy_grad(pos)
             pos_n = pos + dt * mom_half
             project_onto_constraint_surface(
-                pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters)
+                pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
+                scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
             mom_half = (pos_n - pos) / dt
             pos = pos_n
             dc_dpos = self.constr_jacob(pos)
@@ -86,22 +90,36 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         return mom
 
 
-def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func,
-                                    tol=1e-8, max_iters=100):
+def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
+                                    max_iters=100, scipy_opt_fallback=True,
+                                    constr_jacob=None):
     """ Projects a vector on to constraint surface using Newton iteration. """
     converged = False
     iters = 0
+    pos_0 = pos * 1.
     if isinstance(dc_dpos_prev, tuple):
         dc_dpos_prev, prod_chol_prev = dc_dpos_prev
     else:
-        prod_chol_prev = la.chol_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
+        prod_chol_prev = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
     while not converged and iters < max_iters:
         c = constr_func(pos)
         pos -= dc_dpos_prev.T.dot(la.cho_solve(prod_chol_prev, c))
         converged = np.all(np.abs(c) < tol)
         iters += 1
-    if iters >= max_iters:
-        raise ExceededMaxItersError(max_iters, tol, np.max(np.abs(c)))
+    if iters >= max_iters and scipy_opt_fallback and constr_jacob:
+        pos_n = lambda l: pos_0 - dc_dpos_prev.T.dot(l)
+        func = lambda l: constr_func(pos_n(l))
+        jacob = lambda l: -dc_dpos_prev.dot(constr_jacob(pos_n(l), False).T)
+        sol = opt.root(fun=func, x0=np.zeros_like(c), method='hybr', jac=jacob,
+                       tol=tol, options={'maxfev': max_iters})
+        if sol.success:
+            pos = pos_0 - dc_dpos_prev.T.dot(sol.x)
+        else:
+            raise ExceededMaxItersError('scipy.root(hybrj)', max_iters, tol,
+                                        np.max(np.abs(sol.fun[-1])))
+    elif iters >= max_iters:
+        raise ExceededMaxItersError('numpy symmetric-Newton', max_iters, tol,
+                                    np.max(np.abs(c)))
 
 
 def project_onto_nullspace(vct, mtx):
