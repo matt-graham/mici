@@ -4,6 +4,7 @@
 __authors__ = 'Matt Graham'
 __license__ = 'MIT'
 
+import logging
 import numpy as np
 import scipy.linalg as la
 import scipy.optimize as opt
@@ -15,14 +16,17 @@ try:
 except ImportError:
     autograd_available = False
 
+logger = logging.getLogger(__name__)
 
-class ExceededMaxItersError(Exception):
-    """Exception raised when iterative solver exceeds iteration limit."""
+
+class ConvergenceError(Exception):
+    """Exception raised when iterative solver fails to converge."""
 
     def __init__(self, solver, max_iters, tol, error):
-        super(ExceededMaxItersError, self).__init__(
-            'Solver ({0}) exceeded maximum number of iterations ({1}) without '
-            'converging. Maximum error for convergence: {2}. '
+        super(ConvergenceError, self).__init__(
+            'Solver ({0}) did not converge. '
+            'Maximum number of iterations: {1}. '
+            'Maximum error for convergence: {2}. '
             'Last maximum error: {3}'
             .format(solver, max_iters, tol, error))
 
@@ -95,18 +99,27 @@ def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
                                     constr_jacob=None):
     """ Projects a vector on to constraint surface using Newton iteration. """
     converged = False
+    diverging = False
     iters = 0
     pos_0 = pos * 1.
     if isinstance(dc_dpos_prev, tuple):
         dc_dpos_prev, prod_chol_prev = dc_dpos_prev
     else:
         prod_chol_prev = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
-    while not converged and iters < max_iters:
+    while not converged and not diverging and iters < max_iters:
         c = constr_func(pos)
+        if np.any(np.isinf(c)) or np.any(np.isnan(c)):
+            diverging = True
+            break
         pos -= dc_dpos_prev.T.dot(la.cho_solve(prod_chol_prev, c))
         converged = np.all(np.abs(c) < tol)
         iters += 1
-    if iters >= max_iters and scipy_opt_fallback and constr_jacob:
+    if diverging:
+        logger.info('Quasi-Newton iteration diverged.')
+    elif not converged:
+        logger.info('Quasi-Newton iteration did not converge within max_iters.'
+                    ' Last max error: {0}'.format(np.max(np.abs(c))))
+    if not converged and scipy_opt_fallback and constr_jacob:
         pos_n = lambda l: pos_0 - dc_dpos_prev.T.dot(l)
         func = lambda l: constr_func(pos_n(l))
         jacob = lambda l: -dc_dpos_prev.dot(constr_jacob(pos_n(l), False).T)
@@ -115,11 +128,11 @@ def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
         if sol.success:
             pos = pos_0 - dc_dpos_prev.T.dot(sol.x)
         else:
-            raise ExceededMaxItersError('scipy.root(hybrj)', max_iters, tol,
-                                        np.max(np.abs(sol.fun[-1])))
-    elif iters >= max_iters:
-        raise ExceededMaxItersError('numpy symmetric-Newton', max_iters, tol,
-                                    np.max(np.abs(c)))
+            raise ConvergenceError('scipy.root(hybrj)', max_iters, tol,
+                                   np.max(np.abs(sol.fun[-1])))
+    elif not converged:
+        raise ConvergenceError('numpy symmetric Quasi-Newton', max_iters, tol,
+                               np.max(np.abs(c)))
 
 
 def project_onto_nullspace(vct, mtx):
