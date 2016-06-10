@@ -9,6 +9,7 @@ import numpy as np
 import scipy.linalg as la
 import scipy.optimize as opt
 from .unconstrained import IsotropicHmcSampler
+from .base import DynamicsError
 
 autograd_available = True
 try:
@@ -19,7 +20,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class ConvergenceError(Exception):
+class ConvergenceError(DynamicsError):
     """Exception raised when iterative solver fails to converge."""
 
     def __init__(self, solver, max_iters, tol, error):
@@ -94,6 +95,59 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         return mom
 
 
+class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+
+    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
+        if cache is None:
+            dc_dpos = self.constr_jacob(pos)
+        else:
+            dc_dpos = cache
+        for s in range(n_step):
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos)
+            pos_n = pos + dt * mom_half
+            project_onto_constraint_surface(
+                pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
+                scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
+            dc_dpos_n = self.constr_jacob(pos_n)
+            mom_half = (pos_n - pos) / dt
+            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n)
+            project_onto_nullspace(mom_n, dc_dpos_n)
+            pos, mom, dc_dpos = pos_n, mom_n, dc_dpos_n
+        return pos, mom, dc_dpos
+
+
+class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+
+    def __init__(self, energy_func, constr_func, energy_grad=None,
+                 constr_jacob=None, prng=None, mom_resample_coeff=1.,
+                 dtype=np.float64, tol=1e-8, max_iters=100, n_inner_update=10):
+        super(GbabConstrainedIsotropicHmcSampler, self).__init__(
+            energy_func, constr_func, energy_grad, constr_jacob, prng,
+            mom_resample_coeff, dtype, tol, max_iters)
+        self.n_inner_update = n_inner_update
+
+    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
+        if cache is None:
+            dc_dpos = self.constr_jacob(pos)
+        else:
+            dc_dpos = cache
+        for s in range(n_step):
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos)
+            project_onto_nullspace(mom_half, dc_dpos)
+            for i in range(self.n_inner_update):
+                pos_n = pos + (dt / self.n_inner_update) * mom_half
+                project_onto_constraint_surface(
+                    pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
+                    scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
+                mom_half = (pos_n - pos) / (dt / self.n_inner_update)
+                pos = pos_n
+                dc_dpos = self.constr_jacob(pos)
+                project_onto_nullspace(mom_half, dc_dpos)
+            mom = mom_half - 0.5 * dt * self.energy_grad(pos)
+            project_onto_nullspace(mom, dc_dpos)
+        return pos, mom, dc_dpos
+
+
 def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
                                     max_iters=100, scipy_opt_fallback=True,
                                     constr_jacob=None):
@@ -123,8 +177,13 @@ def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
         pos_n = lambda l: pos_0 - dc_dpos_prev.T.dot(l)
         func = lambda l: constr_func(pos_n(l))
         jacob = lambda l: -dc_dpos_prev.dot(constr_jacob(pos_n(l), False).T)
+        # root `tol` parameter is on function inputs not outputs (as used in
+        # preceding Newton iteration) therefore use square root of supplied tol
+        # see e.g.
+        # > The Devil is in the Detail: Hints for Practical Optimisation
+        # > Christensen, Hurn and Lindsey (2008)
         sol = opt.root(fun=func, x0=np.zeros_like(c), method='hybr', jac=jacob,
-                       tol=tol, options={'maxfev': max_iters})
+                       tol=tol**0.5, options={'maxfev': max_iters})
         if sol.success:
             pos = pos_0 - dc_dpos_prev.T.dot(sol.x)
         else:

@@ -4,6 +4,7 @@
 __authors__ = 'Matt Graham'
 __license__ = 'MIT'
 
+import logging
 import numpy as np
 
 autograd_available = True
@@ -11,6 +12,13 @@ try:
     from autograd import grad
 except ImportError:
     autograd_available = False
+
+logger = logging.getLogger(__name__)
+
+
+class DynamicsError(Exception):
+    """Base class for exceptions due to error in simulation of dynamics. """
+    pass
 
 
 class AbstractHmcSampler(object):
@@ -269,8 +277,9 @@ class AbstractHmcSampler(object):
                     n_step_per_sample)
                 hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
                 proposal_successful = True
-            except Exception as e:
-                print e.message
+            except DynamicsError as e:
+                logger.exception('Error occured when simulating dynamic. '
+                                 'Rejecting.')
                 proposal_successful = False
             # Metropolis-Hastings accept step on proposed update
             if (proposal_successful and self.prng.uniform() <
