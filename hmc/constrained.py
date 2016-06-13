@@ -38,10 +38,21 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
 
     Generates MCMC samples on a manifold embedded in Euclidean space, specified
     as the solution set to `constr_func(pos) = 0` for some vector function of
-    the position state `pos.
+    the position state `pos`. Based on method presented in [1].
 
-    A hybrid SHAKE / RATTLE integration scheme is used to simulate the
+    A hybrid SHAKE [2] / RATTLE [3] integration scheme is used to simulate the
     constrained Hamiltonian dynamics.
+
+    References
+    ----------
+    [1] Brubaker, Salzmann and Urtasun. A family of MCMC methods on implicitly
+        defined manifolds. Proceedings of International Conference on
+        Artificial Intelligence and Statistics, 2012.
+    [2] Ryckaert, Ciccotti and Berendsen. Numerical integration of Cartesian
+        equations of motion of a system with constraints : molecular dynamics
+        of n-alkanes. Journal of Computational Physics, 1977
+    [3] Andersen. RATTLE: A "velocity" version of the SHAKE algorithm for
+        molecular dynamics calculations. Journal of Computational Physics, 1983
     """
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
@@ -163,10 +174,18 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
 
     Generates MCMC samples on a manifold embedded in Euclidean space, specified
     as the solution set to `constr_func(pos) = 0` for some vector function of
-    the position state `pos.
+    the position state `pos`. Based on method presented in [1].
 
-    A RATTLE integration scheme is used to simulate the constrained
+    A RATTLE [2] integration scheme is used to simulate the constrained
     Hamiltonian dynamics.
+
+    References
+    ----------
+    [1] Brubaker, Salzmann and Urtasun. A family of MCMC methods on implicitly
+        defined manifolds. Proceedings of International Conference on
+        Artificial Intelligence and Statistics, 2012.
+    [2] Andersen. RATTLE: A "velocity" version of the SHAKE algorithm for
+        molecular dynamics calculations. Journal of Computational Physics, 1983
     """
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
@@ -192,10 +211,19 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
 
     Generates MCMC samples on a manifold embedded in Euclidean space, specified
     as the solution set to `constr_func(pos) = 0` for some vector function of
-    the position state `pos.
+    the position state `pos`. Based on method presented in [1].
 
     A Geodesic-BAB integration scheme is used to simulate the constrained
     Hamiltonian dynamics.
+
+    References
+    ----------
+    [1] Brubaker, Salzmann and Urtasun. A family of MCMC methods on implicitly
+        defined manifolds. Proceedings of International Conference on
+        Artificial Intelligence and Statistics, 2012.
+    [2] Leimkuhler and Matthews. Efficient molecular dynamics using geodesic
+        integration and solve--solute splitting. Proceedings of the Royal
+        Society (A), 2016.
     """
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
