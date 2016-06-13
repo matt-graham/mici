@@ -31,15 +31,24 @@ class AbstractHmcSampler(object):
 
         Parameters
         ----------
-        energy_func : function(vector) -> scalar
+        energy_func : function(vector, **cache]) -> scalar
             Function which returns energy (marginal negative log density) of a
-            position state. If no `energy_grad` is provided and so `autograd`
-            is to be used to calculate the gradient this function should be
-            defined using the autograd.numpy interface.
-        energy_grad : function(vector) -> vector or None
+            position state. Should also accept a (potentially empty) set of
+            `cache` keyword arguments which correspond to cached intermediate
+            results which are fully determined by position state. If no
+            `energy_grad` is provided it will be attempted to use Autograd to
+            calculate the gradient and so this function should be then be
+            defined using the `autograd.numpy` interface.
+        energy_grad : function(vector, **cache) -> vector or None
             Function which returns gradient of energy function at a position
-            state. If not provided it will be attempted to use `autograd` to
-            create a gradient function from the provided `energy_func`.
+            state. Should also accept a (potentially empty) set of `cache`
+            keyword arguments which correspond to cached intermediate results
+            which are fully determined by position state. If not provided it
+            will be attempted to use Autograd to create a gradient function
+            from the provided `energy_func`. In this case any cached results
+            will be ignored when calculating the gradient as there is no
+            information available of how to propagate the derivatives through
+            them.
         prng : RandomState
             Pseudo-random number generator. If `None` a new Numpy RandomState
             instance is created.
@@ -57,7 +66,10 @@ class AbstractHmcSampler(object):
         """
         self.energy_func = energy_func
         if energy_grad is None and autograd_available:
-            self.energy_grad = grad(energy_func)
+            e_grad = grad(energy_func, 0)
+            # force energy gradient to ignore cached results if using Autograd
+            # as otherwise gradient may be incorrectly calculated
+            self.energy_grad = lambda pos, **cache: e_grad(pos)
         elif energy_grad is None and not autograd_available:
             raise ValueError('Autograd not available therefore energy gradient'
                              ' must be provided.')
@@ -70,7 +82,7 @@ class AbstractHmcSampler(object):
         self.mom_resample_coeff = mom_resample_coeff
         self.dtype = dtype
 
-    def kinetic_energy(self, pos, cache, mom):
+    def kinetic_energy(self, pos, mom, cache={}):
         """
         Value of kinetic energy term at provided state pair.
 
@@ -83,33 +95,33 @@ class AbstractHmcSampler(object):
             Position state.
         mom : vector
             Momentum state.
-        cache : object
-            Either a set of cached results which can be deterministically
-            calculated from position state (e.g. from previous move) or `None`
-            if dynamic does not make use of cached results or no cached results
-            are yet available.
+        cache : dictionary
+            A dictionary of cached results which can be deterministically
+            calculated from position state (e.g. from previous move). If
+            dynamic does not make use of cached results or no cached results
+            are yet available this will be an empty dictionary.
         """
         raise NotImplementedError()
 
-    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
+    def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         """
         Simulate Hamiltonian dynamics from a given state and return new state.
 
         Parameters
         ----------
+        n_step : positive integer
+            Number of time steps to simulate discretised dynamics for.
+        dt : scalar
+            Time step for discretised dynamics.
         pos : vector
             Initial position state.
         mom : vector
             Initial momentum state.
-        cache : object
-            Either a set of cached results which can be deterministically
-            calculated from position state (e.g. from previous move) or `None`
-            if move does not make use of cached results or no cached results
-            are yet available.
-        dt : scalar
-            Time step for discretised dynamics.
-        n_step : positive integer
-            Number of time steps to simulate discretised dynamics for.
+        cache : dictionary
+            A dictionary of cached results which can be deterministically
+            calculated from position state (e.g. from previous move). If
+            dynamic does not make use of cached results or no cached results
+            are yet available this will be an empty dictionary.
 
         Returns
         -------
@@ -123,7 +135,7 @@ class AbstractHmcSampler(object):
         """
         raise NotImplementedError()
 
-    def sample_independent_momentum_given_position(self, pos, cache):
+    def sample_independent_momentum_given_position(self, pos, cache={}):
         """
         Sample a momentum independently from the conditional given a position.
 
@@ -136,11 +148,11 @@ class AbstractHmcSampler(object):
         ----------
         pos : vector
             Position state.
-        cache : object
-            Either a set of cached results which can be deterministically
-            calculated from position state (e.g. from previous move) or `None`
-            if move does not make use of cached results or no cached results
-            are yet available.
+        cache : dictionary
+            A dictionary of cached results which can be deterministically
+            calculated from position state (e.g. from previous move). If
+            dynamic does not make use of cached results or no cached results
+            are yet available this will be an empty dictionary.
 
         Returns
         -------
@@ -149,7 +161,7 @@ class AbstractHmcSampler(object):
         """
         raise NotImplementedError()
 
-    def resample_momentum(self, pos, cache, mom):
+    def resample_momentum(self, pos, mom, cache={}):
         """
         Resample momentum state leaving conditional given position invariant.
 
@@ -170,13 +182,13 @@ class AbstractHmcSampler(object):
         ----------
         pos : vector
             Position state.
-        cache : object
-            Either a set of cached results which can be deterministically
-            calculated from position state (e.g. from previous move) or `None`
-            if move does not make use of cached results or no cached results
-            are yet available.
         mom : vector
             Momentum state.
+        cache : dictionary
+            A dictionary of cached results which can be deterministically
+            calculated from position state (e.g. from previous move). If
+            dynamic does not make use of cached results or no cached results
+            are yet available this will be an empty dictionary.
 
         Returns
         -------
@@ -192,7 +204,7 @@ class AbstractHmcSampler(object):
             return (self.mom_resample_coeff * mom_i +
                     (1. - self.mom_resample_coeff**2) * mom)
 
-    def hamiltonian(self, pos, cache, mom):
+    def hamiltonian(self, pos, mom, cache={}):
         """
         Hamiltonian (negative log density) of a position-momentum state pair.
 
@@ -200,20 +212,21 @@ class AbstractHmcSampler(object):
         ----------
         pos : vector
             Position state.
-        cache : object
-            Either a set of cached results which can be deterministically
-            calculated from position state (e.g. from previous move) or `None`
-            if dynamic does not make use of cached results or no cached results
-            are yet available.
         mom : vector
             Momentum state.
+        cache : dictionary
+            A dictionary of cached results which can be deterministically
+            calculated from position state (e.g. from previous move). If
+            dynamic does not make use of cached results or no cached results
+            are yet available this will be an empty dictionary.
 
         Returns
         -------
         scalar
             Hamiltonian value at specified state pair.
         """
-        return self.energy_func(pos) + self.kinetic_energy(pos, cache, mom)
+        return (self.energy_func(pos, **cache) +
+                self.kinetic_energy(pos, mom, cache))
 
     def get_samples(self, pos, dt, n_step_per_sample, n_sample, mom=None):
         """
@@ -248,7 +261,7 @@ class AbstractHmcSampler(object):
         """
         n_dim = pos.shape[0]
         pos_samples, mom_samples = np.empty((2, n_sample, n_dim), self.dtype)
-        cache = None
+        cache = {}
         if mom is None:
             mom = self.sample_independent_momentum_given_position(pos, cache)
         pos_samples[0], mom_samples[0] = pos, mom
@@ -263,7 +276,7 @@ class AbstractHmcSampler(object):
         else:
             randomise_steps = False
 
-        hamiltonian_c = self.hamiltonian(pos, cache, mom)
+        hamiltonian_c = self.hamiltonian(pos, mom, cache)
         n_reject = 0
 
         for s in range(1, n_sample):
@@ -273,9 +286,9 @@ class AbstractHmcSampler(object):
             # simulate Hamiltonian dynamic to get new state pair proposal
             try:
                 pos_p, mom_p, cache_p = self.simulate_dynamic(
-                    pos_samples[s-1], mom_samples[s-1], cache, dt,
-                    n_step_per_sample)
-                hamiltonian_p = self.hamiltonian(pos_p, cache_p, mom_p)
+                    n_step_per_sample, dt, pos_samples[s-1],
+                    mom_samples[s-1], cache)
+                hamiltonian_p = self.hamiltonian(pos_p, mom_p, cache_p)
                 proposal_successful = True
             except DynamicsError as e:
                 logger.exception('Error occured when simulating dynamic. '
@@ -295,9 +308,9 @@ class AbstractHmcSampler(object):
                 n_reject += 1
             # momentum update transition: leaves momentum conditional invariant
             mom_samples[s] = self.resample_momentum(
-                pos_samples[s], cache, mom_samples[s])
+                pos_samples[s], mom_samples[s], cache)
             if self.mom_resample_coeff != 0:
-                hamiltonian_c = self.hamiltonian(pos_samples[s], cache,
-                                                 mom_samples[s])
+                hamiltonian_c = self.hamiltonian(pos_samples[s],
+                                                 mom_samples[s], cache)
 
         return pos_samples, mom_samples, 1. - (n_reject * 1. / n_sample)

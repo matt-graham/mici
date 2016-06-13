@@ -33,23 +33,87 @@ class ConvergenceError(DynamicsError):
 
 
 class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
+    """
+    Constrained HMC sampler with identity mass matrix.
+
+    Generates MCMC samples on a manifold embedded in Euclidean space, specified
+    as the solution set to `constr_func(pos) = 0` for some vector function of
+    the position state `pos.
+
+    A hybrid SHAKE / RATTLE integration scheme is used to simulate the
+    constrained Hamiltonian dynamics.
+    """
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
                  dtype=np.float64, tol=1e-8, max_iters=100):
+        """
+        Parameters
+        ----------
+        energy_func : function(vector, **cache]) -> scalar
+            Function which returns energy (marginal negative log density) of a
+            position state. Should also accept a (potentially empty) set of
+            `cache` keyword arguments which correspond to cached intermediate
+            results which are fully determined by position state. If no
+            `energy_grad` is provided it will be attempted to use Autograd to
+            calculate the gradient and so this function should be then be
+            defined using the `autograd.numpy` interface.
+        constr_func : function(vector) -> vector
+            Function which returns the vector-valued constraint function which
+            defines the constraint manifold to sample on (i.e. the set of
+            position states for which the constraint function is equal to the
+            zero vector). If no `constr_jacob` is provided it will be attempted
+            to use Autograd to calculate the Jacobian and so this function
+            should be then be defined using the `autograd.numpy` interface.
+        energy_grad : function(vector, **cache) -> vector or None
+            Function which returns gradient of energy function at a position
+            state. Should also accept a (potentially empty) set of `cache`
+            keyword arguments which correspond to cached intermediate results
+            which are fully determined by position state. If not provided it
+            will be attempted to use Autograd to create a gradient function
+            from the provided `energy_func`. In this case any cached results
+            will be ignored when calculating the gradient as there is no
+            information available of how to propagate the derivatives through
+            them.
+        constr_jacob : function(vector) -> dict or None
+            Function calculating the constraint Jacobian, the matrix of partial
+            derivatives of constraint function with respect to the position
+            state, with dimensions dim(pos) * dim(constr_func(pos)). The
+            function should return a dictionary with entry with key `dc_dpos`
+            corresponding to the constraint Jacobian. Optionally it may also
+            calculate the Cholesky decomposition of the Gram matrix
+            `dc_dpos.dot(dc_dpos.T)` which should then be stored in the
+            returned dictionary with key `gram_chol`. If not provided it will
+            be attempted to use Autograd to create a Jacobian function from the
+            provided `constr_func`.
+        prng : RandomState
+            Pseudo-random number generator. If `None` a new Numpy RandomState
+            instance is created.
+        mom_resample_coeff : scalar in [0, 1]
+            Coefficient specifying degree with which to resample momentum
+            after each Metropolis-Hastings Hamiltonian move. If equal to 1 the
+            momentum will be independently sampled from its conditional given
+            the current position, while if equal to 0 the momentum will be
+            left at the value returned from the M-H step. Values in between
+            these two extremes will lead to a new momentum which is a weighted
+            sun of an independent draw from the conditional and the current
+            momentum state.
+        dtype : Numpy data type
+            Floating point data type to use in arrays storing states.
+        tol : float
+            Convergence tolerance for iterative solution of projection on to
+            constraint manifold - convergence is assumed when
+            `max(abs(constr_func(pos_n))) < tol`.
+        max_iters : integer
+            Maximum number of iterations to perform when solving non-linear
+            projection step - if iteration count exceeds this without a
+            solution being found a `ConvergenceError` exception is raised.
+        """
         super(ConstrainedIsotropicHmcSampler, self).__init__(
             energy_func, energy_grad, prng, mom_resample_coeff, dtype)
         self.constr_func = constr_func
         if constr_jacob is None and autograd_available:
-            constr_jacob = jacobian(constr_func)
-            def constr_jacob_func(pos, calc_gram_chol=True):
-                jacob = constr_jacob(pos)
-                if calc_gram_chol:
-                    prod_chol = la.cho_factor(jacob.dot(jacob.T))
-                    return jacob, prod_chol
-                else:
-                    return jacob
-            self.constr_jacob = constr_jacob_func
+            self.constr_jacob = wrap_constr_jacob_func(jacobian(constr_func))
         elif constr_jacob is None and not autograd_available:
             raise ValueError('Autograd not available therefore constraint '
                              'Jacobian must be provided.')
@@ -58,65 +122,81 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         self.tol = tol
         self.max_iters = max_iters
 
-    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
-        if cache is None:
-            dc_dpos = self.constr_jacob(pos)
-        else:
-            dc_dpos = cache
+    def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
+        if not any(cache):
+            cache.update(self.constr_jacob(pos))
         mom_half = mom - 0.5 * dt * self.energy_grad(pos)
         pos_n = pos + dt * mom_half
-        project_onto_constraint_surface(
-            pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
-            scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
+        pos_n = project_onto_constraint_surface(
+            pos_n, cache, self.constr_func, tol=self.tol,
+            max_iters=self.max_iters, scipy_opt_fallback=True,
+            constr_jacob=self.constr_jacob)
         mom_half = (pos_n - pos) / dt
         pos = pos_n
-        dc_dpos = self.constr_jacob(pos)
+        cache.update(self.constr_jacob(pos))
         for s in range(n_step):
             mom_half -= dt * self.energy_grad(pos)
             pos_n = pos + dt * mom_half
-            project_onto_constraint_surface(
-                pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
-                scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
+            pos_n = project_onto_constraint_surface(
+                pos_n, cache, self.constr_func, tol=self.tol,
+                max_iters=self.max_iters, scipy_opt_fallback=True,
+                constr_jacob=self.constr_jacob)
             mom_half = (pos_n - pos) / dt
             pos = pos_n
-            dc_dpos = self.constr_jacob(pos)
+            cache.update(self.constr_jacob(pos))
         mom = mom_half - 0.5 * dt * self.energy_grad(pos)
-        project_onto_nullspace(mom, dc_dpos)
-        return pos, mom, dc_dpos
+        mom = project_onto_nullspace(mom, cache)
+        return pos, mom, cache
 
     def sample_independent_momentum_given_position(self, pos, cache):
         n_dim = pos.shape[0]
-        if cache is None:
-            dc_dpos = self.constr_jacob(pos)
-        else:
-            dc_dpos = cache
+        if not any(cache):
+            cache.update(self.constr_jacob(pos))
         mom = self.prng.normal(size=n_dim).astype(self.dtype)
-        project_onto_nullspace(mom, dc_dpos)
+        mom = project_onto_nullspace(mom, cache)
         return mom
 
 
 class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+    """
+    Constrained HMC sampler with identity mass matrix.
 
-    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
-        if cache is None:
-            dc_dpos = self.constr_jacob(pos)
-        else:
-            dc_dpos = cache
+    Generates MCMC samples on a manifold embedded in Euclidean space, specified
+    as the solution set to `constr_func(pos) = 0` for some vector function of
+    the position state `pos.
+
+    A RATTLE integration scheme is used to simulate the constrained
+    Hamiltonian dynamics.
+    """
+    def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
+        if not any(cache):
+            cache.update(self.constr_jacob(pos))
         for s in range(n_step):
             mom_half = mom - 0.5 * dt * self.energy_grad(pos)
             pos_n = pos + dt * mom_half
-            project_onto_constraint_surface(
-                pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
-                scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
-            dc_dpos_n = self.constr_jacob(pos_n)
+            pos_n = project_onto_constraint_surface(
+                pos_n, cache, self.constr_func, tol=self.tol,
+                max_iters=self.max_iters, scipy_opt_fallback=True,
+                constr_jacob=self.constr_jacob)
+            cache.update(self.constr_jacob(pos))
             mom_half = (pos_n - pos) / dt
             mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n)
-            project_onto_nullspace(mom_n, dc_dpos_n)
-            pos, mom, dc_dpos = pos_n, mom_n, dc_dpos_n
-        return pos, mom, dc_dpos
+            mom_n = project_onto_nullspace(mom_n, cache)
+            pos, mom = pos_n, mom_n
+        return pos, mom, cache
 
 
 class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+    """
+    Constrained HMC sampler with identity mass matrix.
+
+    Generates MCMC samples on a manifold embedded in Euclidean space, specified
+    as the solution set to `constr_func(pos) = 0` for some vector function of
+    the position state `pos.
+
+    A Geodesic-BAB integration scheme is used to simulate the constrained
+    Hamiltonian dynamics.
+    """
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
@@ -126,46 +206,112 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
             mom_resample_coeff, dtype, tol, max_iters)
         self.n_inner_update = n_inner_update
 
-    def simulate_dynamic(self, pos, mom, cache, dt, n_step):
-        if cache is None:
-            dc_dpos = self.constr_jacob(pos)
-        else:
-            dc_dpos = cache
+    def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
+        if not any(cache):
+            cache.update(self.constr_jacob(pos))
         for s in range(n_step):
             mom_half = mom - 0.5 * dt * self.energy_grad(pos)
-            project_onto_nullspace(mom_half, dc_dpos)
+            mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
                 pos_n = pos + (dt / self.n_inner_update) * mom_half
-                project_onto_constraint_surface(
-                    pos_n, dc_dpos, self.constr_func, self.tol, self.max_iters,
-                    scipy_opt_fallback=True, constr_jacob=self.constr_jacob)
+                pos_n = project_onto_constraint_surface(
+                    pos_n, cache, self.constr_func, tol=self.tol,
+                    max_iters=self.max_iters, scipy_opt_fallback=True,
+                    constr_jacob=self.constr_jacob)
                 mom_half = (pos_n - pos) / (dt / self.n_inner_update)
                 pos = pos_n
-                dc_dpos = self.constr_jacob(pos)
-                project_onto_nullspace(mom_half, dc_dpos)
+                cache.update(self.constr_jacob(pos))
+                mom_half = project_onto_nullspace(mom_half, cache)
             mom = mom_half - 0.5 * dt * self.energy_grad(pos)
-            project_onto_nullspace(mom, dc_dpos)
-        return pos, mom, dc_dpos
+            mom = project_onto_nullspace(mom, cache)
+        return pos, mom, cache
 
 
-def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
+def wrap_constr_jacob_func(constr_jacob):
+    """Convenience function to wrap function calculating constraint Jacobian.
+
+    Produceds a function which returns a dictionary with entry with key
+    `dc_dpos` corresponding to calculated constraint Jacobian and optionally
+    also entry with key `gram_chol` for Cholesky decomposition of Gram matrix
+    if keyword argument `calc_gram_chol` is True.
+    """
+
+    def constr_jacob_wrapper(pos, calc_gram_chol=True):
+        jacob = constr_jacob(pos)
+        cache = {'dc_dpos': jacob}
+        if calc_gram_chol:
+            cache['gram_chol'] = la.cho_factor(jacob.dot(jacob.T))
+        return cache
+
+    return constr_jacob_wrapper
+
+
+def project_onto_constraint_surface(pos, cache, constr_func, tol=1e-8,
                                     max_iters=100, scipy_opt_fallback=True,
                                     constr_jacob=None):
-    """ Projects a vector on to constraint surface using Newton iteration. """
+    """ Projects a vector on to constraint surface using Newton iteration.
+
+    Parameters
+    ----------
+    pos : vector
+        Position state to project on to constraint manifold (usually result
+        of a unconstrained Hamiltonian dynamics step).
+    cache : dictionary
+        Dictionary of cached constraint Jacobian results for *previous*
+        position state (i.e. position state before unconstrained step).
+    constr_func : function(vector) -> vector
+        Function which returns the vector-valued constraint function which
+        defines the constraint manifold to sample on (i.e. the set of position
+        states for which the constraint function is equal to the zero vector).
+    tol : float
+        Convergence tolerance for iterative solution of projection on to
+        constraint manifold - convergence is assumed when
+        `max(abs(constr_func(pos_n))) < tol`.
+    max_iters : integer
+        Maximum number of iterations to perform when solving non-linear
+        projection step - if iteration count exceeds this without a
+        solution being found a `ConvergenceError` exception is raised.
+    scipy_opt_fallback : boolean
+        Whether to fallback to `scipy.opt.root('hybrj')` solver if initial
+        quasi-Newton iteration does not converge.
+    constr_jacob : function(vector) -> dict
+        Function calculating the constraint Jacobian, the matrix of partial
+        derivatives of constraint function with respect to the position
+        state, with dimensions dim(pos) * dim(constr_func(pos)). The
+        function should return a dictionary with entry with key `dc_dpos`
+        corresponding to the constraint Jacobian. Optionally it may also
+        calculate the Cholesky decomposition of the Gram matrix
+        `dc_dpos.dot(dc_dpos.T)` which should then be stored in the
+        returned dictionary with key `gram_chol`.
+
+    Returns
+    -------
+    pos_n : vector
+        Updated position state on constraint manifold
+            `pos_n = pos - dc_dpos_prev.T.dot(l)`
+        where `l` is chosen such that
+            `max(abs(constr_func(pos_n)) < tol`
+
+    Raises
+    ------
+    ConvergenceError :
+        Raised when Newton iteration (and fallback if enabled) do not converge
+        within `max_iters`.
+    """
     converged = False
     diverging = False
     iters = 0
     pos_0 = pos * 1.
-    if isinstance(dc_dpos_prev, tuple):
-        dc_dpos_prev, prod_chol_prev = dc_dpos_prev
-    else:
-        prod_chol_prev = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
+    dc_dpos_prev = cache['dc_dpos']
+    if 'gram_chol' not in cache:
+        cache['gram_chol'] = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
+    gram_chol_prev = cache['gram_chol']
     while not converged and not diverging and iters < max_iters:
         c = constr_func(pos)
         if np.any(np.isinf(c)) or np.any(np.isnan(c)):
             diverging = True
             break
-        pos -= dc_dpos_prev.T.dot(la.cho_solve(prod_chol_prev, c))
+        pos -= dc_dpos_prev.T.dot(la.cho_solve(gram_chol_prev, c))
         converged = np.all(np.abs(c) < tol)
         iters += 1
     if diverging:
@@ -176,7 +322,8 @@ def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
     if not converged and scipy_opt_fallback and constr_jacob:
         pos_n = lambda l: pos_0 - dc_dpos_prev.T.dot(l)
         func = lambda l: constr_func(pos_n(l))
-        jacob = lambda l: -dc_dpos_prev.dot(constr_jacob(pos_n(l), False).T)
+        jacob = lambda l: (
+            -dc_dpos_prev.dot(constr_jacob(pos_n(l), False)['dc_dpos'].T))
         # root `tol` parameter is on function inputs not outputs (as used in
         # preceding Newton iteration) therefore use square root of supplied tol
         # see e.g.
@@ -192,14 +339,30 @@ def project_onto_constraint_surface(pos, dc_dpos_prev, constr_func, tol=1e-8,
     elif not converged:
         raise ConvergenceError('numpy symmetric Quasi-Newton', max_iters, tol,
                                np.max(np.abs(c)))
+    return pos
 
 
-def project_onto_nullspace(vct, mtx):
-    """ Projects a vector on to the nullspace of a matrix. """
-    if isinstance(mtx, tuple):
-        mtx, mtx_prod_chol = mtx
-    else:
-        mtx_prod_chol = la.cho_factor(mtx.dot(mtx.T))
-    mtx_vct = mtx.dot(vct)
-    mtx_prod_inv_mtx_vct = la.cho_solve(mtx_prod_chol, mtx_vct)
-    vct -= mtx.T.dot(mtx_prod_inv_mtx_vct)
+def project_onto_nullspace(mom, cache):
+    """ Projects a momentum on to the nullspace of the constraint Jacobian.
+
+    Parameters
+    ----------
+    mom : vector
+        Momentum state to project.
+    cache : dictionary
+        Dictionary of cached constraint Jacobian results.
+
+    Returns
+    -------
+    mom : vector
+        Momentum state projected into nullspace of constraint Jacobian.
+    """
+    dc_dpos = cache['dc_dpos']
+    if 'gram_chol' not in cache:
+        cache['gram_chol'] = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
+    gram_chol = cache['gram_chol']
+    dc_dpos_mom = dc_dpos.dot(mom)
+    gram_inv_dc_dpos_mom = la.cho_solve(gram_chol, dc_dpos_mom)
+    dc_dpos_pinv_dc_dpos_mom = dc_dpos.T.dot(gram_inv_dc_dpos_mom)
+    mom -= dc_dpos_pinv_dc_dpos_mom
+    return mom
