@@ -16,12 +16,12 @@ class IsotropicHmcSampler(AbstractHmcSampler):
         return 0.5 * mom.dot(mom)
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
-        mom = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+        mom = mom - 0.5 * dt * self.energy_grad(pos, cache)
         pos = pos + dt * mom
         for s in range(1, n_step):
-            mom -= dt * self.energy_grad(pos, **cache)
+            mom -= dt * self.energy_grad(pos, cache)
             pos += dt * mom
-        mom -= 0.5 * dt * self.energy_grad(pos, **cache)
+        mom -= 0.5 * dt * self.energy_grad(pos, cache)
         return pos, mom, None
 
     def sample_independent_momentum_given_position(self, pos, cache={}):
@@ -42,12 +42,12 @@ class EuclideanMetricHamiltonianSampler(object):
         return 0.5 * mom.dot(la.cho_solve(self.mass_matrix_chol, mom))
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
-        mom = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+        mom = mom - 0.5 * dt * self.energy_grad(pos, cache)
         pos = pos + dt * la.cho_solve(self.mass_matrix_chol, mom)
         for s in range(1, n_step):
-            mom -= dt * self.energy_grad(pos, **cache)
+            mom -= dt * self.energy_grad(pos, cache)
             pos += dt * la.cho_solve(self.mass_matrix_chol, mom)
-        mom -= 0.5 * dt * self.energy_grad(pos, **cache)
+        mom -= 0.5 * dt * self.energy_grad(pos, cache)
         return pos, mom, None
 
     def sample_independent_momentum_given_position(self, pos, cache={}):

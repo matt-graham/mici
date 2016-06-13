@@ -15,8 +15,8 @@ class TestIsotropicHMCSampler(unittest.TestCase):
         self.prng = np.random.RandomState(1234)
 
     def test_init_with_energy_grad(self):
-        energy_func = lambda pos, **cache: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, **cache: pos
+        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
+        energy_grad = lambda pos, cache={}: pos
         mom_resample_coeff = 1.
         dtype = np.float64
         sampler = uhmc.IsotropicHmcSampler(
@@ -33,7 +33,7 @@ class TestIsotropicHMCSampler(unittest.TestCase):
 
     def test_init_without_energy_grad(self):
         if autograd_available:
-            energy_func = lambda pos, **cache: 0.5 * ag_np.dot(pos, pos)
+            energy_func = lambda pos, cache={}: 0.5 * ag_np.dot(pos, pos)
             sampler = uhmc.IsotropicHmcSampler(
                 energy_func=energy_func, prng=self.prng)
             assert sampler.energy_grad is not None, (
@@ -46,8 +46,8 @@ class TestIsotropicHMCSampler(unittest.TestCase):
             )
 
     def test_dynamic_reversible(self):
-        energy_func = lambda pos, **cache: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, **cache: pos
+        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
+        energy_grad = lambda pos, cache={}: pos
         sampler = uhmc.IsotropicHmcSampler(
             energy_func=energy_func, energy_grad=energy_grad,
             prng=self.prng, dtype=np.float64)

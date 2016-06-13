@@ -31,24 +31,23 @@ class AbstractHmcSampler(object):
 
         Parameters
         ----------
-        energy_func : function(vector, **cache]) -> scalar
+        energy_func : function(vector, dictionary]) -> scalar
             Function which returns energy (marginal negative log density) of a
-            position state. Should also accept a (potentially empty) set of
-            `cache` keyword arguments which correspond to cached intermediate
-            results which are fully determined by position state. If no
-            `energy_grad` is provided it will be attempted to use Autograd to
-            calculate the gradient and so this function should be then be
-            defined using the `autograd.numpy` interface.
-        energy_grad : function(vector, **cache) -> vector or None
+            position state. Should also accept a (potentially empty) `cache`
+            dictionary argument which correspond to cached intermediate results
+            which are fully determined by position state. If no `energy_grad`
+            is provided it will be attempted to use Autograd to calculate the
+            gradient and so this function should be then be defined using the
+            `autograd.numpy` interface.
+        energy_grad : function(vector, dictionary) -> vector or None
             Function which returns gradient of energy function at a position
-            state. Should also accept a (potentially empty) set of `cache`
-            keyword arguments which correspond to cached intermediate results
-            which are fully determined by position state. If not provided it
-            will be attempted to use Autograd to create a gradient function
-            from the provided `energy_func`. In this case any cached results
-            will be ignored when calculating the gradient as there is no
-            information available of how to propagate the derivatives through
-            them.
+            state. Should also accept a (potentially empty) `cache` dictionary
+            argument which correspond to cached intermediate results which are
+            fully determined by position state. If not provided it will be
+            attempted to use Autograd to create a gradient function from the
+            provided `energy_func`. In this case any cached results will be
+            ignored when calculating the gradient as there is no information
+            available of how to propagate the derivatives through them.
         prng : RandomState
             Pseudo-random number generator. If `None` a new Numpy RandomState
             instance is created.
@@ -69,7 +68,7 @@ class AbstractHmcSampler(object):
             e_grad = grad(energy_func, 0)
             # force energy gradient to ignore cached results if using Autograd
             # as otherwise gradient may be incorrectly calculated
-            self.energy_grad = lambda pos, **cache: e_grad(pos)
+            self.energy_grad = lambda pos, cache={}: e_grad(pos)
         elif energy_grad is None and not autograd_available:
             raise ValueError('Autograd not available therefore energy gradient'
                              ' must be provided.')
@@ -225,7 +224,7 @@ class AbstractHmcSampler(object):
         scalar
             Hamiltonian value at specified state pair.
         """
-        return (self.energy_func(pos, **cache) +
+        return (self.energy_func(pos, cache) +
                 self.kinetic_energy(pos, mom, cache))
 
     def get_samples(self, pos, dt, n_step_per_sample, n_sample, mom=None):

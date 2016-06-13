@@ -15,8 +15,8 @@ class TestConstrainedIsotropicHMCSampler(unittest.TestCase):
         self.prng = np.random.RandomState(1234)
 
     def test_init_with_constr_jacob(self):
-        energy_func = lambda pos, **cache: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, **cache: pos
+        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
+        energy_grad = lambda pos, cache={}: pos
         constr_func = lambda pos: pos[:2]
         constr_jacob = lambda pos: np.c_[np.eye(2),
                                          np.zeros((2, pos.shape[0] - 2))]
@@ -47,8 +47,8 @@ class TestConstrainedIsotropicHMCSampler(unittest.TestCase):
 
     def test_init_without_energy_grad(self):
         if autograd_available:
-            energy_func = lambda pos, **cache: 0.5 * pos.dot(pos)
-            energy_grad = lambda pos, **cache: pos
+            energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
+            energy_grad = lambda pos, cache={}: pos
             constr_func = lambda pos: pos[:2]
             constr_jacob = lambda pos: np.c_[np.eye(2),
                                              np.zeros((2, pos.shape[0] - 2))]
@@ -78,8 +78,8 @@ class TestConstrainedIsotropicHMCSampler(unittest.TestCase):
             )
 
     def test_dynamic_reversible(self):
-        energy_func = lambda pos, **cache: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, **cache: pos
+        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
+        energy_grad = lambda pos, cache={}: pos
         constr_func = lambda pos: pos[:2]
         constr_jacob = lambda pos: np.c_[np.eye(2),
                                          np.zeros((2, pos.shape[0] - 2))]

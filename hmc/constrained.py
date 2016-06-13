@@ -61,14 +61,14 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         """
         Parameters
         ----------
-        energy_func : function(vector, **cache]) -> scalar
+        energy_func : function(vector, dictionary]) -> scalar
             Function which returns energy (marginal negative log density) of a
-            position state. Should also accept a (potentially empty) set of
-            `cache` keyword arguments which correspond to cached intermediate
-            results which are fully determined by position state. If no
-            `energy_grad` is provided it will be attempted to use Autograd to
-            calculate the gradient and so this function should be then be
-            defined using the `autograd.numpy` interface.
+            position state. Should also accept a (potentially empty) `cache`
+            dictionary argument which correspond to cached intermediate results
+            which are fully determined by position state. If no `energy_grad`
+            is provided it will be attempted to use Autograd to calculate the
+            gradient and so this function should be then be defined using the
+            `autograd.numpy` interface.
         constr_func : function(vector) -> vector
             Function which returns the vector-valued constraint function which
             defines the constraint manifold to sample on (i.e. the set of
@@ -76,16 +76,15 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             zero vector). If no `constr_jacob` is provided it will be attempted
             to use Autograd to calculate the Jacobian and so this function
             should be then be defined using the `autograd.numpy` interface.
-        energy_grad : function(vector, **cache) -> vector or None
+        energy_grad : function(vector, dictionary) -> vector or None
             Function which returns gradient of energy function at a position
-            state. Should also accept a (potentially empty) set of `cache`
-            keyword arguments which correspond to cached intermediate results
-            which are fully determined by position state. If not provided it
-            will be attempted to use Autograd to create a gradient function
-            from the provided `energy_func`. In this case any cached results
-            will be ignored when calculating the gradient as there is no
-            information available of how to propagate the derivatives through
-            them.
+            state. Should also accept a (potentially empty) `cache` dictionary
+            argument which correspond to cached intermediate results which are
+            fully determined by position state. If not provided it will be
+            attempted to use Autograd to create a gradient function from the
+            provided `energy_func`. In this case any cached results will be
+            ignored when calculating the gradient as there is no information
+            available of how to propagate the derivatives through them.
         constr_jacob : function(vector) -> dict or None
             Function calculating the constraint Jacobian, the matrix of partial
             derivatives of constraint function with respect to the position
@@ -136,7 +135,7 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
-        mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+        mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
         pos_n = pos + dt * mom_half
         pos_n = project_onto_constraint_surface(
             pos_n, cache, self.constr_func, tol=self.tol,
@@ -144,9 +143,9 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             constr_jacob=self.constr_jacob)
         mom_half = (pos_n - pos) / dt
         pos = pos_n
-        cache.update(self.constr_jacob(pos))
+        cache = self.constr_jacob(pos)
         for s in range(n_step):
-            mom_half -= dt * self.energy_grad(pos, **cache)
+            mom_half -= dt * self.energy_grad(pos, cache)
             pos_n = pos + dt * mom_half
             pos_n = project_onto_constraint_surface(
                 pos_n, cache, self.constr_func, tol=self.tol,
@@ -154,8 +153,8 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
                 constr_jacob=self.constr_jacob)
             mom_half = (pos_n - pos) / dt
             pos = pos_n
-            cache.update(self.constr_jacob(pos))
-        mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
+            cache = self.constr_jacob(pos)
+        mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
         mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
 
@@ -191,15 +190,15 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
             pos_n = pos + dt * mom_half
             pos_n = project_onto_constraint_surface(
                 pos_n, cache, self.constr_func, tol=self.tol,
                 max_iters=self.max_iters, scipy_opt_fallback=True,
                 constr_jacob=self.constr_jacob)
-            cache.update(self.constr_jacob(pos))
+            cache = self.constr_jacob(pos)
             mom_half = (pos_n - pos) / dt
-            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n, **cache)
+            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n, cache)
             mom_n = project_onto_nullspace(mom_n, cache)
             pos, mom = pos_n, mom_n
         return pos, mom, cache
@@ -238,10 +237,7 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            if s == 0:
-                mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
-            else:
-                mom_half = mom_half - dt * self.energy_grad(pos, **cache)
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
                 pos_n = pos + (dt / self.n_inner_update) * mom_half
@@ -251,10 +247,10 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
                     constr_jacob=self.constr_jacob)
                 mom_half = (pos_n - pos) / (dt / self.n_inner_update)
                 pos = pos_n
-                cache.update(self.constr_jacob(pos))
+                cache = self.constr_jacob(pos)
                 mom_half = project_onto_nullspace(mom_half, cache)
-        mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
-        mom = project_onto_nullspace(mom, cache)
+            mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
+            mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
 
 
@@ -283,7 +279,10 @@ class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+            if s == 0:
+                mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
+            else:
+                mom_half = mom_half - dt * self.energy_grad(pos, cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
                 pos_n = pos + (dt / self.n_inner_update) * mom_half
@@ -293,10 +292,10 @@ class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
                     constr_jacob=self.constr_jacob)
                 mom_half = (pos_n - pos) / (dt / self.n_inner_update)
                 pos = pos_n
-                cache.update(self.constr_jacob(pos))
+                cache = self.constr_jacob(pos)
                 mom_half = project_onto_nullspace(mom_half, cache)
-            mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
-            mom = project_onto_nullspace(mom, cache)
+        mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
+        mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
 
 
