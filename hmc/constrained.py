@@ -258,7 +258,7 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         return pos, mom, cache
 
 
-class LfGbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
     """
     Constrained HMC sampler with identity mass matrix.
 
@@ -278,14 +278,6 @@ class LfGbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         integration and solve--solute splitting. Proceedings of the Royal
         Society (A), 2016.
     """
-
-    def __init__(self, energy_func, constr_func, energy_grad=None,
-                 constr_jacob=None, prng=None, mom_resample_coeff=1.,
-                 dtype=np.float64, tol=1e-8, max_iters=100, n_inner_update=10):
-        super(GbabConstrainedIsotropicHmcSampler, self).__init__(
-            energy_func, constr_func, energy_grad, constr_jacob, prng,
-            mom_resample_coeff, dtype, tol, max_iters)
-        self.n_inner_update = n_inner_update
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
