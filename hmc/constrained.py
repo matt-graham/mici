@@ -85,17 +85,17 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             provided `energy_func`. In this case any cached results will be
             ignored when calculating the gradient as there is no information
             available of how to propagate the derivatives through them.
-        constr_jacob : function(vector) -> dict or None
+        constr_jacob : function(vector, boolean) -> dict or None
             Function calculating the constraint Jacobian, the matrix of partial
             derivatives of constraint function with respect to the position
             state, with dimensions dim(pos) * dim(constr_func(pos)). The
             function should return a dictionary with entry with key `dc_dpos`
-            corresponding to the constraint Jacobian. Optionally it may also
-            calculate the Cholesky decomposition of the Gram matrix
-            `dc_dpos.dot(dc_dpos.T)` which should then be stored in the
-            returned dictionary with key `gram_chol`. If not provided it will
-            be attempted to use Autograd to create a Jacobian function from the
-            provided `constr_func`.
+            corresponding to the constraint Jacobian. Optionally if the second
+            is True it may also calculate the Cholesky decomposition of the
+            Gram matrix `dc_dpos.dot(dc_dpos.T)` which should then be stored in
+            the returned dictionary with key `gram_chol`. If not provided it
+            will be attempted to use Autograd to create a Jacobian function
+            from the provided `constr_func`.
         prng : RandomState
             Pseudo-random number generator. If `None` a new Numpy RandomState
             instance is created.
@@ -346,14 +346,14 @@ def project_onto_constraint_surface(pos, cache, constr_func, tol=1e-8,
     scipy_opt_fallback : boolean
         Whether to fallback to `scipy.opt.root('hybrj')` solver if initial
         quasi-Newton iteration does not converge.
-    constr_jacob : function(vector) -> dict
+    constr_jacob : function(vector, boolean) -> dict
         Function calculating the constraint Jacobian, the matrix of partial
         derivatives of constraint function with respect to the position
         state, with dimensions dim(pos) * dim(constr_func(pos)). The
         function should return a dictionary with entry with key `dc_dpos`
-        corresponding to the constraint Jacobian. Optionally it may also
-        calculate the Cholesky decomposition of the Gram matrix
-        `dc_dpos.dot(dc_dpos.T)` which should then be stored in the
+        corresponding to the constraint Jacobian. Optionally if the second is
+        True it may also calculate the Cholesky decomposition of the Gram
+        matrix `dc_dpos.dot(dc_dpos.T)` which should then be stored in the
         returned dictionary with key `gram_chol`.
 
     Returns
