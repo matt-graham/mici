@@ -136,7 +136,7 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
-        mom_half = mom - 0.5 * dt * self.energy_grad(pos)
+        mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
         pos_n = pos + dt * mom_half
         pos_n = project_onto_constraint_surface(
             pos_n, cache, self.constr_func, tol=self.tol,
@@ -146,7 +146,7 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
         pos = pos_n
         cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            mom_half -= dt * self.energy_grad(pos)
+            mom_half -= dt * self.energy_grad(pos, **cache)
             pos_n = pos + dt * mom_half
             pos_n = project_onto_constraint_surface(
                 pos_n, cache, self.constr_func, tol=self.tol,
@@ -155,7 +155,7 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             mom_half = (pos_n - pos) / dt
             pos = pos_n
             cache.update(self.constr_jacob(pos))
-        mom = mom_half - 0.5 * dt * self.energy_grad(pos)
+        mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
         mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
 
@@ -191,7 +191,7 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            mom_half = mom - 0.5 * dt * self.energy_grad(pos)
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
             pos_n = pos + dt * mom_half
             pos_n = project_onto_constraint_surface(
                 pos_n, cache, self.constr_func, tol=self.tol,
@@ -199,7 +199,7 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
                 constr_jacob=self.constr_jacob)
             cache.update(self.constr_jacob(pos))
             mom_half = (pos_n - pos) / dt
-            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n)
+            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n, **cache)
             mom_n = project_onto_nullspace(mom_n, cache)
             pos, mom = pos_n, mom_n
         return pos, mom, cache
@@ -238,7 +238,7 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
-            mom_half = mom - 0.5 * dt * self.energy_grad(pos)
+            mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
                 pos_n = pos + (dt / self.n_inner_update) * mom_half
@@ -250,7 +250,7 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
                 pos = pos_n
                 cache.update(self.constr_jacob(pos))
                 mom_half = project_onto_nullspace(mom_half, cache)
-            mom = mom_half - 0.5 * dt * self.energy_grad(pos)
+            mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
             mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
 
