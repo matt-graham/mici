@@ -238,6 +238,59 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
+            if s == 0:
+                mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
+            else:
+                mom_half = mom_half - dt * self.energy_grad(pos, **cache)
+            mom_half = project_onto_nullspace(mom_half, cache)
+            for i in range(self.n_inner_update):
+                pos_n = pos + (dt / self.n_inner_update) * mom_half
+                pos_n = project_onto_constraint_surface(
+                    pos_n, cache, self.constr_func, tol=self.tol,
+                    max_iters=self.max_iters, scipy_opt_fallback=True,
+                    constr_jacob=self.constr_jacob)
+                mom_half = (pos_n - pos) / (dt / self.n_inner_update)
+                pos = pos_n
+                cache.update(self.constr_jacob(pos))
+                mom_half = project_onto_nullspace(mom_half, cache)
+        mom = mom_half - 0.5 * dt * self.energy_grad(pos, **cache)
+        mom = project_onto_nullspace(mom, cache)
+        return pos, mom, cache
+
+
+class LfGbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
+    """
+    Constrained HMC sampler with identity mass matrix.
+
+    Generates MCMC samples on a manifold embedded in Euclidean space, specified
+    as the solution set to `constr_func(pos) = 0` for some vector function of
+    the position state `pos`. Based on method presented in [1].
+
+    A leapfrog Geodesic-BAB integration scheme is used to simulate the
+    constrained Hamiltonian dynamics.
+
+    References
+    ----------
+    [1] Brubaker, Salzmann and Urtasun. A family of MCMC methods on implicitly
+        defined manifolds. Proceedings of International Conference on
+        Artificial Intelligence and Statistics, 2012.
+    [2] Leimkuhler and Matthews. Efficient molecular dynamics using geodesic
+        integration and solve--solute splitting. Proceedings of the Royal
+        Society (A), 2016.
+    """
+
+    def __init__(self, energy_func, constr_func, energy_grad=None,
+                 constr_jacob=None, prng=None, mom_resample_coeff=1.,
+                 dtype=np.float64, tol=1e-8, max_iters=100, n_inner_update=10):
+        super(GbabConstrainedIsotropicHmcSampler, self).__init__(
+            energy_func, constr_func, energy_grad, constr_jacob, prng,
+            mom_resample_coeff, dtype, tol, max_iters)
+        self.n_inner_update = n_inner_update
+
+    def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
+        if not any(cache):
+            cache.update(self.constr_jacob(pos))
+        for s in range(n_step):
             mom_half = mom - 0.5 * dt * self.energy_grad(pos, **cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
