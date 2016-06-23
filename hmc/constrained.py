@@ -196,7 +196,7 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
                 pos_n, cache, self.constr_func, tol=self.tol,
                 max_iters=self.max_iters, scipy_opt_fallback=True,
                 constr_jacob=self.constr_jacob)
-            cache = self.constr_jacob(pos)
+            cache = self.constr_jacob(pos_n)
             mom_half = (pos_n - pos) / dt
             mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n, cache)
             mom_n = project_onto_nullspace(mom_n, cache)
