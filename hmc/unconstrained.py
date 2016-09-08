@@ -28,7 +28,7 @@ class IsotropicHmcSampler(AbstractHmcSampler):
         return self.prng.normal(size=pos.shape[0]).astype(self.dtype)
 
 
-class EuclideanMetricHamiltonianSampler(object):
+class EuclideanMetricHamiltonianSampler(IsotropicHmcSampler):
     """Standard unconstrained HMC sampler with constant mass matrix. """
 
     def __init__(self, energy_func, mass_matrix, energy_grad=None, prng=None,
