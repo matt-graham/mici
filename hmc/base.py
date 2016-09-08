@@ -296,7 +296,7 @@ class AbstractHmcSampler(object):
             # Metropolis-Hastings accept step on proposed update
             if (proposal_successful and self.prng.uniform() <
                     np.exp(hamiltonian_c - hamiltonian_p)):
-                # acccept move
+                # accept move
                 pos_samples[s], mom_samples[s], cache = pos_p, mom_p, cache_p
                 hamiltonian_c = hamiltonian_p
             else:
