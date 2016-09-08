@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from distutils.core import setup
+from setuptools import setup
 
 if __name__ == '__main__':
     setup(name='hmc',
