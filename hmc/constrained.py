@@ -302,7 +302,7 @@ class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
 def wrap_constr_jacob_func(constr_jacob):
     """Convenience function to wrap function calculating constraint Jacobian.
 
-    Produceds a function which returns a dictionary with entry with key
+    Produces a function which returns a dictionary with entry with key
     `dc_dpos` corresponding to calculated constraint Jacobian and optionally
     also entry with key `gram_chol` for Cholesky decomposition of Gram matrix
     if keyword argument `calc_gram_chol` is True.
@@ -431,7 +431,7 @@ def project_onto_nullspace(mom, cache):
     """
     dc_dpos = cache['dc_dpos']
     if 'gram_chol' not in cache:
-        cache['gram_chol'] = la.cho_factor(dc_dpos_prev.dot(dc_dpos_prev.T))
+        cache['gram_chol'] = la.cho_factor(dc_dpos.dot(dc_dpos.T))
     gram_chol = cache['gram_chol']
     dc_dpos_mom = dc_dpos.dot(mom)
     gram_inv_dc_dpos_mom = la.cho_solve(gram_chol, dc_dpos_mom)
