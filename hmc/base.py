@@ -201,7 +201,7 @@ class AbstractHmcSampler(object):
         else:
             mom_i = self.sample_independent_momentum_given_position(pos, cache)
             return (self.mom_resample_coeff * mom_i +
-                    (1. - self.mom_resample_coeff**2) * mom)
+                    (1. - self.mom_resample_coeff**2)**0.5 * mom)
 
     def hamiltonian(self, pos, mom, cache={}):
         """
