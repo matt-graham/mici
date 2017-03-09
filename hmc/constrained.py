@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Numpy implementations of constrained Euclidean metric HMC samplers. """
 
-__authors__ = 'Matt Graham'
-__license__ = 'MIT'
-
 import logging
 import numpy as np
 import scipy.linalg as la
@@ -392,10 +389,17 @@ def project_onto_constraint_surface(pos, cache, constr_func, tol=1e-8,
         logger.info('Quasi-Newton iteration did not converge within max_iters.'
                     ' Last max error: {0}'.format(np.max(np.abs(c))))
     if not converged and scipy_opt_fallback and constr_jacob:
-        pos_n = lambda l: pos_0 - dc_dpos_prev.T.dot(l)
-        func = lambda l: constr_func(pos_n(l))
-        jacob = lambda l: (
-            -dc_dpos_prev.dot(constr_jacob(pos_n(l), False)['dc_dpos'].T))
+
+        def pos_n(l):
+            return pos_0 - dc_dpos_prev.T.dot(l)
+
+        def func(l):
+            return constr_func(pos_n(l))
+
+        def jacob(l):
+            return -dc_dpos_prev.dot(
+                constr_jacob(pos_n(l), False)['dc_dpos'].T)
+
         # root `tol` parameter is on function inputs not outputs (as used in
         # preceding Newton iteration) therefore use square root of supplied tol
         # see e.g.

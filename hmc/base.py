@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Hamiltonian dynamics based MCMC samplers. """
 
-__authors__ = 'Matt Graham'
-__license__ = 'MIT'
-
 import logging
 import numpy as np
 

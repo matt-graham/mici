@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Numpy implementations of unconstrained Euclidean metric HMC samplers. """
 
-__authors__ = 'Matt Graham'
-__license__ = 'MIT'
-
 import numpy as np
 import scipy.linalg as la
 from .base import AbstractHmcSampler
@@ -28,12 +25,12 @@ class IsotropicHmcSampler(AbstractHmcSampler):
         return self.prng.normal(size=pos.shape[0]).astype(self.dtype)
 
 
-class EuclideanMetricHamiltonianSampler(IsotropicHmcSampler):
+class EuclideanMetricHmcSampler(IsotropicHmcSampler):
     """Standard unconstrained HMC sampler with constant mass matrix. """
 
     def __init__(self, energy_func, mass_matrix, energy_grad=None, prng=None,
                  mom_resample_coeff=1., dtype=np.float64):
-        super(EuclideanMetricHamiltonianSampler, self).__init__(
+        super(EuclideanMetricHmcSampler, self).__init__(
             energy_func, energy_grad, prng, mom_resample_coeff, dtype)
         self.mass_matrix = mass_matrix
         self.mass_matrix_chol = la.cho_factor(mass_matrix)
