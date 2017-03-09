@@ -1,22 +1,31 @@
-import numpy as np
+# -*- coding: utf-8 -*-
+"""Unconstrained HMC sampler tests."""
+
 import unittest
 import hmc.unconstrained as uhmc
 
 autograd_available = True
 try:
-    import autograd.numpy as ag_np
+    import autograd.numpy as np
 except ImportError:
     autograd_available = False
+    import numpy as np
 
 
-class TestIsotropicHMCSampler(unittest.TestCase):
+SEED = 1234
 
-    def setUp(self):
-        self.prng = np.random.RandomState(1234)
+
+def energy_func(pos, cache={}):
+    return 0.5 * np.dot(pos, pos)
+
+
+def energy_grad(pos, cache={}):
+    return pos
+
+
+class UnconstrainedSamplerTestCase(object):
 
     def test_init_with_energy_grad(self):
-        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, cache={}: pos
         mom_resample_coeff = 1.
         dtype = np.float64
         sampler = uhmc.IsotropicHmcSampler(
@@ -33,8 +42,7 @@ class TestIsotropicHMCSampler(unittest.TestCase):
 
     def test_init_without_energy_grad(self):
         if autograd_available:
-            energy_func = lambda pos, cache={}: 0.5 * ag_np.dot(pos, pos)
-            sampler = uhmc.IsotropicHmcSampler(
+            sampler = self.test_class(
                 energy_func=energy_func, prng=self.prng)
             assert sampler.energy_grad is not None, (
                 'Sampler energy_grad not being automatically defined using '
@@ -46,8 +54,6 @@ class TestIsotropicHMCSampler(unittest.TestCase):
             )
 
     def test_dynamic_reversible(self):
-        energy_func = lambda pos, cache={}: 0.5 * pos.dot(pos)
-        energy_grad = lambda pos, cache={}: pos
         sampler = uhmc.IsotropicHmcSampler(
             energy_func=energy_func, energy_grad=energy_grad,
             prng=self.prng, dtype=np.float64)
@@ -63,5 +69,13 @@ class TestIsotropicHMCSampler(unittest.TestCase):
                 'Initial state\n  {0}\n  {1}\n'.format(pos_0, mom_0) +
                 'Reversed state\n  {0}\n  {1}\n'.format(pos_r, mom_r)
             )
+
         do_reversible_check(2, 0.1, 5)
         do_reversible_check(10, 0.1, 100)
+
+
+class IsotropicHmcTestCase(UnconstrainedSamplerTestCase, unittest.TestCase):
+
+    def setUp(self):
+        self.test_class = uhmc.IsotropicHmcSampler
+        self.prng = np.random.RandomState(SEED)
