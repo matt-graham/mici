@@ -287,8 +287,8 @@ class AbstractHmcSampler(object):
                 hamiltonian_p = self.hamiltonian(pos_p, mom_p, cache_p)
                 proposal_successful = True
             except DynamicsError as e:
-                logger.exception('Error occured when simulating dynamic. '
-                                 'Rejecting.')
+                logger.info('Error occured when simulating dynamic. '
+                            'Rejecting.\n' + str(e))
                 proposal_successful = False
             # Metropolis-Hastings accept step on proposed update
             if (proposal_successful and self.prng.uniform() <
