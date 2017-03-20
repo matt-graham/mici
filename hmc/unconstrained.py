@@ -36,7 +36,8 @@ class EuclideanMetricHmcSampler(IsotropicHmcSampler):
         self.mass_matrix_chol = la.cholesky(mass_matrix, lower=True)
 
     def kinetic_energy(self, pos, mom, cache={}):
-        return 0.5 * mom.dot(la.cho_solve(self.mass_matrix_chol, mom))
+        return 0.5 * mom.dot(la.cho_solve(
+            (self.mass_matrix_chol, True), mom))
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         mom = mom - 0.5 * dt * self.energy_grad(pos, cache)

@@ -57,6 +57,25 @@ class IsotropicHmcSamplerTestCase(unittest.TestCase):
                 'Sampler energy_grad inconsistent with energy_func.'
             )
 
+    def test_kinetic_energy(self):
+        mom_resample_coeff = 1.
+        dtype = np.float64
+        sampler = uhmc.IsotropicHmcSampler(
+            energy_func=energy_func,
+            energy_grad=energy_grad,
+            prng=self.prng,
+            mom_resample_coeff=mom_resample_coeff,
+            dtype=dtype)
+        for n_dim in [10, 100, 1000]:
+            pos, mom = self.prng.normal(size=(2, n_dim,)).astype(dtype)
+            k_energy = sampler.kinetic_energy(pos, mom, {})
+            assert np.isscalar(k_energy), (
+                'kinetic_energy returning non-scalar value.'
+            )
+            assert np.allclose(k_energy, 0.5 * mom.dot(mom)), (
+                'kinetic_energy returning incorrect value.'
+            )
+
     def test_sample_independent_momentum(self):
         mom_resample_coeff = 1.
         dtype = np.float64
@@ -128,13 +147,38 @@ class EuclideanMetricHmcSamplerTestCase(unittest.TestCase):
         assert sampler.mom_resample_coeff == mom_resample_coeff
         assert sampler.dtype == dtype
 
+    def test_kinetic_energy(self):
+        mom_resample_coeff = 1.
+        dtype = np.float64
+        for n_dim in [10, 100, 1000]:
+            mass_matrix = self.prng.normal(size=(n_dim, n_dim))
+            mass_matrix = mass_matrix.dot(mass_matrix.T)
+            mass_matrix_chol = la.cholesky(mass_matrix, lower=True)
+            sampler = uhmc.EuclideanMetricHmcSampler(
+                energy_func=energy_func,
+                mass_matrix=mass_matrix,
+                energy_grad=energy_grad,
+                prng=self.prng,
+                mom_resample_coeff=mom_resample_coeff,
+                dtype=dtype)
+            pos, mom = self.prng.normal(size=(2, n_dim,)).astype(dtype)
+            k_energy = sampler.kinetic_energy(pos, mom, {})
+            assert np.isscalar(k_energy), (
+                'kinetic_energy returning non-scalar value.'
+            )
+            assert np.allclose(
+                k_energy,
+                0.5 * mom.dot(la.cho_solve((mass_matrix_chol, True), mom))), (
+                    'kinetic_energy returning incorrect value.'
+                )
+
     def test_sample_independent_momentum(self):
         mom_resample_coeff = 1.
         dtype = np.float64
         for n_dim in [10, 100, 1000]:
             mass_matrix = self.prng.normal(size=(n_dim, n_dim))
             mass_matrix = mass_matrix.dot(mass_matrix.T)
-            mass_matrix_chol = la.cholesky(mass_matrix)
+            mass_matrix_chol = la.cholesky(mass_matrix, lower=True)
             sampler = uhmc.EuclideanMetricHmcSampler(
                 energy_func=energy_func,
                 mass_matrix=mass_matrix,
