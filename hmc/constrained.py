@@ -117,7 +117,11 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             corresponding to the constraint Jacobian. Optionally if the second
             is True it may also calculate the Cholesky decomposition of the
             Gram matrix `dc_dpos.dot(dc_dpos.T)` which should then be stored in
-            the returned dictionary with key `gram_chol`. If not provided it
+            the returned dictionary with key `gram_chol` in the same format as
+            that returned by `scipy.linalg.cho_factor` i.e. a tuple with first
+            element the calculated Cholesky decomposition and the second
+            element a boolean value indicating if a lower triangular factor
+            was computed (True) or upper triangular (False). If not provided it
             will be attempted to use Autograd to create a Jacobian function
             from the provided `constr_func`.
         prng : RandomState
