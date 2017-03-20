@@ -22,11 +22,37 @@ class ConvergenceError(DynamicsError):
 
     def __init__(self, solver, max_iters, tol, error):
         super(ConvergenceError, self).__init__(
-            'Solver ({0}) did not converge. '
-            'Maximum number of iterations: {1}. '
-            'Maximum error for convergence: {2}. '
+            'Solver ({0}) did not converge.\n'
+            'Maximum number of iterations: {1}\n'
+            'Maximum error for convergence: {2}\n'
             'Last maximum error: {3}'
             .format(solver, max_iters, tol, error))
+
+
+def check_reverse_in_tol(pos, pos_rev, cache, tol):
+    """Helper function for checking constrained step is reversible."""
+    # Estimate maximum absolute distance in *constraint* space
+    c_dist = np.max(abs(cache['dc_dpos'].dot(pos - pos_rev)))
+    # Maximum absolute distance in position space -
+    # as a heuristic check if this is within sqrt(tol) where tol is the
+    # convergence tolerance for projection step in constraint space, see e.g.
+    # > The Devil is in the Detail: Hints for Practical Optimisation
+    # > Christensen, Hurn and Lindsey (2008)
+    p_dist = np.max(abs(pos - pos_rev))
+    if c_dist > tol or p_dist > tol**0.5:
+        raise NonReversibleStepError(c_dist, p_dist, tol)
+
+
+class NonReversibleStepError(DynamicsError):
+    """Exception raised when reversed step does return to original position."""
+
+    def __init__(self, c_dist, p_dist, tol):
+        super(DynamicsError, self).__init__(
+            'Non-reversible geodesic step.\n'
+            'Maximum absolute distance between positions: {0}\n'
+            'Estimated maximum absolute distance in constraint space: {1}\n'
+            'Distance tolerance: {2}'
+            .format(p_dist, c_dist, tol))
 
 
 class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
@@ -54,7 +80,8 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
-                 dtype=np.float64, tol=1e-8, max_iters=100):
+                 dtype=np.float64, tol=1e-8, max_iters=100,
+                 check_reverse=True, scipy_opt_fallback=True):
         """
         Parameters
         ----------
@@ -115,6 +142,19 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             Maximum number of iterations to perform when solving non-linear
             projection step - if iteration count exceeds this without a
             solution being found a `ConvergenceError` exception is raised.
+        check_reverse : boolean
+            Whether to check reverse step and projection on to constraint
+            manifold returns to the original position (to within floating
+            point precision using `numpy.allclose`). This adds around a ~25%
+            run time overhead (mainly in re-running the projection for the
+            reverse step) but ensures reversibility of the proposal.
+            Non-reversible steps are recorded to the logger output so it is
+            possible to monitor how often non-reversible steps occur in a
+            given sampling run.
+        scipy_opt_fallback : boolean
+            Whether to fallback to `scipy.opt.root('hybrj')` solver if initial
+            quasi-Newton iteration does not converge when solving for
+            projection of position on to constraint manifold.
         """
         super(ConstrainedIsotropicHmcSampler, self).__init__(
             energy_func, energy_grad, prng, mom_resample_coeff, dtype)
@@ -128,29 +168,36 @@ class ConstrainedIsotropicHmcSampler(IsotropicHmcSampler):
             self.constr_jacob = constr_jacob
         self.tol = tol
         self.max_iters = max_iters
+        self.check_reverse = check_reverse
+        self.scipy_opt_fallback = scipy_opt_fallback
+
+    def project_position(self, pos, cache):
+        return project_onto_constraint_surface(
+            pos, cache, constr_func=self.constr_func, tol=self.tol,
+            max_iters=self.max_iters,
+            scipy_opt_fallback=self.scipy_opt_fallback,
+            constr_jacob=self.constr_jacob)
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
         pos_n = pos + dt * mom_half
-        pos_n = project_onto_constraint_surface(
-            pos_n, cache, self.constr_func, tol=self.tol,
-            max_iters=self.max_iters, scipy_opt_fallback=True,
-            constr_jacob=self.constr_jacob)
+        pos_n = self.project_position(pos_n, cache)
         mom_half = (pos_n - pos) / dt
         pos = pos_n
         cache = self.constr_jacob(pos)
         for s in range(n_step):
             mom_half -= dt * self.energy_grad(pos, cache)
             pos_n = pos + dt * mom_half
-            pos_n = project_onto_constraint_surface(
-                pos_n, cache, self.constr_func, tol=self.tol,
-                max_iters=self.max_iters, scipy_opt_fallback=True,
-                constr_jacob=self.constr_jacob)
-            mom_half = (pos_n - pos) / dt
-            pos = pos_n
-            cache = self.constr_jacob(pos)
+            pos_n = self.project_position(pos_n, cache)
+            cache_n = self.constr_jacob(pos_n)
+            mom_half_n = (pos_n - pos) / dt
+            if self.check_reverse:
+                pos_rev = pos_n - dt * mom_half_n
+                pos_rev = self.project_position(pos_rev, cache_n)
+                check_reverse_in_tol(pos, pos_rev, cache, self.tol)
+            pos, cache, mom_half = pos_n, cache_n, mom_half_n
         mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
         mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
@@ -183,21 +230,25 @@ class RattleConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
     [2] Andersen. RATTLE: A "velocity" version of the SHAKE algorithm for
         molecular dynamics calculations. Journal of Computational Physics, 1983
     """
+
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
         for s in range(n_step):
             mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
             pos_n = pos + dt * mom_half
-            pos_n = project_onto_constraint_surface(
-                pos_n, cache, self.constr_func, tol=self.tol,
-                max_iters=self.max_iters, scipy_opt_fallback=True,
-                constr_jacob=self.constr_jacob)
-            cache = self.constr_jacob(pos_n)
-            mom_half = (pos_n - pos) / dt
-            mom_n = mom_half - 0.5 * dt * self.energy_grad(pos_n, cache)
-            mom_n = project_onto_nullspace(mom_n, cache)
-            pos, mom = pos_n, mom_n
+            pos_n = self.project_position(pos_n, cache)
+            cache_n = self.constr_jacob(pos_n)
+            mom_half_n = (pos_n - pos) / dt
+            mom_n = mom_half_n - 0.5 * dt * self.energy_grad(pos_n, cache_n)
+            mom_n = project_onto_nullspace(mom_n, cache_n)
+            if self.check_reverse:
+                mom_half_rev = mom_n + 0.5 * dt * self.energy_grad(
+                    pos_n, cache_n)
+                pos_rev = pos_n - dt * mom_half_rev
+                pos_rev = self.project_position(pos_rev, cache_n)
+                check_reverse_in_tol(pos, pos_rev, cache, self.tol)
+            pos, cache, mom = pos_n, cache_n, mom_n
         return pos, mom, cache
 
 
@@ -224,28 +275,32 @@ class GbabConstrainedIsotropicHmcSampler(ConstrainedIsotropicHmcSampler):
 
     def __init__(self, energy_func, constr_func, energy_grad=None,
                  constr_jacob=None, prng=None, mom_resample_coeff=1.,
-                 dtype=np.float64, tol=1e-8, max_iters=100, n_inner_update=10):
+                 dtype=np.float64, tol=1e-8, max_iters=100, check_reverse=True,
+                 scipy_opt_fallback=True, n_inner_update=10):
         super(GbabConstrainedIsotropicHmcSampler, self).__init__(
             energy_func, constr_func, energy_grad, constr_jacob, prng,
-            mom_resample_coeff, dtype, tol, max_iters)
+            mom_resample_coeff, dtype, tol, max_iters, check_reverse,
+            scipy_opt_fallback)
         self.n_inner_update = n_inner_update
 
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
+        dt_inner = dt / self.n_inner_update
         for s in range(n_step):
             mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
-                pos_n = pos + (dt / self.n_inner_update) * mom_half
-                pos_n = project_onto_constraint_surface(
-                    pos_n, cache, self.constr_func, tol=self.tol,
-                    max_iters=self.max_iters, scipy_opt_fallback=True,
-                    constr_jacob=self.constr_jacob)
-                mom_half = (pos_n - pos) / (dt / self.n_inner_update)
-                pos = pos_n
-                cache = self.constr_jacob(pos)
-                mom_half = project_onto_nullspace(mom_half, cache)
+                pos_n = pos + dt_inner * mom_half
+                pos_n = self.project_position(pos_n, cache)
+                cache_n = self.constr_jacob(pos_n)
+                mom_half_n = (pos_n - pos) / dt_inner
+                mom_half_n = project_onto_nullspace(mom_half_n, cache_n)
+                if self.check_reverse:
+                    pos_rev = pos_n - dt_inner * mom_half_n
+                    pos_rev = self.project_position(pos_rev, cache_n)
+                    check_reverse_in_tol(pos, pos_rev, cache, self.tol)
+                pos, cache, mom_half = pos_n, cache_n, mom_half_n
             mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
             mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
@@ -275,6 +330,7 @@ class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
     def simulate_dynamic(self, n_step, dt, pos, mom, cache={}):
         if not any(cache):
             cache.update(self.constr_jacob(pos))
+        dt_inner = dt / self.n_inner_update
         for s in range(n_step):
             if s == 0:
                 mom_half = mom - 0.5 * dt * self.energy_grad(pos, cache)
@@ -282,15 +338,16 @@ class LfGbabConstrainedIsotropicHmcSampler(GbabConstrainedIsotropicHmcSampler):
                 mom_half = mom_half - dt * self.energy_grad(pos, cache)
             mom_half = project_onto_nullspace(mom_half, cache)
             for i in range(self.n_inner_update):
-                pos_n = pos + (dt / self.n_inner_update) * mom_half
-                pos_n = project_onto_constraint_surface(
-                    pos_n, cache, self.constr_func, tol=self.tol,
-                    max_iters=self.max_iters, scipy_opt_fallback=True,
-                    constr_jacob=self.constr_jacob)
-                mom_half = (pos_n - pos) / (dt / self.n_inner_update)
-                pos = pos_n
-                cache = self.constr_jacob(pos)
-                mom_half = project_onto_nullspace(mom_half, cache)
+                pos_n = pos + dt_inner * mom_half
+                pos_n = self.project_position(pos_n, cache)
+                cache_n = self.constr_jacob(pos_n)
+                mom_half_n = (pos_n - pos) / dt_inner
+                mom_half_n = project_onto_nullspace(mom_half_n, cache_n)
+                if self.check_reverse:
+                    pos_rev = pos_n - dt_inner * mom_half_n
+                    pos_rev = self.project_position(pos_rev, cache_n)
+                    check_reverse_in_tol(pos, pos_rev, cache, self.tol)
+                pos, cache, mom_half = pos_n, cache_n, mom_half_n
         mom = mom_half - 0.5 * dt * self.energy_grad(pos, cache)
         mom = project_onto_nullspace(mom, cache)
         return pos, mom, cache
@@ -385,10 +442,11 @@ def project_onto_constraint_surface(pos, cache, constr_func, tol=1e-8,
         iters += 1
     if diverging:
         logger.info('Quasi-Newton iteration diverged.')
-    elif not converged:
-        logger.info('Quasi-Newton iteration did not converge within max_iters.'
-                    ' Last max error: {0}'.format(np.max(np.abs(c))))
     if not converged and scipy_opt_fallback and constr_jacob:
+        logger.info(
+            'Quasi-Newton iteration did not converge within max_iters.\n'
+            'Last max error: {0}\n'.format(np.max(np.abs(c))) +
+            'Falling back to scipy.optimize.root(hybrj).')
 
         def pos_n(l):
             return pos_0 - dc_dpos_prev.T.dot(l)
@@ -410,8 +468,8 @@ def project_onto_constraint_surface(pos, cache, constr_func, tol=1e-8,
         if sol.success:
             pos = pos_0 - dc_dpos_prev.T.dot(sol.x)
         else:
-            raise ConvergenceError('scipy.root(hybrj)', max_iters, tol,
-                                   np.max(np.abs(sol.fun[-1])))
+            raise ConvergenceError('scipy.optimize.root(hybrj)', max_iters,
+                                   tol, np.max(np.abs(sol.fun[-1])))
     elif not converged:
         raise ConvergenceError('numpy symmetric Quasi-Newton', max_iters, tol,
                                np.max(np.abs(c)))
