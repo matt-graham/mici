@@ -66,7 +66,7 @@ class ConstrainedSamplerTestCase(object):
             dtype = np.float64
             tol = 1e-8
             max_iters = 100
-            sampler = chmc.ConstrainedIsotropicHmcSampler(
+            sampler = self.test_class(
                 energy_func=energy_func,
                 constr_func=constr_func,
                 energy_grad=None,
@@ -100,7 +100,7 @@ class ConstrainedSamplerTestCase(object):
         dtype = np.float64
         tol = 1e-8
         max_iters = 100
-        sampler = chmc.ConstrainedIsotropicHmcSampler(
+        sampler = self.test_class(
             energy_func=energy_func,
             constr_func=constr_func,
             energy_grad=energy_grad,
@@ -113,13 +113,28 @@ class ConstrainedSamplerTestCase(object):
 
         def do_reversible_check(n_dim, dt, n_step):
             pos_0, mom_0 = self.prng.normal(size=(2, n_dim))
-            pos_0[:2] = 0
-            mom_0[:2] = 0
+            constr_dim = sampler.constr_func(pos_0).shape[0]
+            rand_basis = self.prng.normal(size=(constr_dim, n_dim))
+            pos_0 = chmc.project_onto_constraint_surface(
+                pos_0, {'dc_dpos': rand_basis}, sampler.constr_func, tol=tol,
+                max_iters=sampler.max_iters, scipy_opt_fallback=True,
+                constr_jacob=sampler.constr_jacob)
+            cache = sampler.constr_jacob(pos_0, True)
+            mom_0 = chmc.project_onto_nullspace(mom_0, cache)
             assert np.max(np.abs(sampler.constr_func(pos_0))) < tol, (
                 'Initial position not satisfying constraint function.'
             )
+            assert np.max(np.abs(cache['dc_dpos'].dot(mom_0))) < tol, (
+                'Initial momentum not in constraint manifold tangent space.'
+            )
             pos_f, mom_f, cache_f = sampler.simulate_dynamic(
                 n_step, dt, pos_0, mom_0, {})
+            assert np.max(np.abs(sampler.constr_func(pos_f))) < tol, (
+                'Final position not satisfying constraint function.'
+            )
+            assert np.max(np.abs(cache_f['dc_dpos'].dot(mom_f))) < tol, (
+                'Final momentum not in constraint manifold tangent space.'
+            )
             pos_r, mom_r, cache_r = sampler.simulate_dynamic(
                 n_step, -dt, pos_f, mom_f, {})
             assert np.allclose(pos_0, pos_r) and np.allclose(mom_0, mom_r), (

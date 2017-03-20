@@ -28,7 +28,7 @@ class UnconstrainedSamplerTestCase(object):
     def test_init_with_energy_grad(self):
         mom_resample_coeff = 1.
         dtype = np.float64
-        sampler = uhmc.IsotropicHmcSampler(
+        sampler = self.test_class(
             energy_func=energy_func,
             energy_grad=energy_grad,
             prng=self.prng,
@@ -54,7 +54,7 @@ class UnconstrainedSamplerTestCase(object):
             )
 
     def test_dynamic_reversible(self):
-        sampler = uhmc.IsotropicHmcSampler(
+        sampler = self.test_class(
             energy_func=energy_func, energy_grad=energy_grad,
             prng=self.prng, dtype=np.float64)
 
