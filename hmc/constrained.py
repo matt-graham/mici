@@ -39,7 +39,7 @@ def check_reverse_in_tol(pos, pos_rev, cache, tol):
     # > The Devil is in the Detail: Hints for Practical Optimisation
     # > Christensen, Hurn and Lindsey (2008)
     p_dist = np.max(abs(pos - pos_rev))
-    if c_dist > tol or p_dist > tol**0.5:
+    if p_dist > tol**0.5:
         raise NonReversibleStepError(c_dist, p_dist, tol)
 
 
