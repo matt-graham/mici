@@ -12,7 +12,49 @@ except ImportError:
     autograd_available = False
 
 
-class SeparableHamiltonianSystem(object):
+class HamiltonianSystem(object):
+    """Base class for Hamiltonian systems."""
+
+    def __init__(self, pot_energy, grad_pot_energy=None):
+        self._pot_energy = pot_energy
+        if grad_pot_energy is None and autograd_available:
+            self._grad_pot_energy = grad(pot_energy)
+            self._val_and_grad_pot_energy = value_and_grad(pot_energy)
+        elif grad_pot_energy is None and not autograd_available:
+            raise ValueError('Autograd not available therefore grad_pot_energy'
+                             ' must be provided.')
+        else:
+            self._grad_pot_energy = grad_pot_energy
+            self._val_and_grad_pot_energy = None
+
+    def pot_energy(self, state):
+        if state.pot_energy is None:
+            state.pot_energy = self._pot_energy(state.pos)
+        return state.pot_energy
+
+    def grad_pot_energy(self, state):
+        if state.grad_pot_energy is None:
+            if self._val_and_grad_pot_energy is None:
+                state.grad_pot_energy = self._grad_pot_energy(state.pos)
+            else:
+                state.pot_energy, state.grad_pot_energy = (
+                    self._val_and_grad_pot_energy(state.pos))
+        return state.grad_pot_energy
+
+    def h(self, state):
+        raise NotImplementedError()
+
+    def dh_dpos(self, state):
+        raise NotImplementedError()
+
+    def dh_dmom(self, state):
+        raise NotImplementedError()
+
+    def sample_momentum(self, state, rng):
+        raise NotImplementedError()
+
+
+class SeparableHamiltonianSystem(HamiltonianSystem):
     """Base class for separable Hamiltonian systems.
 
     Here separable means that the Hamiltonian can be expressed as the sum of
@@ -21,55 +63,29 @@ class SeparableHamiltonianSystem(object):
     variables, typically denoted the kinetic energy.
     """
 
-    def __init__(self, pot_energy, pot_energy_grad=None):
-        self._pot_energy = pot_energy
-        if pot_energy_grad is None and autograd_available:
-            self._pot_energy_grad = grad(pot_energy)
-            self._pot_energy_val_and_grad = value_and_grad(pot_energy)
-        elif pot_energy_grad is None and not autograd_available:
-            raise ValueError('Autograd not available therefore pot_energy_grad'
-                             ' must be provided.')
-        else:
-            self._pot_energy_grad = pot_energy_grad
-            self._pot_energy_val_and_grad = None
-
-    def pot_energy(self, state):
-        if state.pot_energy_val is None:
-            state.pot_energy_val = self._pot_energy(state.pos)
-        return state.pot_energy_val
-
-    def pot_energy_grad(self, state):
-        if state.pot_energy_grad is None:
-            if self._pot_energy_val_and_grad is None:
-                state.pot_energy_grad = self._pot_energy_grad(state.pos)
-            else:
-                state.pot_energy_val, state.pot_energy_grad = (
-                    self._pot_energy_val_and_grad(state.pos))
-        return state.pot_energy_grad
-
     def kin_energy(self, state):
-        if state.kin_energy_val is None:
-            state.kin_energy_val = self._kin_energy(state.mom)
-        return state.kin_energy_val
+        if state.kin_energy is None:
+            state.kin_energy = self._kin_energy(state.mom)
+        return state.kin_energy
 
-    def kin_energy_grad(self, state):
-        if state.kin_energy_grad is None:
-            state.kin_energy_grad = self._kin_energy_grad(state.mom)
-        return state.kin_energy_grad
+    def grad_kin_energy(self, state):
+        if state.grad_kin_energy is None:
+            state.grad_kin_energy = self._grad_kin_energy(state.mom)
+        return state.grad_kin_energy
 
     def h(self, state):
         return self.pot_energy(state) + self.kin_energy(state)
 
     def dh_dpos(self, state):
-        return self.pot_energy_grad(state)
+        return self.grad_pot_energy(state)
 
     def dh_dmom(self, state):
-        return self.kin_energy_grad(state)
+        return self.grad_kin_energy(state)
 
     def _kin_energy(self, mom):
         raise NotImplementedError()
 
-    def _kin_energy_grad(self, mom):
+    def _grad_kin_energy(self, mom):
         raise NotImplementedError()
 
     def sample_momentum(self, state, rng):
@@ -83,13 +99,13 @@ class IsotropicEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
     a isotropic covariance zero-mean Gaussian marginal distribution.
     """
 
-    def __init__(self, pot_energy, pot_energy_grad=None):
-        super().__init__(pot_energy, pot_energy_grad)
+    def __init__(self, pot_energy, grad_pot_energy=None):
+        super().__init__(pot_energy, grad_pot_energy)
 
     def _kin_energy(self, mom):
         return 0.5 * np.sum(mom**2)
 
-    def _kin_energy_grad(self, mom):
+    def _grad_kin_energy(self, mom):
         return mom
 
     def sample_momentum(self, state, rng):
@@ -103,14 +119,14 @@ class DiagonalEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
     a zero-mean Gaussian marginal distribution with diagonal covariance matrix.
     """
 
-    def __init__(self, pot_energy, diag_metric, pot_energy_grad=None):
+    def __init__(self, pot_energy, diag_metric, grad_pot_energy=None):
+        super().__init__(pot_energy, grad_pot_energy)
         self.diag_metric = diag_metric
-        super().__init__(pot_energy, pot_energy_grad)
 
     def _kin_energy(self, mom):
         return 0.5 * np.sum(mom**2 / self.diag_metric)
 
-    def _kin_energy_grad(self, mom):
+    def _grad_kin_energy(self, mom):
         return mom / self.diag_metric
 
     def sample_momentum(self, state, rng):
@@ -124,15 +140,15 @@ class DenseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
     a zero-mean Gaussian marginal distribution with dense covariance matrix.
     """
 
-    def __init__(self, pot_energy, metric, pot_energy_grad=None):
+    def __init__(self, pot_energy, metric, grad_pot_energy=None):
+        super().__init__(pot_energy, grad_pot_energy)
         self.metric = metric
         self.chol_metric = sla.cholesky(metric, lower=True)
-        super().__init__(pot_energy, pot_energy_grad)
 
     def _kin_energy(self, mom):
-        return 0.5 * mom @ self._kin_energy_grad(mom)
+        return 0.5 * mom @ self._grad_kin_energy(mom)
 
-    def _kin_energy_grad(self, mom):
+    def _grad_kin_energy(self, mom):
         return sla.cho_solve((self.chol_metric, True), mom)
 
     def sample_momentum(self, state, rng):
