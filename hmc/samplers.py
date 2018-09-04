@@ -394,7 +394,10 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
             sum_mom += sum_mom_s
             if self.termination_criterion(state_l, state_r, sum_mom):
                 break
-        stats['accept_prob'] = stats['sum_acc_prob'] / stats['n_step']
+        if stats['n_step'] > 0:
+            stats['accept_prob'] = stats['sum_acc_prob'] / stats['n_step']
+        else:
+            stats['accept_prob'] = 0.
         stats['hamiltonian'] = self.system.h(state_n)
         stats['tree_depth'] = depth
         return state_n, stats
