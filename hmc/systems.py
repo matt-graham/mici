@@ -7,7 +7,7 @@ import scipy.optimize as opt
 
 autograd_available = True
 try:
-    from autograd import grad, value_and_grad, jacobian
+    from autograd import grad, value_and_grad, jacobian, make_vjp
 except ImportError:
     autograd_available = False
 
@@ -197,11 +197,17 @@ class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
 class DenseRiemannianMetricHamiltonianSystem(
             BaseRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, grad_pot_energy=None, metric=None,
+    def __init__(self, pot_energy, metric, grad_pot_energy=None,
                  vjp_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._metric = metric
-        self._vjp_metric = vjp_metric
+        if vjp_metric is None and autograd_available:
+            self._vjp_metric = make_vjp(metric)
+        elif vjp_metric is None and not autograd_available:
+            raise ValueError('Autograd not available therefore vjp_metric'
+                             ' must be provided.')
+        else:
+            self._vjp_metric = vjp_metric
 
     def dh1_dpos(self, state):
         inv_metric = self.inv_metric(state)
@@ -240,11 +246,17 @@ class DenseRiemannianMetricHamiltonianSystem(
 class FactoredRiemannianMetricHamiltonianSystem(
             BaseRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, grad_pot_energy=None, chol_metric=None,
+    def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
                  vjp_chol_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._chol_metric = chol_metric
-        self._vjp_chol_metric = vjp_chol_metric
+        if vjp_chol_metric is None and autograd_available:
+            self._vjp_chol_metric = make_vjp(chol_metric)
+        elif vjp_chol_metric is None and not autograd_available:
+            raise ValueError('Autograd not available therefore vjp_chol_metric'
+                             ' must be provided.')
+        else:
+            self._vjp_chol_metric = vjp_chol_metric
 
     def dh1_dpos(self, state):
         inv_chol_metric = self.inv_chol_metric(state)
