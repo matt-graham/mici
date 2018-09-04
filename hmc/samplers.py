@@ -332,7 +332,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
                         f'(delta_h = {hamiltonian - h_init:.1e}).')
             except RuntimeError as e:
                 logger.warning(
-                    f'Terminating build_tree due to integrator error: {e.msg}')
+                    f'Terminating build_tree due to integrator error: {e!s}')
                 state = None
                 terminate = True
             return terminate, state, state, state
