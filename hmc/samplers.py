@@ -117,8 +117,14 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
     def _sample_dynamics_transition(self, state, n_step):
         h_init = self.system.h(state)
         state_p = state
-        for s in range(n_step):
-            state_p = self.integrator.step(state_p)
+        try:
+            for s in range(n_step):
+                state_p = self.integrator.step(state_p)
+        except RuntimeError as e:
+            logger.warning(
+                f'Terminating trajectory due to integrator error: {e!s}')
+            return state, {
+                'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
         state_p.direction *= -1
         h_final = self.system.h(state_p)
         accept_prob = min(1, np.exp(h_init - h_final))
