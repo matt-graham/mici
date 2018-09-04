@@ -29,11 +29,12 @@ class LeapfrogIntegrator(object):
 class GeneralisedLeapfrogIntegrator(object):
     """Implicit leapfrog integrator for non-separable Hamiltonian systems."""
 
-    def __init__(self, system, step_size,
+    def __init__(self, system, step_size, reverse_check_tol=1e-8,
                  fixed_point_solver=solve_fixed_point_direct,
                  **fixed_point_solver_kwargs):
         self.system = system
         self.step_size = step_size
+        self.reverse_check_tol = reverse_check_tol
         self.fixed_point_solver = fixed_point_solver
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
@@ -52,24 +53,28 @@ class GeneralisedLeapfrogIntegrator(object):
         state.mom = self.solve_fixed_point(fixed_point_func, mom_init)
 
     def step_b2(self, state, dt):
-        mom_init = state.mom
-        state.mom = state.mom - dt * self.system.dh2_dpos(state)
-        mom_rev = self.step_b1(state, -dt)
-        rev_diff = max_abs(mom_rev - mom_init)
-        if rev_diff > 2 * self.tol:
+        mom_init = state.mom.copy()
+        state.mom -= dt * self.system.dh2_dpos(state)
+        mom_fwd = state.mom.copy()
+        self.step_b1(state, -dt)
+        rev_diff = max_abs(state.mom - mom_init)
+        if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
-                f'Non-reversible step. Difference between initial and '
-                f'forward-backward momentum = {rev_diff:.1e}')
+                f'Non-reversible step. Maximum difference between initial and '
+                f'forward-backward integrated momentum = {rev_diff:.1e}.')
+        state.mom = mom_fwd
 
     def step_c1(self, state, dt):
-        pos_init = state.pos
-        state.pos = state.pos + dt * self.system.dh_dmom(state)
-        pos_rev = self.step_c2(state, -dt)
-        rev_diff = max_abs(pos_rev - pos_init)
-        if rev_diff > 2 * self.tol:
+        pos_init = state.pos.copy()
+        state.pos += dt * self.system.dh_dmom(state)
+        pos_fwd = state.pos.copy()
+        self.step_c2(state, -dt)
+        rev_diff = max_abs(state.pos - pos_init)
+        if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
                 f'Non-reversible step. Difference between initial and '
-                f'forward-backward position = {rev_diff:.1e}')
+                f'forward-backward integrated position = {rev_diff:.1e}.')
+        state.pos = pos_fwd
 
     def step_c2(self, state, dt):
         def fixed_point_func(pos):
