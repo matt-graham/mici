@@ -1,6 +1,7 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
 from hmc.utils import max_abs
+import numpy as np
 
 
 class ConvergenceError(RuntimeError):
@@ -24,6 +25,9 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100):
     """
     for i in range(max_iters):
         x = func(x0)
+        if any(np.isnan(x)) or any(np.isinf(x)):
+            raise ConvergenceError(
+                f'Fixed point iteration diverged, last error {error:.1e}.')
         error = max_abs(x - x0)
         if error < tol:
             return x
@@ -58,6 +62,9 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100):
         x1 = func(x0)
         x2 = func(x1)
         x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+        if any(np.isnan(x)) or any(np.isinf(x)):
+            raise ConvergenceError(
+                f'Fixed point iteration diverged, last error {error:.1e}.')
         error = max_abs(x - x0)
         if error < tol:
             return x
