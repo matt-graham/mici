@@ -153,3 +153,127 @@ class DenseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
 
     def sample_momentum(self, state, rng):
         return self.chol_metric @ rng.normal(size=state.pos.shape)
+
+
+class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
+
+    def h(self, state):
+        return self.h1(state) + self.h2(state)
+
+    def h1(self, state):
+        chol_metric = self.chol_metric(state)
+        return self.pot_energy(state) + np.sum(np.log(chol_metric.diagonal()))
+
+    def h2(self, state):
+        return 0.5 * state.mom @ self.inv_metric_mom(state)
+
+    def dh1_dpos(self, state):
+        raise NotImplementedError()
+
+    def dh2_dpos(self, state):
+        raise NotImplementedError()
+
+    def inv_metric_mom(self, state):
+        if state.inv_metric_mom is None:
+            chol_metric = self.chol_metric(state)
+            state.inv_metric_mom = sla.cho_solve(
+                (chol_metric, True), state.mom)
+        return state.inv_metric_mom
+
+    def chol_metric(self, state):
+        raise NotImplementedError()
+
+    def dh_dpos(self, state):
+        return self.dh1_dpos(state) + self.dh2_dpos(state)
+
+    def dh_dmom(self, state):
+        return self.inv_metric_mom(state)
+
+    def sample_momentum(self, state, rng):
+        chol_metric = self.chol_metric(state)
+        return chol_metric @ rng.normal(size=state.pos.shape)
+
+
+class DenseRiemannianMetricHamiltonianSystem(
+            BaseRiemannianMetricHamiltonianSystem):
+
+    def __init__(self, pot_energy, grad_pot_energy=None, metric=None,
+                 vjp_metric=None):
+        super().__init__(pot_energy, grad_pot_energy)
+        self._metric = metric
+        self._vjp_metric = vjp_metric
+
+    def dh1_dpos(self, state):
+        inv_metric = self.inv_metric(state)
+        return (
+            self.grad_pot_energy(state) +
+            0.5 * self.vjp_metric(state)(inv_metric))
+
+    def dh2_dpos(self, state):
+        inv_metric_mom = self.inv_metric_mom(state)
+        inv_metric_mom_outer = np.outer(inv_metric_mom, inv_metric_mom)
+        return -0.5 * self.vjp_metric(state)(inv_metric_mom_outer)
+
+    def metric(self, state):
+        if state.metric is None:
+            state.metric = self._metric(state.pos)
+        return state.metric
+
+    def inv_metric(self, state):
+        if state.inv_metric is None:
+            chol_metric = self.chol_metric(state)
+            state.inv_metric = sla.cho_solve(
+                (chol_metric, True), np.eye(state.n_dim))
+        return state.inv_metric
+
+    def vjp_metric(self, state):
+        if state.vjp_metric is None:
+            state.vjp_metric, state.metric = self._vjp_metric(state.pos)
+        return state.vjp_metric
+
+    def chol_metric(self, state):
+        if state.chol_metric is None:
+            state.chol_metric = sla.cholesky(self.metric(state), True)
+        return state.chol_metric
+
+
+class FactoredRiemannianMetricHamiltonianSystem(
+            BaseRiemannianMetricHamiltonianSystem):
+
+    def __init__(self, pot_energy, grad_pot_energy=None, chol_metric=None,
+                 vjp_chol_metric=None):
+        super().__init__(pot_energy, grad_pot_energy)
+        self._chol_metric = chol_metric
+        self._vjp_chol_metric = vjp_chol_metric
+
+    def dh1_dpos(self, state):
+        inv_chol_metric = self.inv_chol_metric(state)
+        return (
+            self.grad_pot_energy(state) +
+            self.vjp_chol_metric(state)(inv_chol_metric.T))
+
+    def dh2_dpos(self, state):
+        chol_metric = self.chol_metric(state)
+        inv_chol_metric_mom = sla.solve_triangular(
+            chol_metric, state.mom, lower=True)
+        inv_metric_mom = self.inv_metric_mom(state)
+        inv_metric_mom_outer = np.outer(inv_metric_mom, inv_chol_metric_mom)
+        return -self.vjp_chol_metric(state)(inv_metric_mom_outer)
+
+    def chol_metric(self, state):
+        if state.chol_metric is None:
+            state.chol_metric = self._chol_metric(state.pos)
+        return state.chol_metric
+
+    def inv_chol_metric(self, state):
+        if state.inv_chol_metric is None:
+            chol_metric = self.chol_metric(state)
+            state.inv_chol_metric = sla.solve_triangular(
+                chol_metric, np.eye(state.n_dim), lower=True)
+        return state.inv_chol_metric
+
+    def vjp_chol_metric(self, state):
+        if state.vjp_chol_metric is None:
+            state.vjp_chol_metric, state.chol_metric = self._vjp_chol_metric(
+                state.pos)
+        return state.vjp_chol_metric

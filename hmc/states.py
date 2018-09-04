@@ -79,3 +79,40 @@ class SeparableHamiltonianState(BaseHamiltonianState):
         self._mom = value
         self.kin_energy = None
         self.grad_kin_energy = None
+
+
+class RiemannianHamiltonianState(BaseHamiltonianState):
+    """State of a Riemmanian manifold Hamiltonian system."""
+
+    def __init__(self, pos, mom, direction=1, pot_energy=None,
+                 grad_pot_energy=None, metric=None, chol_metric=None,
+                 inv_metric=None, inv_metric_mom=None, vjp_metric=None,
+                 vjp_chol_metric=None, inv_chol_metric=None):
+        super().__init__(pos, mom, direction)
+        self.pot_energy = pot_energy
+        self.grad_pot_energy = grad_pot_energy
+        self.metric = metric
+        self.chol_metric = chol_metric
+        self.inv_metric = inv_metric
+        self.inv_metric_mom = inv_metric_mom
+        self.vjp_metric = vjp_metric
+        self.inv_chol_metric = inv_chol_metric
+        self.vjp_chol_metric = vjp_chol_metric
+
+    @BaseHamiltonianState.pos.setter
+    def pos(self, value):
+        self._pos = value
+        self.pot_energy = None
+        self.grad_pot_energy = None
+        self.metric = None
+        self.chol_metric = None
+        self.inv_metric = None
+        self.inv_metric_mom = None
+        self.vjp_metric = None
+        self.inv_chol_metric = None
+        self.vjp_chol_metric = None
+
+    @BaseHamiltonianState.mom.setter
+    def mom(self, value):
+        self._mom = value
+        self.inv_metric_mom = None
