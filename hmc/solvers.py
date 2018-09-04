@@ -27,7 +27,7 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100):
         error = max_abs(x - x0)
         if error < tol:
             return x
-        x = x0
+        x0 = x
     raise ConvergenceError(
         f'Fixed point iteration did not converge, last error {error:.1e}.')
 
@@ -61,6 +61,6 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100):
         error = max_abs(x - x0)
         if error < tol:
             return x
-        x = x0
+        x0 = x
     raise ConvergenceError(
         f'Fixed point iteration did not converge, last error {error:.1e}.')
