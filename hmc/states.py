@@ -13,10 +13,12 @@ class BaseHamiltonianState(object):
     these values are reused.
     """
 
-    def __init__(self, pos, mom, direction=1):
+    def __init__(self, pos, mom, dir=1):
         self._pos = pos
         self._mom = mom
-        self.direction = direction
+        self.dir = dir
+        self.dependencies = {'pos': [], 'mom': []}
+        self.cache = {}
 
     @property
     def n_dim(self):

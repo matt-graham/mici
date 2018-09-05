@@ -18,7 +18,7 @@ class LeapfrogIntegrator(object):
         self.step_size = step_size
 
     def step(self, state):
-        dt = state.direction * self.step_size
+        dt = state.dir * self.step_size
         state = state.deep_copy()
         state.mom -= 0.5 * dt * self.system.dh_dpos(state)
         state.pos += dt * self.system.dh_dmom(state)
@@ -83,8 +83,8 @@ class GeneralisedLeapfrogIntegrator(object):
         pos_init = state.pos
         state.pos = self.solve_fixed_point(fixed_point_func, pos_init)
 
-    def step(self, state, dir=1):
-        dt = 0.5 * dir * self.step_size
+    def step(self, state):
+        dt = 0.5 * state.dir * self.step_size
         state = state.deep_copy()
         self.step_a(state, dt)
         self.step_b1(state, dt)
@@ -140,8 +140,8 @@ class GeodesicLeapfrogIntegrator(object):
                     f'Non-reversible step. Difference between initial and '
                     f'forward-backward positions = {rev_diff:.1e}')
 
-    def step(self, state, dir=1):
-        dt = dir * self.step_size
+    def step(self, state):
+        dt = state.dir * self.step_size
         state = state.deep_copy()
         self.step_a(state, 0.5 * dt)
         self.step_b(state, dt)

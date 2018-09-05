@@ -125,12 +125,12 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
                 f'Terminating trajectory due to integrator error: {e!s}')
             return state, {
                 'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
-        state_p.direction *= -1
+        state_p.dir *= -1
         h_final = self.system.h(state_p)
         accept_prob = min(1, np.exp(h_init - h_final))
         if self.rng.uniform() < accept_prob:
             state = state_p
-        state.direction *= -1
+        state.dir *= -1
         stats = {'hamiltonian': self.system.h(state),
                  'accept_prob': accept_prob, 'n_step': n_step}
         return state, stats
@@ -368,8 +368,8 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         stats = {'n_step': 0, 'divergent': False, 'sum_acc_prob': 0.}
         state_n, state_l, state_r = state, state.copy(), state.copy()
         # set integration directions of initial left and right tree leaves
-        state_l.direction = -1
-        state_r.direction = +1
+        state_l.dir = -1
+        state_r.dir = +1
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
             direction = 2 * (self.rng.uniform() < 0.5) - 1
