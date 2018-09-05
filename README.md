@@ -20,7 +20,8 @@ Samplers
 Hamiltonian systems
 
   * Euclidean-metric systems - isotropic, diagonal and dense metrics
-  * Riemannian-metric systems (Girolami and Calderhead, 2011)
+  * Riemannian-metric systems (Girolami and Calderhead, 2011) inluding the
+    log density Hessian based *SoftAbs* metric (Betancourt, 2013)
   * Euclidean-metric systems subject to holonomic constraints (Hartmann and
     Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and
     Stoltz, 2018)
@@ -33,10 +34,9 @@ Numerical integrators
 
 ## To do
 
+  * Static multinomial sampler (Betancourt, 2017)
   * Dynamic integration time using slice sampling (Hoffman and Gelman, 2014)
   * Dual-averaging step-size adaptation (Hoffman and Gelman, 2014)
-  * Static multinomial sampler (Betancourt, 2017)
-  * SoftAbs Riemannian metric (Betancourt, 2013)
   * Windowed sampling (Neal, 1994)
   * Look-Ahead HMC (Sohl-Dickenstein et al., 2014)
   * Exponential integration (Chao et al., 2015)

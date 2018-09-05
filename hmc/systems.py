@@ -7,7 +7,7 @@ import scipy.optimize as opt
 
 autograd_available = True
 try:
-    from autograd import grad, value_and_grad, jacobian, make_vjp
+    from autograd import grad, value_and_grad, hessian, make_vjp
 except ImportError:
     autograd_available = False
 
@@ -312,3 +312,75 @@ class FactoredRiemannianMetricHamiltonianSystem(
             state.vjp_chol_metric, state.chol_metric = self._vjp_chol_metric(
                 state.pos)
         return state.vjp_chol_metric
+
+
+class SoftAbsRiemannianMetricHamiltonianSystem(
+            BaseRiemannianMetricHamiltonianSystem):
+
+    def __init__(self, pot_energy, softabs_coeff=1., grad_pot_energy=None,
+                 hess_pot_energy=None, vjp_hess_pot_energy=None):
+        super().__init__(pot_energy, grad_pot_energy)
+        self.softabs_coeff = softabs_coeff
+        if hess_pot_energy is None and autograd_available:
+            self._hess_pot_energy = hessian(pot_energy)
+        elif hess_pot_energy is None and not autograd_available:
+            raise ValueError('Autograd not available therefore hess_pot_energy'
+                             ' must be provided.')
+        else:
+            self._hess_pot_energy = hess_pot_energy
+        if vjp_hess_pot_energy is None and autograd_available:
+            self._vjp_hess_pot_energy = make_vjp(self._hess_pot_energy)
+        elif vjp_hess_pot_energy is None and not autograd_available:
+            raise ValueError('Autograd not available therefore '
+                             'vjp_hess_pot_energy must be provided.')
+        else:
+            self._vjp_hess_pot_energy = vjp_hess_pot_energy
+
+    def softabs(self, x):
+        return x / np.tanh(x * self.softabs_coeff)
+
+    def grad_softabs(self, x):
+        return (
+            1. / np.tanh(self.softabs_coeff * x) -
+            self.softabs_coeff * x / np.sinh(self.softabs_coeff * x)**2)
+
+    def hess_pot_energy(self, state):
+        return self._hess_pot_energy(state.pos)
+
+    def vjp_hess_pot_energy(self, state):
+        return self._vjp_hess_pot_energy(state.pos)[0]
+
+    def eig_metric(self, state):
+        hess = self.hess_pot_energy(state)
+        hess_eigval, eigvec = sla.eigh(hess)
+        metric_eigval = self.softabs(hess_eigval)
+        return metric_eigval, hess_eigval, eigvec
+
+    def sqrt_metric(self, state):
+        metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
+        return eigvec * metric_eigval**0.5
+
+    def log_det_sqrt_metric(self, state):
+        metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
+        return 0.5 * np.log(metric_eigval).sum()
+
+    def grad_log_det_sqrt_metric(self, state):
+        metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
+        return 0.5 * self.vjp_hess_pot_energy(state)(
+            eigvec * self.grad_softabs(hess_eigval) / metric_eigval @ eigvec.T)
+
+    def inv_metric_mom(self, state):
+        metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
+        return (eigvec / metric_eigval) @ (eigvec.T @ state.mom)
+
+    def grad_mom_inv_metric_mom(self, state):
+        metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
+        num_j_mtx = metric_eigval[:, None] - metric_eigval[None, :]
+        num_j_mtx += np.diag(self.grad_softabs(hess_eigval))
+        den_j_mtx = hess_eigval[:, None] - hess_eigval[None, :]
+        np.fill_diagonal(den_j_mtx, 1)
+        j_mtx = num_j_mtx / den_j_mtx
+        eigvec_mom = (eigvec.T @ state.mom) / metric_eigval
+        return -self.vjp_hess_pot_energy(state)(
+            eigvec @ (np.outer(eigvec_mom, eigvec_mom) * j_mtx) @ eigvec.T)
+
