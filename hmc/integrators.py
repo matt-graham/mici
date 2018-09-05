@@ -138,7 +138,7 @@ class GeodesicLeapfrogIntegrator(object):
             if rev_diff > 2 * self.tol:
                 raise IntegratorError(
                     f'Non-reversible step. Difference between initial and '
-                    f'forward-backward positions = {rev_diff:.1e}')
+                    f'forward-backward positions = {rev_diff:.1e}.')
 
     def step(self, state):
         dt = state.dir * self.step_size
