@@ -157,31 +157,37 @@ class DenseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
 
 class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
 
+    def sqrt_metric(self, state):
+        raise NotImplementedError()
+
+    def log_det_sqrt_metric(self, state):
+        raise NotImplementedError()
+
+    def grad_log_det_sqrt_metric(self, state):
+        raise NotImplementedError()
+
+    def grad_mom_inv_metric_mom(self, state):
+        raise NotImplementedError()
+
+    def inv_metric_mom(self, state):
+        raise NotImplementedError()
+
     def h(self, state):
         return self.h1(state) + self.h2(state)
 
     def h1(self, state):
-        chol_metric = self.chol_metric(state)
-        return self.pot_energy(state) + np.sum(np.log(chol_metric.diagonal()))
+        return self.pot_energy(state) + self.log_det_sqrt_metric(state)
 
     def h2(self, state):
         return 0.5 * state.mom @ self.inv_metric_mom(state)
 
     def dh1_dpos(self, state):
-        raise NotImplementedError()
+        return (
+            self.grad_pot_energy(state) +
+            self.grad_log_det_sqrt_metric(state))
 
     def dh2_dpos(self, state):
-        raise NotImplementedError()
-
-    def inv_metric_mom(self, state):
-        if state.inv_metric_mom is None:
-            chol_metric = self.chol_metric(state)
-            state.inv_metric_mom = sla.cho_solve(
-                (chol_metric, True), state.mom)
-        return state.inv_metric_mom
-
-    def chol_metric(self, state):
-        raise NotImplementedError()
+        return 0.5 * self.grad_mom_inv_metric_mom(state)
 
     def dh_dpos(self, state):
         return self.dh1_dpos(state) + self.dh2_dpos(state)
@@ -190,12 +196,33 @@ class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
         return self.inv_metric_mom(state)
 
     def sample_momentum(self, state, rng):
+        sqrt_metric = self.sqrt_metric(state)
+        return sqrt_metric @ rng.normal(size=state.pos.shape)
+
+
+class BaseCholeskyRiemannianMetricHamiltonianSystem(
+        BaseRiemannianMetricHamiltonianSystem):
+
+    def chol_metric(self, state):
+        raise NotImplementedError()
+
+    def log_det_sqrt_metric(self, state):
         chol_metric = self.chol_metric(state)
-        return chol_metric @ rng.normal(size=state.pos.shape)
+        return np.log(chol_metric.diagonal()).sum()
+
+    def inv_metric_mom(self, state):
+        if state.inv_metric_mom is None:
+            chol_metric = self.chol_metric(state)
+            state.inv_metric_mom = sla.cho_solve(
+                (chol_metric, True), state.mom)
+        return state.inv_metric_mom
+
+    def sqrt_metric(self, state):
+        return self.chol_metric(state)
 
 
 class DenseRiemannianMetricHamiltonianSystem(
-            BaseRiemannianMetricHamiltonianSystem):
+            BaseCholeskyRiemannianMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, metric, grad_pot_energy=None,
                  vjp_metric=None):
@@ -209,21 +236,24 @@ class DenseRiemannianMetricHamiltonianSystem(
         else:
             self._vjp_metric = vjp_metric
 
-    def dh1_dpos(self, state):
+    def grad_log_det_sqrt_metric(self, state):
         inv_metric = self.inv_metric(state)
-        return (
-            self.grad_pot_energy(state) +
-            0.5 * self.vjp_metric(state)(inv_metric))
+        return 0.5 * self.vjp_metric(state)(inv_metric)
 
-    def dh2_dpos(self, state):
+    def grad_mom_inv_metric_mom(self, state):
         inv_metric_mom = self.inv_metric_mom(state)
         inv_metric_mom_outer = np.outer(inv_metric_mom, inv_metric_mom)
-        return -0.5 * self.vjp_metric(state)(inv_metric_mom_outer)
+        return -self.vjp_metric(state)(inv_metric_mom_outer)
 
     def metric(self, state):
         if state.metric is None:
             state.metric = self._metric(state.pos)
         return state.metric
+
+    def chol_metric(self, state):
+        if state.chol_metric is None:
+            state.chol_metric = sla.cholesky(self.metric(state), True)
+        return state.chol_metric
 
     def inv_metric(self, state):
         if state.inv_metric is None:
@@ -237,14 +267,9 @@ class DenseRiemannianMetricHamiltonianSystem(
             state.vjp_metric, state.metric = self._vjp_metric(state.pos)
         return state.vjp_metric
 
-    def chol_metric(self, state):
-        if state.chol_metric is None:
-            state.chol_metric = sla.cholesky(self.metric(state), True)
-        return state.chol_metric
-
 
 class FactoredRiemannianMetricHamiltonianSystem(
-            BaseRiemannianMetricHamiltonianSystem):
+            BaseCholeskyRiemannianMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
                  vjp_chol_metric=None):
@@ -258,19 +283,17 @@ class FactoredRiemannianMetricHamiltonianSystem(
         else:
             self._vjp_chol_metric = vjp_chol_metric
 
-    def dh1_dpos(self, state):
+    def grad_log_det_sqrt_metric(self, state):
         inv_chol_metric = self.inv_chol_metric(state)
-        return (
-            self.grad_pot_energy(state) +
-            self.vjp_chol_metric(state)(inv_chol_metric.T))
+        return self.vjp_chol_metric(state)(inv_chol_metric.T)
 
-    def dh2_dpos(self, state):
+    def grad_mom_inv_metric_mom(self, state):
         chol_metric = self.chol_metric(state)
         inv_chol_metric_mom = sla.solve_triangular(
             chol_metric, state.mom, lower=True)
         inv_metric_mom = self.inv_metric_mom(state)
         inv_metric_mom_outer = np.outer(inv_metric_mom, inv_chol_metric_mom)
-        return -self.vjp_chol_metric(state)(inv_metric_mom_outer)
+        return -2 * self.vjp_chol_metric(state)(inv_metric_mom_outer)
 
     def chol_metric(self, state):
         if state.chol_metric is None:
