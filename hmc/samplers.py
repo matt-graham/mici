@@ -4,6 +4,11 @@ import logging
 import numpy as np
 from hmc.utils import LogRepFloat
 from hmc.integrators import IntegratorError
+try:
+    import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -75,13 +80,18 @@ class BaseHamiltonianMonteCarlo(object):
             var = chain_func(state)
             var_chains.append(np.empty((n_sample,) + var.shape))
             var_chains[-1][0] = var
-        for s in range(1, n_sample):
+        if TQDM_AVAILABLE:
+            s_range = tqdm.trange(
+                n_sample - 1, desc='Running chain', unit='it')
+        else:
+            s_range = range(n_sample - 1)
+        for s in s_range:
             state = self.sample_momentum_transition(state)
             state, trans_stats = self.sample_dynamics_transition(state)
-            self.update_chain_stats(s, chain_stats, trans_stats)
+            self.update_chain_stats(s + 1, chain_stats, trans_stats)
             for chain_func, var_chain in zip(chain_var_funcs, var_chains):
-                var_chain[s] = chain_func(state)
-        return var_chains, chain_stats
+                var_chain[s + 1] = chain_func(state)
+        return var_chains + [chain_stats]
 
 
 class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
