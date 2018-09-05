@@ -2,7 +2,7 @@
 
 import numpy as np
 import scipy.linalg as sla
-from hmc.solvers import solve_fixed_point_direct, solve_fixed_point_steffensen
+from hmc.solvers import solve_fixed_point_direct
 from hmc.utils import max_abs
 
 
