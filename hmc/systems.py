@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import scipy.linalg as sla
 import scipy.optimize as opt
+from hmc.states import cache_in_state, multi_cache_in_state
 
 autograd_available = True
 try:
@@ -15,31 +16,23 @@ except ImportError:
 class HamiltonianSystem(object):
     """Base class for Hamiltonian systems."""
 
-    def __init__(self, pot_energy, grad_pot_energy=None):
+    def __init__(self, pot_energy, val_and_grad_pot_energy=None):
         self._pot_energy = pot_energy
-        if grad_pot_energy is None and autograd_available:
-            self._grad_pot_energy = grad(pot_energy)
+        if val_and_grad_pot_energy is None and autograd_available:
             self._val_and_grad_pot_energy = value_and_grad(pot_energy)
-        elif grad_pot_energy is None and not autograd_available:
-            raise ValueError('Autograd not available therefore grad_pot_energy'
-                             ' must be provided.')
+        elif val_and_grad_pot_energy is None and not autograd_available:
+            raise ValueError('Autograd not available therefore '
+                             'val_and_grad_pot_energy must be provided.')
         else:
-            self._grad_pot_energy = grad_pot_energy
-            self._val_and_grad_pot_energy = None
+            self._val_and_grad_pot_energy = val_and_grad_pot_energy
 
+    @cache_in_state('pos')
     def pot_energy(self, state):
-        if state.pot_energy is None:
-            state.pot_energy = self._pot_energy(state.pos)
-        return state.pot_energy
+        return self._pot_energy(state.pos)
 
+    @multi_cache_in_state(['pos'], ['pot_energy', 'grad_pot_energy'], 1)
     def grad_pot_energy(self, state):
-        if state.grad_pot_energy is None:
-            if self._val_and_grad_pot_energy is None:
-                state.grad_pot_energy = self._grad_pot_energy(state.pos)
-            else:
-                state.pot_energy, state.grad_pot_energy = (
-                    self._val_and_grad_pot_energy(state.pos))
-        return state.grad_pot_energy
+        return self._val_and_grad_pot_energy(state.pos)
 
     def h(self, state):
         raise NotImplementedError()
@@ -63,15 +56,13 @@ class SeparableHamiltonianSystem(HamiltonianSystem):
     variables, typically denoted the kinetic energy.
     """
 
+    @cache_in_state('mom')
     def kin_energy(self, state):
-        if state.kin_energy is None:
-            state.kin_energy = self._kin_energy(state.mom)
-        return state.kin_energy
+        return self._kin_energy(state.mom)
 
+    @cache_in_state('mom')
     def grad_kin_energy(self, state):
-        if state.grad_kin_energy is None:
-            state.grad_kin_energy = self._grad_kin_energy(state.mom)
-        return state.grad_kin_energy
+        return self._grad_kin_energy(state.mom)
 
     def h(self, state):
         return self.pot_energy(state) + self.kin_energy(state)
@@ -206,16 +197,15 @@ class BaseCholeskyRiemannianMetricHamiltonianSystem(
     def chol_metric(self, state):
         raise NotImplementedError()
 
+    @cache_in_state('pos')
     def log_det_sqrt_metric(self, state):
         chol_metric = self.chol_metric(state)
         return np.log(chol_metric.diagonal()).sum()
 
+    @cache_in_state('pos', 'mom')
     def inv_metric_mom(self, state):
-        if state.inv_metric_mom is None:
-            chol_metric = self.chol_metric(state)
-            state.inv_metric_mom = sla.cho_solve(
-                (chol_metric, True), state.mom)
-        return state.inv_metric_mom
+        chol_metric = self.chol_metric(state)
+        return sla.cho_solve((chol_metric, True), state.mom)
 
     def sqrt_metric(self, state):
         return self.chol_metric(state)
@@ -225,68 +215,67 @@ class DenseRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, metric, grad_pot_energy=None,
-                 vjp_metric=None):
+                 vjp_and_val_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._metric = metric
-        if vjp_metric is None and autograd_available:
-            self._vjp_metric = make_vjp(metric)
-        elif vjp_metric is None and not autograd_available:
-            raise ValueError('Autograd not available therefore vjp_metric'
-                             ' must be provided.')
+        if vjp_and_val_metric is None and autograd_available:
+            self._vjp_and_val_metric = make_vjp(metric)
+        elif vjp_and_val_metric is None and not autograd_available:
+            raise ValueError('Autograd not available therefore '
+                             'vjp_and_val_metric must be provided.')
         else:
-            self._vjp_metric = vjp_metric
+            self._vjp_and_val_metric = vjp_and_val_metric
 
+    @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
         inv_metric = self.inv_metric(state)
         return 0.5 * self.vjp_metric(state)(inv_metric)
 
+    @cache_in_state('pos', 'mom')
     def grad_mom_inv_metric_mom(self, state):
         inv_metric_mom = self.inv_metric_mom(state)
         inv_metric_mom_outer = np.outer(inv_metric_mom, inv_metric_mom)
         return -self.vjp_metric(state)(inv_metric_mom_outer)
 
+    @cache_in_state('pos')
     def metric(self, state):
-        if state.metric is None:
-            state.metric = self._metric(state.pos)
-        return state.metric
+        return self._metric(state.pos)
 
+    @cache_in_state('pos')
     def chol_metric(self, state):
-        if state.chol_metric is None:
-            state.chol_metric = sla.cholesky(self.metric(state), True)
-        return state.chol_metric
+        return sla.cholesky(self.metric(state), True)
 
+    @cache_in_state('pos')
     def inv_metric(self, state):
-        if state.inv_metric is None:
-            chol_metric = self.chol_metric(state)
-            state.inv_metric = sla.cho_solve(
-                (chol_metric, True), np.eye(state.n_dim))
-        return state.inv_metric
+        chol_metric = self.chol_metric(state)
+        return sla.cho_solve((chol_metric, True), np.eye(state.n_dim))
 
+    @multi_cache_in_state(['pos'], ['vjp_metric', 'metric'])
     def vjp_metric(self, state):
-        if state.vjp_metric is None:
-            state.vjp_metric, state.metric = self._vjp_metric(state.pos)
-        return state.vjp_metric
+        return self._vjp_and_val_metric(state.pos)
 
 
 class FactoredRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
-                 vjp_chol_metric=None):
+                 vjp_and_val_chol_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._chol_metric = chol_metric
-        if vjp_chol_metric is None and autograd_available:
-            self._vjp_chol_metric = make_vjp(chol_metric)
-        elif vjp_chol_metric is None and not autograd_available:
-            raise ValueError('Autograd not available therefore vjp_chol_metric'
-                             ' must be provided.')
+        if vjp_and_val_chol_metric is None and autograd_available:
+            self._vjp_and_val_chol_metric = make_vjp(chol_metric)
+        elif vjp_and_val_chol_metric is None and not autograd_available:
+            raise ValueError('Autograd not available therefore '
+                             'vjp_and_val_chol_metric must be provided.')
         else:
-            self._vjp_chol_metric = vjp_chol_metric
+            self._vjp_and_val_chol_metric = vjp_and_val_chol_metric
 
+    @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
         inv_chol_metric = self.inv_chol_metric(state)
         return self.vjp_chol_metric(state)(inv_chol_metric.T)
 
+    @cache_in_state('pos', 'mom')
     def grad_mom_inv_metric_mom(self, state):
         chol_metric = self.chol_metric(state)
         inv_chol_metric_mom = sla.solve_triangular(
@@ -295,23 +284,19 @@ class FactoredRiemannianMetricHamiltonianSystem(
         inv_metric_mom_outer = np.outer(inv_metric_mom, inv_chol_metric_mom)
         return -2 * self.vjp_chol_metric(state)(inv_metric_mom_outer)
 
+    @cache_in_state('pos')
     def chol_metric(self, state):
-        if state.chol_metric is None:
-            state.chol_metric = self._chol_metric(state.pos)
-        return state.chol_metric
+        return self._chol_metric(state.pos)
 
+    @cache_in_state('pos')
     def inv_chol_metric(self, state):
-        if state.inv_chol_metric is None:
-            chol_metric = self.chol_metric(state)
-            state.inv_chol_metric = sla.solve_triangular(
-                chol_metric, np.eye(state.n_dim), lower=True)
-        return state.inv_chol_metric
+        chol_metric = self.chol_metric(state)
+        return sla.solve_triangular(
+            chol_metric, np.eye(state.n_dim), lower=True)
 
+    @multi_cache_in_state(['pos'], ['vjp_metric', 'metric'])
     def vjp_chol_metric(self, state):
-        if state.vjp_chol_metric is None:
-            state.vjp_chol_metric, state.chol_metric = self._vjp_chol_metric(
-                state.pos)
-        return state.vjp_chol_metric
+        return self._vjp_and_val_chol_metric(state.pos)
 
 
 class SoftAbsRiemannianMetricHamiltonianSystem(
@@ -344,35 +329,43 @@ class SoftAbsRiemannianMetricHamiltonianSystem(
             1. / np.tanh(self.softabs_coeff * x) -
             self.softabs_coeff * x / np.sinh(self.softabs_coeff * x)**2)
 
+    @cache_in_state('pos')
     def hess_pot_energy(self, state):
         return self._hess_pot_energy(state.pos)
 
+    @cache_in_state('pos')
     def vjp_hess_pot_energy(self, state):
         return self._vjp_hess_pot_energy(state.pos)[0]
 
+    @cache_in_state('pos')
     def eig_metric(self, state):
         hess = self.hess_pot_energy(state)
         hess_eigval, eigvec = sla.eigh(hess)
         metric_eigval = self.softabs(hess_eigval)
         return metric_eigval, hess_eigval, eigvec
 
+    @cache_in_state('pos')
     def sqrt_metric(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
         return eigvec * metric_eigval**0.5
 
+    @cache_in_state('pos')
     def log_det_sqrt_metric(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
         return 0.5 * np.log(metric_eigval).sum()
 
+    @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
         return 0.5 * self.vjp_hess_pot_energy(state)(
             eigvec * self.grad_softabs(hess_eigval) / metric_eigval @ eigvec.T)
 
+    @cache_in_state('pos', 'mom')
     def inv_metric_mom(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
         return (eigvec / metric_eigval) @ (eigvec.T @ state.mom)
 
+    @cache_in_state('pos', 'mom')
     def grad_mom_inv_metric_mom(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
         num_j_mtx = metric_eigval[:, None] - metric_eigval[None, :]
@@ -383,4 +376,3 @@ class SoftAbsRiemannianMetricHamiltonianSystem(
         eigvec_mom = (eigvec.T @ state.mom) / metric_eigval
         return -self.vjp_hess_pot_energy(state)(
             eigvec @ (np.outer(eigvec_mom, eigvec_mom) * j_mtx) @ eigvec.T)
-

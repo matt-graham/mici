@@ -1,10 +1,70 @@
-"""Classes to represent states of Hamiltonian systems of various types."""
+"""Objects for recording state of a simulated Hamiltonian system."""
 
 import copy
 
 
-class BaseHamiltonianState(object):
-    """Base class for state of a separable Hamiltonian system.
+def cache_in_state(*depends_on):
+    """Decorator to memoize / cache output of a function of state variable(s).
+
+    Used to wrap methods of Hamiltonian system objects to allow caching of
+    values computed from state position and momentum variables to prevent
+    recomputation when possible. The decorator takes as arguments a set of
+    strings defining which state variables the computed values depend on
+    e.g. 'pos', 'mom', such that the cache is correctly cleared when one of
+    these parent dependency's value changes.
+    """
+    def cache_in_state_decorator(method):
+        key = method.__name__
+        def wrapper(self, state):
+            if key not in state.cache:
+                for dep in depends_on:
+                    state.dependencies[dep].append(key)
+            if key not in state.cache or state.cache[key] is None:
+                state.cache[key] = method(self, state)
+            return state.cache[key]
+        return wrapper
+    return cache_in_state_decorator
+
+
+def multi_cache_in_state(depends_on, keys, primary_index=0):
+    """Decorator to cache multiple outputs of a function of state variable(s).
+
+    Used to wrap methods of Hamiltonian system objects to allow caching of
+    values computed from state position and momentum variables to prevent
+    recomputation when possible. This variant allows for functions which also
+    cache intermediate computed results which may be used separately elsewhere
+    for example the value of a function calculate in the forward pass of a
+    reverse-mode automatic differentation implementation of its gradient.
+
+    Args:
+        depends_on: a list of strings defining which state variables the
+            computed values depend on e.g. ['pos', 'mom'], such that the cache
+            is correctly cleared when one of these parent dependency's value
+            changes.
+        keys: a list of strings defining the keys in the state cache dictionary
+            corresponding to the outputs of the wrapped function (method) in
+            the corresponding returned order.
+        primary_index: index of primary output of function (i.e. value to be
+            returned) in keys list / position in output of function.
+    """
+    prim_key = keys[primary_index]
+    def multi_cache_in_state_decorator(method):
+        def wrapper(self, state):
+            for key in keys:
+                if key not in state.cache:
+                    for dep in depends_on:
+                        state.dependencies[dep].append(key)
+            if prim_key not in state.cache or state.cache[prim_key] is None:
+                vals = method(self, state)
+                for k, v in zip(keys, vals):
+                    state.cache[k] = v
+            return state.cache[prim_key]
+        return wrapper
+    return multi_cache_in_state_decorator
+
+
+class HamiltonianState(object):
+    """State of a Hamiltonian system.
 
     As well as recording the position and momentum state values and integration
     direction binary indicator, the state object is also used to cache derived
@@ -30,7 +90,10 @@ class BaseHamiltonianState(object):
 
     @pos.setter
     def pos(self, value):
-        raise NotImplementedError()
+        self._pos = value
+        # clear any dependent cached values
+        for dep in self.dependencies['pos']:
+            self.cache[dep] = None
 
     @property
     def mom(self):
@@ -38,7 +101,10 @@ class BaseHamiltonianState(object):
 
     @mom.setter
     def mom(self, value):
-        raise NotImplementedError()
+        self._mom = value
+        # clear any dependent cached values
+        for dep in self.dependencies['mom']:
+            self.cache[dep] = None
 
     def deep_copy(self):
         return copy.deepcopy(self)
@@ -47,74 +113,7 @@ class BaseHamiltonianState(object):
         return copy.copy(self)
 
     def __str__(self):
-        return '(\n  pos={0},\n  mom={1}\n)'.format(self.pos, self.mom)
+        return f'(\n  pos={self.pos},\n  mom={self.mom},\n  dir={self.dir})'
 
     def __repr__(self):
         return type(self).__name__ + str(self)
-
-
-class SeparableHamiltonianState(BaseHamiltonianState):
-    """State of a separable Hamiltonian system.
-
-    Here separable means that the Hamiltonian can be expressed as the sum of
-    a term depending only on the position (target) variables, typically denoted
-    the potential energy, and a second term depending only on the momentum
-    variables, typically denoted the kinetic energy.
-    """
-
-    def __init__(self, pos, mom, direction=1, pot_energy=None,
-                 grad_pot_energy=None, kin_energy=None, grad_kin_energy=None):
-        super().__init__(pos, mom, direction)
-        self.pot_energy = pot_energy
-        self.grad_pot_energy = grad_pot_energy
-        self.kin_energy = kin_energy
-        self.grad_kin_energy = grad_kin_energy
-
-    @BaseHamiltonianState.pos.setter
-    def pos(self, value):
-        self._pos = value
-        self.pot_energy = None
-        self.grad_pot_energy = None
-
-    @BaseHamiltonianState.mom.setter
-    def mom(self, value):
-        self._mom = value
-        self.kin_energy = None
-        self.grad_kin_energy = None
-
-
-class RiemannianHamiltonianState(BaseHamiltonianState):
-    """State of a Riemmanian manifold Hamiltonian system."""
-
-    def __init__(self, pos, mom, direction=1, pot_energy=None,
-                 grad_pot_energy=None, metric=None, chol_metric=None,
-                 inv_metric=None, inv_metric_mom=None, vjp_metric=None,
-                 vjp_chol_metric=None, inv_chol_metric=None):
-        super().__init__(pos, mom, direction)
-        self.pot_energy = pot_energy
-        self.grad_pot_energy = grad_pot_energy
-        self.metric = metric
-        self.chol_metric = chol_metric
-        self.inv_metric = inv_metric
-        self.inv_metric_mom = inv_metric_mom
-        self.vjp_metric = vjp_metric
-        self.inv_chol_metric = inv_chol_metric
-        self.vjp_chol_metric = vjp_chol_metric
-
-    @BaseHamiltonianState.pos.setter
-    def pos(self, value):
-        self._pos = value
-        self.pot_energy = None
-        self.grad_pot_energy = None
-        self.metric = None
-        self.chol_metric = None
-        self.inv_metric = None
-        self.inv_metric_mom = None
-        self.vjp_metric = None
-        self.inv_chol_metric = None
-        self.vjp_chol_metric = None
-
-    @BaseHamiltonianState.mom.setter
-    def mom(self, value):
-        self._mom = value
-        self.inv_metric_mom = None
