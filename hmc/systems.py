@@ -422,3 +422,114 @@ class SoftAbsRiemannianMetricHamiltonianSystem(
         eigvec_mom = (eigvec.T @ state.mom) / metric_eigval
         return -self.vjp_hess_pot_energy(state)(
             eigvec @ (np.outer(eigvec_mom, eigvec_mom) * j_mtx) @ eigvec.T)
+
+
+class BaseEuclideanMetricConstrainedHamiltonianSystem(
+        BaseEuclideanMetricHamiltonianSystem):
+
+    def __init__(self, pot_energy, constr, metric=None,
+                 val_and_grad_pot_energy=None, jacob_constr=None,
+                 use_quasi_newton_method=True, tol=1e-8, max_iters=100,
+                 norm=maximum_norm):
+        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
+        self._constr = constr
+        if jacob_constr is None and autograd_available:
+            self._jacob_constr = jacobian(constr)
+        elif jacob_constr is None and not autograd_available:
+            raise ValueError('Autograd not available therefore jacob_constr'
+                             ' must be provided.')
+        else:
+            self._jacob_constr = jacob_constr
+        self.use_quasi_newton_method = use_quasi_newton_method
+        self.tol = tol
+        self.max_iters = max_iters
+        self.norm = maximum_norm
+
+    @cache_in_state('pos')
+    def constr(self, state):
+        return self._constr(state.pos)
+
+    @cache_in_state('pos')
+    def jacob_constr(self, state):
+        return self._jacob_constr(state.pos)
+
+    @cache_in_state('pos')
+    def chol_gram(self, state):
+        jacob_constr = self.jacob_constr(state)
+        gram = jacob_constr @ self.mult_inv_metric(jacob_constr.T)
+        return sla.cholesky(gram, lower=True)
+
+    def project_onto_tangent_space(self, state):
+        jacob_constr = self.jacob_constr(state)
+        chol_gram = self.chol_gram(state)
+        non_tangent_mom_component = (
+            jacob_constr.T @ sla.cho_solve(
+                (chol_gram, True), jacob_constr @ self.dh_dmom(state)))
+        state.mom -= non_tangent_mom_component
+
+    def project_onto_manifold(self, state, state_prev):
+        if self.use_quasi_newton_method:
+            return self.quasi_newton_project_onto_manifold(state, state_prev)
+        else:
+            return self.newton_project_onto_manifold(state, state_prev)
+
+    def quasi_newton_project_onto_manifold(self, state, state_prev):
+        jacob_constr_prev = self.jacob_constr(state_prev)
+        chol_gram_prev = self.chol_gram(state_prev)
+        for i in range(self.max_iters):
+            constr = self.constr(state)
+            if self.norm(constr) < self.tol:
+                return
+            state.pos -= self.mult_inv_metric(
+                jacob_constr_prev.T @
+                sla.cho_solve((chol_gram_prev, True), constr))
+        err = self.norm(self.constr(state))
+        raise ConvergenceError(
+            f'Quasi-Newton iteration did not converge. Last error {err:.1e}.')
+
+    def newton_project_onto_manifold(self, state, state_prev):
+        jacob_constr_prev = self.jacob_constr(state_prev)
+        for i in range(self.max_iters):
+            jacob_constr = self.jacob_constr(state)
+            constr = self.constr(state)
+            if self.norm(constr) < self.tol:
+                return
+            state.pos -= self.mult_inv_metric(
+                jacob_constr_prev.T @ sla.solve(
+                    jacob_constr @ self.mult_inv_metric(jacob_constr_prev.T),
+                    constr))
+        err = self.norm(self.constr(state))
+        raise ConvergenceError(
+            f'Newton iteration did not converge. Last error {err:.1e}.')
+
+    def solve_dh_dmom_for_mom(self, dpos_dt):
+        return self.mult_metric(dpos_dt)
+
+    def sample_momentum(self, state, rng):
+        state.mom = super().sample_momentum(state, rng)
+        self.project_onto_tangent_space(state)
+        return state.mom
+
+
+class IsotropicEuclideanMetricConstrainedHamiltonianSystem(
+        BaseEuclideanMetricConstrainedHamiltonianSystem,
+        IsotropicEuclideanMetricHamiltonianSystem):
+    """
+    Isotropic Euclidean metric Hamiltonian system with position constraints.
+    """
+
+
+class DiagonalEuclideanMetricConstrainedHamiltonianSystem(
+        BaseEuclideanMetricConstrainedHamiltonianSystem,
+        DiagonalEuclideanMetricHamiltonianSystem):
+    """
+    Diagonal Euclidean metric Hamiltonian system with position constraints.
+    """
+
+
+class DenseEuclideanMetricConstrainedHamiltonianSystem(
+        BaseEuclideanMetricConstrainedHamiltonianSystem,
+        DenseEuclideanMetricHamiltonianSystem):
+    """
+    Dense Euclidean metric Hamiltonian system with position constraints.
+    """
