@@ -1,7 +1,6 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
 import numpy as np
-import scipy.linalg as sla
 from hmc.solvers import solve_fixed_point_direct
 from hmc.utils import maximum_norm
 
@@ -11,7 +10,20 @@ class IntegratorError(RuntimeError):
 
 
 class LeapfrogIntegrator(object):
-    """Explicit leapfrog integrator for separable Hamiltonian systems."""
+    """
+    Explicit leapfrog integrator for separable Hamiltonian systems.
+
+    Here separable means that the Hamiltonian can be expressed as the sum of
+    a term depending only on the position (target) variables, typically denoted
+    the potential energy, and a second term depending only on the momentum
+    variables, typically denoted the kinetic energy, i.e.
+
+        h(pos, mom) = pot_energy(pos) + kin_energy(mom)
+
+    with pos and mom the position and momentum variables respectively and
+    pot_energy and kin_energy the potential and kinetic energy functions
+    respectively.
+    """
 
     def __init__(self, system, step_size):
         self.system = system
@@ -27,7 +39,18 @@ class LeapfrogIntegrator(object):
 
 
 class GeneralisedLeapfrogIntegrator(object):
-    """Implicit leapfrog integrator for non-separable Hamiltonian systems."""
+    """
+    Implicit leapfrog integrator for non-separable Hamiltonian systems.
+
+    The Hamiltonian function is assumed to take the form
+
+        h(pos, mom) = h1(pos) + h2(pos, mom)
+
+    where pos and mom are the position and momentum variables respectively, and
+    h2 is a non-separable function of the position and momentum variables and
+    for which exact simulation of the correspond Hamiltonian flow is not
+    possible.
+    """
 
     def __init__(self, system, step_size, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
@@ -62,8 +85,8 @@ class GeneralisedLeapfrogIntegrator(object):
         rev_diff = self.reverse_check_norm(state.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
-                f'Non-reversible step. Maximum difference between initial and '
-                f'forward-backward integrated momentum = {rev_diff:.1e}.')
+                f'Non-reversible step. Distance between initial and '
+                f'forward-backward integrated momentums = {rev_diff:.1e}.')
         state.mom = mom_fwd
 
     def step_c1(self, state, dt):
@@ -74,8 +97,8 @@ class GeneralisedLeapfrogIntegrator(object):
         rev_diff = self.reverse_check_norm(state.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
-                f'Non-reversible step. Difference between initial and '
-                f'forward-backward integrated position = {rev_diff:.1e}.')
+                f'Non-reversible step. Distance between initial and '
+                f'forward-backward integrated positions = {rev_diff:.1e}.')
         state.pos = pos_fwd
 
     def step_c2(self, state, dt):
