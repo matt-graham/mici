@@ -7,9 +7,14 @@ from math import log, exp, log1p, expm1, inf, nan
 LOG_2 = log(2.)
 
 
-def max_abs(array):
-    """Calculate the maximum absolute element of an array (L-infinity norm)."""
-    return np.max(abs(array))
+def euclidean_norm(vct):
+    """Calculate the Euclidean (L-2) norm of a vector."""
+    return np.sum(vct**2)**0.5
+
+
+def maximum_norm(vct):
+    """Calculate the maximum (L-infinity) norm of a vector."""
+    return np.max(abs(vct))
 
 
 def log1p_exp(val):

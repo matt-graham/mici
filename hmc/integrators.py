@@ -3,7 +3,7 @@
 import numpy as np
 import scipy.linalg as sla
 from hmc.solvers import solve_fixed_point_direct
-from hmc.utils import max_abs
+from hmc.utils import maximum_norm
 
 
 class IntegratorError(RuntimeError):
@@ -30,11 +30,13 @@ class GeneralisedLeapfrogIntegrator(object):
     """Implicit leapfrog integrator for non-separable Hamiltonian systems."""
 
     def __init__(self, system, step_size, reverse_check_tol=1e-8,
+                 reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
                  **fixed_point_solver_kwargs):
         self.system = system
         self.step_size = step_size
         self.reverse_check_tol = reverse_check_tol
+        self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
@@ -57,7 +59,7 @@ class GeneralisedLeapfrogIntegrator(object):
         state.mom -= dt * self.system.dh2_dpos(state)
         mom_fwd = state.mom.copy()
         self.step_b1(state, -dt)
-        rev_diff = max_abs(state.mom - mom_init)
+        rev_diff = self.reverse_check_norm(state.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
                 f'Non-reversible step. Maximum difference between initial and '
@@ -69,7 +71,7 @@ class GeneralisedLeapfrogIntegrator(object):
         state.pos += dt * self.system.dh_dmom(state)
         pos_fwd = state.pos.copy()
         self.step_c2(state, -dt)
-        rev_diff = max_abs(state.pos - pos_init)
+        rev_diff = self.reverse_check_norm(state.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
             raise IntegratorError(
                 f'Non-reversible step. Difference between initial and '
