@@ -1,6 +1,6 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
-from hmc.utils import max_abs
+from hmc.utils import maximum_norm
 import numpy as np
 
 
@@ -8,7 +8,8 @@ class ConvergenceError(RuntimeError):
     """Error raised when solver fails to converge within allowed iterations."""
 
 
-def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100):
+def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
+                             norm=maximum_norm):
     """Solve fixed point equation f(x) = x using direct iteration.
 
     Args:
@@ -28,7 +29,7 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100):
         if any(np.isnan(x)) or any(np.isinf(x)):
             raise ConvergenceError(
                 f'Fixed point iteration diverged, last error {error:.1e}.')
-        error = max_abs(x - x0)
+        error = norm(x - x0)
         if error < tol:
             return x
         x0 = x
@@ -36,7 +37,8 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100):
         f'Fixed point iteration did not converge, last error {error:.1e}.')
 
 
-def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100):
+def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
+                                 norm=maximum_norm):
     """Solve fixed point equation f(x) = x using Steffensen's method.
 
     Steffennsen's method [1] achieves quadratic convergence but at the cost of
@@ -65,7 +67,7 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100):
         if any(np.isnan(x)) or any(np.isinf(x)):
             raise ConvergenceError(
                 f'Fixed point iteration diverged, last error {error:.1e}.')
-        error = max_abs(x - x0)
+        error = norm(x - x0)
         if error < tol:
             return x
         x0 = x
