@@ -29,6 +29,8 @@ Hamiltonian systems
 Numerical integrators
 
   * Explicit leapfrog for separable Hamiltonian systems
+  * 'Split' leapfrog for Hamiltonian systems with an analytically tractable
+    component for which the exact flow can be solved (Shahbaba et al., 2014)
   * Implicit leapfrog for non-separable Hamiltonian systems
   * Geodesic leapfrog for constrained Hamiltonian systems
 
@@ -75,22 +77,24 @@ Numerical integrators
  12. Sohl-Dickstein, J., Mudigonda, M. and DeWeese, M., 2014. Hamiltonian Monte
      Carlo Without Detailed Balance. In International Conference on Machine
      Learning (pp. 719-726).
- 13. Chao, W.L., Solomon, J., Michels, D. and Sha, F., 2015. Exponential
+ 13. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
+     Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
+ 14. Chao, W.L., Solomon, J., Michels, D. and Sha, F., 2015. Exponential
      integration for Hamiltonian Monte Carlo. In International Conference on
      Machine Learning (pp. 1142-1151).
- 14. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+ 15. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
      arXiv preprint arXiv:1701.02434.
- 15. Lu, X., Perrone, V., Hasenclever, L., Teh, Y.W. and Vollmer, S., 2017.
+ 16. Lu, X., Perrone, V., Hasenclever, L., Teh, Y.W. and Vollmer, S., 2017.
      Relativistic Monte Carlo. In Artificial Intelligence and Statistics
      (pp. 1236-1245).
- 16. Tripuraneni, N., Rowland, M., Ghahramani, Z. and Turner, R., 2017.
+ 17. Tripuraneni, N., Rowland, M., Ghahramani, Z. and Turner, R., 2017.
      Magnetic Hamiltonian Monte Carlo. In International Conference on Machine
      Learning (pp. 3453-3461).
- 17. Livingstone, S., Faulkner, M.F. and Roberts, G.O., 2017. Kinetic energy
+ 18. Livingstone, S., Faulkner, M.F. and Roberts, G.O., 2017. Kinetic energy
      choice in Hamiltonian/hybrid Monte Carlo. arXiv preprint arXiv:1706.02649.
- 18. Graham, M.M. and Storkey, A.J., 2017. Continuously tempered Hamiltonian
+ 19. Graham, M.M. and Storkey, A.J., 2017. Continuously tempered Hamiltonian
      Monte Carlo. In Proceedings of the 33rd Conference on Uncertainty in
      Artificial Intelligence.
- 19. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
+ 20. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
      for sampling probability measures on submanifolds. arXiv preprint
      arXiv:1807.02356.

@@ -38,6 +38,34 @@ class LeapfrogIntegrator(object):
         return state
 
 
+class SplitLeapfrogIntegrator(object):
+    """
+    Split leapfrog integrator for Hamiltonian systems with tractable component.
+
+    The Hamiltonian function is assumed to have an analytically tractable
+    component (e.g a quadratic form in the position and momentum variables) for
+    which the corresponding Hamiltonian flow can be exactly simulated.
+    Specifically it is assumed that the Hamiltonian function h takes the form
+
+        h(pos, mom) = h1(pos) + h2(pos, mom)
+
+    where pos and mom are the position and momentum variables respectively,
+    with h2(pos, mom) a Hamiltonian for which the exact flow can be computed.
+    """
+
+    def __init__(self, system, step_size):
+        self.system = system
+        self.step_size = step_size
+
+    def step(self, state):
+        dt = state.dir * self.step_size
+        state = state.copy()
+        state.mom -= 0.5 * dt * self.system.dh1_dpos(state)
+        state = self.system.h2_exact_flow(state, dt)
+        state.mom -= 0.5 * dt * self.system.dh1_dpos(state)
+        return state
+
+
 class GeneralisedLeapfrogIntegrator(object):
     """
     Implicit leapfrog integrator for non-separable Hamiltonian systems.
