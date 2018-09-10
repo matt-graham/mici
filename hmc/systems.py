@@ -259,9 +259,9 @@ class BaseCholeskyRiemannianMetricHamiltonianSystem(
 class DenseRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, metric, grad_pot_energy=None,
+    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None,
                  vjp_and_val_metric=None):
-        super().__init__(pot_energy, grad_pot_energy)
+        super().__init__(pot_energy, val_and_grad_pot_energy)
         self._metric = metric
         if vjp_and_val_metric is None and autograd_available:
             self._vjp_and_val_metric = make_vjp(metric)
@@ -303,9 +303,9 @@ class DenseRiemannianMetricHamiltonianSystem(
 class FactoredRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
+    def __init__(self, pot_energy, chol_metric, val_and_grad_pot_energy=None,
                  vjp_and_val_chol_metric=None):
-        super().__init__(pot_energy, grad_pot_energy)
+        super().__init__(pot_energy, val_and_grad_pot_energy)
         self._chol_metric = chol_metric
         if vjp_and_val_chol_metric is None and autograd_available:
             self._vjp_and_val_chol_metric = make_vjp(chol_metric)
@@ -347,9 +347,10 @@ class FactoredRiemannianMetricHamiltonianSystem(
 class SoftAbsRiemannianMetricHamiltonianSystem(
             BaseRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, softabs_coeff=1., grad_pot_energy=None,
-                 hess_pot_energy=None, vjp_hess_pot_energy=None):
-        super().__init__(pot_energy, grad_pot_energy)
+    def __init__(self, pot_energy, softabs_coeff=1.,
+                 val_and_grad_pot_energy=None, hess_pot_energy=None,
+                 vjp_hess_pot_energy=None):
+        super().__init__(pot_energy, val_and_grad_pot_energy)
         self.softabs_coeff = softabs_coeff
         if hess_pot_energy is None and autograd_available:
             self._hess_pot_energy = hessian(pot_energy)
