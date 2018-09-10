@@ -1,14 +1,17 @@
 """Classes to represent Hamiltonian systems of various types."""
 
-import logging
+import warnings
 import numpy as np
+import numpy.linalg as nla
 import scipy.linalg as sla
 import scipy.optimize as opt
 from hmc.states import cache_in_state, multi_cache_in_state
+from hmc.solvers import ConvergenceError
+from hmc.utils import maximum_norm
 
 autograd_available = True
 try:
-    from autograd import grad, value_and_grad, hessian, make_vjp
+    from autograd import grad, value_and_grad, jacobian, hessian, make_vjp
 except ImportError:
     autograd_available = False
 
@@ -83,15 +86,32 @@ class SeparableHamiltonianSystem(HamiltonianSystem):
         raise NotImplementedError()
 
 
-class IsotropicEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
+class BaseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
+
+    def __init__(self, pot_energy, metric=None, val_and_grad_pot_energy=None):
+        super().__init__(pot_energy, val_and_grad_pot_energy)
+        self.metric = metric
+
+    def mult_inv_metric(self, rhs):
+        raise NotImplementedError()
+
+    def mult_metric(self, rhs):
+        raise NotImplementedError()
+
+
+class IsotropicEuclideanMetricHamiltonianSystem(
+        BaseEuclideanMetricHamiltonianSystem):
     """Euclidean-Gaussian Hamiltonian system with isotropic metric.
 
     The momenta are taken to be independent of the position variables and with
     a isotropic covariance zero-mean Gaussian marginal distribution.
     """
 
-    def __init__(self, pot_energy, grad_pot_energy=None):
-        super().__init__(pot_energy, grad_pot_energy)
+    def __init__(self, pot_energy, metric=None, val_and_grad_pot_energy=None):
+        super().__init__(pot_energy, 1, val_and_grad_pot_energy)
+        if metric is not None:
+            warning.warn(
+                f'Value of metric is ignored for {type(self).__name__}.')
 
     def _kin_energy(self, mom):
         return 0.5 * np.sum(mom**2)
@@ -102,38 +122,57 @@ class IsotropicEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
     def sample_momentum(self, state, rng):
         return rng.normal(size=state.pos.shape)
 
+    def mult_inv_metric(self, rhs):
+        return rhs
 
-class DiagonalEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
+    def mult_metric(self, rhs):
+        return rhs
+
+
+class DiagonalEuclideanMetricHamiltonianSystem(
+        BaseEuclideanMetricHamiltonianSystem):
     """Euclidean-Gaussian Hamiltonian system with diagonal metric.
 
     The momenta are taken to be independent of the position variables and with
     a zero-mean Gaussian marginal distribution with diagonal covariance matrix.
     """
 
-    def __init__(self, pot_energy, diag_metric, grad_pot_energy=None):
-        super().__init__(pot_energy, grad_pot_energy)
-        self.diag_metric = diag_metric
+    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None):
+        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
+        if hasattr(metric, 'ndim') and metric.ndim == 2:
+            warning.warn(
+                f'Off-diagonal metric values ignored for '
+                f'{type(self).__name__}.')
+            self.metric_diagonal = metric.diagonal()
+        else:
+            self.metric_diagonal = metric
 
     def _kin_energy(self, mom):
-        return 0.5 * np.sum(mom**2 / self.diag_metric)
+        return 0.5 * np.sum(mom**2 / self.metric_diagonal)
 
     def _grad_kin_energy(self, mom):
-        return mom / self.diag_metric
+        return mom / self.metric_diagonal
 
     def sample_momentum(self, state, rng):
-        return self.diag_metric**0.5 * rng.normal(size=state.pos.shape)
+        return self.metric_diagonal**0.5 * rng.normal(size=state.pos.shape)
+
+    def mult_inv_metric(self, rhs):
+        return (rhs.T / self.metric_diagonal).T
+
+    def mult_metric(self, rhs):
+        return (rhs.T * self.metric_diagonal).T
 
 
-class DenseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
+class DenseEuclideanMetricHamiltonianSystem(
+        BaseEuclideanMetricHamiltonianSystem):
     """Euclidean-Gaussian Hamiltonian system with dense metric.
 
     The momenta are taken to be independent of the position variables and with
     a zero-mean Gaussian marginal distribution with dense covariance matrix.
     """
 
-    def __init__(self, pot_energy, metric, grad_pot_energy=None):
-        super().__init__(pot_energy, grad_pot_energy)
-        self.metric = metric
+    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None):
+        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
         self.chol_metric = sla.cholesky(metric, lower=True)
 
     def _kin_energy(self, mom):
@@ -144,6 +183,12 @@ class DenseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
 
     def sample_momentum(self, state, rng):
         return self.chol_metric @ rng.normal(size=state.pos.shape)
+
+    def mult_inv_metric(self, rhs):
+        return sla.cho_solve((self.chol_metric, True), rhs)
+
+    def mult_metric(self, rhs):
+        return self.metric @ rhs
 
 
 class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
