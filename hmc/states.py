@@ -18,7 +18,7 @@ def cache_in_state(*depends_on):
         def wrapper(self, state):
             if key not in state.cache:
                 for dep in depends_on:
-                    state.dependencies[dep].append(key)
+                    state.dependencies[dep].add(key)
             if key not in state.cache or state.cache[key] is None:
                 state.cache[key] = method(self, state)
             return state.cache[key]
@@ -53,7 +53,7 @@ def multi_cache_in_state(depends_on, keys, primary_index=0):
             for key in keys:
                 if key not in state.cache:
                     for dep in depends_on:
-                        state.dependencies[dep].append(key)
+                        state.dependencies[dep].add(key)
             if prim_key not in state.cache or state.cache[prim_key] is None:
                 vals = method(self, state)
                 for k, v in zip(keys, vals):
@@ -73,12 +73,16 @@ class HamiltonianState(object):
     these values are reused.
     """
 
-    def __init__(self, pos, mom, dir=1):
+    def __init__(self, pos, mom, dir=1, dependencies=None, cache=None):
         self._pos = pos
         self._mom = mom
         self.dir = dir
-        self.dependencies = {'pos': [], 'mom': []}
-        self.cache = {}
+        if dependencies is None:
+            dependencies = {'pos': set(), 'mom': set()}
+        self.dependencies = dependencies
+        if cache is None:
+            cache = {}
+        self.cache = cache
 
     @property
     def n_dim(self):
