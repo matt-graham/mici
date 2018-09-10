@@ -19,7 +19,7 @@ class LeapfrogIntegrator(object):
 
     def step(self, state):
         dt = state.dir * self.step_size
-        state = state.deep_copy()
+        state = state.copy()
         state.mom -= 0.5 * dt * self.system.dh_dpos(state)
         state.pos += dt * self.system.dh_dmom(state)
         state.mom -= 0.5 * dt * self.system.dh_dpos(state)
@@ -87,7 +87,7 @@ class GeneralisedLeapfrogIntegrator(object):
 
     def step(self, state):
         dt = 0.5 * state.dir * self.step_size
-        state = state.deep_copy()
+        state = state.copy()
         self.step_a(state, dt)
         self.step_b1(state, dt)
         self.step_c1(state, dt)
@@ -144,7 +144,7 @@ class GeodesicLeapfrogIntegrator(object):
 
     def step(self, state):
         dt = state.dir * self.step_size
-        state = state.deep_copy()
+        state = state.copy()
         self.step_a(state, 0.5 * dt)
         self.step_b(state, dt)
         self.step_a(state, 0.5 * dt)

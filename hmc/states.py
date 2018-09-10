@@ -1,7 +1,5 @@
 """Objects for recording state of a simulated Hamiltonian system."""
 
-import copy
-
 
 def cache_in_state(*depends_on):
     """Decorator to memoize / cache output of a function of state variable(s).
@@ -110,11 +108,10 @@ class HamiltonianState(object):
         for dep in self.dependencies['mom']:
             self.cache[dep] = None
 
-    def deep_copy(self):
-        return copy.deepcopy(self)
-
     def copy(self):
-        return copy.copy(self)
+        return HamiltonianState(
+            pos=self.pos.copy(), mom=self.mom.copy(), dir=self.dir,
+            cache=self.cache.copy(), dependencies=self.dependencies)
 
     def __str__(self):
         return f'(\n  pos={self.pos},\n  mom={self.mom},\n  dir={self.dir})'
