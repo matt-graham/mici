@@ -6,7 +6,8 @@ Users can either directly specific the required model derivatives or when availa
 
 ## Dependencies
 
-To install and use the package the minimal requirement is a Python 3 environment with `numpy` and `scipy` installed, with `autograd` an optional additional requirement to allow automatic calculation of model derivative functions.
+To install and use the package the minimal requirements are a Python 3 environment with `numpy` and `scipy` installed. If available `autograd` will be used to automatically compute the required derivatives of the model functions (providing they are specified
+using functions from the `autograd.numpy` and `autograd.scipy` interfaces). If the `tqdm` package is available a simple progress bar will be shown during sampling.
 
 ## Implemented methods
 
