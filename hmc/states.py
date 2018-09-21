@@ -71,7 +71,7 @@ class HamiltonianState(object):
     these values are reused.
     """
 
-    def __init__(self, pos, mom, dir=1, dependencies=None, cache=None):
+    def __init__(self, pos, mom=None, dir=1, dependencies=None, cache=None):
         self._pos = pos
         self._mom = mom
         self.dir = dir
