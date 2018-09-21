@@ -287,7 +287,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
          manifolds. arXiv preprint arXiv:1304.1920.
     """
 
-    def __init__(self, system, integrator, rng, max_tree_depth=5,
+    def __init__(self, system, integrator, rng, max_tree_depth=10,
                  max_delta_h=1000):
         super().__init__(system, integrator, rng)
         self.max_tree_depth = max_tree_depth
