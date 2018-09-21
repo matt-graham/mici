@@ -35,6 +35,55 @@ Numerical integrators
   * Implicit leapfrog for non-separable Hamiltonian systems
   * Geodesic leapfrog for constrained Hamiltonian systems
 
+## Example usage
+
+A simple complete example of using the package to sample from a multivariate Gaussian distribution with randomly generated parameters is given below. Here an isotropic Euclidean metric Hamiltonian system is used (corresponding to a istropic covariance Gaussian marginal distribution on the momenta) with the dynamic integration time HMC implementation proposed by Betancourt (2017), which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
+
+```python
+import hmc
+import autograd.numpy as np
+import autograd.scipy.linalg as sla
+
+# Generate random precision and mean parameters for a Gaussian
+n_dim = 50
+rng = np.random.RandomState(seed=1234)
+rnd_eigvec, _ = sla.qr(rng.normal(size=(n_dim, n_dim)))
+rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
+prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
+mean = rng.normal(size=n_dim)
+
+# Deine potential energy (negative log density) for a Gaussian
+# target distribution. The derivative of this function will
+# be calculated automatically using autograd
+def pot_energy(pos):
+    pos_minus_mean = pos - mean
+    return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
+
+# Specify Hamiltonian system with isotropic Gaussian kinetic energy
+system = hmc.systems.IsotropicEuclideanMetricHamiltonianSystem(pot_energy)
+
+# Hamiltonian is separable therefore use explicit leapfrog integrator
+integrator = hmc.integrators.LeapfrogIntegrator(system, step_size=0.15)
+
+# Use dynamic integration-time HMC implementation with multinomial sampling 
+# from generated trajectories
+sampler = hmc.samplers.DynamicMultinomialHMC(system, integrator, rng)
+
+# Sample an initial state from zero-mean isotropic Gaussian
+init_state = hmc.states.HamiltonianState(rng.normal(size=n_dim))
+
+# Sample a Markov chain with 1000 transitions
+pos_chain, chain_stats = sampler.sample_chain(1000, init_state)
+
+# Print RMSE in mean estimate
+mean_rmse = np.mean((pos_chain.mean(0) - mean)**2)**0.5
+print(f'Mean estimate RMSE: {mean_rmse}')
+
+# Print average acceptance probability
+mean_accept_prob = chain_stats['accept_prob'].mean()
+print(f'Mean accept prob: {mean_accept_prob:0.2f}')
+```
+
 ## To do
 
   * Static multinomial sampler (Betancourt, 2017)
