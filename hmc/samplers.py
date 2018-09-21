@@ -80,17 +80,16 @@ class BaseHamiltonianMonteCarlo(object):
         var_chains = []
         for chain_func in chain_var_funcs:
             var = chain_func(state)
-            var_chains.append(np.empty((n_sample,) + var.shape))
+            var_chains.append(np.empty((n_sample + 1,) + var.shape))
             var_chains[-1][0] = var
         if TQDM_AVAILABLE:
-            s_range = tqdm.trange(
-                n_sample - 1, desc='Running chain', unit='it')
+            s_range = tqdm.trange(n_sample, desc='Running chain', unit='it')
         else:
-            s_range = range(n_sample - 1)
+            s_range = range(n_sample)
         for s in s_range:
             state = self.sample_momentum_transition(state)
             state, trans_stats = self.sample_dynamics_transition(state)
-            self.update_chain_stats(s + 1, chain_stats, trans_stats)
+            self.update_chain_stats(s, chain_stats, trans_stats)
             for chain_func, var_chain in zip(chain_var_funcs, var_chains):
                 var_chain[s + 1] = chain_func(state)
         return var_chains + [chain_stats]
@@ -114,17 +113,17 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
 
     def initialise_chain_stats(self, init_state, n_sample):
         chain_stats = {
-            'hamiltonian': np.empty(n_sample, np.float64),
-            'n_step': np.empty(n_sample - 1, np.int64),
-            'accept_prob': np.empty(n_sample - 1, np.float64)
+            'hamiltonian': np.empty(n_sample + 1, np.float64),
+            'n_step': np.empty(n_sample, np.int64),
+            'accept_prob': np.empty(n_sample, np.float64)
         }
         chain_stats['hamiltonian'][0] = self.system.h(init_state)
         return chain_stats
 
     def update_chain_stats(self, s, chain_stats, trans_stats):
-        chain_stats['hamiltonian'][s] = trans_stats['hamiltonian']
-        chain_stats['n_step'][s - 1] = trans_stats['n_step']
-        chain_stats['accept_prob'][s - 1] = trans_stats['accept_prob']
+        chain_stats['hamiltonian'][s + 1] = trans_stats['hamiltonian']
+        chain_stats['n_step'][s] = trans_stats['n_step']
+        chain_stats['accept_prob'][s] = trans_stats['accept_prob']
 
     def _sample_dynamics_transition(self, state, n_step):
         h_init = self.system.h(state)
@@ -296,21 +295,21 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
 
     def initialise_chain_stats(self, init_state, n_sample):
         chain_stats = {
-            'hamiltonian': np.empty(n_sample, np.float64),
-            'n_step': np.empty(n_sample - 1, np.int64),
-            'accept_prob': np.empty(n_sample - 1, np.float64),
-            'tree_depth': np.empty(n_sample - 1, np.int64),
-            'divergent': np.empty(n_sample - 1, np.bool)
+            'hamiltonian': np.empty(n_sample + 1, np.float64),
+            'n_step': np.empty(n_sample, np.int64),
+            'accept_prob': np.empty(n_sample, np.float64),
+            'tree_depth': np.empty(n_sample, np.int64),
+            'divergent': np.empty(n_sample, np.bool)
         }
         chain_stats['hamiltonian'][0] = self.system.h(init_state)
         return chain_stats
 
     def update_chain_stats(self, s, chain_stats, trans_stats):
-        chain_stats['hamiltonian'][s] = trans_stats['hamiltonian']
-        chain_stats['n_step'][s - 1] = trans_stats['n_step']
-        chain_stats['accept_prob'][s - 1] = trans_stats['accept_prob']
-        chain_stats['tree_depth'][s - 1] = trans_stats['tree_depth']
-        chain_stats['divergent'][s - 1] = trans_stats['divergent']
+        chain_stats['hamiltonian'][s + 1] = trans_stats['hamiltonian']
+        chain_stats['n_step'][s] = trans_stats['n_step']
+        chain_stats['accept_prob'][s] = trans_stats['accept_prob']
+        chain_stats['tree_depth'][s] = trans_stats['tree_depth']
+        chain_stats['divergent'][s] = trans_stats['divergent']
 
     def termination_criterion(self, state_1, state_2, sum_mom):
         return (
