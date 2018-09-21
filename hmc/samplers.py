@@ -74,6 +74,8 @@ class BaseHamiltonianMonteCarlo(object):
         raise NotImplementedError()
 
     def sample_chain(self, n_sample, state, chain_var_funcs=[extract_pos]):
+        if state.mom is None:
+            state.mom = self.system.sample_momentum(state, self.rng)
         chain_stats = self.initialise_chain_stats(state, n_sample)
         var_chains = []
         for chain_func in chain_var_funcs:
