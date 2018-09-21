@@ -110,7 +110,7 @@ class IsotropicEuclideanMetricHamiltonianSystem(
     def __init__(self, pot_energy, metric=None, val_and_grad_pot_energy=None):
         super().__init__(pot_energy, 1, val_and_grad_pot_energy)
         if metric is not None:
-            warning.warn(
+            warnings.warn(
                 f'Value of metric is ignored for {type(self).__name__}.')
 
     def _kin_energy(self, mom):
@@ -140,7 +140,7 @@ class DiagonalEuclideanMetricHamiltonianSystem(
     def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None):
         super().__init__(pot_energy, metric, val_and_grad_pot_energy)
         if hasattr(metric, 'ndim') and metric.ndim == 2:
-            warning.warn(
+            warnings.warn(
                 f'Off-diagonal metric values ignored for '
                 f'{type(self).__name__}.')
             self.metric_diagonal = metric.diagonal()
