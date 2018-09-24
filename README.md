@@ -37,7 +37,7 @@ Numerical integrators
 
 ## Example usage
 
-A simple complete example of using the package to sample from a multivariate Gaussian distribution with randomly generated parameters is given below. Here an isotropic Euclidean metric Hamiltonian system is used (corresponding to a istropic covariance Gaussian marginal distribution on the momenta) with the dynamic integration time HMC implementation proposed by Betancourt (2017), which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
+A simple complete example of using the package to sample from a multivariate Gaussian distribution with randomly generated parameters is given below. Here an isotropic Euclidean metric Hamiltonian system is used (corresponding to a isotropic covariance Gaussian marginal distribution on the momenta) with the dynamic integration time HMC implementation described in Betancourt (2017), which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
 
 ```python
 import hmc
