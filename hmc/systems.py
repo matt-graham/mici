@@ -11,8 +11,10 @@ from hmc.utils import maximum_norm
 
 autograd_available = True
 try:
-    from autograd import grad, jacobian, hessian, make_vjp
-    from hmc.autograd_extensions import grad_and_value
+    from autograd import make_vjp
+    from hmc.autograd_extensions import (
+        grad_and_value, jacobian_and_value, hessian_grad_and_value,
+        mtp_hessian_grad_and_value)
 except ImportError:
     autograd_available = False
 
@@ -340,23 +342,23 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
 
     def __init__(self, pot_energy, softabs_coeff=1.,
                  grad_pot_energy=None, hess_pot_energy=None,
-                 vjp_hess_pot_energy=None):
+                 mtp_pot_energy=None):
         super().__init__(pot_energy, grad_pot_energy)
         self.softabs_coeff = softabs_coeff
         if hess_pot_energy is None and autograd_available:
-            self._hess_pot_energy = hessian(pot_energy)
+            self._hess_pot_energy = hessian_grad_and_value(pot_energy)
         elif hess_pot_energy is None and not autograd_available:
             raise ValueError('Autograd not available therefore hess_pot_energy'
                              ' must be provided.')
         else:
             self._hess_pot_energy = hess_pot_energy
-        if vjp_hess_pot_energy is None and autograd_available:
-            self._vjp_hess_pot_energy = make_vjp(self._hess_pot_energy)
-        elif vjp_hess_pot_energy is None and not autograd_available:
-            raise ValueError('Autograd not available therefore '
-                             'vjp_hess_pot_energy must be provided.')
+        if mtp_pot_energy is None and autograd_available:
+            self._mtp_pot_energy = mtp_hessian_grad_and_value(pot_energy)
+        elif mtp_pot_energy is None and not autograd_available:
+            raise ValueError('Autograd not available therefore mtp_pot_energy '
+                             'must be provided.')
         else:
-            self._vjp_hess_pot_energy = vjp_hess_pot_energy
+            self._mtp_pot_energy = mtp_pot_energy
 
     def softabs(self, x):
         return x / np.tanh(x * self.softabs_coeff)
@@ -366,13 +368,16 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
             1. / np.tanh(self.softabs_coeff * x) -
             self.softabs_coeff * x / np.sinh(self.softabs_coeff * x)**2)
 
-    @cache_in_state('pos')
+    @multi_cache_in_state(
+        ['pos'], ['hess_pot_energy', 'grad_pot_energy', 'pot_energy'])
     def hess_pot_energy(self, state):
         return self._hess_pot_energy(state.pos)
 
-    @cache_in_state('pos')
-    def vjp_hess_pot_energy(self, state):
-        return self._vjp_hess_pot_energy(state.pos)[0]
+    @multi_cache_in_state(
+        ['pos'],
+        ['mtp_pot_energy', 'hess_pot_energy', 'grad_pot_energy', 'pot_energy'])
+    def mtp_pot_energy(self, state):
+        return self._mtp_pot_energy(state.pos)
 
     @cache_in_state('pos')
     def eig_metric(self, state):
@@ -394,7 +399,7 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
     @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
         metric_eigval, hess_eigval, eigvec = self.eig_metric(state)
-        return 0.5 * self.vjp_hess_pot_energy(state)(
+        return 0.5 * self.mtp_pot_energy(state)(
             eigvec * self.grad_softabs(hess_eigval) / metric_eigval @ eigvec.T)
 
     @cache_in_state('pos', 'mom')
@@ -411,7 +416,7 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
         np.fill_diagonal(den_j_mtx, 1)
         j_mtx = num_j_mtx / den_j_mtx
         eigvec_mom = (eigvec.T @ state.mom) / metric_eigval
-        return -self.vjp_hess_pot_energy(state)(
+        return -self.mtp_pot_energy(state)(
             eigvec @ (np.outer(eigvec_mom, eigvec_mom) * j_mtx) @ eigvec.T)
 
 
@@ -425,7 +430,7 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
                          grad_pot_energy=grad_pot_energy)
         self._constr = constr
         if jacob_constr is None and autograd_available:
-            self._jacob_constr = jacobian(constr)
+            self._jacob_constr = jacobian_and_value(constr)
         elif jacob_constr is None and not autograd_available:
             raise ValueError('Autograd not available therefore jacob_constr'
                              ' must be provided.')
@@ -440,7 +445,7 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
     def constr(self, state):
         return self._constr(state.pos)
 
-    @cache_in_state('pos')
+    @multi_cache_in_state(['pos'], ['jacob_constr', 'constr'])
     def jacob_constr(self, state):
         return self._jacob_constr(state.pos)
 
