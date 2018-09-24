@@ -87,7 +87,7 @@ class SeparableHamiltonianSystem(HamiltonianSystem):
         raise NotImplementedError()
 
 
-class BaseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
+class BaseEuclideanMetricSystem(SeparableHamiltonianSystem):
 
     def __init__(self, pot_energy, metric=None, grad_pot_energy=None):
         super().__init__(pot_energy, grad_pot_energy)
@@ -100,8 +100,7 @@ class BaseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
         raise NotImplementedError()
 
 
-class IsotropicEuclideanMetricHamiltonianSystem(
-        BaseEuclideanMetricHamiltonianSystem):
+class IsotropicEuclideanMetricSystem(BaseEuclideanMetricSystem):
     """Euclidean-Gaussian Hamiltonian system with isotropic metric.
 
     The momenta are taken to be independent of the position variables and with
@@ -130,8 +129,7 @@ class IsotropicEuclideanMetricHamiltonianSystem(
         return rhs
 
 
-class DiagonalEuclideanMetricHamiltonianSystem(
-        BaseEuclideanMetricHamiltonianSystem):
+class DiagonalEuclideanMetricSystem(BaseEuclideanMetricSystem):
     """Euclidean-Gaussian Hamiltonian system with diagonal metric.
 
     The momenta are taken to be independent of the position variables and with
@@ -164,8 +162,7 @@ class DiagonalEuclideanMetricHamiltonianSystem(
         return (rhs.T * self.metric_diagonal).T
 
 
-class DenseEuclideanMetricHamiltonianSystem(
-        BaseEuclideanMetricHamiltonianSystem):
+class DenseEuclideanMetricSystem(BaseEuclideanMetricSystem):
     """Euclidean-Gaussian Hamiltonian system with dense metric.
 
     The momenta are taken to be independent of the position variables and with
@@ -192,7 +189,7 @@ class DenseEuclideanMetricHamiltonianSystem(
         return self.metric @ rhs
 
 
-class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
+class BaseRiemannianMetricSystem(HamiltonianSystem):
 
     def sqrt_metric(self, state):
         raise NotImplementedError()
@@ -237,8 +234,7 @@ class BaseRiemannianMetricHamiltonianSystem(HamiltonianSystem):
         return sqrt_metric @ rng.normal(size=state.pos.shape)
 
 
-class BaseCholeskyRiemannianMetricHamiltonianSystem(
-        BaseRiemannianMetricHamiltonianSystem):
+class BaseCholeskyRiemannianMetricSystem(BaseRiemannianMetricSystem):
 
     def chol_metric(self, state):
         raise NotImplementedError()
@@ -257,8 +253,7 @@ class BaseCholeskyRiemannianMetricHamiltonianSystem(
         return self.chol_metric(state)
 
 
-class DenseRiemannianMetricHamiltonianSystem(
-            BaseCholeskyRiemannianMetricHamiltonianSystem):
+class DenseRiemannianMetricSystem(BaseCholeskyRiemannianMetricSystem):
 
     def __init__(self, pot_energy, metric, grad_pot_energy=None,
                  vjp_metric=None):
@@ -301,8 +296,7 @@ class DenseRiemannianMetricHamiltonianSystem(
         return self._vjp_metric(state.pos)
 
 
-class FactoredRiemannianMetricHamiltonianSystem(
-            BaseCholeskyRiemannianMetricHamiltonianSystem):
+class FactoredRiemannianMetricSystem(BaseCholeskyRiemannianMetricSystem):
 
     def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
                  vjp_chol_metric=None):
@@ -345,8 +339,7 @@ class FactoredRiemannianMetricHamiltonianSystem(
         return self._vjp_chol_metric(state.pos)
 
 
-class SoftAbsRiemannianMetricHamiltonianSystem(
-            BaseRiemannianMetricHamiltonianSystem):
+class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
 
     def __init__(self, pot_energy, softabs_coeff=1.,
                  grad_pot_energy=None, hess_pot_energy=None,
@@ -425,8 +418,7 @@ class SoftAbsRiemannianMetricHamiltonianSystem(
             eigvec @ (np.outer(eigvec_mom, eigvec_mom) * j_mtx) @ eigvec.T)
 
 
-class BaseEuclideanMetricConstrainedHamiltonianSystem(
-        BaseEuclideanMetricHamiltonianSystem):
+class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
 
     def __init__(self, pot_energy, constr, metric=None,
                  grad_pot_energy=None, jacob_constr=None,
@@ -513,25 +505,22 @@ class BaseEuclideanMetricConstrainedHamiltonianSystem(
         return state.mom
 
 
-class IsotropicEuclideanMetricConstrainedHamiltonianSystem(
-        BaseEuclideanMetricConstrainedHamiltonianSystem,
-        IsotropicEuclideanMetricHamiltonianSystem):
+class IsotropicEuclideanMetricConstrainedSystem(
+        BaseEuclideanMetricConstrainedSystem, IsotropicEuclideanMetricSystem):
     """
     Isotropic Euclidean metric Hamiltonian system with position constraints.
     """
 
 
-class DiagonalEuclideanMetricConstrainedHamiltonianSystem(
-        BaseEuclideanMetricConstrainedHamiltonianSystem,
-        DiagonalEuclideanMetricHamiltonianSystem):
+class DiagonalEuclideanMetricConstrainedSystem(
+        BaseEuclideanMetricConstrainedSystem, DiagonalEuclideanMetricSystem):
     """
     Diagonal Euclidean metric Hamiltonian system with position constraints.
     """
 
 
-class DenseEuclideanMetricConstrainedHamiltonianSystem(
-        BaseEuclideanMetricConstrainedHamiltonianSystem,
-        DenseEuclideanMetricHamiltonianSystem):
+class DenseEuclideanMetricConstrainedSystem(
+        BaseEuclideanMetricConstrainedSystem, DenseEuclideanMetricSystem):
     """
     Dense Euclidean metric Hamiltonian system with position constraints.
     """

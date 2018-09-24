@@ -60,7 +60,7 @@ def pot_energy(pos):
     return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
 
 # Specify Hamiltonian system with isotropic Gaussian kinetic energy
-system = hmc.systems.IsotropicEuclideanMetricHamiltonianSystem(pot_energy)
+system = hmc.systems.IsotropicEuclideanMetricSystem(pot_energy)
 
 # Hamiltonian is separable therefore use explicit leapfrog integrator
 integrator = hmc.integrators.LeapfrogIntegrator(system, step_size=0.15)
