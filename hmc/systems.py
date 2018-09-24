@@ -107,11 +107,8 @@ class IsotropicEuclideanMetricSystem(BaseEuclideanMetricSystem):
     a isotropic covariance zero-mean Gaussian marginal distribution.
     """
 
-    def __init__(self, pot_energy, grad_pot_energy=None, metric=None):
+    def __init__(self, pot_energy, grad_pot_energy=None, **kwargs):
         super().__init__(pot_energy, 1, grad_pot_energy)
-        if metric is not None:
-            warnings.warn(
-                f'Value of metric is ignored for {type(self).__name__}.')
 
     def _kin_energy(self, mom):
         return 0.5 * np.sum(mom**2)
