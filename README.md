@@ -1,13 +1,12 @@
 # Hamiltonian Monte Carlo
 
-Implementations of various Hamiltonian dynamics based MCMC samplers in idiomatic Python code. A modular design is used to as far as possible allowing mixing and matching elements of different proposed extensions to the original HMC algorithm proposed in Duane et al. (1987).
-
-Users can either directly specific the required model derivatives or when available [autograd](https://github.com/HIPS/autograd) can be used to construct the required derivative functions using automatic differentiation.
+Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo (MCMC) samplers in idiomatic Python code. A modular design is used to as far as possible allowing mixing and matching elements of different proposed extensions to the original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
 
 ## Dependencies
 
-To install and use the package the minimal requirements are a Python 3 environment with `numpy` and `scipy` installed. If available `autograd` will be used to automatically compute the required derivatives of the model functions (providing they are specified
-using functions from the `autograd.numpy` and `autograd.scipy` interfaces). If the `tqdm` package is available a simple progress bar will be shown during sampling.
+To install and use the package the minimal requirements are a Python 3 environment with [NumPy](http://www.numpy.org/) and [SciPy](https://www.scipy.org) installed. 
+
+If available [autograd](https://github.com/HIPS/autograd) will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the `autograd.numpy` and `autograd.scipy` interfaces). If the [tqdm](https://github.com/tqdm/tqdm) package is available a simple progress bar will be shown during sampling.
 
 ## Implemented methods
 
@@ -52,7 +51,7 @@ rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
 prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
 mean = rng.normal(size=n_dim)
 
-# Deine potential energy (negative log density) for a Gaussian
+# Define potential energy (negative log density) for a Gaussian
 # target distribution. The derivative of this function will
 # be calculated automatically using autograd
 def pot_energy(pos):
