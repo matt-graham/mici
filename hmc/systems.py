@@ -11,7 +11,8 @@ from hmc.utils import maximum_norm
 
 autograd_available = True
 try:
-    from autograd import grad, value_and_grad, jacobian, hessian, make_vjp
+    from autograd import grad, jacobian, hessian, make_vjp
+    from hmc.autograd_extensions import grad_and_value
 except ImportError:
     autograd_available = False
 
@@ -19,23 +20,23 @@ except ImportError:
 class HamiltonianSystem(object):
     """Base class for Hamiltonian systems."""
 
-    def __init__(self, pot_energy, val_and_grad_pot_energy=None):
+    def __init__(self, pot_energy, grad_pot_energy=None):
         self._pot_energy = pot_energy
-        if val_and_grad_pot_energy is None and autograd_available:
-            self._val_and_grad_pot_energy = value_and_grad(pot_energy)
-        elif val_and_grad_pot_energy is None and not autograd_available:
+        if grad_pot_energy is None and autograd_available:
+            self._grad_pot_energy = grad_and_value(pot_energy)
+        elif grad_pot_energy is None and not autograd_available:
             raise ValueError('Autograd not available therefore '
-                             'val_and_grad_pot_energy must be provided.')
+                             'grad_pot_energy must be provided.')
         else:
-            self._val_and_grad_pot_energy = val_and_grad_pot_energy
+            self._grad_pot_energy = grad_pot_energy
 
     @cache_in_state('pos')
     def pot_energy(self, state):
         return self._pot_energy(state.pos)
 
-    @multi_cache_in_state(['pos'], ['pot_energy', 'grad_pot_energy'], 1)
+    @multi_cache_in_state(['pos'], ['grad_pot_energy', 'pot_energy'])
     def grad_pot_energy(self, state):
-        return self._val_and_grad_pot_energy(state.pos)
+        return self._grad_pot_energy(state.pos)
 
     def h(self, state):
         raise NotImplementedError()
@@ -88,8 +89,8 @@ class SeparableHamiltonianSystem(HamiltonianSystem):
 
 class BaseEuclideanMetricHamiltonianSystem(SeparableHamiltonianSystem):
 
-    def __init__(self, pot_energy, metric=None, val_and_grad_pot_energy=None):
-        super().__init__(pot_energy, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, metric=None, grad_pot_energy=None):
+        super().__init__(pot_energy, grad_pot_energy)
         self.metric = metric
 
     def mult_inv_metric(self, rhs):
@@ -107,8 +108,8 @@ class IsotropicEuclideanMetricHamiltonianSystem(
     a isotropic covariance zero-mean Gaussian marginal distribution.
     """
 
-    def __init__(self, pot_energy, metric=None, val_and_grad_pot_energy=None):
-        super().__init__(pot_energy, 1, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, grad_pot_energy=None, metric=None):
+        super().__init__(pot_energy, 1, grad_pot_energy)
         if metric is not None:
             warnings.warn(
                 f'Value of metric is ignored for {type(self).__name__}.')
@@ -137,8 +138,8 @@ class DiagonalEuclideanMetricHamiltonianSystem(
     a zero-mean Gaussian marginal distribution with diagonal covariance matrix.
     """
 
-    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None):
-        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, metric, grad_pot_energy=None):
+        super().__init__(pot_energy, metric, grad_pot_energy)
         if hasattr(metric, 'ndim') and metric.ndim == 2:
             warnings.warn(
                 f'Off-diagonal metric values ignored for '
@@ -171,8 +172,8 @@ class DenseEuclideanMetricHamiltonianSystem(
     a zero-mean Gaussian marginal distribution with dense covariance matrix.
     """
 
-    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None):
-        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, metric, grad_pot_energy=None):
+        super().__init__(pot_energy, metric, grad_pot_energy)
         self.chol_metric = sla.cholesky(metric, lower=True)
 
     def _kin_energy(self, mom):
@@ -259,17 +260,17 @@ class BaseCholeskyRiemannianMetricHamiltonianSystem(
 class DenseRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, metric, val_and_grad_pot_energy=None,
-                 vjp_and_val_metric=None):
-        super().__init__(pot_energy, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, metric, grad_pot_energy=None,
+                 vjp_metric=None):
+        super().__init__(pot_energy, grad_pot_energy)
         self._metric = metric
-        if vjp_and_val_metric is None and autograd_available:
-            self._vjp_and_val_metric = make_vjp(metric)
-        elif vjp_and_val_metric is None and not autograd_available:
-            raise ValueError('Autograd not available therefore '
-                             'vjp_and_val_metric must be provided.')
+        if vjp_metric is None and autograd_available:
+            self._vjp_metric = make_vjp(metric)
+        elif vjp_metric is None and not autograd_available:
+            raise ValueError('Autograd not available therefore vjp_metric must'
+                             ' be provided.')
         else:
-            self._vjp_and_val_metric = vjp_and_val_metric
+            self._vjp_metric = vjp_metric
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
@@ -297,23 +298,23 @@ class DenseRiemannianMetricHamiltonianSystem(
 
     @multi_cache_in_state(['pos'], ['vjp_metric', 'metric'])
     def vjp_metric(self, state):
-        return self._vjp_and_val_metric(state.pos)
+        return self._vjp_metric(state.pos)
 
 
 class FactoredRiemannianMetricHamiltonianSystem(
             BaseCholeskyRiemannianMetricHamiltonianSystem):
 
-    def __init__(self, pot_energy, chol_metric, val_and_grad_pot_energy=None,
-                 vjp_and_val_chol_metric=None):
-        super().__init__(pot_energy, val_and_grad_pot_energy)
+    def __init__(self, pot_energy, chol_metric, grad_pot_energy=None,
+                 vjp_chol_metric=None):
+        super().__init__(pot_energy, grad_pot_energy)
         self._chol_metric = chol_metric
-        if vjp_and_val_chol_metric is None and autograd_available:
-            self._vjp_and_val_chol_metric = make_vjp(chol_metric)
-        elif vjp_and_val_chol_metric is None and not autograd_available:
+        if vjp_chol_metric is None and autograd_available:
+            self._vjp_chol_metric = make_vjp(chol_metric)
+        elif vjp_chol_metric is None and not autograd_available:
             raise ValueError('Autograd not available therefore '
-                             'vjp_and_val_chol_metric must be provided.')
+                             'vjp_chol_metric must be provided.')
         else:
-            self._vjp_and_val_chol_metric = vjp_and_val_chol_metric
+            self._vjp_chol_metric = vjp_chol_metric
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
@@ -341,16 +342,16 @@ class FactoredRiemannianMetricHamiltonianSystem(
 
     @multi_cache_in_state(['pos'], ['vjp_metric', 'metric'])
     def vjp_chol_metric(self, state):
-        return self._vjp_and_val_chol_metric(state.pos)
+        return self._vjp_chol_metric(state.pos)
 
 
 class SoftAbsRiemannianMetricHamiltonianSystem(
             BaseRiemannianMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, softabs_coeff=1.,
-                 val_and_grad_pot_energy=None, hess_pot_energy=None,
+                 grad_pot_energy=None, hess_pot_energy=None,
                  vjp_hess_pot_energy=None):
-        super().__init__(pot_energy, val_and_grad_pot_energy)
+        super().__init__(pot_energy, grad_pot_energy)
         self.softabs_coeff = softabs_coeff
         if hess_pot_energy is None and autograd_available:
             self._hess_pot_energy = hessian(pot_energy)
@@ -428,10 +429,11 @@ class BaseEuclideanMetricConstrainedHamiltonianSystem(
         BaseEuclideanMetricHamiltonianSystem):
 
     def __init__(self, pot_energy, constr, metric=None,
-                 val_and_grad_pot_energy=None, jacob_constr=None,
+                 grad_pot_energy=None, jacob_constr=None,
                  use_quasi_newton_method=True, tol=1e-8, max_iters=100,
                  norm=maximum_norm):
-        super().__init__(pot_energy, metric, val_and_grad_pot_energy)
+        super().__init__(pot_energy=pot_energy, metric=metric,
+                         grad_pot_energy=grad_pot_energy)
         self._constr = constr
         if jacob_constr is None and autograd_available:
             self._jacob_constr = jacobian(constr)

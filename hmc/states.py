@@ -54,8 +54,11 @@ def multi_cache_in_state(depends_on, keys, primary_index=0):
                         state.dependencies[dep].add(key)
             if prim_key not in state.cache or state.cache[prim_key] is None:
                 vals = method(self, state)
-                for k, v in zip(keys, vals):
-                    state.cache[k] = v
+                if isinstance(vals, tuple):
+                    for k, v in zip(keys, vals):
+                        state.cache[k] = v
+                else:
+                    state.cache[prim_key] = vals
             return state.cache[prim_key]
         return wrapper
     return multi_cache_in_state_decorator
