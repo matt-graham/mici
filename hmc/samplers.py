@@ -5,7 +5,7 @@ import numpy as np
 from hmc.utils import LogRepFloat
 from hmc.integrators import IntegratorError
 try:
-    import tqdm
+    import tqdm.autonotebook as tqdm
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
