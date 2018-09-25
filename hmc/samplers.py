@@ -134,7 +134,7 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
                 state_p = self.integrator.step(state_p)
         except RuntimeError as e:
             logger.warning(
-                f'Terminating trajectory due to integrator error: {e!s}')
+                f'Terminating trajectory due to integrator error:\n{e!s}')
             return state, {
                 'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
         state_p.dir *= -1
@@ -344,7 +344,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
                         f'(delta_h = {hamiltonian - h_init:.1e}).')
             except RuntimeError as e:
                 logger.warning(
-                    f'Terminating build_tree due to integrator error: {e!s}')
+                    f'Terminating build_tree due to integrator error:\n{e!s}')
                 state = None
                 terminate = True
             return terminate, state, state, state
