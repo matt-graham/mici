@@ -14,7 +14,7 @@ try:
     from autograd import make_vjp
     from hmc.autograd_extensions import (
         grad_and_value, jacobian_and_value, hessian_grad_and_value,
-        mtp_hessian_grad_and_value)
+        mhp_jacobian_and_value, mtp_hessian_grad_and_value)
 except ImportError:
     autograd_available = False
 
@@ -530,3 +530,77 @@ class DenseEuclideanMetricConstrainedSystem(
     """
     Dense Euclidean metric Hamiltonian system with position constraints.
     """
+
+
+class IsotropicMetricObservedGeneratorSystem(
+        BaseEuclideanMetricConstrainedSystem, IsotropicEuclideanMetricSystem):
+
+    def __init__(self, neg_log_input_density, generator, obs_output,
+                 grad_neg_log_input_density=None, jacob_generator=None,
+                 mhp_generator=None, use_quasi_newton_method=True, tol=1e-8,
+                 max_iters=100, norm=maximum_norm):
+        self.neg_log_input_density = neg_log_input_density
+        self._generator = generator
+        self.obs_output = obs_output
+        super().__init__(
+            pot_energy=neg_log_input_density,
+            grad_pot_energy=grad_neg_log_input_density,
+            constr=[], jacob_constr=[],
+            use_quasi_newton_method=use_quasi_newton_method, tol=tol,
+            max_iters=max_iters, norm=norm)
+        if jacob_generator is None and autograd_available:
+            self._jacob_generator = jacobian_and_value(generator)
+        elif jacob_generator is None and not autograd_available:
+            raise ValueError('Autograd not available therefore jacob_generator'
+                             ' must be provided.')
+        else:
+            self._jacob_generator = jacob_generator
+        if mhp_generator is None and autograd_available:
+            self._mhp_generator = mhp_jacobian_and_value(generator)
+        elif mhp_generator is None and not autograd_available:
+            raise ValueError('Autograd not available therefore mhp_generator'
+                             ' must be provided.')
+        else:
+            self._mhp_generator = mhp_generator
+
+    @cache_in_state('pos')
+    def generator(self, state):
+        return self._generator(state.pos)
+
+    @multi_cache_in_state(['pos'], ['jacob_generator', 'generator'])
+    def jacob_generator(self, state):
+        return self._jacob_generator(state.pos)
+
+    @multi_cache_in_state(
+        ['pos'], ['mhp_generator', 'jacob_generator', 'generator'])
+    def mhp_generator(self, state):
+        return self._mhp_generator(state.pos)
+
+    def constr(self, state):
+        return self.generator(state) - self.obs_output
+
+    def jacob_constr(self, state):
+        return self.jacob_generator(state)
+
+    @cache_in_state('pos')
+    def log_det_sqrt_gram(self, state):
+        chol_gram = self.chol_gram(state)
+        return np.log(chol_gram.diagonal()).sum()
+
+    @cache_in_state('pos')
+    def grad_log_det_sqrt_gram(self, state):
+        mhp_generator = self.mhp_generator(state)
+        jacob_generator = self.jacob_generator(state)
+        chol_gram = self.chol_gram(state)
+        gram_inv_jacob_generator = sla.cho_solve(
+            (chol_gram, True), jacob_generator)
+        return self.mhp_generator(state)(gram_inv_jacob_generator)
+
+    def h(self, state):
+        return (
+            self.pot_energy(state) + self.log_det_sqrt_gram(state) +
+            self.kin_energy(state))
+
+    def dh_dpos(self, state):
+        return (
+            self.grad_pot_energy(state) + self.grad_log_det_sqrt_gram(state))
