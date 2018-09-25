@@ -99,52 +99,52 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
 ## References
 
   1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
-     Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.
+     Hybrid Monte Carlo. *Physics letters B*, 195(2), pp.216-222.
   2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
-     Physics Letters B, 226(3-4), pp.369-371.
+     *Physics Letters B*, 226(3-4), pp.369-371.
   3. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
-     Phys. Lett. B, 268(CERN-TH-6172-91), pp.247-252.
+     *Physics Letters  B*, 268(CERN-TH-6172-91), pp.247-252.
   4. Neal, R. M., 1994. An improved acceptance procedure for the hybrid Monte
-     Carlo algorithm. Journal of Computational Physics, 111:194–203.
+     Carlo algorithm. *Journal of Computational Physics*, 111:194–203.
   6. Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo
      algorithm and the problem of calculating the free energy in several
-     variables. ZAMM ‐ Journal of Applied Mathematics and Mechanics, 85(10),
+     variables. *ZAMM ‐ Journal of Applied Mathematics and Mechanics*, 85(10),
      pp.700-710.
   7. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
-     Handbook of Markov Chain Monte Carlo, 2(11), p.2.
+     *Handbook of Markov Chain Monte Carlo*, 2(11), p.2.
   8. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
-     Hamiltonian Monte Varlo methods. Journal of the Royal Statistical Society:
-     Series B (Statistical Methodology), 73(2), pp.123-214.
+     Hamiltonian Monte Varlo methods. *Journal of the Royal Statistical Society:
+     Series B (Statistical Methodology)*, 73(2), pp.123-214.
   9. Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods
-     on implicitly defined manifolds. In Artificial intelligence and statistics
+     on implicitly defined manifolds. In *Artificial intelligence and statistics*
      (pp. 161-172).
  10. Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
-     Monte Carlo. In Geometric science of information (pp. 327-334).
+     Monte Carlo. In *Geometric science of information* (pp. 327-334).
  11. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively
-     setting path lengths in Hamiltonian Monte Carlo. Journal of Machine
-     Learning Research, 15(1), pp.1593-1623.
+     setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine
+     Learning Research*, 15(1), pp.1593-1623.
  12. Sohl-Dickstein, J., Mudigonda, M. and DeWeese, M., 2014. Hamiltonian Monte
-     Carlo Without Detailed Balance. In International Conference on Machine
-     Learning (pp. 719-726).
+     Carlo Without Detailed Balance. In *International Conference on Machine
+     Learning* (pp. 719-726).
  13. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
      Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
  14. Chao, W.L., Solomon, J., Michels, D. and Sha, F., 2015. Exponential
-     integration for Hamiltonian Monte Carlo. In International Conference on
-     Machine Learning (pp. 1142-1151).
+     integration for Hamiltonian Monte Carlo. In *International Conference on
+     Machine Learning* (pp. 1142-1151).
  15. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
-     arXiv preprint arXiv:1701.02434.
+     *arXiv preprint arXiv:1701.02434*.
  16. Lu, X., Perrone, V., Hasenclever, L., Teh, Y.W. and Vollmer, S., 2017.
-     Relativistic Monte Carlo. In Artificial Intelligence and Statistics
+     Relativistic Monte Carlo. In *Artificial Intelligence and Statistics*
      (pp. 1236-1245).
  17. Tripuraneni, N., Rowland, M., Ghahramani, Z. and Turner, R., 2017.
-     Magnetic Hamiltonian Monte Carlo. In International Conference on Machine
-     Learning (pp. 3453-3461).
+     Magnetic Hamiltonian Monte Carlo. In *International Conference on Machine
+     Learning* (pp. 3453-3461).
  18. Livingstone, S., Faulkner, M.F. and Roberts, G.O., 2017. Kinetic energy
-     choice in Hamiltonian/hybrid Monte Carlo. arXiv preprint arXiv:1706.02649.
- 18. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in differentiable generative models. Electronic Journal of Statistics, 11(2), pp.5105-5164.
+     choice in Hamiltonian/hybrid Monte Carlo. *arXiv preprint arXiv:1706.02649*.
+ 18. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in differentiable generative models. *Electronic Journal of Statistics*, 11(2), pp.5105-5164.
  19. Graham, M.M. and Storkey, A.J., 2017b. Continuously tempered Hamiltonian
-     Monte Carlo. In Proceedings of the 33rd Conference on Uncertainty in
-     Artificial Intelligence.
+     Monte Carlo. In *Proceedings of the 33rd Conference on Uncertainty in
+     Artificial Intelligence*.
  20. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
-     for sampling probability measures on submanifolds. arXiv preprint
-     arXiv:1807.02356.
+     for sampling probability measures on submanifolds. *arXiv preprint
+     arXiv:1807.02356*.
