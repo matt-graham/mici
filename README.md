@@ -24,7 +24,7 @@ Hamiltonian systems
     log density Hessian based *SoftAbs* metric (Betancourt, 2013)
   * Euclidean-metric systems subject to holonomic constraints (Hartmann and
     Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and
-    Stoltz, 2018)
+    Stoltz, 2018) and for inference in differentiable generative models when conditioning on observed outputs (Graham and Storkey, 2017a)
 
 Numerical integrators
 
@@ -91,7 +91,7 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
   * Windowed sampling (Neal, 1994)
   * Look-Ahead HMC (Sohl-Dickenstein et al., 2014)
   * Exponential integration (Chao et al., 2015)
-  * Continuous tempering (Graham and Storkey, 2017)
+  * Continuous tempering (Graham and Storkey, 2017b)
   * Non-Gaussian kinetic energies (Livingstone et al., 2017)
   * Magnetic HMC (Lu et al., 2017)
   * Relativistic HMC (Tripuraneni et al., 2017)
@@ -141,7 +141,8 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
      Learning (pp. 3453-3461).
  18. Livingstone, S., Faulkner, M.F. and Roberts, G.O., 2017. Kinetic energy
      choice in Hamiltonian/hybrid Monte Carlo. arXiv preprint arXiv:1706.02649.
- 19. Graham, M.M. and Storkey, A.J., 2017. Continuously tempered Hamiltonian
+ 18. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in differentiable generative models. Electronic Journal of Statistics, 11(2), pp.5105-5164.
+ 19. Graham, M.M. and Storkey, A.J., 2017b. Continuously tempered Hamiltonian
      Monte Carlo. In Proceedings of the 33rd Conference on Uncertainty in
      Artificial Intelligence.
  20. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
