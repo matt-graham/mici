@@ -83,7 +83,8 @@ class BaseHamiltonianMonteCarlo(object):
             var_chains.append(np.empty((n_sample + 1,) + var.shape))
             var_chains[-1][0] = var
         if TQDM_AVAILABLE:
-            s_range = tqdm.trange(n_sample, desc='Running chain', unit='it')
+            s_range = tqdm.trange(
+                n_sample, desc='Sampling', unit='it', dynamic_ncols=True)
         else:
             s_range = range(n_sample)
         for s in s_range:
