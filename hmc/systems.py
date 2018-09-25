@@ -474,6 +474,8 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
         chol_gram_prev = self.chol_gram(state_prev)
         for i in range(self.max_iters):
             constr = self.constr(state)
+            if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
+                raise ConvergenceError(f'Quasi-Newton iteration diverged.')
             if self.norm(constr) < self.tol:
                 return
             state.pos -= self.mult_inv_metric(
@@ -488,6 +490,8 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
         for i in range(self.max_iters):
             jacob_constr = self.jacob_constr(state)
             constr = self.constr(state)
+            if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
+                raise ConvergenceError(f'Newton iteration diverged.')
             if self.norm(constr) < self.tol:
                 return
             state.pos -= self.mult_inv_metric(
