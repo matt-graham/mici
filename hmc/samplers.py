@@ -139,6 +139,7 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
                 'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
         state_p.dir *= -1
         h_final = self.system.h(state_p)
+        h_final = np.inf if np.isnan(h_final) else h_final
         accept_prob = min(1, np.exp(h_init - h_final))
         if self.rng.uniform() < accept_prob:
             state = state_p
@@ -273,7 +274,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
     integrating randomly forward and backward in time by a number of steps
     equal to the previous tree size [1,2] until a termination criteria on the
     tree leaves is met [1,3]. The next chain state is chosen from the candidate
-    states using a progressive multinomial resampling scheme [2] based on the
+    states using a progressive multinomial sampling scheme [2] based on the
     relative probability densities of the different candidate states, with the
     resampling biased towards states further from the current state.
 
@@ -331,17 +332,18 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
             # recursion base case
             try:
                 state = self.integrator.step(state)
-                hamiltonian = self.system.h(state)
+                h = self.system.h(state)
+                h = np.inf if np.isnan(h) else h
                 sum_mom += state.mom
-                sum_weight += LogRepFloat(log_val=-hamiltonian)
-                stats['sum_acc_prob'] += min(1., np.exp(h_init - hamiltonian))
+                sum_weight += LogRepFloat(log_val=-h)
+                stats['sum_acc_prob'] += min(1, np.exp(h_init - h))
                 stats['n_step'] += 1
-                terminate = hamiltonian - h_init > self.max_delta_h
+                terminate = h - h_init > self.max_delta_h
                 if terminate:
                     stats['divergent'] = True
                     logger.warning(
                         f'Terminating build_tree due to integrator divergence '
-                        f'(delta_h = {hamiltonian - h_init:.1e}).')
+                        f'(delta_h = {h - h_init:.1e}).')
             except RuntimeError as e:
                 logger.warning(
                     f'Terminating build_tree due to integrator error:\n{e!s}')
