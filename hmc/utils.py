@@ -4,6 +4,32 @@ import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
 
 
+try:
+
+    import tqdm
+    import logging
+
+    class TqdmHandler(logging.StreamHandler):
+        """Simple log handler which uses tqdm write method."""
+
+        def __init__(self):
+            super().__init__()
+
+        def emit(self, record):
+            msg = self.format(record)
+            tqdm.tqdm.write(msg)
+
+    def setup_tqdm_logger():
+        """Returns a logger which redirects log output to tqdm.write."""
+        logger = logging.getLogger()
+        handler = TqdmHandler()
+        logger.addHandler(handler)
+        return logger
+
+except ImportError:
+    pass
+
+
 LOG_2 = log(2.)
 
 
