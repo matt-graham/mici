@@ -1,12 +1,9 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
 import numpy as np
+from hmc.errors import IntegratorError, NonReversibleStepError
 from hmc.solvers import solve_fixed_point_direct
 from hmc.utils import maximum_norm
-
-
-class IntegratorError(RuntimeError):
-    """Error raised when integrator step fails."""
 
 
 class LeapfrogIntegrator(object):
@@ -112,7 +109,7 @@ class GeneralisedLeapfrogIntegrator(object):
         self.step_b1(state, -dt)
         rev_diff = self.reverse_check_norm(state.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
-            raise IntegratorError(
+            raise NonReversibleStepError(
                 f'Non-reversible step. Distance between initial and '
                 f'forward-backward integrated momentums = {rev_diff:.1e}.')
         state.mom = mom_fwd
@@ -124,7 +121,7 @@ class GeneralisedLeapfrogIntegrator(object):
         self.step_c2(state, -dt)
         rev_diff = self.reverse_check_norm(state.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
-            raise IntegratorError(
+            raise NonReversibleStepError(
                 f'Non-reversible step. Distance between initial and '
                 f'forward-backward integrated positions = {rev_diff:.1e}.')
         state.pos = pos_fwd
@@ -181,7 +178,7 @@ class BaseConstrainedLeapfrogIntegrator(object):
             self.system.project_onto_manifold(state_back, state)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
-                raise IntegratorError(
+                raise NonReversibleStepError(
                     f'Non-reversible step. Distance between initial and '
                     f'forward-backward integrated positions = {rev_diff:.1e}.')
 

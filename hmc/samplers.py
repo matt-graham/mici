@@ -3,7 +3,8 @@
 import logging
 import numpy as np
 from hmc.utils import LogRepFloat
-from hmc.integrators import IntegratorError
+from hmc.errors import (
+    IntegratorError, NonReversibleStepError, ConvergenceError)
 try:
     import tqdm.autonotebook as tqdm
     TQDM_AVAILABLE = True
@@ -67,16 +68,25 @@ class BaseHamiltonianMonteCarlo(object):
     def sample_dynamics_transition(self, state):
         raise NotImplementedError()
 
-    def initialise_chain_stats(self, init_state, n_sample):
-        raise NotImplementedError()
+    def initialise_chain_stats(self, n_sample):
+        chain_stats = {
+            'hamiltonian': np.empty(n_sample, np.float64),
+            'n_step': np.empty(n_sample, np.int64),
+            'accept_prob': np.empty(n_sample, np.float64),
+            'non_reversible_step': np.full(n_sample, False, dtype=np.bool),
+            'convergence_error': np.full(n_sample, False, dtype=np.bool)
+        }
+        return chain_stats
 
     def update_chain_stats(self, s, chain_stats, trans_stats):
-        raise NotImplementedError()
+        for key, value in trans_stats.items():
+            if key in chain_stats:
+                chain_stats[key][s] = trans_stats[key]
 
     def sample_chain(self, n_sample, state, chain_var_funcs=[extract_pos]):
         if state.mom is None:
             state.mom = self.system.sample_momentum(state, self.rng)
-        chain_stats = self.initialise_chain_stats(state, n_sample)
+        chain_stats = self.initialise_chain_stats(n_sample)
         var_chains = []
         for chain_func in chain_var_funcs:
             var = chain_func(state)
@@ -112,31 +122,19 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
     the negation of its initial value.
     """
 
-    def initialise_chain_stats(self, init_state, n_sample):
-        chain_stats = {
-            'hamiltonian': np.empty(n_sample + 1, np.float64),
-            'n_step': np.empty(n_sample, np.int64),
-            'accept_prob': np.empty(n_sample, np.float64)
-        }
-        chain_stats['hamiltonian'][0] = self.system.h(init_state)
-        return chain_stats
-
-    def update_chain_stats(self, s, chain_stats, trans_stats):
-        chain_stats['hamiltonian'][s + 1] = trans_stats['hamiltonian']
-        chain_stats['n_step'][s] = trans_stats['n_step']
-        chain_stats['accept_prob'][s] = trans_stats['accept_prob']
-
     def _sample_dynamics_transition(self, state, n_step):
         h_init = self.system.h(state)
         state_p = state
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
-        except RuntimeError as e:
-            logger.warning(
+        except IntegratorError as e:
+            logger.info(
                 f'Terminating trajectory due to integrator error:\n{e!s}')
             return state, {
-                'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
+                'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s,
+                'non_reversible_step': isinstance(e, NonReversibleStepError),
+                'convergence_error': isinstance(e, ConvergenceError)}
         state_p.dir *= -1
         h_final = self.system.h(state_p)
         h_final = np.inf if np.isnan(h_final) else h_final
@@ -145,7 +143,8 @@ class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
             state = state_p
         state.dir *= -1
         stats = {'hamiltonian': self.system.h(state),
-                 'accept_prob': accept_prob, 'n_step': n_step}
+                 'accept_prob': accept_prob, 'n_step': n_step,
+                 'non_reversible_step': False, 'convergence_error': False}
         return state, stats
 
 
@@ -295,23 +294,11 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
 
-    def initialise_chain_stats(self, init_state, n_sample):
-        chain_stats = {
-            'hamiltonian': np.empty(n_sample + 1, np.float64),
-            'n_step': np.empty(n_sample, np.int64),
-            'accept_prob': np.empty(n_sample, np.float64),
-            'tree_depth': np.empty(n_sample, np.int64),
-            'divergent': np.empty(n_sample, np.bool)
-        }
-        chain_stats['hamiltonian'][0] = self.system.h(init_state)
+    def initialise_chain_stats(self, n_sample):
+        chain_stats = super().initialise_chain_stats(n_sample)
+        chain_stats['tree_depth'] = np.empty(n_sample, np.int64)
+        chain_stats['divergent'] = np.full(n_sample, False, np.bool)
         return chain_stats
-
-    def update_chain_stats(self, s, chain_stats, trans_stats):
-        chain_stats['hamiltonian'][s + 1] = trans_stats['hamiltonian']
-        chain_stats['n_step'][s] = trans_stats['n_step']
-        chain_stats['accept_prob'][s] = trans_stats['accept_prob']
-        chain_stats['tree_depth'][s] = trans_stats['tree_depth']
-        chain_stats['divergent'][s] = trans_stats['divergent']
 
     def termination_criterion(self, state_1, state_2, sum_mom):
         return (
@@ -341,12 +328,15 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
                 terminate = h - h_init > self.max_delta_h
                 if terminate:
                     stats['divergent'] = True
-                    logger.warning(
+                    logger.info(
                         f'Terminating build_tree due to integrator divergence '
                         f'(delta_h = {h - h_init:.1e}).')
-            except RuntimeError as e:
-                logger.warning(
+            except IntegratorError as e:
+                logger.info(
                     f'Terminating build_tree due to integrator error:\n{e!s}')
+                stats['non_reversible_step'] = isinstance(
+                    e, NonReversibleStepError)
+                stats['convergence_error'] = isinstance(e, ConvergenceError)
                 state = None
                 terminate = True
             return terminate, state, state, state
@@ -379,7 +369,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         h_init = self.system.h(state)
         sum_mom = state.mom.copy()
         sum_weight = LogRepFloat(log_val=-h_init)
-        stats = {'n_step': 0, 'divergent': False, 'sum_acc_prob': 0.}
+        stats = {'n_step': 0, 'sum_acc_prob': 0.}
         state_n, state_l, state_r = state, state.copy(), state.copy()
         # set integration directions of initial left and right tree leaves
         state_l.dir = -1

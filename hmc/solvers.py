@@ -1,11 +1,8 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
 from hmc.utils import maximum_norm
+from hmc.errors import ConvergenceError
 import numpy as np
-
-
-class ConvergenceError(RuntimeError):
-    """Error raised when solver fails to converge within allowed iterations."""
 
 
 def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
