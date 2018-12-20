@@ -274,13 +274,75 @@ class RandomMetropolisCorrelatedMomentumHMC(
     """
 
 
+def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    """No-U-turn termination criterion for Euclidean manifolds [1].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the vector from
+    the position of the first terminal state to the position of the second
+    terminal state, corresponding to further evolution of the trajectory
+    reducing the distance between the terminal state positions.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (HamiltonianState): First terminal state of trajectory.
+        state_2 (HamiltonianState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    """
+    return (
+        system.dh_dmom(state_1).dot(state_2.pos - state_1.pos) < 0 or
+        system.dh_dmom(state_2).dot(state_2.pos - state_1.pos) < 0)
+
+
+def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    """Generalised no-U-turn termination criterion on Riemannian manifolds [2].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the sum of the
+    the momentums across the trajectory from the first to second terminal state
+    of the first terminal state to the position of the second terminal state.
+    This generalises the no-U-turn criterion of [1] to Riemannian manifolds
+    where due to the intrinsic curvature of the space the geodesic between
+    two points is general no longer a straight line.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (HamiltonianState): First terminal state of trajectory.
+        state_2 (HamiltonianState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+         manifolds. arXiv preprint arXiv:1304.1920.
+    """
+    return (
+        system.dh_dmom(state_1).dot(sum_mom) < 0 or
+        system.dh_dmom(state_2).dot(sum_mom) < 0)
+
+
 class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
     """Dynamic integration time HMC with multinomial sampling of new state.
 
     In each transition a binary tree of states is recursively computed by
     integrating randomly forward and backward in time by a number of steps
     equal to the previous tree size [1,2] until a termination criteria on the
-    tree leaves is met [1,3]. The next chain state is chosen from the candidate
+    tree leaves is met. The next chain state is chosen from the candidate
     states using a progressive multinomial sampling scheme [2] based on the
     relative probability densities of the different candidate states, with the
     resampling biased towards states further from the current state.
@@ -292,15 +354,15 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
          Journal of Machine Learning Research, 15(1), pp.1593-1623.
       2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
          Carlo. arXiv preprint arXiv:1701.02434.
-      3. Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
-         manifolds. arXiv preprint arXiv:1304.1920.
     """
 
-    def __init__(self, system, integrator, rng, max_tree_depth=10,
-                 max_delta_h=1000):
+    def __init__(self, system, integrator, rng,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=riemannian_no_u_turn_criterion):
         super().__init__(system, integrator, rng)
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
+        self._termination_criterion = termination_criterion
 
     def initialise_chain_stats(self, n_sample):
         chain_stats = super().initialise_chain_stats(n_sample)
@@ -309,9 +371,8 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         return chain_stats
 
     def termination_criterion(self, state_1, state_2, sum_mom):
-        return (
-            self.system.dh_dmom(state_1).dot(sum_mom) < 0 or
-            self.system.dh_dmom(state_2).dot(sum_mom) < 0)
+        return self._termination_criterion(
+            self.system, state_1, state_2, sum_mom)
 
     # Key to subscripts used in build_tree and sample_dynamics_transition
     # _p : proposal
