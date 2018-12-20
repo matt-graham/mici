@@ -90,20 +90,28 @@ class BaseHamiltonianMonteCarlo(object):
         var_chains = []
         for chain_func in chain_var_funcs:
             var = chain_func(state)
-            var_chains.append(np.empty((n_sample + 1,) + var.shape))
+            var_chains.append(np.full((n_sample + 1,) + var.shape, np.nan))
             var_chains[-1][0] = var
         if TQDM_AVAILABLE:
             s_range = tqdm.trange(
                 n_sample, desc='Sampling', unit='it', dynamic_ncols=True)
         else:
             s_range = range(n_sample)
-        for s in s_range:
-            state = self.sample_momentum_transition(state)
-            state, trans_stats = self.sample_dynamics_transition(state)
-            self.update_chain_stats(s, chain_stats, trans_stats)
-            for chain_func, var_chain in zip(chain_var_funcs, var_chains):
-                var_chain[s + 1] = chain_func(state)
-        return var_chains + [chain_stats]
+        try:
+            for s in s_range:
+                state = self.sample_momentum_transition(state)
+                state, trans_stats = self.sample_dynamics_transition(state)
+                self.update_chain_stats(s, chain_stats, trans_stats)
+                for chain_func, var_chain in zip(chain_var_funcs, var_chains):
+                    var_chain[s + 1] = chain_func(state)
+        except KeyboardInterrupt:
+            logger.exception(
+                f'Sampling manually interrupted at iteration {s}. Arrays '
+                f'containing chain variables and statistics computed before '
+                f'interruption will be returned, all entries after index {s} '
+                f'should be ignored.')
+        finally:
+            return var_chains + [chain_stats]
 
 
 class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
