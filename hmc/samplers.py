@@ -6,7 +6,7 @@ from hmc.utils import LogRepFloat
 from hmc.errors import (
     IntegratorError, NonReversibleStepError, ConvergenceError)
 try:
-    import tqdm.autonotebook as tqdm
+    import tqdm.auto as tqdm
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
