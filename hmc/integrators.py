@@ -1,9 +1,9 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
 import numpy as np
-from hmc.errors import IntegratorError, NonReversibleStepError
-from hmc.solvers import solve_fixed_point_direct
-from hmc.utils import maximum_norm
+from hmc.errors import NonReversibleStepError
+from hmc.solvers import (maximum_norm, solve_fixed_point_direct,
+                         project_onto_manifold_quasi_newton)
 
 
 class LeapfrogIntegrator(object):
@@ -149,12 +149,26 @@ class BaseConstrainedLeapfrogIntegrator(object):
     """Leapfrog iterator for constrained separable Hamiltonian systems."""
 
     def __init__(self, system, step_size, n_inner_step=1,
-                 reverse_check_tol=1e-8, reverse_check_norm=maximum_norm):
+                 reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
+                 projection_solver=project_onto_manifold_quasi_newton,
+                 projection_solver_kwargs=None):
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
+        self.projection_solver = projection_solver
+        if projection_solver_kwargs is None:
+            projection_solver_kwargs = {
+                'tol': 1e-8, 'max_iters': 100, 'norm': maximum_norm}
+        self.projection_solver_kwargs = projection_solver_kwargs
+
+    def project_onto_manifold(self, state, state_prev):
+        self.projection_solver(
+            state, state_prev, self.system, **self.projection_solver_kwargs)
+
+    def project_onto_tangent_space(self, state):
+        self.system.project_onto_tangent_space(state)
 
     def step_a(self, state, dt):
         raise NotImplementedError()
@@ -170,12 +184,12 @@ class BaseConstrainedLeapfrogIntegrator(object):
         for i in range(self.n_inner_step):
             state_prev = state.copy()
             self.step_b_inner(state, dt_i)
-            self.system.project_onto_manifold(state, state_prev)
+            self.project_onto_manifold(state, state_prev)
             self.solve_for_mom_post_projection(state, state_prev, dt_i)
-            self.system.project_onto_tangent_space(state)
+            self.project_onto_tangent_space(state)
             state_back = state.copy()
             self.step_b_inner(state_back, -dt_i)
-            self.system.project_onto_manifold(state_back, state)
+            self.project_onto_manifold(state_back, state)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -186,10 +200,10 @@ class BaseConstrainedLeapfrogIntegrator(object):
         dt = state.dir * self.step_size
         state = state.copy()
         self.step_a(state, 0.5 * dt)
-        self.system.project_onto_tangent_space(state)
+        self.project_onto_tangent_space(state)
         self.step_b(state, dt)
         self.step_a(state, 0.5 * dt)
-        self.system.project_onto_tangent_space(state)
+        self.project_onto_tangent_space(state)
         return state
 
 

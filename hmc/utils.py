@@ -33,16 +33,6 @@ except ImportError:
 LOG_2 = log(2.)
 
 
-def euclidean_norm(vct):
-    """Calculate the Euclidean (L-2) norm of a vector."""
-    return np.sum(vct**2)**0.5
-
-
-def maximum_norm(vct):
-    """Calculate the maximum (L-infinity) norm of a vector."""
-    return np.max(abs(vct))
-
-
 def log1p_exp(val):
     if val > 0.:
         return val + log1p(exp(-val))

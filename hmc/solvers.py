@@ -1,8 +1,18 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
-from hmc.utils import maximum_norm
 from hmc.errors import ConvergenceError
 import numpy as np
+import scipy.linalg as sla
+
+
+def euclidean_norm(vct):
+    """Calculate the Euclidean (L-2) norm of a vector."""
+    return np.sum(vct**2)**0.5
+
+
+def maximum_norm(vct):
+    """Calculate the maximum (L-infinity) norm of a vector."""
+    return np.max(abs(vct))
 
 
 def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
@@ -25,13 +35,13 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
         x = func(x0)
         if any(np.isnan(x)) or any(np.isinf(x)):
             raise ConvergenceError(
-                f'Fixed point iteration diverged, last error {error:.1e}.')
+                f'Fixed point iteration diverged on iteration {i}.')
         error = norm(x - x0)
         if error < tol:
             return x
         x0 = x
     raise ConvergenceError(
-        f'Fixed point iteration did not converge, last error {error:.1e}.')
+        f'Fixed point iteration did not converge. Last error {error:.1e}.')
 
 
 def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
@@ -63,10 +73,44 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
         x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
         if any(np.isnan(x)) or any(np.isinf(x)):
             raise ConvergenceError(
-                f'Fixed point iteration diverged, last error {error:.1e}.')
+                f'Fixed point iteration diverged on iteration {i}.')
         error = norm(x - x0)
         if error < tol:
             return x
         x0 = x
     raise ConvergenceError(
-        f'Fixed point iteration did not converge, last error {error:.1e}.')
+        f'Fixed point iteration did not converge. Last error {error:.1e}.')
+
+
+def project_onto_manifold_quasi_newton(state, state_prev, system, tol=1e-8,
+                                       max_iters=100, norm=maximum_norm):
+    jacob_constr_prev = system.jacob_constr(state_prev)
+    chol_gram_prev = (system.chol_gram(state_prev), True)
+    for i in range(max_iters):
+        constr = system.constr(state)
+        if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
+            raise ConvergenceError(f'Quasi-Newton iteration diverged.')
+        error = norm(constr)
+        if error < tol:
+            return state
+        state.pos -= system.mult_inv_metric(
+            jacob_constr_prev.T @ sla.cho_solve(chol_gram_prev, constr))
+    raise ConvergenceError(
+        f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
+
+
+def project_onto_manifold_newton(state, state_prev, system, tol=1e-8,
+                                 max_iters=100, norm=maximum_norm):
+    inv_metr_jacob_constr_prev_t = system.inv_metric_jacob_constr_t(state_prev)
+    for i in range(max_iters):
+        jacob_constr = system.jacob_constr(state)
+        constr = system.constr(state)
+        if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
+            raise ConvergenceError(f'Newton iteration diverged.')
+        error = norm(constr)
+        if error < tol:
+            return state
+        state.pos -= inv_metr_jacob_constr_prev_t @ sla.solve(
+            jacob_constr @ inv_metr_jacob_constr_prev_t, constr)
+    raise ConvergenceError(
+        f'Newton iteration did not converge. Last error {error:.1e}.')
