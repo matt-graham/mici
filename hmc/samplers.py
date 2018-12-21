@@ -244,7 +244,6 @@ class BaseCorrelatedMomentumHMC(BaseHamiltonianMonteCarlo):
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample_momentum_transition(self, state):
-        return self.system.sample_momentum(state, self.rng)
         if self.mom_resample_coeff == 1:
             state.mom = self.system.sample_momentum(state, self.rng)
         elif self.mom_resample_coeff != 0:

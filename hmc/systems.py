@@ -452,21 +452,19 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
         gram = jacob_constr @ self.inv_metric_jacob_constr_t(state)
         return sla.cholesky(gram, lower=True)
 
-    def project_onto_tangent_space(self, state):
+    def project_onto_tangent_space(self, mom, state):
         jacob_constr = self.jacob_constr(state)
         chol_gram = self.chol_gram(state)
-        non_tangent_mom_component = (
-            jacob_constr.T @ sla.cho_solve(
-                (chol_gram, True), jacob_constr @ self.dh_dmom(state)))
-        state.mom -= non_tangent_mom_component
+        mom -= jacob_constr.T @ sla.cho_solve(
+            (chol_gram, True), jacob_constr @ self.mult_inv_metric(mom))
 
     def solve_dh_dmom_for_mom(self, dpos_dt):
         return self.mult_metric(dpos_dt)
 
     def sample_momentum(self, state, rng):
-        state.mom = super().sample_momentum(state, rng)
-        self.project_onto_tangent_space(state)
-        return state.mom
+        mom = super().sample_momentum(state, rng)
+        self.project_onto_tangent_space(mom, state)
+        return mom
 
 
 class IsotropicEuclideanMetricConstrainedSystem(

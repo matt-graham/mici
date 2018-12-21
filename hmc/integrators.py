@@ -168,7 +168,7 @@ class BaseConstrainedLeapfrogIntegrator(object):
             state, state_prev, self.system, **self.projection_solver_kwargs)
 
     def project_onto_tangent_space(self, state):
-        self.system.project_onto_tangent_space(state)
+        self.system.project_onto_tangent_space(state.mom, state)
 
     def step_a(self, state, dt):
         raise NotImplementedError()
