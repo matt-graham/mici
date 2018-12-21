@@ -154,8 +154,8 @@ class BaseHamiltonianMonteCarlo(object):
                 f'containing chain variables and statistics computed before '
                 f'interruption will be returned, all entries after index {s} '
                 f'should be ignored.')
-        finally:
             return var_chains + [chain_stats]
+        return var_chains + [chain_stats]
 
 
 class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
