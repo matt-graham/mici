@@ -68,7 +68,7 @@ class BaseHamiltonianMonteCarlo(object):
     def sample_dynamics_transition(self, state):
         raise NotImplementedError()
 
-    def initialise_chain_stats(self, n_sample):
+    def _initialise_chain_stats(self, n_sample):
         """Initialise the dictionary of chain statistics with empty arrays.
 
         Should be overridden by any subclasses which record additional chain
@@ -83,7 +83,7 @@ class BaseHamiltonianMonteCarlo(object):
         }
         return chain_stats
 
-    def update_chain_stats(self, s, chain_stats, trans_stats):
+    def _update_chain_stats(self, s, chain_stats, trans_stats):
         """Update chain statistics dictionary with transition statistics.
 
         Args:
@@ -130,7 +130,7 @@ class BaseHamiltonianMonteCarlo(object):
         """
         if state.mom is None:
             state.mom = self.system.sample_momentum(state, self.rng)
-        chain_stats = self.initialise_chain_stats(n_sample)
+        chain_stats = self._initialise_chain_stats(n_sample)
         var_chains = []
         for chain_func in chain_var_funcs:
             var = chain_func(state)
@@ -145,7 +145,7 @@ class BaseHamiltonianMonteCarlo(object):
             for s in s_range:
                 state = self.sample_momentum_transition(state)
                 state, trans_stats = self.sample_dynamics_transition(state)
-                self.update_chain_stats(s, chain_stats, trans_stats)
+                self._update_chain_stats(s, chain_stats, trans_stats)
                 for chain_func, var_chain in zip(chain_var_funcs, var_chains):
                     var_chain[s + 1] = chain_func(state)
         except KeyboardInterrupt:
@@ -407,8 +407,8 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         self.max_delta_h = max_delta_h
         self._termination_criterion = termination_criterion
 
-    def initialise_chain_stats(self, n_sample):
-        chain_stats = super().initialise_chain_stats(n_sample)
+    def _initialise_chain_stats(self, n_sample):
+        chain_stats = super()._initialise_chain_stats(n_sample)
         chain_stats['tree_depth'] = np.empty(n_sample, np.int64)
         chain_stats['divergent'] = np.full(n_sample, False, np.bool)
         return chain_stats
@@ -426,7 +426,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
     # _i : inner subsubtree
     # _o : outer subsubtree
 
-    def build_tree(self, depth, state, sum_mom, sum_weight, stats, h_init):
+    def _build_tree(self, depth, state, sum_mom, sum_weight, stats, h_init):
         if depth == 0:
             # recursion base case
             try:
@@ -455,12 +455,12 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
         sum_mom_i, sum_mom_o = np.zeros((2, state.n_dim))
         sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
         # build inner subsubtree
-        terminate_i, state_i, state, state_pi = self.build_tree(
+        terminate_i, state_i, state, state_pi = self._build_tree(
             depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init)
         if terminate_i:
             return True, None, None, None
         # build outer subsubtree
-        terminate_o, _, state_o, state_po = self.build_tree(
+        terminate_o, _, state_o, state_po = self._build_tree(
             depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init)
         if terminate_o:
             return True, None, None, None
@@ -493,11 +493,11 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
             sum_weight_s = LogRepFloat(0.)
             if direction == 1:
                 # expand tree by adding subtree to right edge
-                terminate_s, _, state_r, state_p = self.build_tree(
+                terminate_s, _, state_r, state_p = self._build_tree(
                     depth, state_r, sum_mom_s, sum_weight_s, stats, h_init)
             else:
                 # expand tree by adding subtree to left edge
-                terminate_s, _, state_l, state_p = self.build_tree(
+                terminate_s, _, state_l, state_p = self._build_tree(
                     depth, state_l, sum_mom_s, sum_weight_s, stats, h_init)
             if terminate_s:
                 break
