@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+from hmc.states import HamiltonianState
 from hmc.utils import LogRepFloat
 from hmc.errors import (
     IntegratorError, NonReversibleStepError, ConvergenceError)
@@ -101,7 +102,8 @@ class BaseHamiltonianMonteCarlo(object):
             if key in chain_stats:
                 chain_stats[key][s] = trans_stats[key]
 
-    def sample_chain(self, n_sample, state, chain_var_funcs=[extract_pos]):
+    def sample_chain(self, n_sample, init_state,
+                     chain_var_funcs=[extract_pos]):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -113,21 +115,30 @@ class BaseHamiltonianMonteCarlo(object):
                 The returned chain variables arrays first dimension will be of
                 size `n_sample + 1` as the chains variable functions are also
                 evaluated on the initial chain state.
-            state (HamiltonianState): Initial chain state.
-            chain_var_funcs (Iterable[Callable]): List of
-               functions which compute the chain variables to be recorded
-               at each iteration, with each function being passed the
-               current state and returning an array corresponding to the
-               variable(s) to be stored. By default a single function which
-               returns the position component of the state is used, so that
-               there is a single returned variable chain corresponding to
-               the sequence of position variables.
+            init_state (HamiltonianState or ndarray): Initial chain state.
+               Either a `HamiltonianState` instance or a NumPy array specifying
+               the position component of the initial state. If an array is
+               passed or the `mom` attribute of the state is not set, the
+               momentum component of the initial state will be independently
+               sampled from its conditional distribution.
+            chain_var_funcs (Iterable[Callable]): List of functions which
+               compute the chain variables to be recorded at each iteration,
+               with each function being passed the current state and returning
+               an array corresponding to the variable(s) to be stored. By
+               default a single function which returns the position component
+               of the state is used, so that there is a single returned
+               variable chain corresponding to the sequence of position
+               variables.
 
         Returns:
             List of arrays of chain variables recorded during sampling (one
             array is returned per function in `chain_var_funcs`) plus a
             dictionary of statistics about the chain as the final list item.
         """
+        if not isinstance(init_state, HamiltonianState):
+            state = HamiltonianState(init_state)
+        else:
+            state = init_state
         if state.mom is None:
             state.mom = self.system.sample_momentum(state, self.rng)
         chain_stats = self._initialise_chain_stats(n_sample)
