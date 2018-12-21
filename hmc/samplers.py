@@ -69,6 +69,11 @@ class BaseHamiltonianMonteCarlo(object):
         raise NotImplementedError()
 
     def initialise_chain_stats(self, n_sample):
+        """Initialise the dictionary of chain statistics with empty arrays.
+
+        Should be overridden by any subclasses which record additional chain
+        statistics during sampling.
+        """
         chain_stats = {
             'hamiltonian': np.empty(n_sample, np.float64),
             'n_step': np.empty(n_sample, np.int64),
@@ -79,11 +84,50 @@ class BaseHamiltonianMonteCarlo(object):
         return chain_stats
 
     def update_chain_stats(self, s, chain_stats, trans_stats):
+        """Update chain statistics dictionary with transition statistics.
+
+        Args:
+            s (int): Current chain sample (iteration) index.
+            chains_stats (dict[str, ndarray]): Statistics accumulated for chain
+                up to last Markov transition.
+            trans_stats (dict[str, ndarray]): Statistics computed for last
+                chain Markov transition.
+
+        Returns:
+            dict[str, ndarray]: Updated chain statistics including values for
+                last Markov transition.
+        """
         for key, value in trans_stats.items():
             if key in chain_stats:
                 chain_stats[key][s] = trans_stats[key]
 
     def sample_chain(self, n_sample, state, chain_var_funcs=[extract_pos]):
+        """Sample a Markov chain from a given initial state.
+
+        Performs a specified number of chain iterations (each of which may be
+        composed of multiple individual Markov transitions), recording
+        the outputs of functions of the chain state after each iteration.
+
+        Args:
+            n_sample (int): Number of chain samples (iterations) to compute.
+                The returned chain variables arrays first dimension will be of
+                size `n_sample + 1` as the chains variable functions are also
+                evaluated on the initial chain state.
+            state (HamiltonianState): Initial chain state.
+            chain_var_funcs (Iterable[Callable]): List of
+               functions which compute the chain variables to be recorded
+               at each iteration, with each function being passed the
+               current state and returning an array corresponding to the
+               variable(s) to be stored. By default a single function which
+               returns the position component of the state is used, so that
+               there is a single returned variable chain corresponding to
+               the sequence of position variables.
+
+        Returns:
+            List of arrays of chain variables recorded during sampling (one
+            array is returned per function in `chain_var_funcs`) plus a
+            dictionary of statistics about the chain as the final list item.
+        """
         if state.mom is None:
             state.mom = self.system.sample_momentum(state, self.rng)
         chain_stats = self.initialise_chain_stats(n_sample)
