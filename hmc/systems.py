@@ -2,9 +2,7 @@
 
 import warnings
 import numpy as np
-import numpy.linalg as nla
 import scipy.linalg as sla
-import scipy.optimize as opt
 from hmc.states import cache_in_state, multi_cache_in_state
 
 autograd_available = True
