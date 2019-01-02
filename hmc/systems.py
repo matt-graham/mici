@@ -1,6 +1,6 @@
 """Classes to represent Hamiltonian systems of various types."""
 
-import warnings
+import logging
 import numpy as np
 import scipy.linalg as sla
 from hmc.states import cache_in_state, multi_cache_in_state
@@ -13,6 +13,8 @@ try:
         mhp_jacobian_and_value, mtp_hessian_grad_and_value)
 except ImportError:
     autograd_available = False
+
+logger = logging.getLogger(__name__)
 
 
 class HamiltonianSystem(object):
@@ -134,7 +136,7 @@ class DiagonalEuclideanMetricSystem(BaseEuclideanMetricSystem):
     def __init__(self, pot_energy, metric, grad_pot_energy=None):
         super().__init__(pot_energy, metric, grad_pot_energy)
         if hasattr(metric, 'ndim') and metric.ndim == 2:
-            warnings.warn(
+            logger.warning(
                 f'Off-diagonal metric values ignored for '
                 f'{type(self).__name__}.')
             self.metric_diagonal = metric.diagonal()
