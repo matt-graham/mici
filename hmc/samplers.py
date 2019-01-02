@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+import hmc
 from hmc.states import HamiltonianState
 from hmc.utils import LogRepFloat
 from hmc.errors import (
@@ -11,6 +12,11 @@ try:
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
+try:
+    import arviz
+    ARVIZ_AVAILABLE = True
+except ImportError:
+    ARVIZ_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -84,89 +90,212 @@ class BaseHamiltonianMonteCarlo(object):
         }
         return chain_stats
 
-    def _update_chain_stats(self, s, chain_stats, trans_stats):
+    def _update_chain_stats(self, sample_index, chain_stats, trans_stats):
         """Update chain statistics dictionary with transition statistics.
 
         Args:
-            s (int): Current chain sample (iteration) index.
-            chains_stats (dict[str, ndarray]): Statistics accumulated for chain
+            sample_index (int): Current chain sample (iteration) index.
+            chains_stats (dict[str, array]): Statistics accumulated for chain
                 up to last Markov transition.
-            trans_stats (dict[str, ndarray]): Statistics computed for last
+            trans_stats (dict[str, array]): Statistics computed for last
                 chain Markov transition.
 
         Returns:
-            dict[str, ndarray]: Updated chain statistics including values for
+            dict[str, array]: Updated chain statistics including values for
                 last Markov transition.
         """
         for key, value in trans_stats.items():
             if key in chain_stats:
-                chain_stats[key][s] = trans_stats[key]
+                chain_stats[key][sample_index] = trans_stats[key]
 
-    def sample_chain(self, n_sample, init_state,
-                     chain_var_funcs=[extract_pos]):
-        """Sample a Markov chain from a given initial state.
-
-        Performs a specified number of chain iterations (each of which may be
-        composed of multiple individual Markov transitions), recording
-        the outputs of functions of the chain state after each iteration.
-
-        Args:
-            n_sample (int): Number of chain samples (iterations) to compute.
-                The returned chain variables arrays first dimension will be of
-                size `n_sample + 1` as the chains variable functions are also
-                evaluated on the initial chain state.
-            init_state (HamiltonianState or ndarray): Initial chain state.
-               Either a `HamiltonianState` instance or a NumPy array specifying
-               the position component of the initial state. If an array is
-               passed or the `mom` attribute of the state is not set, the
-               momentum component of the initial state will be independently
-               sampled from its conditional distribution.
-            chain_var_funcs (Iterable[Callable]): List of functions which
-               compute the chain variables to be recorded at each iteration,
-               with each function being passed the current state and returning
-               an array corresponding to the variable(s) to be stored. By
-               default a single function which returns the position component
-               of the state is used, so that there is a single returned
-               variable chain corresponding to the sequence of position
-               variables.
-
-        Returns:
-            List of arrays of chain variables recorded during sampling (one
-            array is returned per function in `chain_var_funcs`) plus a
-            dictionary of statistics about the chain as the final list item.
-        """
+    def _sample_chain(self, n_sample, init_state, chain_var_funcs=None,
+                      tqdm_desc='Sampling'):
         if not isinstance(init_state, HamiltonianState):
             state = HamiltonianState(init_state)
         else:
             state = init_state
         if state.mom is None:
             state.mom = self.system.sample_momentum(state, self.rng)
+        if chain_var_funcs is None:
+            chain_var_funcs = {'pos': extract_pos}
         chain_stats = self._initialise_chain_stats(n_sample)
-        var_chains = []
-        for chain_func in chain_var_funcs:
-            var = chain_func(state)
-            var_chains.append(np.full((n_sample + 1,) + var.shape, np.nan))
-            var_chains[-1][0] = var
+        chains = {}
         if TQDM_AVAILABLE:
-            s_range = tqdm.trange(
-                n_sample, desc='Sampling', unit='it', dynamic_ncols=True)
+            sample_range = tqdm.trange(
+                n_sample, desc=tqdm_desc, unit='it', dynamic_ncols=True)
         else:
-            s_range = range(n_sample)
+            sample_range = range(n_sample)
         try:
-            for s in s_range:
+            for sample_index in sample_range:
                 state = self.sample_momentum_transition(state)
                 state, trans_stats = self.sample_dynamics_transition(state)
-                self._update_chain_stats(s, chain_stats, trans_stats)
-                for chain_func, var_chain in zip(chain_var_funcs, var_chains):
-                    var_chain[s + 1] = chain_func(state)
+                self._update_chain_stats(
+                    sample_index, chain_stats, trans_stats)
+                for key, chain_func in chain_var_funcs.items():
+                    var = chain_func(state)
+                    if sample_index == 0:
+                        chains[key] = np.full((n_sample,) + var.shape, np.nan)
+                    chains[key][sample_index] = var
         except KeyboardInterrupt:
+            return chains, chain_stats, sample_index
+        return chains, chain_stats, sample_index + 1
+
+    def sample_chain(self, n_sample, init_state, chain_var_funcs=None):
+        """Sample a Markov chain from a given initial state.
+
+        Performs a specified number of chain iterations (each of which may be
+        composed of multiple individual Markov transitions), recording the
+        outputs of functions of the sampled chain state after each iteration.
+
+        Args:
+            n_sample (int): Number of samples (iterations) to draw per chain.
+            init_states (HamiltonianState or array):
+               Initial chain state. The state can be either an array specifying
+               the state position component or a `HamiltonianState` instance.
+               If an array is passed or the `mom` attribute of the state is not
+               set, a momentum component will be independently sampled from its
+               conditional distribution.
+            chain_var_funcs (dict[str, callable]): Dictionary of functions
+               which compute the chain variables to be recorded at each
+               iteration, with each function being passed the current state
+               and returning an array corresponding to the variable(s) to be
+               stored. By default (or if set to `None`) a single function which
+               returns the position component of the state is used. The keys
+               to the functions are used to index the chain variable arrays in
+               the returned data.
+
+        Returns:
+            chains (dict[str, array]):
+                Chain variable arrays, with one entry per function in
+                `chain_var_funcs` with the same key. Each entry consists of an
+                arrays with the leading dimension of the arrays corresponding
+                to the sampling (draw) index.
+            chain_stats (dict[str, array]):
+                Chain statistics arrays, with the specific entries depending on
+                the sampler. Each entry consists of an array with the leading
+                dimension of the arrays corresponding to the sampling (draw)
+                index.
+        """
+        chains, chain_stats, sample_index = self._sample_chain(
+            n_sample, init_state, chain_var_funcs)
+        if sample_index != n_sample:
             logger.exception(
-                f'Sampling manually interrupted at iteration {s}. Arrays '
-                f'containing chain variables and statistics computed before '
-                f'interruption will be returned, all entries after index {s} '
-                f'should be ignored.')
-            return var_chains + [chain_stats]
-        return var_chains + [chain_stats]
+                f'Sampling manually interrupted at iteration {sample_index}. '
+                f'Arrays containing chain variables and statistics computed '
+                f'before interruption will be returned, all entries for '
+                f'iteration {sample_index} and above should be ignored.')
+        return chains, chain_stats
+
+    def sample_chains(self, n_sample, init_states, chain_var_funcs):
+        """Sample one or more Markov chains from given initial states.
+
+        Performs a specified number of chain iterations (each of which may be
+        composed of multiple individual Markov transitions), recording the
+        outputs of functions of the sampled chain state after each iteration.
+        The chains are run sequentially and using independent random draws.
+
+        Args:
+            n_sample (int): Number of samples (iterations) to draw per chain.
+            init_states (Iterable[HamiltonianState] or Iterable[array]):
+               Initial chain states. Each state can be either an array
+               specifying the state position component or a `HamiltonianState`
+               instance. If an array is passed or the `mom` attribute of the
+               state is not set, a momentum component will be independently
+               sampled from its conditional distribution. One chain will be run
+               for each state in the iterable sequence.
+            chain_var_funcs (dict[str, callable]): Dictionary of functions
+               which compute the chain variables to be recorded at each
+               iteration, with each function being passed the current state
+               and returning an array corresponding to the variable(s) to be
+               stored. By default (or if set to `None`) a single function which
+               returns the position component of the state is used. The keys
+               to the functions are used to index the chain variable arrays in
+               the returned data.
+
+        Returns:
+            chains (dict[str, list[array]]):
+                Chain variable array lists, with one entry per function in
+                `chain_var_funcs` with the same key. Each entry consists of a
+                list of arrays (one per chain) with the leading dimension of
+                the arrays corresponding to the sampling (draw) index.
+            chain_stats (dict[str, list[array]]):
+                Chain statistics array lists, with the specific entries
+                depending on the sampler. Each entry consists of a list of
+                arrays (one per chain) with the leading dimension of the arrays
+                corresponding to the sampling (draw) index.
+        """
+        chains_stack, chain_stats_stack = {}, {}
+        for chain_index, init_state in enumerate(init_states):
+            chains, chain_stats, sample_index = self._sample_chain(
+                n_sample, init_state, chain_var_funcs, f'Chain {chain_index}')
+            for key, val in chains.items():
+                if chain_index == 0:
+                    chains_stack[key] = [val]
+                else:
+                    chains_stack[key].append(val)
+            for key, val in chain_stats.items():
+                if chain_index == 0:
+                    chain_stats_stack[key] = [val]
+                else:
+                    chain_stats_stack[key].append(val)
+            if sample_index != n_sample:
+                logger.exception(
+                    f'Sampling manually interrupted at chain {chain_index} '
+                    f'iteration {sample_index}. Arrays containing chain '
+                    f'variables and statistics computed before interruption '
+                    f'will be returned, all entries for iteration '
+                    f'{sample_index} and above of chain {chain_index} should '
+                    f'be ignored.')
+                break
+        return chains_stack, chain_stats_stack
+
+    if ARVIZ_AVAILABLE:
+
+        def sample_chains_arviz(
+                self, n_sample, init_states, chain_var_funcs=None):
+            """Sample one or more Markov chains from given initial states.
+
+            Performs a specified number of chain iterations (each of which may
+            be composed of multiple individual Markov transitions), recording
+            the outputs of functions of the sampled chain state after each
+            iteration. The chains are run sequentially and using independent
+            random draws. Chain data is returned in an `arviz.InferenceData`
+            container object.
+
+            Args:
+                n_sample (int): Number of samples to draw per chain.
+                init_states (Iterable[HamiltonianState] or Iterable[array]):
+                   Initial chain states. Each state can be either an array
+                   specifying the state position component or a
+                   `HamiltonianState` instance. If an array is passed or the
+                   `mom` attribute of the state is not set, a momentum
+                   component will be independently sampled from its conditional
+                   distribution. One chain will be run for each state in the
+                   iterable sequence.
+                chain_var_funcs (dict[str, callable]): Dictionary of functions
+                   which compute the chain variables to be recorded at each
+                   iteration, with each function being passed the current state
+                   and returning an array corresponding to the variable(s) to
+                   be stored. By default (or if set to `None`) a single
+                   function which returns the position component of the state
+                   is used. The keys to the functions are used to index the
+                   chain variable arrays in the returned data.
+
+            Returns:
+                arvix.InferenceData:
+                    An arviz data container with groups `posterior` and
+                    'sample_stats', both of instances of `xarray.Dataset`.
+                    The `posterior` group corresponds to the chain variable
+                    samples computed using the `chain_var_funcs` entries (with
+                    the data variable keys corresponding to the keys there).
+                    The `sample_stats` group corresponds to additional chain
+                    sampling statistics such as acceptance probabilities.
+            """
+            chains, chain_stats = self.sample_chains(
+                n_sample, init_states, chain_var_funcs)
+            return arviz.InferenceData(
+                posterior=arviz.dict_to_dataset(chains, library=hmc),
+                sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
 
 
 class BaseMetropolisHMC(BaseHamiltonianMonteCarlo):
@@ -421,7 +550,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
     def _initialise_chain_stats(self, n_sample):
         chain_stats = super()._initialise_chain_stats(n_sample)
         chain_stats['tree_depth'] = np.empty(n_sample, np.int64)
-        chain_stats['divergent'] = np.full(n_sample, False, np.bool)
+        chain_stats['diverging'] = np.full(n_sample, False, np.bool)
         return chain_stats
 
     def termination_criterion(self, state_1, state_2, sum_mom):
@@ -450,7 +579,7 @@ class DynamicMultinomialHMC(BaseHamiltonianMonteCarlo):
                 stats['n_step'] += 1
                 terminate = h - h_init > self.max_delta_h
                 if terminate:
-                    stats['divergent'] = True
+                    stats['diverging'] = True
                     logger.info(
                         f'Terminating build_tree due to integrator divergence '
                         f'(delta_h = {h - h_init:.1e}).')
