@@ -5,16 +5,26 @@ import numpy as np
 import scipy.linalg as sla
 from hmc.states import cache_in_state, multi_cache_in_state
 
-autograd_available = True
+AUTOGRAD_AVAILABLE = True
 try:
     from autograd import make_vjp
     from hmc.autograd_extensions import (
         grad_and_value, jacobian_and_value, hessian_grad_and_value,
         mhp_jacobian_and_value, mtp_hessian_grad_and_value)
 except ImportError:
-    autograd_available = False
+    AUTOGRAD_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+def _autograd_fallback(diff_func, func, diff_op, name):
+    if diff_func is not None:
+        return diff_func
+    elif AUTOGRAD_AVAILABLE:
+        return diff_op(func)
+    elif not AUTOGRAD_AVAILABLE:
+        raise ValueError(
+            f'Autograd not available therefore {name} must be provided.')
 
 
 class HamiltonianSystem(object):
@@ -22,13 +32,8 @@ class HamiltonianSystem(object):
 
     def __init__(self, pot_energy, grad_pot_energy=None):
         self._pot_energy = pot_energy
-        if grad_pot_energy is None and autograd_available:
-            self._grad_pot_energy = grad_and_value(pot_energy)
-        elif grad_pot_energy is None and not autograd_available:
-            raise ValueError('Autograd not available therefore '
-                             'grad_pot_energy must be provided.')
-        else:
-            self._grad_pot_energy = grad_pot_energy
+        self._grad_pot_energy = _autograd_fallback(
+            grad_pot_energy, pot_energy, grad_and_value, 'grad_pot_energy')
 
     @cache_in_state('pos')
     def pot_energy(self, state):
@@ -256,13 +261,8 @@ class DenseRiemannianMetricSystem(BaseCholeskyRiemannianMetricSystem):
                  vjp_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._metric = metric
-        if vjp_metric is None and autograd_available:
-            self._vjp_metric = make_vjp(metric)
-        elif vjp_metric is None and not autograd_available:
-            raise ValueError('Autograd not available therefore vjp_metric must'
-                             ' be provided.')
-        else:
-            self._vjp_metric = vjp_metric
+        self._vjp_metric = _autograd_fallback(
+            vjp_metric, metric, make_vjp, 'vjp_metric')
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
@@ -299,13 +299,8 @@ class FactoredRiemannianMetricSystem(BaseCholeskyRiemannianMetricSystem):
                  vjp_chol_metric=None):
         super().__init__(pot_energy, grad_pot_energy)
         self._chol_metric = chol_metric
-        if vjp_chol_metric is None and autograd_available:
-            self._vjp_chol_metric = make_vjp(chol_metric)
-        elif vjp_chol_metric is None and not autograd_available:
-            raise ValueError('Autograd not available therefore '
-                             'vjp_chol_metric must be provided.')
-        else:
-            self._vjp_chol_metric = vjp_chol_metric
+        self._vjp_chol_metric = _autograd_fallback(
+            vjp_chol_metric, chol_metric, make_vjp, 'vjp_chol_metric')
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_metric(self, state):
@@ -343,20 +338,12 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
                  mtp_pot_energy=None):
         super().__init__(pot_energy, grad_pot_energy)
         self.softabs_coeff = softabs_coeff
-        if hess_pot_energy is None and autograd_available:
-            self._hess_pot_energy = hessian_grad_and_value(pot_energy)
-        elif hess_pot_energy is None and not autograd_available:
-            raise ValueError('Autograd not available therefore hess_pot_energy'
-                             ' must be provided.')
-        else:
-            self._hess_pot_energy = hess_pot_energy
-        if mtp_pot_energy is None and autograd_available:
-            self._mtp_pot_energy = mtp_hessian_grad_and_value(pot_energy)
-        elif mtp_pot_energy is None and not autograd_available:
-            raise ValueError('Autograd not available therefore mtp_pot_energy '
-                             'must be provided.')
-        else:
-            self._mtp_pot_energy = mtp_pot_energy
+        self._hess_pot_energy = _autograd_fallback(
+            hess_pot_energy, pot_energy, hessian_grad_and_value,
+            'hess_pot_energy')
+        self._mtp_pot_energy = _autograd_fallback(
+            mtp_pot_energy, pot_energy, mtp_hessian_grad_and_value,
+            'mtp_pot_energy')
 
     def softabs(self, x):
         return x / np.tanh(x * self.softabs_coeff)
@@ -425,13 +412,8 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
         super().__init__(pot_energy=pot_energy, metric=metric,
                          grad_pot_energy=grad_pot_energy)
         self._constr = constr
-        if jacob_constr is None and autograd_available:
-            self._jacob_constr = jacobian_and_value(constr)
-        elif jacob_constr is None and not autograd_available:
-            raise ValueError('Autograd not available therefore jacob_constr'
-                             ' must be provided.')
-        else:
-            self._jacob_constr = jacob_constr
+        self._jacob_constr = _autograd_fallback(
+            jacob_constr, constr, jacobian_and_value, 'jacob_constr')
 
     @cache_in_state('pos')
     def constr(self, state):
@@ -501,20 +483,10 @@ class IsotropicMetricObservedGeneratorSystem(
             pot_energy=neg_log_input_density,
             grad_pot_energy=grad_neg_log_input_density,
             constr=[], jacob_constr=[])
-        if jacob_generator is None and autograd_available:
-            self._jacob_generator = jacobian_and_value(generator)
-        elif jacob_generator is None and not autograd_available:
-            raise ValueError('Autograd not available therefore jacob_generator'
-                             ' must be provided.')
-        else:
-            self._jacob_generator = jacob_generator
-        if mhp_generator is None and autograd_available:
-            self._mhp_generator = mhp_jacobian_and_value(generator)
-        elif mhp_generator is None and not autograd_available:
-            raise ValueError('Autograd not available therefore mhp_generator'
-                             ' must be provided.')
-        else:
-            self._mhp_generator = mhp_generator
+        self._jacob_generator = _autograd_fallback(
+            jacob_generator, generator, jacobian_and_value, 'jacob_generator')
+        self._mhp_generator = _autograd_fallback(
+            mhp_generator, generator, mhp_jacobian_and_value, 'mhp_generator')
 
     @cache_in_state('pos')
     def generator(self, state):
