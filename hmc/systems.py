@@ -407,21 +407,11 @@ class SoftAbsRiemannianMetricSystem(BaseRiemannianMetricSystem):
 
 class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
 
-    def __init__(self, pot_energy, constr, metric=None,
-                 grad_pot_energy=None, jacob_constr=None):
-        super().__init__(pot_energy=pot_energy, metric=metric,
-                         grad_pot_energy=grad_pot_energy)
-        self._constr = constr
-        self._jacob_constr = _autograd_fallback(
-            jacob_constr, constr, jacobian_and_value, 'jacob_constr')
-
-    @cache_in_state('pos')
     def constr(self, state):
-        return self._constr(state.pos)
+        raise NotImplementedError()
 
-    @multi_cache_in_state(['pos'], ['jacob_constr', 'constr'])
     def jacob_constr(self, state):
-        return self._jacob_constr(state.pos)
+        raise NotImplementedError()
 
     @cache_in_state('pos')
     def inv_metric_jacob_constr_t(self, state):
@@ -449,40 +439,62 @@ class BaseEuclideanMetricConstrainedSystem(BaseEuclideanMetricSystem):
         return mom
 
 
-class IsotropicEuclideanMetricConstrainedSystem(
-        BaseEuclideanMetricConstrainedSystem, IsotropicEuclideanMetricSystem):
+class BaseEuclideanMetricNoJacobianDeterminantConstrainedSystem(
+        BaseEuclideanMetricConstrainedSystem):
+
+    def __init__(self, pot_energy, constr, metric=None,
+                 grad_pot_energy=None, jacob_constr=None):
+        super().__init__(pot_energy=pot_energy, metric=metric,
+                         grad_pot_energy=grad_pot_energy)
+        self._constr = constr
+        self._jacob_constr = _autograd_fallback(
+            jacob_constr, constr, jacobian_and_value, 'jacob_constr')
+
+    @cache_in_state('pos')
+    def constr(self, state):
+        return self._constr(state.pos)
+
+    @multi_cache_in_state(['pos'], ['jacob_constr', 'constr'])
+    def jacob_constr(self, state):
+        return self._jacob_constr(state.pos)
+
+
+class IsotropicMetricConstrainedSystem(
+        BaseEuclideanMetricNoJacobianDeterminantConstrainedSystem,
+        IsotropicEuclideanMetricSystem):
     """
     Isotropic Euclidean metric Hamiltonian system with position constraints.
     """
 
 
-class DiagonalEuclideanMetricConstrainedSystem(
-        BaseEuclideanMetricConstrainedSystem, DiagonalEuclideanMetricSystem):
+class DiagonalMetricConstrainedSystem(
+        BaseEuclideanMetricNoJacobianDeterminantConstrainedSystem,
+        DiagonalEuclideanMetricSystem):
     """
     Diagonal Euclidean metric Hamiltonian system with position constraints.
     """
 
 
-class DenseEuclideanMetricConstrainedSystem(
-        BaseEuclideanMetricConstrainedSystem, DenseEuclideanMetricSystem):
+class DenseMetricConstrainedSystem(
+        BaseEuclideanMetricNoJacobianDeterminantConstrainedSystem,
+        DenseEuclideanMetricSystem):
     """
     Dense Euclidean metric Hamiltonian system with position constraints.
     """
 
 
-class IsotropicMetricObservedGeneratorSystem(
-        BaseEuclideanMetricConstrainedSystem, IsotropicEuclideanMetricSystem):
+class BaseEuclideanMetricObservedGeneratorSystem(
+        BaseEuclideanMetricConstrainedSystem):
 
     def __init__(self, neg_log_input_density, generator, obs_output,
-                 grad_neg_log_input_density=None, jacob_generator=None,
-                 mhp_generator=None):
+                 metric=None, grad_neg_log_input_density=None,
+                 jacob_generator=None, mhp_generator=None):
         self.neg_log_input_density = neg_log_input_density
         self._generator = generator
         self.obs_output = obs_output
         super().__init__(
             pot_energy=neg_log_input_density,
-            grad_pot_energy=grad_neg_log_input_density,
-            constr=[], jacob_constr=[])
+            grad_pot_energy=grad_neg_log_input_density, metric=metric)
         self._jacob_generator = _autograd_fallback(
             jacob_generator, generator, jacobian_and_value, 'jacob_generator')
         self._mhp_generator = _autograd_fallback(
@@ -529,3 +541,27 @@ class IsotropicMetricObservedGeneratorSystem(
     def dh_dpos(self, state):
         return (
             self.grad_pot_energy(state) + self.grad_log_det_sqrt_gram(state))
+
+
+class IsotropicEuclideanMetricObservedGeneratorSystem(
+        BaseEuclideanMetricObservedGeneratorSystem,
+        IsotropicEuclideanMetricSystem):
+    """
+    Isotropic Euclidean metric observed generator Hamiltonian system.
+    """
+
+
+class DiagonalEuclideanMetricObservedGeneratorSystem(
+        BaseEuclideanMetricObservedGeneratorSystem,
+        DiagonalEuclideanMetricSystem):
+    """
+    Diagonal Euclidean metric observed generator Hamiltonian system.
+    """
+
+
+class DenseEuclideanMetricObservedGeneratorSystem(
+        BaseEuclideanMetricObservedGeneratorSystem,
+        DenseEuclideanMetricSystem):
+    """
+    Dense Euclidean metric observed generator Hamiltonian system.
+    """
