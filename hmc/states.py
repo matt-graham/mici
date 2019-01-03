@@ -12,8 +12,8 @@ def cache_in_state(*depends_on):
     these parent dependency's value changes.
     """
     def cache_in_state_decorator(method):
-        key = method.__name__
         def wrapper(self, state):
+            key = (type(self).__name__ + '.' + method.__name__, id(self))
             if key not in state.cache:
                 for dep in depends_on:
                     state.dependencies[dep].add(key)
@@ -24,7 +24,7 @@ def cache_in_state(*depends_on):
     return cache_in_state_decorator
 
 
-def multi_cache_in_state(depends_on, keys, primary_index=0):
+def multi_cache_in_state(depends_on, vars, primary_index=0):
     """Decorator to cache multiple outputs of a function of state variable(s).
 
     Used to wrap methods of Hamiltonian system objects to allow caching of
@@ -39,16 +39,19 @@ def multi_cache_in_state(depends_on, keys, primary_index=0):
             computed values depend on e.g. ['pos', 'mom'], such that the cache
             is correctly cleared when one of these parent dependency's value
             changes.
-        keys: a list of strings defining the keys in the state cache dictionary
+        vars: a list of strings defining the variables in the state cache dict
             corresponding to the outputs of the wrapped function (method) in
             the corresponding returned order.
         primary_index: index of primary output of function (i.e. value to be
-            returned) in keys list / position in output of function.
+            returned) in vars list / position in output of function.
     """
-    prim_key = keys[primary_index]
     def multi_cache_in_state_decorator(method):
         def wrapper(self, state):
-            for key in keys:
+            id_ = id(self)
+            type_prefix = type(self).__name__ + '.'
+            prim_key = (type_prefix + vars[primary_index], id_)
+            keys = [(type_prefix + v, id_) for v in vars]
+            for i, key in enumerate(keys):
                 if key not in state.cache:
                     for dep in depends_on:
                         state.dependencies[dep].add(key)
