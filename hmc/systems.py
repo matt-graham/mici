@@ -126,7 +126,7 @@ class BaseEuclideanMetricConstrainedSystem(EuclideanMetricSystem):
         gram = jacob_constr @ self.inv_metric_jacob_constr_t(state)
         return sla.cholesky(gram, lower=True)
 
-    def project_onto_tangent_space(self, mom, state):
+    def project_onto_cotangent_space(self, mom, state):
         jacob_constr = self.jacob_constr(state)
         chol_gram = self.chol_gram(state)
         mom -= jacob_constr.T @ sla.cho_solve(
@@ -137,7 +137,7 @@ class BaseEuclideanMetricConstrainedSystem(EuclideanMetricSystem):
 
     def sample_momentum(self, state, rng):
         mom = super().sample_momentum(state, rng)
-        self.project_onto_tangent_space(mom, state)
+        self.project_onto_cotangent_space(mom, state)
         return mom
 
 

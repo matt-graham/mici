@@ -167,8 +167,8 @@ class BaseConstrainedLeapfrogIntegrator(object):
         self.projection_solver(
             state, state_prev, self.system, **self.projection_solver_kwargs)
 
-    def project_onto_tangent_space(self, state):
-        self.system.project_onto_tangent_space(state.mom, state)
+    def project_onto_cotangent_space(self, state):
+        self.system.project_onto_cotangent_space(state.mom, state)
 
     def step_a(self, state, dt):
         raise NotImplementedError()
@@ -186,7 +186,7 @@ class BaseConstrainedLeapfrogIntegrator(object):
             self.step_b_inner(state, dt_i)
             self.project_onto_manifold(state, state_prev)
             self.solve_for_mom_post_projection(state, state_prev, dt_i)
-            self.project_onto_tangent_space(state)
+            self.project_onto_cotangent_space(state)
             state_back = state.copy()
             self.step_b_inner(state_back, -dt_i)
             self.project_onto_manifold(state_back, state)
@@ -200,10 +200,10 @@ class BaseConstrainedLeapfrogIntegrator(object):
         dt = state.dir * self.step_size
         state = state.copy()
         self.step_a(state, 0.5 * dt)
-        self.project_onto_tangent_space(state)
+        self.project_onto_cotangent_space(state)
         self.step_b(state, dt)
         self.step_a(state, 0.5 * dt)
-        self.project_onto_tangent_space(state)
+        self.project_onto_cotangent_space(state)
         return state
 
 
