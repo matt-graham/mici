@@ -1,10 +1,15 @@
 """Additional autograd differential operators."""
 
-from autograd.wrap_util import unary_to_nary
-from autograd.builtins import tuple as atuple
-from autograd.core import make_vjp as _make_vjp
-from autograd.extend import vspace
-import autograd.numpy as np
+AUTOGRAD_AVAILABLE = True
+try:
+    from autograd import make_vjp
+    from autograd.wrap_util import unary_to_nary
+    from autograd.builtins import tuple as atuple
+    from autograd.core import make_vjp as _make_vjp
+    from autograd.extend import vspace
+    import autograd.numpy as np
+except ImportError:
+    AUTOGRAD_AVAILABLE = False
 
 
 @unary_to_nary

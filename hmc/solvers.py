@@ -93,7 +93,7 @@ def project_onto_manifold_quasi_newton(state, state_prev, system, tol=1e-8,
         error = norm(constr)
         if error < tol:
             return state
-        state.pos -= system.mult_inv_metric(
+        state.pos -= system.metric.lmult_inv(
             jacob_constr_prev.T @ sla.cho_solve(chol_gram_prev, constr))
     raise ConvergenceError(
         f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
