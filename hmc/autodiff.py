@@ -2,7 +2,7 @@
 
 AUTOGRAD_AVAILABLE = True
 try:
-    import hmc.autograd_extensions as autograd_wrapper
+    import hmc.autograd_wrapper as autograd_wrapper
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 
