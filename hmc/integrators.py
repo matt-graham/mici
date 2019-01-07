@@ -207,7 +207,7 @@ class BaseConstrainedLeapfrogIntegrator(object):
         return state
 
 
-class GeodesicConstrainedLeapfrogIntegrator(BaseConstrainedLeapfrogIntegrator):
+class ConstrainedLeapfrogIntegrator(BaseConstrainedLeapfrogIntegrator):
 
     def step_a(self, state, dt):
         state.mom -= dt * self.system.dh_dpos(state)
