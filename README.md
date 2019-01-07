@@ -1,6 +1,6 @@
 # Hamiltonian Monte Carlo
 
-Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo (MCMC) samplers in idiomatic Python code. A modular design is used to as far as possible allowing mixing and matching elements of different proposed extensions to the original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
+Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo (MCMC) samplers in Python. A modular design is used to as far as possible allowing mixing and matching elements of different proposed extensions to the original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
 
 ## Implemented methods
 
@@ -31,15 +31,11 @@ Numerical integrators
 
 To install and use the package the minimal requirements are a Python 3.6+ environment with [NumPy](http://www.numpy.org/) (tested with v1.15.0) and [SciPy](https://www.scipy.org) (tested with v1.1.0) installed.
 
-From a local clone of the repository run
-
-```python setup.py install```
-
-to install the package in the current Python environment.
+From a local clone of the repository run `python setup.py install` to install the package in the current Python environment.
 
 ## Optional dependencies
 
-  * [Autograd](https://github.com/HIPS/autograd): if available will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the `autograd.numpy` and `autograd.scipy` interfaces)
+  * [Autograd](https://github.com/HIPS/autograd): if available will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the `autograd.numpy` and `autograd.scipy` interfaces).
   * [tqdm](https://github.com/tqdm/tqdm): if available a simple progress bar will be shown during sampling.
   * [Arviz](https://arviz-devs.github.io/arviz/index.html#): if available outputs of a sampling run can be returned in an `arviz.InferenceData` container object, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.
 
@@ -121,7 +117,9 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
      Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
  12. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
      *arXiv preprint arXiv:1701.02434*.
- 13. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in differentiable generative models. *Electronic Journal of Statistics*, 11(2), pp.5105-5164.
+ 13. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in 
+     differentiable generative models. *Electronic Journal of Statistics*, 
+     11(2), pp.5105-5164.
  14. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
      for sampling probability measures on submanifolds. *arXiv preprint
-     arXiv:1807.02356*.
+     1807.02356*.
