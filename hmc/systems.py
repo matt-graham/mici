@@ -95,6 +95,67 @@ class EuclideanMetricSystem(SeparableHamiltonianSystem):
         return self.metric.lmult_sqrt(rng.normal(size=state.pos.shape))
 
 
+class IsotropicGaussianSplitSystem(SeparableHamiltonianSystem):
+    """Separable Hamiltonian system with isotropic Gaussian component.
+
+    The kinetic energy is assumed to correspond to an isotropic covariance
+    Gaussian distribution and the potential energy is assumed to consist of
+    the sum of an isotropic Gaussian component and further non-Gaussian term.
+    Specifically the Hamiltonian function is assumed to have the form
+
+         h(pos, mom) = h1(pos) + h2(pos, mom)
+                     = h1(pos) + 0.5 * sum(pos**2) + 0.5 * sum(mom**2)
+
+    In this case the Hamiltonian flow due to the `h2` component can be solved
+    for analytically, allowing use of a split integration scheme [1].
+
+    References:
+
+      1. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
+         Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
+    """
+
+    def __init__(self, h1, grad_h1=None):
+        self._h1 = h1
+        self._grad_h1 = autodiff_fallback(
+            grad_h1, h1, 'grad_and_value', 'grad_h1')
+
+    def pot_energy(self, state):
+        return self.h1(state) + 0.5 * np.sum(state.pos**2)
+
+    def grad_pot_energy(self, state):
+        return self.dh1_dpos(state) + state.pos
+
+    def _kin_energy(self, mom):
+        return 0.5 * np.sum(mom**2)
+
+    def _grad_kin_energy(self, mom):
+        return mom
+
+    @cache_in_state('pos')
+    def h1(self, state):
+        return self._h1(state.pos)
+
+    @multi_cache_in_state(['pos'], ['grad_h1', 'h1'])
+    def dh1_dpos(self, state):
+        return self._grad_h1(state.pos)
+
+    def h2(self, state):
+        return 0.5 * np.sum(state.pos**2) + 0.5 * np.sum(state.mom**2)
+
+    def h2_exact_flow(self, state, dt):
+        pos_0, mom_0 = state.pos.copy(), state.mom.copy()
+        sin_dt, cos_dt = np.sin(dt), np.cos(dt)
+        state.pos *= cos_dt
+        state.pos += sin_dt * mom_0
+        state.mom *= cos_dt
+        state.mom -= sin_dt * pos_0
+        return state
+
+    def sample_momentum(self, state, rng):
+        return rng.normal(size=state.pos.shape)
+
+
 class BaseEuclideanMetricConstrainedSystem(EuclideanMetricSystem):
     """Base class for Euclidean Hamiltonian systems subject to constraints.
 

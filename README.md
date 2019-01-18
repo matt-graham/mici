@@ -18,13 +18,16 @@ Hamiltonian systems
     log density Hessian based *SoftAbs* metric (Betancourt, 2013)
   * Euclidean-metric systems subject to holonomic constraints (Hartmann and
     Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and
-    Stoltz, 2018) and for inference in differentiable generative models when conditioning on observed outputs (Graham and Storkey, 2017a)
+    Stoltz, 2018) and for inference in differentiable generative models when 
+    conditioning on observed outputs (Graham and Storkey, 2017a)
 
 Numerical integrators
 
   * Explicit leapfrog for separable Hamiltonian systems
   * Implicit leapfrog for non-separable Hamiltonian systems
   * Geodesic leapfrog for constrained Hamiltonian systems
+  * 'Split' leapfrog for Hamiltonian systems with an analytically tractable
+    component for which the exact flow can be solved (Shahbaba et al., 2014)
 
 
 ## Installation
