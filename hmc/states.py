@@ -1,15 +1,19 @@
-"""Objects for recording state of a simulated Hamiltonian system."""
+"""Objects for recording state of a Markov chain."""
+
+import copy
 
 
 def cache_in_state(*depends_on):
     """Decorator to memoize / cache output of a function of state variable(s).
 
-    Used to wrap methods of Hamiltonian system objects to allow caching of
-    values computed from state position and momentum variables to prevent
-    recomputation when possible. The decorator takes as arguments a set of
-    strings defining which state variables the computed values depend on
-    e.g. 'pos', 'mom', such that the cache is correctly cleared when one of
-    these parent dependency's value changes.
+    Used to wrap functions of a chain state vaiable(s) to allow caching of
+    the values computed to prevent recomputation when possible.
+
+    Args:
+       *depends_on: One or more strings defining which state variables the
+           computed values depend on e.g. 'pos', 'mom', such that the cache is
+           correctly cleared when one of these parent dependency's value
+           changes.
     """
     def cache_in_state_decorator(method):
         def wrapper(self, state):
@@ -27,12 +31,13 @@ def cache_in_state(*depends_on):
 def multi_cache_in_state(depends_on, vars, primary_index=0):
     """Decorator to cache multiple outputs of a function of state variable(s).
 
-    Used to wrap methods of Hamiltonian system objects to allow caching of
-    values computed from state position and momentum variables to prevent
-    recomputation when possible. This variant allows for functions which also
-    cache intermediate computed results which may be used separately elsewhere
-    for example the value of a function calculate in the forward pass of a
-    reverse-mode automatic differentation implementation of its gradient.
+    Used to wrap functions of a chain state vaiable(s) to allow caching of
+    the values computed to prevent recomputation when possible.
+
+    This variant allows for functions which also cache intermediate computed
+    results which may be used separately elsewhere for example the value of a
+    function calculate in the forward pass of a reverse-mode automatic-
+    differentation implementation of its gradient.
 
     Args:
         depends_on: a list of strings defining which state variables the
@@ -67,8 +72,59 @@ def multi_cache_in_state(depends_on, vars, primary_index=0):
     return multi_cache_in_state_decorator
 
 
-class HamiltonianState(object):
-    """State of a Hamiltonian system.
+class ChainState(object):
+    """Markov chain state.
+
+    As well as recording the chain state variable values, the state object is
+    also used to cache derived quantities to avoid recalculation if these
+    values are subsequently reused.
+    """
+
+    def __init__(self, dependencies=None, cache=None, **vars):
+        # set vars attribute by directly writing to __dict__ to ensure set
+        # before any cally to __setattr__
+        self.__dict__['vars'] = vars
+        if dependencies is None:
+            dependencies = {name: set() for name in vars}
+        self.dependencies = dependencies
+        if cache is None:
+            cache = {}
+        self.cache = cache
+
+    def __getattr__(self, name):
+        if name in self.vars:
+            return self.vars[name]
+        else:
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'")
+
+    def __setattr__(self, name, value):
+        if name in self.vars:
+            self.vars[name] = value
+            # clear any dependent cached values
+            for dep in self.dependencies[name]:
+                self.cache[dep] = None
+        else:
+            return super().__setattr__(name, value)
+
+    def copy(self):
+        return type(self)(
+            cache=self.cache.copy(), dependencies=self.dependencies,
+            **{name: copy.copy(val) for name, val in self.vars.items()})
+
+    def __str__(self):
+        return (
+            '(\n ' +
+            ',\n '.join([f'{name}={val}' for name, val in self.vars.items()]) +
+            ')'
+        )
+
+    def __repr__(self):
+        return type(self).__name__ + str(self)
+
+
+class HamiltonianState(ChainState):
+    """Chain state with position, momentum and integration direction variables.
 
     As well as recording the position and momentum state values and integration
     direction binary indicator, the state object is also used to cache derived
@@ -78,49 +134,9 @@ class HamiltonianState(object):
     """
 
     def __init__(self, pos, mom=None, dir=1, dependencies=None, cache=None):
-        self._pos = pos
-        self._mom = mom
-        self.dir = dir
-        if dependencies is None:
-            dependencies = {'pos': set(), 'mom': set()}
-        self.dependencies = dependencies
-        if cache is None:
-            cache = {}
-        self.cache = cache
+        super().__init__(
+            pos=pos, mom=mom, dir=dir, dependencies=dependencies, cache=cache)
 
     @property
     def n_dim(self):
         return self.pos.shape[0]
-
-    @property
-    def pos(self):
-        return self._pos
-
-    @pos.setter
-    def pos(self, value):
-        self._pos = value
-        # clear any dependent cached values
-        for dep in self.dependencies['pos']:
-            self.cache[dep] = None
-
-    @property
-    def mom(self):
-        return self._mom
-
-    @mom.setter
-    def mom(self, value):
-        self._mom = value
-        # clear any dependent cached values
-        for dep in self.dependencies['mom']:
-            self.cache[dep] = None
-
-    def copy(self):
-        return HamiltonianState(
-            pos=self.pos.copy(), mom=self.mom.copy(), dir=self.dir,
-            cache=self.cache.copy(), dependencies=self.dependencies)
-
-    def __str__(self):
-        return f'(\n  pos={self.pos},\n  mom={self.mom},\n  dir={self.dir})'
-
-    def __repr__(self):
-        return type(self).__name__ + str(self)
