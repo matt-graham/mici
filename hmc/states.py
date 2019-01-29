@@ -122,6 +122,14 @@ class ChainState(object):
     def __repr__(self):
         return type(self).__name__ + str(self)
 
+    def __getstate__(self):
+        return self.vars
+
+    def __setstate__(self, state):
+        self.__dict__['vars'] = state
+        self.dependencies = {name: set() for name in self.vars}
+        self.cache = {}
+
 
 class HamiltonianState(ChainState):
     """Chain state with position, momentum and integration direction variables.
