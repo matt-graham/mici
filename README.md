@@ -1,6 +1,9 @@
 # Hamiltonian Monte Carlo
 
-Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo (MCMC) samplers in Python. A modular design is used to as far as possible allowing mixing and matching elements of different proposed extensions to the original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
+Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo
+(MCMC) samplers in Python. A modular design is used to as far as possible
+allowing mixing and matching elements of different proposed extensions to the
+original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
 
 ## Implemented methods
 
@@ -32,19 +35,44 @@ Numerical integrators
 
 ## Installation
 
-To install and use the package the minimal requirements are a Python 3.6+ environment with [NumPy](http://www.numpy.org/) (tested with v1.15.0) and [SciPy](https://www.scipy.org) (tested with v1.1.0) installed.
+To install and use the package the minimal requirements are a Python 3.6+
+environment with [NumPy](http://www.numpy.org/) (tested with v1.15.0) and
+[SciPy](https://www.scipy.org) (tested with v1.1.0) installed.
 
-From a local clone of the repository run `python setup.py install` to install the package in the current Python environment.
+From a local clone of the repository run `python setup.py install` to install
+the package in the current Python environment.
 
 ## Optional dependencies
 
-  * [Autograd](https://github.com/HIPS/autograd): if available will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the `autograd.numpy` and `autograd.scipy` interfaces).
-  * [tqdm](https://github.com/tqdm/tqdm): if available a simple progress bar will be shown during sampling.
-  * [Arviz](https://arviz-devs.github.io/arviz/index.html#): if available outputs of a sampling run can be returned in an `arviz.InferenceData` container object, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.
+  * [Autograd](https://github.com/HIPS/autograd): if available will be used to 
+    automatically compute the required derivatives of the model functions 
+    (providing they are specified using functions from the `autograd.numpy` and 
+    `autograd.scipy` interfaces).
+  * [tqdm](https://github.com/tqdm/tqdm): if available a simple progress bar 
+    will be shown during sampling.
+  * [Arviz](https://arviz-devs.github.io/arviz/index.html#): if available 
+    outputs of a sampling run can be returned in an `arviz.InferenceData` 
+    container object, allowing straightforward use of the extensive Arviz 
+    visualisation and diagnostic functionality.
+  * [multiprocess](https://github.com/uqfoundation/multiprocess) and 
+    [dill](https://github.com/uqfoundation/dill): if available
+    `multiprocess.Pool` will be used in preference to the in-built
+    `mutiprocessing.Pool` for parallelisation as `multiprocess` supports
+    serialisation ( via dill) of a much wider range of types, including of
+    Autograd generated functions.
+  * [RandomGen](https://github.com/bashtage/randomgen): if available the
+    `Xorshift1024` random number generator will be used when running multiple
+    chains in parallel, with the `jump` method of the object used to 
+    reproducibly generate independent substreams.
 
 ## Example usage
 
-A simple complete example of using the package to sample from a multivariate Gaussian distribution with randomly generated parameters is given below. Here an isotropic Euclidean metric Hamiltonian system is used (corresponding to a isotropic covariance Gaussian marginal distribution on the momenta) with the dynamic integration time HMC implementation described in Betancourt (2017), which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
+A simple complete example of using the package to sample from a multivariate
+Gaussian distribution with randomly generated parameters is given below. Here an
+isotropic Euclidean metric Hamiltonian system is used (corresponding to a
+isotropic covariance Gaussian marginal distribution on the momenta) with the
+dynamic integration time HMC implementation described in Betancourt (2017),
+which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
 
 ```python
 import hmc
