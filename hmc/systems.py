@@ -302,18 +302,19 @@ class EuclideanMetricObservedGeneratorSystem(
             (chol_gram, True), jacob_generator)
         return self.mhp_generator(state)(gram_inv_jacob_generator)
 
+    @cache_in_state('pos')
     def neg_log_input_density(self, state):
         return self._pot_energy(state.pos)
 
+    @multi_cache_in_state(
+        ['pos'], ['grad_neg_log_input_density', 'neg_log_input_density'])
     def grad_neg_log_input_density(self, state):
         return self._grad_pot_energy(state.pos)
 
-    @cache_in_state('pos')
     def pot_energy(self, state):
         return (self.neg_log_input_density(state) +
                 self.log_det_sqrt_gram(state))
 
-    @cache_in_state('pos')
     def grad_pot_energy(self, state):
         return (self.grad_neg_log_input_density(state) +
                 self.grad_log_det_sqrt_gram(state))
