@@ -389,8 +389,8 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
             state.mom = self.system.sample_momentum(state, self.rng)
         if chain_var_funcs is None:
             chain_var_funcs = {'pos': extract_pos}
-        return super()._sample_chain(rng, n_sample, init_state,
-                                     chain_var_funcs, tqdm_desc, tqdm_position)
+        return super()._sample_chain(rng, n_sample, state, chain_var_funcs,
+                                     tqdm_desc, tqdm_position)
 
     def sample_chain(self, n_sample, init_state, chain_var_funcs=None):
         """Sample a Markov chain from a given initial state.
