@@ -94,7 +94,7 @@ class BaseCholeskyRiemannianMetric(BaseRiemannianMetric):
     def __init__(self, metric, vjp_metric):
         self._metric = metric
         self._vjp_metric = autodiff_fallback(
-            vjp_metric, metric, 'make_vjp', 'vjp_metric')
+            vjp_metric, metric, 'vjp_and_value', 'vjp_metric')
 
     def chol(self, state):
         raise NotImplementedError()
@@ -119,7 +119,7 @@ class CholeskyRiemannianMetric(BaseCholeskyRiemannianMetric):
     def __init__(self, chol_func, vjp_chol_func=None):
         self._chol = chol_func
         self._vjp_chol = autodiff_fallback(
-            vjp_chol_func, chol_func, 'make_vjp', 'vjp_chol_func')
+            vjp_chol_func, chol_func, 'vjp_and_value', 'vjp_chol_func')
 
     @cache_in_state('pos')
     def chol(self, state):
@@ -152,7 +152,7 @@ class DenseRiemannianMetric(BaseCholeskyRiemannianMetric):
     def __init__(self, metric_func, vjp_metric_func=None):
         self._value = metric_func
         self._vjp = autodiff_fallback(
-            vjp_metric_func, metric_func, 'make_vjp', 'vjp_metric_func')
+            vjp_metric_func, metric_func, 'vjp_and_value', 'vjp_metric_func')
 
     @cache_in_state('pos')
     def value(self, state):

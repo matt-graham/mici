@@ -2,10 +2,10 @@
 
 AUTOGRAD_AVAILABLE = True
 try:
-    from autograd import make_vjp
+    from autograd import make_vjp as vjp_and_value
     from autograd.wrap_util import unary_to_nary
     from autograd.builtins import tuple as atuple
-    from autograd.core import make_vjp as _make_vjp
+    from autograd.core import make_vjp
     from autograd.extend import vspace
     import autograd.numpy as np
 except ImportError:
@@ -17,7 +17,7 @@ def grad_and_value(fun, x):
     """
     Returns a function that returns both gradient and value of a function.
     """
-    vjp, val = _make_vjp(fun, x)
+    vjp, val = make_vjp(fun, x)
     if not vspace(val).size == 1:
         raise TypeError("grad_and_value only applies to real scalar-output "
                         "functions.")
@@ -37,7 +37,7 @@ def jacobian_and_value(fun, x):
     v_vspace = vspace(val)
     x_vspace = vspace(x)
     x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
-    vjp_rep, _ = _make_vjp(fun, x_rep)
+    vjp_rep, _ = make_vjp(fun, x_rep)
     jacobian_shape = v_vspace.shape + x_vspace.shape
     basis_vectors = np.array([b for b in v_vspace.standard_basis()])
     jacobian = vjp_rep(basis_vectors)
@@ -64,7 +64,7 @@ def mhp_jacobian_and_value(fun, x):
     input being differentiated with respect to such that a batch of outputs can
     be computed concurrently for a batch of inputs.
     """
-    mhp, (jacob, val) = _make_vjp(
+    mhp, (jacob, val) = make_vjp(
         lambda x: atuple(jacobian_and_value(fun)(x)), x)
     return lambda m: mhp((m, vspace(val).zeros())), jacob, val
 
@@ -79,11 +79,11 @@ def hessian_grad_and_value(fun, x):
     be computed concurrently for a batch of inputs.
     """
     def grad_fun(x):
-        vjp, val = _make_vjp(fun, x)
+        vjp, val = make_vjp(fun, x)
         return vjp(vspace(val).ones()), val
     x_vspace = vspace(x)
     x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
-    vjp_grad, (grad, val) = _make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
+    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
     hessian_shape = x_vspace.shape + x_vspace.shape
     basis_vectors = np.array([b for b in x_vspace.standard_basis()])
     hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
@@ -109,7 +109,7 @@ def mtp_hessian_grad_and_value(fun, x):
     input being differentiated with respect to such that a batch of outputs can
     be computed concurrently for a batch of inputs.
     """
-    mtp, (hessian, grad, val) = _make_vjp(
+    mtp, (hessian, grad, val) = make_vjp(
         lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
     return (
         lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),

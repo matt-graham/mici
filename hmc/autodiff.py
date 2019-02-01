@@ -8,7 +8,7 @@ except ImportError:
 
 
 DIFF_OPS = [
-    'make_vjp',
+    'vjp_and_value',
     'grad_and_value',
     'hessian_grad_and_value',
     'mtp_hessian_grad_and_value',
