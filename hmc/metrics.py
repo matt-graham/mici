@@ -107,7 +107,7 @@ class BaseCholeskyRiemannianMetric(BaseRiemannianMetric):
 
     @cache_in_state('pos')
     def inv(self, state):
-        return self.lmult_inv(state, np.eye(state.n_dim))
+        return self.lmult_inv(state, np.eye(state.mom.shape[0]))
 
     @cache_in_state('pos')
     def log_det_sqrt(self, state):
@@ -134,7 +134,7 @@ class CholeskyRiemannianMetric(BaseCholeskyRiemannianMetric):
 
     @cache_in_state('pos')
     def inv_chol(self, state):
-        return self.lmult_inv_chol(state, np.eye(state.n_dim))
+        return self.lmult_inv_chol(state, np.eye(state.mom.shape[0]))
 
     @cache_in_state('pos')
     def grad_log_det_sqrt(self, state):

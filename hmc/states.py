@@ -150,7 +150,3 @@ class HamiltonianState(ChainState):
     def __init__(self, pos, mom=None, dir=1, dependencies=None, cache=None):
         super().__init__(
             pos=pos, mom=mom, dir=dir, dependencies=dependencies, cache=cache)
-
-    @property
-    def n_dim(self):
-        return self.pos.shape[0]

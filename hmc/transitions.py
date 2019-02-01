@@ -321,7 +321,7 @@ class MultinomialDynamicIntegrationTransition(BaseIntegrationTransition):
                 state = None
                 terminate = True
             return terminate, state, state, state
-        sum_mom_i, sum_mom_o = np.zeros((2, state.n_dim))
+        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
         sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
         # build inner subsubtree
         terminate_i, state_i, state, state_pi = self._build_tree(
@@ -358,7 +358,7 @@ class MultinomialDynamicIntegrationTransition(BaseIntegrationTransition):
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
             direction = 2 * (rng.uniform() < 0.5) - 1
-            sum_mom_s = np.zeros(state.n_dim)
+            sum_mom_s = np.zeros(state.mom.shape)
             sum_weight_s = LogRepFloat(0.)
             if direction == 1:
                 # expand tree by adding subtree to right edge
