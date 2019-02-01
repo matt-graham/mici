@@ -108,6 +108,12 @@ class ChainState(object):
             return super().__setattr__(name, value)
 
     def copy(self):
+        """Create a deep copy of the state object.
+
+        Returns:
+            A copy of the state object which can be updated without
+            affecting the original object's attributes.
+        """
         return type(self)(
             cache=self.cache.copy(), dependencies=self.dependencies,
             **{name: copy.copy(val) for name, val in self.vars.items()})

@@ -146,7 +146,39 @@ class GeneralisedLeapfrogIntegrator(object):
 
 
 class BaseConstrainedLeapfrogIntegrator(object):
-    """Leapfrog iterator for constrained separable Hamiltonian systems."""
+    """
+    Leapfrog integrator for constrained separable Hamiltonian systems.
+
+    Here separable means that the Hamiltonian can be expressed as the sum of
+    a term depending only on the position (target) variables, typically denoted
+    the potential energy, and a second term depending only on the momentum
+    variables, typically denoted the kinetic energy, i.e.
+
+        h(pos, mom) = pot_energy(pos) + kin_energy(mom)
+
+    with `pos` and `mom` the position and momentum variables respectively and
+    `pot_energy` and `kin_energy` the potential and kinetic energy functions
+    respectively.
+
+    The system is assumed to be additionally subject to a set of holonomic
+    constraints on the position component of the state i.e. that all valid
+    states must satisfy
+
+        all(constr(pos) == 0)
+
+    for some vector constraint function `constr`, with the set of positions
+    satisfying the constraints implicitly defining a manifold. There is also
+    a corresponding constraint implied on the momentum variables which can
+    be derived by differentiating the above with respect to time and using
+    that under the Hamiltonian dynamics the time derivative of the position
+    is equal to negative the gradient of the kinetic energy with respect to
+    the momentum, giving that
+
+        all(jacob_constr(pos) @ grad_kin_energy(mom) == 0)
+
+    The set of momentum variables satisfying the above for given position
+    variables is termed the cotangent space of the manifold (at a position).
+    """
 
     def __init__(self, system, step_size, n_inner_step=1,
                  reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
