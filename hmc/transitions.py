@@ -214,8 +214,8 @@ def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
          Journal of Machine Learning Research, 15(1), pp.1593-1623.
     """
     return (
-        system.dh_dmom(state_1).dot(state_2.pos - state_1.pos) < 0 or
-        system.dh_dmom(state_2).dot(state_2.pos - state_1.pos) < 0)
+        np.sum(system.dh_dmom(state_1) * (state_2.pos - state_1.pos)) < 0 or
+        np.sum(system.dh_dmom(state_2) * (state_2.pos - state_1.pos)) < 0)
 
 
 def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
@@ -247,8 +247,8 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
          manifolds. arXiv preprint arXiv:1304.1920.
     """
     return (
-        system.dh_dmom(state_1).dot(sum_mom) < 0 or
-        system.dh_dmom(state_2).dot(sum_mom) < 0)
+        np.sum(system.dh_dmom(state_1) * sum_mom) < 0 or
+        np.sum(system.dh_dmom(state_2) * sum_mom) < 0)
 
 
 class MultinomialDynamicIntegrationTransition(BaseIntegrationTransition):
