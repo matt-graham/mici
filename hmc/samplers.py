@@ -537,9 +537,11 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                     the integration transition such as the acceptance
                     probabilities and number of integrator steps.
             """
-            return super().sample_chains_arviz(
-                n_sample, init_states, chain_var_funcs,
-                n_process=n_process, sample_stats_key='integration_transition')
+            chains, chain_stats = self.sample_chains(
+                n_sample, init_states, chain_var_funcs, n_process)
+            return arviz.InferenceData(
+                posterior=arviz.dict_to_dataset(chains, library=hmc),
+                sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
 
 
 class StaticMetropolisHMC(HamiltonianMonteCarlo):
