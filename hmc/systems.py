@@ -385,7 +385,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     """
 
     def __init__(self, pot_energy, grad_pot_energy=None, hess_pot_energy=None,
-                 mtp_pot_energy=None):
+                 mtp_pot_energy=None, softabs_coeff=1.):
         super().__init__(pot_energy, grad_pot_energy)
         self._hess_pot_energy = autodiff_fallback(
             hess_pot_energy, pot_energy, 'hessian_grad_and_value',
@@ -393,7 +393,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         self._mtp_pot_energy = autodiff_fallback(
             mtp_pot_energy, pot_energy, 'mtp_hessian_grad_and_value',
             'mtp_pot_energy')
-        self.metric = SoftAbsRiemannianMetric(self)
+        self.metric = SoftAbsRiemannianMetric(self, softabs_coeff)
 
     @multi_cache_in_state(
         ['pos'], ['hess_pot_energy', 'grad_pot_energy', 'pot_energy'])
