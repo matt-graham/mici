@@ -81,7 +81,7 @@ import autograd.numpy as np
 # Generate random precision and mean parameters for a Gaussian
 n_dim = 50
 rng = np.random.RandomState(seed=1234)
-rnd_eigvec, _ = sla.qr(rng.normal(size=(n_dim, n_dim)))
+rnd_eigvec, _ = np.linalg.qr(rng.normal(size=(n_dim, n_dim)))
 rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
 prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
 mean = rng.normal(size=n_dim)
