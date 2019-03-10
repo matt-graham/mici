@@ -1,13 +1,15 @@
 """Monte Carlo sampler classes for peforming inference."""
 
+import os
 import logging
+import tempfile
 import signal
 from collections import OrderedDict
 import numpy as np
 import hmc
 import hmc.transitions as trans
 from hmc.states import ChainState, HamiltonianState
-from hmc.utils import get_size
+from hmc.utils import get_size, get_valid_filename
 
 try:
     import tqdm.auto as tqdm
@@ -67,43 +69,80 @@ class MarkovChainMonteCarloMethod(object):
         self.rng = rng
         self.transitions = transitions
 
-    def _init_chain_stats(self, n_sample, n_chain=None):
-        shape = (n_sample,) if n_chain is None else (n_chain, n_sample)
-        return {
-            trans_key:
-            {key: np.full(shape, val, dtype) for key, (dtype, val)
-             in transition.statistic_types.items()}
-            for trans_key, transition in self.transitions.items()
-            if hasattr(transition, 'statistic_types')
-        }
+    def _generate_memmap_filename(self, dir_path, prefix, key, index):
+        key_str = get_valid_filename(str(key))
+        if index is None:
+            index = 0
+        return os.path.join(dir_path, f'{prefix}_{index}_{key_str}.npy')
 
-    def _sample_chain(self, rng, n_sample, init_state, chain_var_funcs=None,
-                      tqdm_desc='Sampling', tqdm_position=None):
+    def _open_new_memmap(self, filename, shape, dtype, default_val):
+        memmap = np.lib.format.open_memmap(
+            filename, dtype=dtype, mode='w+', shape=shape)
+        memmap[:] = default_val
+        return memmap
+
+    def _memmaps_to_filenames(self, obj):
+        if isinstance(obj, np.memmap):
+            return obj.filename
+        elif isinstance(obj, dict):
+            return {k: self._memmaps_to_filenames(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._memmaps_to_filenames(v) for v in obj]
+
+    def _init_chain_stats(self, n_sample, memmap_enabled, memmap_path,
+                          chain_index):
+        chain_stats = {}
+        for trans_key, trans in self.transitions.items():
+            chain_stats[trans_key] = {}
+            if hasattr(trans, 'statistic_types'):
+                for key, (dtype, val) in trans.statistic_types.items():
+                    if memmap_enabled:
+                        filename = self._generate_memmap_filename(
+                            memmap_path, 'stats', f'{trans_key}_{key}',
+                            chain_index)
+                        chain_stats[trans_key][key] = self._open_new_memmap(
+                            filename, (n_sample,), dtype, val)
+                    else:
+                        chain_stats[trans_key][key] = np.full(
+                            n_sample, val, dtype)
+        return chain_stats
+
+    def _sample_chain(self, rng, n_sample, init_state, chain_var_funcs,
+                      chain_index, parallel_chains, memmap_enabled,
+                      memmap_path):
         if not isinstance(init_state, ChainState):
             state = ChainState(init_state)
         else:
             state = init_state
-        chain_stats = self._init_chain_stats(n_sample)
+        chain_stats = self._init_chain_stats(
+            n_sample, memmap_enabled, memmap_path, chain_index)
+        # Initialise chain variable trace arrays
         chains = {}
         for key, chain_func in chain_var_funcs.items():
             var = chain_func(state)
-            chains[key] = np.full((n_sample,) + var.shape, np.nan)
+            if memmap_enabled:
+                filename = self._generate_memmap_filename(
+                    memmap_path, 'trace', key, chain_index)
+                chains[key] = self._open_new_memmap(
+                    filename, (n_sample,) + var.shape, np.float64, np.nan)
+            else:
+                chains[key] = np.full((n_sample,) + var.shape, np.nan)
         total_return_nbytes = get_size(chain_stats) + get_size(chains)
-        if total_return_nbytes > 2**30:
-            logger.warn(
-                f'Warning: Memory assigned for chain exceeds 1 GiB '
-                f'({total_return_nbytes / 2**30:.2f} GiB).')
-        # Check if running in parallel - implied by tqdm_position being set -
-        # and if total number of bytes to be returned exceeds pickle limit
-        if tqdm_position is not None and total_return_nbytes > 2**31 - 1:
+        # Check if running in parallel and if total number of bytes to be
+        # returned exceeds pickle limit
+        if parallel_chains and total_return_nbytes > 2**31 - 1:
             raise RuntimeError(
                 f'Total number of bytes allocated for arrays to be returned '
                 f'({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit '
-                f'for returning results of a process by pickling (2 GiB).')
+                f'for returning results of a process (2 GiB). Try rerunning '
+                f'with chain memory-mapping enabled (`memmap_enabled=True`).')
         if TQDM_AVAILABLE:
+            desc = ('Sampling' if chain_index is None
+                    else f'Chain {chain_index}')
+            position = chain_index if parallel_chains else None
             sample_range = tqdm.trange(
-                n_sample, desc=tqdm_desc, unit='it', dynamic_ncols=True,
-                position=tqdm_position)
+                n_sample, desc=desc, unit='it', dynamic_ncols=True,
+                position=position)
         else:
             sample_range = range(n_sample)
         try:
@@ -112,22 +151,33 @@ class MarkovChainMonteCarloMethod(object):
                     state, trans_stats = transition.sample(state, rng)
                     if trans_stats is not None:
                         if trans_key not in chain_stats:
-                            raise RuntimeError(
+                            logger.warning(
                                 f'Transition {trans_key} returned statistics '
-                                f'but does not have a `statistic_types` '
-                                f'attribute')
-                        for key, value in trans_stats.items():
+                                f'but has no `statistic_types` attribute.')
+                        for key, val in trans_stats.items():
                             if key in chain_stats[trans_key]:
-                                chain_stats[trans_key][key][sample_index] = (
-                                    trans_stats[key])
+                                chain_stats[trans_key][key][sample_index] = val
                 for key, chain_func in chain_var_funcs.items():
                     var = chain_func(state)
                     chains[key][sample_index] = var
         except KeyboardInterrupt:
+            if memmap_enabled:
+                for chain in chains.values:
+                    chain.flush()
+                for trans_stats in chain_stats.values():
+                    for stat in trans_stats.values():
+                        stat.flush()
+        else:
+            sample_index += 1
+        finally:
+            if parallel_chains and memmap_enabled:
+                    trace_filenames = self._memmaps_to_filenames(chains)
+                    stats_filenames = self._memmaps_to_filenames(chain_stats)
+                    return trace_filenames, stats_filenames, sample_index
             return chains, chain_stats, sample_index
-        return chains, chain_stats, sample_index + 1
 
-    def sample_chain(self, n_sample, init_state, chain_var_funcs):
+    def sample_chain(self, n_sample, init_state, chain_var_funcs,
+                     memmap_enabled=False, memmap_path=None):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -145,6 +195,16 @@ class MarkovChainMonteCarloMethod(object):
                and returning an array corresponding to the variable(s) to be
                stored. The keys to the functions are used to index the chain
                variable arrays in the returned data.
+            memmap_enabled (bool): Whether to memory-map arrays used to store
+               chain data to files on disk to avoid excessive system memory
+               usage for long chains and/or high memory chain states. The chain
+               data is written to `.npy` files in the directory specified by
+               `memmap_path` (or a temporary directory if not provided). These
+               files persist after the termination of the function so should be
+               manually deleted when no longer required.
+            memmap_path (str): Path to directory to write memory-mapped chain
+               data to. If not provided, a temporary directory will be created
+               and the chain data written to files there.
 
         Returns:
             chains (dict[str, array]):
@@ -160,8 +220,14 @@ class MarkovChainMonteCarloMethod(object):
                 keys describing the statistics recorded and array values with
                 the leading dimension corresponding to the sampling index.
         """
+        # Create temporary directory if memory mapping and no path provided
+        if memmap_enabled and memmap_path is None:
+            memmap_path = tempfile.mkdtemp()
         chains, chain_stats, sample_index = self._sample_chain(
-            self.rng, n_sample, init_state, chain_var_funcs)
+            rng=self.rng, n_sample=n_sample, init_state=init_state,
+            chain_var_funcs=chain_var_funcs, chain_index=None,
+            parallel_chains=False, memmap_enabled=memmap_enabled,
+            memmap_path=memmap_path)
         if sample_index != n_sample:
             logger.exception(
                 f'Sampling manually interrupted at iteration {sample_index}. '
@@ -171,26 +237,41 @@ class MarkovChainMonteCarloMethod(object):
         return chains, chain_stats
 
     def _collate_chain_outputs(
-            self, n_sample, chains_stats_and_sample_indices):
+            self, n_sample, chains_stats_and_sample_indices,
+            load_memmaps, stack_chain_arrays=False):
         chains_stack = {}
         n_chain = len(chains_stats_and_sample_indices)
-        chain_stats_stack = self._init_chain_stats(n_sample, n_chain)
+        chain_stats_stack = {}
         for chain_index, (chains, chain_stats, sample_index) in enumerate(
                 chains_stats_and_sample_indices):
             for key, val in chains.items():
+                if load_memmaps:
+                    val = np.lib.format.open_memmap(val)
                 if chain_index == 0:
                     chains_stack[key] = [val]
                 else:
                     chains_stack[key].append(val)
             for trans_key, trans_stats in chain_stats.items():
-                for key, val in chain_stats[trans_key].items():
-                    chain_stats_stack[trans_key][key][chain_index] = val
-        for key, val in chains_stack.items():
-            chains_stack[key] = np.stack(val, axis=0)
+                if chain_index == 0:
+                    chain_stats_stack[trans_key] = {}
+                for key, val in trans_stats.items():
+                    if load_memmaps:
+                        val = np.lib.format.open_memmap(val)
+                    if chain_index == 0:
+                        chain_stats_stack[trans_key][key] = [val]
+                    else:
+                        chain_stats_stack[trans_key][key].append(val)
+        if stack_chain_arrays:
+            for key, val in chains_stack.items():
+                chains_stack[key] = np.stack(val)
+            for trans_key, trans_stats in chain_stats_stack.items():
+                for key, val in trans_stats.items():
+                    trans_stats[key] = np.stack(val)
         return chains_stack, chain_stats_stack
 
     def sample_chains(self, n_sample, init_states, chain_var_funcs,
-                      n_process=1):
+                      n_process=1, memmap_enabled=False, memmap_path=None,
+                      stack_chain_arrays=False):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -217,6 +298,21 @@ class MarkovChainMonteCarloMethod(object):
                 dynamically assign the chains across multiple processes. If
                 set to `None` then the number of processes will default to the
                 output of `os.cpu_count()`.
+            memmap_enabled (bool): Whether to memory-map arrays used to store
+               chain data to files on disk to avoid excessive system memory
+               usage for long chains and/or high memory chain states. The chain
+               data is written to `.npy` files in the directory specified by
+               `memmap_path` (or a temporary directory if not provided). These
+               files persist after the termination of the function so should be
+               manually deleted when no longer required.
+            memmap_path (str): Path to directory to write memory-mapped chain
+               data to. If not provided, a temporary directory will be created
+               and the chain data written to files there.
+            stack_chain_arrays (bool): Whether to stack the lists of per-chain
+               arrays in the returned dictionaries into new arrays with the
+               chain index as the first axis. Note if set to `True` when
+               memory-mapping is enabled (`memmap_enabled=True`) all
+               memory-mapped arrays will be loaded from disk in to memory.
 
         Returns:
             chains (dict[str, list[array]]):
@@ -234,6 +330,9 @@ class MarkovChainMonteCarloMethod(object):
                 the arrays corresponding to the sampling index.
         """
         n_chain = len(init_states)
+        # Create temp directory if memory-mapping enabled and no path provided
+        if memmap_enabled and memmap_path is None:
+            memmap_path = tempfile.mkdtemp()
         if RANDOMGEN_AVAILABLE:
             seed = self.rng.randint(2**64, dtype='uint64')
             rngs = [randomgen.Xorshift1024(seed).jump(i).generator
@@ -243,10 +342,13 @@ class MarkovChainMonteCarloMethod(object):
                      self.rng.choice(2**16, n_chain, False))
             rngs = [np.random.RandomState(seed) for seed in seeds]
         if n_process == 1:
+            # Using single process therefore run chains sequentially
             chain_outputs = []
             for c, (rng, init_state) in enumerate(zip(rngs, init_states)):
                 chains, chain_stats, n_sample_chain = self._sample_chain(
-                    rng, n_sample, init_state, chain_var_funcs, f'Chain {c}')
+                    rng, n_sample, init_state, chain_var_funcs,
+                    chain_index=c, parallel_chains=False,
+                    memmap_enabled=memmap_enabled, memmap_path=memmap_path)
                 chain_outputs.append((chains, chain_stats, n_sample_chain))
                 if n_sample_chain != n_sample:
                     logger.error(
@@ -258,6 +360,9 @@ class MarkovChainMonteCarloMethod(object):
                         f' ignored.')
                     break
         else:
+            # Run chains in parallel using a multiprocess(ing).Pool
+            # Child processes made to ignore SIGINT signals to allow handling
+            # of KeyboardInterrupts in parent process
             with Pool(n_process, _ignore_sigint_initialiser) as pool:
                 try:
                     chain_outputs = pool.starmap(
@@ -266,19 +371,33 @@ class MarkovChainMonteCarloMethod(object):
                             [n_sample] * n_chain,
                             init_states,
                             [chain_var_funcs] * n_chain,
-                            [f'Chain {i}' for i in range(n_chain)],
-                            range(n_chain)))
+                            range(n_chain),  # chain_index
+                            [True] * n_chain,  # parallel_chains flags
+                            [memmap_enabled] * n_chain,
+                            [memmap_path] * n_chain,))
                 except KeyboardInterrupt:
+                    # Close any still running processes
                     pool.terminate()
                     pool.join()
+                    err_message = 'Sampling manually interrupted.'
+                    if memmap_enabled:
+                        err_message += (
+                            f' Chain data recorded so far is available in '
+                            f'directory {memmap_path}.')
+                    logger.error(err_message)
                     raise
-        return self._collate_chain_outputs(n_sample, chain_outputs)
+        # When running parallel jobs with memory-mapping enabled, data arrays
+        # returned by processes as file paths to array memory-maps therfore
+        # load memory-maps objects from file before returing results
+        load_memmaps = memmap_enabled and n_process > 1
+        return self._collate_chain_outputs(
+            n_sample, chain_outputs, load_memmaps, stack_chain_arrays)
 
     if ARVIZ_AVAILABLE:
 
         def sample_chains_arviz(
                 self, n_sample, init_states, chain_var_funcs=None,
-                n_process=1, sample_stats_key=None):
+                sample_stats_key=None, **kwargs):
             """Sample one or more Markov chains from given initial states.
 
             Performs a specified number of chain iterations (each of which may
@@ -301,15 +420,28 @@ class MarkovChainMonteCarloMethod(object):
                     variable(s) to be stored. The keys to the functions are
                     used to index the chain variable arrays in the returned
                     data.
+                sample_stats_key (str): Key of transition to use the
+                    recorded statistics of to populate the `sampling_stats`
+                    group in the returned `InferenceData` object.
+
+            Kwargs:
                 n_process (int or None): Number of parallel processes to run
                     chains over. If set to one then chains will be run
                     sequentially in otherwise a `multiprocessing.Pool` object
                     will be used to dynamically assign the chains across
                     multiple processes. If set to `None` then the number of
                     processes will default to the output of `os.cpu_count()`.
-                sample_stats_key (str): Key of transition to use the
-                    recorded statistics of to populate the `sampling_stats`
-                    group in the returned `InferenceData` object.
+                memmap_enabled (bool): Whether to memory-map arrays used to
+                    store chain data to files on disk to avoid excessive system
+                    memory usage for long chains and/or high memory chain
+                    states. The chain data is written to `.npy` files in the
+                    directory specified by `memmap_path` (or a temporary
+                    directory if not provided). These files persist after the
+                    termination of the function so should be manually deleted
+                    when no longer required.
+                memmap_path (str): Path to directory to write memory-mapped
+                    chain data to. If not provided, a temporary directory will
+                    be created and the chain data written to files there.
 
             Returns:
                 arvix.InferenceData:
@@ -328,7 +460,7 @@ class MarkovChainMonteCarloMethod(object):
                     f'Specified `sample_stats_key` ({sample_stats_key}) does '
                     f'not match any transition.')
             chains, chain_stats = self.sample_chains(
-                n_sample, init_states, chain_var_funcs, n_process)
+                n_sample, init_states, chain_var_funcs, **kwargs)
             if sample_stats_key is None:
                 return arviz.InferenceData(
                     posterior=arviz.dict_to_dataset(chains, library=hmc))
@@ -393,20 +525,20 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
             momentum_transition=momentum_transition,
             integration_transition=integration_transition))
 
-    def _sample_chain(self, rng, n_sample, init_state, chain_var_funcs=None,
-                      tqdm_desc='Sampling', tqdm_position=None):
-        if not isinstance(init_state, HamiltonianState):
-            state = HamiltonianState(init_state)
-        else:
-            state = init_state
-        if state.mom is None:
-            state.mom = self.system.sample_momentum(state, self.rng)
-        if chain_var_funcs is None:
-            chain_var_funcs = {'pos': extract_pos}
-        return super()._sample_chain(rng, n_sample, state, chain_var_funcs,
-                                     tqdm_desc, tqdm_position)
+    def _preprocess_init_state(self, init_state):
+        """Make sure initial state is a HamiltonianState and has momentum."""
+        if isinstance(init_state, np.ndarray):
+            # If array use to set position component of new HamiltonianState
+            init_state = HamiltonianState(pos=init_state)
+        elif not isinstance(init_state, HamiltonianState):
+            raise TypeError(
+                'init_state should be a NumPy array or `HamiltonianState`.')
+        if init_state.mom is None:
+            init_state.mom = self.system.sample_momentum(init_state, self.rng)
+        return init_state
 
-    def sample_chain(self, n_sample, init_state, chain_var_funcs=None):
+    def sample_chain(self, n_sample, init_state, chain_var_funcs=None,
+                     **kwargs):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -430,6 +562,18 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                to the functions are used to index the chain variable arrays in
                the returned data.
 
+        Kwargs:
+            memmap_enabled (bool): Whether to memory-map arrays used to store
+               chain data to files on disk to avoid excessive system memory
+               usage for long chains and/or high memory chain states. The chain
+               data is written to `.npy` files in the directory specified by
+               `memmap_path` (or a temporary directory if not provided). These
+               files persist after the termination of the function so should be
+               manually deleted when no longer required.
+            memmap_path (str): Path to directory to write memory-mapped chain
+               data to. If not provided, a temporary directory will be created
+               and the chain data written to files there.
+
         Returns:
             chains (dict[str, array]):
                 Chain variable arrays, with one entry per function in
@@ -445,12 +589,15 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 values with one array per chain and the leading dimension of
                 the arrays corresponding to the sampling index.
         """
+        init_state = self._preprocess_init_state(init_state)
+        if chain_var_funcs is None:
+            chain_var_funcs = {'pos': extract_pos}
         chains, chain_stats = super().sample_chain(
-            n_sample, init_state, chain_var_funcs)
+            n_sample, init_state, chain_var_funcs, **kwargs)
         return chains, chain_stats.get('integration_transition', {})
 
     def sample_chains(self, n_sample, init_states, chain_var_funcs=None,
-                      n_process=1):
+                      **kwargs):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -476,12 +623,29 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                returns the position component of the state is used. The keys
                to the functions are used to index the chain variable arrays in
                the returned data.
+
+        Kwargs:
             n_process (int or None): Number of parallel processes to run chains
                 over. If set to one then chains will be run sequentially in
                 otherwise a `multiprocessing.Pool` object will be used to
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will default to the
                 output of `os.cpu_count()`.
+            memmap_enabled (bool): Whether to memory-map arrays used to store
+               chain data to files on disk to avoid excessive system memory
+               usage for long chains and/or high memory chain states. The chain
+               data is written to `.npy` files in the directory specified by
+               `memmap_path` (or a temporary directory if not provided). These
+               files persist after the termination of the function so should be
+               manually deleted when no longer required.
+            memmap_path (str): Path to directory to write memory-mapped chain
+               data to. If not provided, a temporary directory will be created
+               and the chain data written to files there.
+            stack_chain_arrays (bool): Whether to stack the lists of per-chain
+               arrays in the returned dictionaries into new arrays with the
+               chain index as the first axis. Note if set to `True` when
+               memory-mapping is enabled (`memmap_enabled=True`) all
+               memory-mapped arrays will be loaded from disk in to memory.
 
         Returns:
             chains (dict[str, list[array]]):
@@ -498,14 +662,17 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 values with one array per chain and the leading dimension of
                 the arrays corresponding to the sampling index.
         """
+        init_states = [self._preprocess_init_state(i) for i in init_states]
+        if chain_var_funcs is None:
+            chain_var_funcs = {'pos': extract_pos}
         chains, chain_stats = super().sample_chains(
-            n_sample, init_states, chain_var_funcs, n_process)
+            n_sample, init_states, chain_var_funcs, **kwargs)
         return chains, chain_stats.get('integration_transition', {})
 
     if ARVIZ_AVAILABLE:
 
         def sample_chains_arviz(self, n_sample, init_states,
-                                chain_var_funcs=None, n_process=1):
+                                chain_var_funcs=None, **kwargs):
             """Sample one or more Markov chains from given initial states.
 
             Performs a specified number of chain iterations (each of which may
@@ -533,12 +700,25 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                    function which returns the position component of the state
                    is used. The keys to the functions are used to index the
                    chain variable arrays in the returned data.
+
+            Kwargs:
                 n_process (int or None): Number of parallel processes to run
                     chains over. If set to one then chains will be run
                     sequentially in otherwise a `multiprocessing.Pool` object
                     will be used to dynamically assign the chains across
                     multiple processes. If set to `None` then the number of
                     processes will default to the output of `os.cpu_count()`.
+                memmap_enabled (bool): Whether to memory-map arrays used to
+                    store chain data to files on disk to avoid excessive system
+                    memory usage for long chains and/or high memory chain
+                    states. The chain data is written to `.npy` files in the
+                    directory specified by `memmap_path` (or a temporary
+                    directory if not provided). These files persist after the
+                    termination of the function so should be manually deleted
+                    when no longer required.
+                memmap_path (str): Path to directory to write memory-mapped
+                    chain data to. If not provided, a temporary directory will
+                    be created and the chain data written to files there.
 
             Returns:
                 arvix.InferenceData:
@@ -552,7 +732,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                     probabilities and number of integrator steps.
             """
             chains, chain_stats = self.sample_chains(
-                n_sample, init_states, chain_var_funcs, n_process)
+                n_sample, init_states, chain_var_funcs, **kwargs)
             return arviz.InferenceData(
                 posterior=arviz.dict_to_dataset(chains, library=hmc),
                 sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
