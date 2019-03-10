@@ -7,6 +7,7 @@ import numpy as np
 import hmc
 import hmc.transitions as trans
 from hmc.states import ChainState, HamiltonianState
+from hmc.utils import get_size
 
 try:
     import tqdm.auto as tqdm
@@ -84,6 +85,21 @@ class MarkovChainMonteCarloMethod(object):
             state = init_state
         chain_stats = self._init_chain_stats(n_sample)
         chains = {}
+        for key, chain_func in chain_var_funcs.items():
+            var = chain_func(state)
+            chains[key] = np.full((n_sample,) + var.shape, np.nan)
+        total_return_nbytes = get_size(chain_stats) + get_size(chains)
+        if total_return_nbytes > 2**30:
+            logger.warn(
+                f'Warning: Memory assigned for chain exceeds 1 GiB '
+                f'({total_return_nbytes / 2**30:.2f} GiB).')
+        # Check if running in parallel - implied by tqdm_position being set -
+        # and if total number of bytes to be returned exceeds pickle limit
+        if tqdm_position is not None and total_return_nbytes > 2**31 - 1:
+            raise RuntimeError(
+                f'Total number of bytes allocated for arrays to be returned '
+                f'({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit '
+                f'for returning results of a process by pickling (2 GiB).')
         if TQDM_AVAILABLE:
             sample_range = tqdm.trange(
                 n_sample, desc=tqdm_desc, unit='it', dynamic_ncols=True,
@@ -106,8 +122,6 @@ class MarkovChainMonteCarloMethod(object):
                                     trans_stats[key])
                 for key, chain_func in chain_var_funcs.items():
                     var = chain_func(state)
-                    if sample_index == 0:
-                        chains[key] = np.full((n_sample,) + var.shape, np.nan)
                     chains[key][sample_index] = var
         except KeyboardInterrupt:
             return chains, chain_stats, sample_index
