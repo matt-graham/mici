@@ -168,13 +168,14 @@ class MarkovChainMonteCarloMethod(object):
                     for stat in trans_stats.values():
                         stat.flush()
         else:
+            # If not interrupted increment sample_index so that it equals
+            # n_sample to flag chain completed sampling
             sample_index += 1
-        finally:
-            if parallel_chains and memmap_enabled:
-                    trace_filenames = self._memmaps_to_filenames(chains)
-                    stats_filenames = self._memmaps_to_filenames(chain_stats)
-                    return trace_filenames, stats_filenames, sample_index
-            return chains, chain_stats, sample_index
+        if parallel_chains and memmap_enabled:
+                trace_filenames = self._memmaps_to_filenames(chains)
+                stats_filenames = self._memmaps_to_filenames(chain_stats)
+                return trace_filenames, stats_filenames, sample_index
+        return chains, chain_stats, sample_index
 
     def sample_chain(self, n_sample, init_state, chain_var_funcs,
                      memmap_enabled=False, memmap_path=None):
