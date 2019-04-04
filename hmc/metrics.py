@@ -249,6 +249,52 @@ class _BaseRiemannianMetric(object):
 
 
 @inherit_docstrings
+class DiagonalRiemannianMetric(_BaseRiemannianMetric):
+    """Riemannian metric with non-zero terms only on diagonal."""
+
+    def __init__(self, diagonal_func, vjp_diagonal_func=None):
+        """
+        Args:
+            diagonal_func: Function to evaluate diagonal of metric.
+            vjp_diagonal_func: Higher-order function which returns a function
+                to evaluate the vector-Jacobian-product for the diagonal of the
+                metric evaluated at provided state (position).
+        """
+        self._diagonal = diagonal_func
+        self._vjp_diagonal = autodiff_fallback(
+            vjp_diagonal_func, diagonal_func, 'vjp_and_value',
+            'vjp_diagonal_func')
+
+    @cache_in_state('pos')
+    def diagonal(self, state):
+        return self._diagonal(state.pos)
+
+    @multi_cache_in_state(['pos'], ['vjp_diagonal', 'diagonal'])
+    def vjp_diagonal(self, state):
+        return self._vjp_diagonal(state.pos)
+
+    def lmult(self, state, other):
+        return (other.T * self.diagonal(state)).T
+
+    def lmult_inv(self, state, other):
+        return (other.T / self.diagonal(state)).T
+
+    def lmult_sqrt(self, state, other):
+        return (other.T * self.diagonal(state)**0.5).T
+
+    def log_det_sqrt(self, state):
+        return 0.5 * np.log(self.diagonal(state)).sum()
+
+    @cache_in_state('pos')
+    def grad_log_det_sqrt(self, state):
+        return 0.5 * self.vjp_diagonal(state)(1. / self.diagonal(state))
+
+    def grad_quadratic_form_inv(self, state, vector):
+        inv_metric_vector = self.lmult_inv(state, vector)
+        return -self.vjp_diagonal(state)(inv_metric_vector**2)
+
+
+@inherit_docstrings
 class _BaseCholeskyRiemannianMetric(_BaseRiemannianMetric):
     """Base class for Cholesky factored Riemannian metrics."""
 
