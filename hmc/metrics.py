@@ -137,7 +137,7 @@ class DenseEuclideanMetric(_BaseEuclideanMetric):
             metric (array): Two-dimensional array specifying metric. Should be
                 symmetric and positive-definite.
         """
-        if not metric_diagonal.ndim == 2:
+        if not metric.ndim == 2:
             raise ValueError('metric should be a two-dimensional array.')
         if not np.allclose(metric, metric.T):
             raise ValueError('metric should be a symmetric matrix (2D array).')
