@@ -5,6 +5,7 @@ from math import log, exp, log1p, expm1, inf, nan
 import types
 import sys
 import inspect
+import hmc
 
 
 try:
@@ -28,6 +29,83 @@ try:
         handler = TqdmHandler()
         logger.addHandler(handler)
         return logger
+
+except ImportError:
+    pass
+
+
+try:
+
+    import arviz
+
+    def convert_to_arviz_inference_data(
+            traces, chain_stats, sample_stats_key=None):
+        """Wrap chain outputs in an `arviz.InferenceData` container object.
+
+        The `traces` and `chain_stats` arguments should correspond to a
+        multiple-chain sampler output i.e. the returned values from a
+        `sample_chains` call.
+
+        Args:
+            traces (dict[str, list[array]] or dict[str, array]): Trace arrays,
+                with one entry per function in `trace_funcs` passed to sampler
+                method. Each entry consists of a list of arrays, one per chain,
+                with the first axes of the arrays corresponding to the sampling
+                (draw) index, or if `stack_chain_arrays=True` was passed to
+                sampler method, each entry is an array with the first axes
+                corresponding to the chain index, the second axis the sampling
+                (draw) index.
+            chain_stats (dict[str, list[array]] or dict[str, array]): Chain
+                integration transition statistics as a dictionary with string
+                keys describing the statistics recorded and values
+                corresponding to either a list of arrays with one array per
+                chain and the first axis of the arrays corresponding to the
+                sampling index, or if `stack_chain_arrays=True` passed to
+                sampler method each entry is an array with the first axes
+                corresponding to the chain index, the second axis the sampling
+                (draw) index.
+            sample_stats_key (str): Optional. Key of transition in
+                `chain_stats` to use the recorded statistics of to populate the
+                `sampling_stats` group in the returned `InferenceData` object.
+
+        Returns:
+            arvix.InferenceData:
+                An arviz data container with groups `posterior` and
+                'sample_stats', both of instances of `xarray.Dataset`. The
+                `posterior` group corresponds to the chain variable traces
+                provides in the `traces` argument and the `sample_stats`
+                group corresponds to the chain transitions statistics passed
+                in the `chain_stats` argument (if multiple transition
+                statistics dictionaries are present the `sample_stats_key`
+                argument should be specified to indicate which to use).
+        """
+        if (sample_stats_key is not None and
+                sample_stats_key not in chain_stats):
+            raise ValueError(
+                f'Specified `sample_stats_key` ({sample_stats_key}) does '
+                f'not match any transition in `chain_stats`.')
+        if sample_stats_key is not None:
+            return arviz.InferenceData(
+                posterior=arviz.dict_to_dataset(traces, library=hmc),
+                sample_stats=arviz.dict_to_dataset(
+                    chain_stats[sample_stats_key], library=hmc))
+        elif not isinstance(next(iter(chain_stats.values())), dict):
+            # chain_stat dictionary value not another dictionary therefore
+            # assume corresponds to statistics for a single transition
+            return arviz.InferenceData(
+                posterior=arviz.dict_to_dataset(traces, library=hmc),
+                sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
+        elif len(chain_stats) == 1:
+            # single transtition statistics dictionary in chain_stats therefore
+            # unambiguous to set sample_stats
+            return arviz.InferenceData(
+                posterior=arviz.dict_to_dataset(traces, library=hmc),
+                sample_stats=arviz.dict_to_dataset(
+                    chain_stats.popitem()[1], library=hmc))
+        else:
+            raise ValueError(
+                '`sample_stats_key` must be specified as `chain_stats` '
+                'contains multiple transtitiion statistics dictionaries.')
 
 except ImportError:
     pass

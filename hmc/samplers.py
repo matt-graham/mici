@@ -17,11 +17,6 @@ try:
 except ImportError:
     TQDM_AVAILABLE = False
 try:
-    import arviz
-    ARVIZ_AVAILABLE = True
-except ImportError:
-    ARVIZ_AVAILABLE = False
-try:
     import randomgen
     RANDOMGEN_AVAILABLE = True
 except ImportError:
@@ -402,81 +397,6 @@ class MarkovChainMonteCarloMethod(object):
         return self._collate_chain_outputs(
             n_sample, chain_outputs, load_memmaps, stack_chain_arrays)
 
-    if ARVIZ_AVAILABLE:
-
-        def sample_chains_arviz(
-                self, n_sample, init_states, trace_funcs=None,
-                sample_stats_key=None, **kwargs):
-            """Sample one or more Markov chains from given initial states.
-
-            Performs a specified number of chain iterations (each of which may
-            be composed of multiple individual Markov transitions), recording
-            the outputs of functions of the sampled chain state after each
-            iteration. The chains may be run in parallel across multiple
-            independent processes or sequentially. Chain data is returned in an
-            `arviz.InferenceData` container object.
-
-            Args:
-                n_sample (int): Number of samples to draw per chain.
-                init_states (Iterable[ChainState] or Iterable[array]):
-                    Initial chain states. Each entry can be either an array
-                    specifying the state or a `ChainState` instance. One chain
-                    will be run for each state in the iterable sequence.
-                trace_funcs (dict[str, callable]): Dictionary of functions
-                    which compute the variables to be recorded at each
-                    iteration, with each function being passed the current
-                    state and returning an array corresponding to the
-                    variable(s) to be stored. The keys to the functions are
-                    used to index the trace arrays in the returned data.
-                sample_stats_key (str): Key of transition to use the
-                    recorded statistics of to populate the `sampling_stats`
-                    group in the returned `InferenceData` object.
-
-            Kwargs:
-                n_process (int or None): Number of parallel processes to run
-                    chains over. If set to one then chains will be run
-                    sequentially in otherwise a `multiprocessing.Pool` object
-                    will be used to dynamically assign the chains across
-                    multiple processes. If set to `None` then the number of
-                    processes will default to the output of `os.cpu_count()`.
-                memmap_enabled (bool): Whether to memory-map arrays used to
-                    store chain data to files on disk to avoid excessive system
-                    memory usage for long chains and/or large chain
-                    states. The chain data is written to `.npy` files in the
-                    directory specified by `memmap_path` (or a temporary
-                    directory if not provided). These files persist after the
-                    termination of the function so should be manually deleted
-                    when no longer required.
-                memmap_path (str): Path to directory to write memory-mapped
-                    chain data to. If not provided, a temporary directory will
-                    be created and the chain data written to files there.
-
-            Returns:
-                arvix.InferenceData:
-                    An arviz data container with groups `posterior` and
-                    'sample_stats', both of instances of `xarray.Dataset`. The
-                    `posterior` group corresponds to the chain traces computed
-                    using the `trace_funcs` entries (with the data variable
-                    keys corresponding to the keys there). The `sample_stats`
-                    group corresponds to the statistics of the transition
-                    indicated by the `sample_stats_key` argument.
-            """
-            if (sample_stats_key is not None and
-                    sample_stats_key not in self.transitions):
-                raise ValueError(
-                    f'Specified `sample_stats_key` ({sample_stats_key}) does '
-                    f'not match any transition.')
-            traces, chain_stats = self.sample_chains(
-                n_sample, init_states, trace_funcs, **kwargs)
-            if sample_stats_key is None:
-                return arviz.InferenceData(
-                    posterior=arviz.dict_to_dataset(traces, library=hmc))
-            else:
-                return arviz.InferenceData(
-                    posterior=arviz.dict_to_dataset(traces, library=hmc),
-                    sample_stats=arviz.dict_to_dataset(
-                        chain_stats[sample_stats_key], library=hmc))
-
 
 class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
     """Wrapper class for Hamiltonian Monte Carlo (HMC) methods.
@@ -672,74 +592,6 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
         traces, chain_stats = super().sample_chains(
             n_sample, init_states, trace_funcs, **kwargs)
         return traces, chain_stats.get('integration_transition', {})
-
-    if ARVIZ_AVAILABLE:
-
-        def sample_chains_arviz(self, n_sample, init_states, trace_funcs=None,
-                                **kwargs):
-            """Sample one or more Markov chains from given initial states.
-
-            Performs a specified number of chain iterations (each of which may
-            be composed of multiple individual Markov transitions), recording
-            the outputs of functions of the sampled chain state after each
-            iteration. The chains may be run in parallel across multiple
-            independent processes or sequentially. Chain data is returned in an
-            `arviz.InferenceData` container object.
-
-            Args:
-                n_sample (int): Number of samples to draw per chain.
-                init_states (Iterable[HamiltonianState] or Iterable[array]):
-                   Initial chain states. Each state can be either an array
-                   specifying the state position component or a
-                   `HamiltonianState` instance. If an array is passed or the
-                   `mom` attribute of the state is not set, a momentum
-                   component will be independently sampled from its conditional
-                   distribution. One chain will be run for each state in the
-                   iterable sequence.
-                trace_funcs (dict[str, callable]): Dictionary of functions
-                    which compute the variables to be recorded at each
-                    iteration, with each function being passed the current
-                    state and returning an array corresponding to the
-                    variable(s) to be stored. By default (or if set to `None`)
-                    a single function which returns the position component of
-                    the state is used. The keys to the functions are used to
-                    index the chain variable arrays in the returned data.
-
-            Kwargs:
-                n_process (int or None): Number of parallel processes to run
-                    chains over. If set to one then chains will be run
-                    sequentially in otherwise a `multiprocessing.Pool` object
-                    will be used to dynamically assign the chains across
-                    multiple processes. If set to `None` then the number of
-                    processes will default to the output of `os.cpu_count()`.
-                memmap_enabled (bool): Whether to memory-map arrays used to
-                    store chain data to files on disk to avoid excessive system
-                    memory usage for long chains and/or large chain states. The
-                    chain data is written to `.npy` files in the directory
-                    specified by `memmap_path` (or a temporary directory if not
-                    provided). These files persist after the termination of the
-                    function so should be manually deleted when no longer
-                    required.
-                memmap_path (str): Path to directory to write memory-mapped
-                    chain data to. If not provided, a temporary directory will
-                    be created and the chain data written to files there.
-
-            Returns:
-                arvix.InferenceData:
-                    An arviz data container with groups `posterior` and
-                    'sample_stats', both of instances of `xarray.Dataset`. The
-                    `posterior` group corresponds to the chain traces computed
-                    using the `trace_funcs` entries (with the data variable
-                    keys corresponding to the keys there). The `sample_stats`
-                    group corresponds to the statistics of the integration
-                    transition such as the acceptance probabilities and number
-                    of integrator steps.
-            """
-            traces, chain_stats = self.sample_chains(
-                n_sample, init_states, trace_funcs, **kwargs)
-            return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=hmc),
-                sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
 
 
 class StaticMetropolisHMC(HamiltonianMonteCarlo):
