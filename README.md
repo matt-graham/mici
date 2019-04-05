@@ -106,10 +106,10 @@ sampler = hmc.samplers.DynamicMultinomialHMC(system, integrator, rng)
 init_pos = rng.normal(size=n_dim)
 
 # Sample a Markov chain with 1000 transitions
-chains, chain_stats = sampler.sample_chain(1000, init_pos)
+traces, chain_stats = sampler.sample_chain(1000, init_pos)
 
 # Print RMSE in mean estimate
-mean_rmse = np.mean((chains['pos'].mean(0) - mean)**2)**0.5
+mean_rmse = np.mean((traces['pos'].mean(0) - mean)**2)**0.5
 print(f'Mean estimate RMSE: {mean_rmse}')
 
 # Print average acceptance probability
