@@ -39,7 +39,7 @@ class CorrelatedMomentumTransition(object):
     exactly invariant. This approach is sometimes known as partial momentum
     refreshing or updating, and was originally proposed in [1].
 
-    If the resampling coefficient is equal to one then the momentum is not
+    If the resampling coefficient is equal to zero then the momentum is not
     randomised at all and succesive applications of the coupled integration
     transitions will continue along the same simulated Hamiltonian trajectory.
     When an integration transition is accepted this means the subsequent
@@ -47,7 +47,7 @@ class CorrelatedMomentumTransition(object):
     not randomising the momentum will reduce random-walk behaviour. However on
     a rejection the integration direction is reversed and so without
     randomisation the trajectory will exactly backtrack along the previous
-    tractory states. A correlation coefficient of zero corresponds to the
+    tractory states. A resampling coefficient of one corresponds to the
     standard case of independent resampling of the momenta while intermediate
     values between zero and one correspond to varying levels of correlation
     between the pre and post update momentums.
@@ -59,7 +59,7 @@ class CorrelatedMomentumTransition(object):
     """
 
     def __init__(self, system, mom_resample_coeff=1.):
-        super().__init__(system)
+        self.system = system
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(self, state, rng):
