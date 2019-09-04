@@ -2,7 +2,6 @@
 
 from hmc.errors import ConvergenceError
 import numpy as np
-import scipy.linalg as sla
 
 
 def euclidean_norm(vct):
@@ -82,10 +81,12 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
         f'Fixed point iteration did not converge. Last error {error:.1e}.')
 
 
-def project_onto_manifold_quasi_newton(state, state_prev, system, tol=1e-8,
-                                       max_iters=100, norm=maximum_norm):
+def retract_onto_manifold_quasi_newton(
+        state, state_prev, dh2_flow_pos_dmom, system, tol=1e-8, max_iters=100,
+        norm=maximum_norm):
     jacob_constr_prev = system.jacob_constr(state_prev)
-    chol_gram_prev = (system.chol_gram(state_prev), True)
+    inv_gram_prev = system.jacob_constr_inner_product(
+        jacob_constr_prev, dh2_flow_pos_dmom).inv
     for i in range(max_iters):
         constr = system.constr(state)
         if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
@@ -93,15 +94,16 @@ def project_onto_manifold_quasi_newton(state, state_prev, system, tol=1e-8,
         error = norm(constr)
         if error < tol:
             return state
-        state.pos -= system.metric.lmult_inv(
-            jacob_constr_prev.T @ sla.cho_solve(chol_gram_prev, constr))
+        state.pos -= dh2_flow_pos_dmom @ (
+            jacob_constr_prev.T @ (inv_gram_prev @ constr))
     raise ConvergenceError(
         f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
 
 
-def project_onto_manifold_newton(state, state_prev, system, tol=1e-8,
-                                 max_iters=100, norm=maximum_norm):
-    inv_metr_jacob_constr_prev_t = system.inv_metric_jacob_constr_t(state_prev)
+def retract_onto_manifold_newton(
+        state, state_prev, dh2_flow_pos_dmom, system, tol=1e-8, max_iters=100,
+        norm=maximum_norm):
+    jacob_constr_prev = system.jacob_constr(state_prev)
     for i in range(max_iters):
         jacob_constr = system.jacob_constr(state)
         constr = system.constr(state)
@@ -110,7 +112,9 @@ def project_onto_manifold_newton(state, state_prev, system, tol=1e-8,
         error = norm(constr)
         if error < tol:
             return state
-        state.pos -= inv_metr_jacob_constr_prev_t @ sla.solve(
-            jacob_constr @ inv_metr_jacob_constr_prev_t, constr)
+        dconstr_dlambda = system.jacob_constr_inner_product(
+            jacob_constr, dh2_flow_pos_dmom, jacob_const_prev)
+        state.pos -= dh2_flow_pos_dmom @ (
+            jacob_constr_prev.T @ (dconstr_dlambda.inv @ constr))
     raise ConvergenceError(
         f'Newton iteration did not converge. Last error {error:.1e}.')

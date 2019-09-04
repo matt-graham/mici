@@ -5,7 +5,7 @@ __authors__ = 'Matt Graham'
 __license__ = 'MIT'
 
 import hmc.integrators
-import hmc.metrics
+import hmc.matrices
 import hmc.samplers
 import hmc.solvers
 import hmc.states
