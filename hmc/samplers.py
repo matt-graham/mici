@@ -162,7 +162,7 @@ class MarkovChainMonteCarloMethod(object):
                     chains[key][sample_index] = var
         except KeyboardInterrupt:
             if memmap_enabled:
-                for chain in chains.values:
+                for chain in chains.values():
                     chain.flush()
                 for trans_stats in chain_stats.values():
                     for stat in trans_stats.values():
