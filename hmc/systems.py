@@ -82,6 +82,15 @@ class _HamiltonianSystem(object):
     def h(self, state):
         return self.h1(state) + self.h2(state)
 
+    def dh_dpos(self, state):
+        if hasattr(self, 'dh2_dpos'):
+            return self.dh1_dpos(state) + self.dh2_dpos(state)
+        else:
+            return self.dh1_dpos(state)
+
+    def dh_dmom(self, state):
+        return self.dh2_dmom(state)
+
     def sample_momentum(self, state, rng):
         raise NotImplementedError()
 
