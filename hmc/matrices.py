@@ -1,4 +1,4 @@
-"""Structure matrix classes implementing basic linear algebra operations."""
+"""Structured matrix classes implementing basic linear algebra operations."""
 
 import numpy as np
 import numpy.linalg as nla

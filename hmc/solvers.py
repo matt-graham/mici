@@ -82,8 +82,8 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
 
 
 def retract_onto_manifold_quasi_newton(
-        state, state_prev, dh2_flow_pos_dmom, system, tol=1e-8, max_iters=100,
-        norm=maximum_norm):
+        state, state_prev, dh2_flow_pos_dmom, system,
+        tol=1e-8, max_iters=100, norm=maximum_norm):
     jacob_constr_prev = system.jacob_constr(state_prev)
     inv_gram_prev = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom).inv
@@ -101,8 +101,8 @@ def retract_onto_manifold_quasi_newton(
 
 
 def retract_onto_manifold_newton(
-        state, state_prev, dh2_flow_pos_dmom, system, tol=1e-8, max_iters=100,
-        norm=maximum_norm):
+        state, state_prev, dh2_flow_pos_dmom, system,
+        tol=1e-8, max_iters=100, norm=maximum_norm):
     jacob_constr_prev = system.jacob_constr(state_prev)
     for i in range(max_iters):
         jacob_constr = system.jacob_constr(state)
