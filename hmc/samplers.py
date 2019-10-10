@@ -346,15 +346,21 @@ class MarkovChainMonteCarloMethod(object):
             seeds = (self.rng.choice(2**16, n_chain, False) * 2**16 +
                      self.rng.choice(2**16, n_chain, False))
             rngs = [np.random.RandomState(seed) for seed in seeds]
+        chain_outputs = []
+        shared_kwargs_list = [{
+                'rng': rng,
+                'n_sample': n_sample,
+                'init_state': init_state,
+                'trace_funcs': trace_funcs,
+                'chain_index': c,
+                'memmap_enabled': memmap_enabled,
+                'memmap_path': memmap_path
+            } for c, (rng, init_state) in enumerate(zip(rngs, init_states))]
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            chain_outputs = []
-            for c, (rng, init_state) in enumerate(zip(rngs, init_states)):
+            for c, kwargs in enumerate(shared_kwargs_list):
                 traces, chain_stats, n_sample_chain = self._sample_chain(
-                    rng=rng, n_sample=n_sample, init_state=init_state,
-                    trace_funcs=trace_funcs, chain_index=c,
-                    parallel_chains=False, memmap_enabled=memmap_enabled,
-                    memmap_path=memmap_path)
+                    **kwargs, parallel_chains=False)
                 chain_outputs.append((traces, chain_stats, n_sample_chain))
                 if n_sample_chain != n_sample:
                     logger.error(
@@ -367,29 +373,31 @@ class MarkovChainMonteCarloMethod(object):
             # Run chains in parallel using a multiprocess(ing).Pool
             # Child processes made to ignore SIGINT signals to allow handling
             # of KeyboardInterrupts in parent process
-            with Pool(n_process, _ignore_sigint_initialiser) as pool:
-                try:
-                    chain_outputs = pool.starmap(
+            n_completed = 0
+            pool = Pool(n_process, _ignore_sigint_initialiser)
+            try:
+                results = [
+                    pool.apply_async(
                         self._sample_chain,
-                        zip(rngs,
-                            [n_sample] * n_chain,
-                            init_states,
-                            [trace_funcs] * n_chain,
-                            range(n_chain),  # chain_index
-                            [True] * n_chain,  # parallel_chains flags
-                            [memmap_enabled] * n_chain,
-                            [memmap_path] * n_chain,))
-                except KeyboardInterrupt:
-                    # Close any still running processes
-                    pool.terminate()
-                    pool.join()
-                    err_message = 'Sampling manually interrupted.'
-                    if memmap_enabled:
-                        err_message += (
-                            f' Chain data recorded so far is available in '
-                            f'directory {memmap_path}.')
-                    logger.error(err_message)
-                    raise
+                        kwds=dict(**kwargs, parallel_chains=True))
+                    for kwargs in shared_kwargs_list]
+                for result in results:
+                    chain_outputs.append(result.get())
+                    n_completed += 1
+            except KeyboardInterrupt:
+                # Close any still running processes
+                pool.terminate()
+                pool.join()
+                err_message = 'Sampling manually interrupted.'
+                if n_completed > 0:
+                    err_message += (
+                        f' Data for {n_completed} completed chains will be '
+                        f'returned.')
+                if memmap_enabled:
+                    err_message += (
+                        f' All data recorded so far including in progress '
+                        f'chains is available in directory {memmap_path}.')
+                logger.error(err_message)
         # When running parallel jobs with memory-mapping enabled, data arrays
         # returned by processes as file paths to array memory-maps therfore
         # load memory-maps objects from file before returing results
