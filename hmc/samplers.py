@@ -156,7 +156,7 @@ class MarkovChainMonteCarloMethod(object):
                     traces[key][sample_index] = trace_func(state)
         except KeyboardInterrupt:
             if memmap_enabled:
-                for trace in traces.values:
+                for trace in traces.values():
                     trace.flush()
                 for trans_stats in chain_stats.values():
                     for stat in trans_stats.values():
