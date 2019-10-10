@@ -60,7 +60,7 @@ class _HamiltonianSystem(object):
     def neg_log_dens(self, state):
         return self._neg_log_dens(state.pos)
 
-    @multi_cache_in_state(['pos'], ['neg_log_dens', 'grad_neg_log_dens'])
+    @multi_cache_in_state(['pos'], ['grad_neg_log_dens', 'neg_log_dens'])
     def grad_neg_log_dens(self, state):
         return self._grad_neg_log_dens(state.pos)
 
