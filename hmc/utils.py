@@ -47,23 +47,15 @@ try:
         `sample_chains` call.
 
         Args:
-            traces (dict[str, list[array]] or dict[str, array]): Trace arrays,
-                with one entry per function in `trace_funcs` passed to sampler
-                method. Each entry consists of a list of arrays, one per chain,
-                with the first axes of the arrays corresponding to the sampling
-                (draw) index, or if `stack_chain_arrays=True` was passed to
-                sampler method, each entry is an array with the first axes
-                corresponding to the chain index, the second axis the sampling
-                (draw) index.
-            chain_stats (dict[str, list[array]] or dict[str, array]): Chain
-                integration transition statistics as a dictionary with string
-                keys describing the statistics recorded and values
-                corresponding to either a list of arrays with one array per
-                chain and the first axis of the arrays corresponding to the
-                sampling index, or if `stack_chain_arrays=True` passed to
-                sampler method each entry is an array with the first axes
-                corresponding to the chain index, the second axis the sampling
-                (draw) index.
+            traces (dict[str, list[array]]): Trace arrays, with one entry per
+                function in `trace_funcs` passed to sampler method. Each entry
+                consists of a list of arrays, one per chain, with the first
+                axes of the arrays corresponding to the sampling (draw) index.
+            chain_stats (dict[str, list[array]]): Chain integration transition
+                statistics as a dictionary with string keys describing the
+                statistics recorded and values corresponding to a list of
+                arrays with one array per chain and the first axis of the
+                arrays corresponding to the sampling index.
             sample_stats_key (str): Optional. Key of transition in
                 `chain_stats` to use the recorded statistics of to populate the
                 `sampling_stats` group in the returned `InferenceData` object.
@@ -90,7 +82,7 @@ try:
                 sample_stats=arviz.dict_to_dataset(
                     chain_stats[sample_stats_key], library=hmc))
         elif not isinstance(next(iter(chain_stats.values())), dict):
-            # chain_stat dictionary value not another dictionary therefore
+            # chain_stats dictionary value not another dictionary therefore
             # assume corresponds to statistics for a single transition
             return arviz.InferenceData(
                 posterior=arviz.dict_to_dataset(traces, library=hmc),

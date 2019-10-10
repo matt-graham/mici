@@ -213,7 +213,8 @@ class MarkovChainMonteCarloMethod(object):
                 statistics (e.g. acceptance probabilities) on each iteration.
                 For each such transition, a dictionary is returned with string
                 keys describing the statistics recorded and array values with
-                the leading dimension corresponding to the sampling index.
+                the leading dimension corresponding to the sampling (draw)
+                index.
         """
         # Create temporary directory if memory mapping and no path provided
         if memmap_enabled and memmap_path is None:
@@ -223,16 +224,24 @@ class MarkovChainMonteCarloMethod(object):
             trace_funcs=trace_funcs, chain_index=None, parallel_chains=False,
             memmap_enabled=memmap_enabled, memmap_path=memmap_path)
         if sample_index != n_sample:
-            logger.exception(
+            # Sampling interrupted therefore truncate returned arrays
+            # Using resize methods makes agnostic to whether array is
+            # memory mapped or not
+            for trans_stats in chain_stats.values():
+                for key in trans_stats:
+                    trans_stats[key].resize(
+                        (sample_index,) + trans_stats[key].shape[1:])
+            for key in traces:
+                traces[key].resize(
+                    (sample_index,) + traces[key].shape[1:])
+            logger.error(
                 f'Sampling manually interrupted at iteration {sample_index}. '
                 f'Arrays containing chain traces and statistics computed '
-                f'before interruption will be returned, all entries for '
-                f'iteration {sample_index} and above should be ignored.')
+                f'before interruption will be returned.')
         return traces, chain_stats
 
     def _collate_chain_outputs(
-            self, n_sample, traces_stats_and_sample_indices, load_memmaps,
-            stack_chain_arrays=False):
+            self, n_sample, traces_stats_and_sample_indices, load_memmaps):
         traces_stack = {}
         n_chain = len(traces_stats_and_sample_indices)
         chain_stats_stack = {}
@@ -241,6 +250,11 @@ class MarkovChainMonteCarloMethod(object):
             for key, val in traces.items():
                 if load_memmaps:
                     val = np.lib.format.open_memmap(val)
+                if sample_index != n_sample:
+                    # Sampling interrupted therefore truncate returned arrays
+                    # Using resize methods makes agnostic to whether array is
+                    # memory mapped or not
+                    val.resize((sample_index,) + val.shape[1:], refcheck=False)
                 if chain_index == 0:
                     traces_stack[key] = [val]
                 else:
@@ -251,21 +265,20 @@ class MarkovChainMonteCarloMethod(object):
                 for key, val in trans_stats.items():
                     if load_memmaps:
                         val = np.lib.format.open_memmap(val)
+                    if sample_index != n_sample:
+                        # Sampling interrupted therefore truncate returned
+                        # arrays Using resize methods makes agnostic to whether
+                        # array is memory mapped or not
+                        val.resize((sample_index,) + val.shape[1:],
+                                   refcheck=False)
                     if chain_index == 0:
                         chain_stats_stack[trans_key][key] = [val]
                     else:
                         chain_stats_stack[trans_key][key].append(val)
-        if stack_chain_arrays:
-            for key, val in traces_stack.items():
-                traces_stack[key] = np.stack(val)
-            for trans_key, trans_stats in chain_stats_stack.items():
-                for key, val in trans_stats.items():
-                    trans_stats[key] = np.stack(val)
         return traces_stack, chain_stats_stack
 
     def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
-                      memmap_enabled=False, memmap_path=None,
-                      stack_chain_arrays=False):
+                      memmap_enabled=False, memmap_path=None):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -302,34 +315,24 @@ class MarkovChainMonteCarloMethod(object):
             memmap_path (str): Path to directory to write memory-mapped chain
                data to. If not provided, a temporary directory will be created
                and the chain data written to files there.
-            stack_chain_arrays (bool): Whether to stack the lists of per-chain
-               arrays in the returned dictionaries into new arrays with the
-               chain index as the first axis. Note if set to `True` when
-               memory-mapping is enabled (`memmap_enabled=True`) all
-               memory-mapped arrays will be loaded from disk in to memory.
 
         Returns:
-            traces (dict[str, list[array]] or dict[str, array]):
+            traces (dict[str, list[array]]:
                 Trace arrays, with one entry per function in `trace_funcs` with
                 the same key. Each entry consists of a list of arrays, one per
                 chain, with the first axes of the arrays corresponding to the
-                sampling (draw) index, or if `stack_chain_arrays=True` each
-                entry is an array with the first axes corresponding to the
-                chain index, the second axis the sampling (draw) index; in both
-                cases the size and number of remaining array axes is determined
-                by the shape of the arrays returned by the corresponding
-                `trace_funcs` entry.
+                sampling (draw) index and the size and number of remaining
+                array axes is determined by the shape of the arrays returned by
+                the corresponding `trace_funcs` entry.
             chain_stats (dict[str, dict[str, list[array]]]):
                 Dictionary of chain transition statistics. Outer dictionary
                 contains entries for each chain transition which returns
                 statistics (e.g. acceptance probabilities) on each iteration.
                 For each such transition, a dictionary is returned with string
                 keys describing the statistics recorded and values
-                corresponding to either a list of arrays with one array per
-                chain and the first axis of the arrays corresponding to the
-                sampling index, or if `stack_chain_arrays=True` each entry is
-                an array with the first axes corresponding to the chain index,
-                the second axis the sampling (draw) index.
+                corresponding to a list of 1D arrays with one array per
+                chain and the axis of the arrays corresponding to the sampling
+                (draw) index.
         """
         n_chain = len(init_states)
         # Create temp directory if memory-mapping enabled and no path provided
@@ -358,9 +361,7 @@ class MarkovChainMonteCarloMethod(object):
                         f'Sampling manually interrupted at chain {c} iteration'
                         f' {n_sample_chain}. Arrays containing chain traces'
                         f' and statistics computed before interruption will'
-                        f' be returned, all entries for iteration '
-                        f' {n_sample_chain} and above of chain {c} should be'
-                        f' ignored.')
+                        f' be returned.')
                     break
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
@@ -394,7 +395,7 @@ class MarkovChainMonteCarloMethod(object):
         # load memory-maps objects from file before returing results
         load_memmaps = memmap_enabled and n_process > 1
         return self._collate_chain_outputs(
-            n_sample, chain_outputs, load_memmaps, stack_chain_arrays)
+            n_sample, chain_outputs, load_memmaps)
 
 
 class HamiltonianMCMC(MarkovChainMonteCarloMethod):
@@ -559,11 +560,6 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             memmap_path (str): Path to directory to write memory-mapped chain
                data to. If not provided, a temporary directory will be created
                and the chain data written to files there.
-            stack_chain_arrays (bool): Whether to stack the lists of per-chain
-               arrays in the returned dictionaries into new arrays with the
-               chain index as the first axis. Note if set to `True` when
-               memory-mapping is enabled (`memmap_enabled=True`) all
-               memory-mapped arrays will be loaded from disk in to memory.
 
         Returns:
             traces (dict[str, list[array]] or dict[str, array]):
