@@ -12,7 +12,8 @@ from hmc.states import ChainState, HamiltonianState
 from hmc.utils import get_size, get_valid_filename
 
 try:
-    import tqdm.auto as tqdm
+    import tqdm
+    import tqdm.auto as tqdm_auto
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
@@ -132,12 +133,16 @@ class MarkovChainMonteCarloMethod(object):
                 f'for returning results of a process (2 GiB). Try rerunning '
                 f'with chain memory-mapping enabled (`memmap_enabled=True`).')
         if TQDM_AVAILABLE:
-            desc = ('Sampling' if chain_index is None
-                    else f'Chain {chain_index}')
-            position = chain_index if parallel_chains else None
-            sample_range = tqdm.trange(
-                n_sample, desc=desc, unit='it', dynamic_ncols=True,
-                position=position)
+            kwargs = {
+                'desc': f'Chain {0 if chain_index is None else chain_index}',
+                'unit': 'it',
+                'dynamic_ncols': True,
+            }
+            if parallel_chains:
+                sample_range = tqdm_auto.trange(
+                    n_sample, **kwargs, position=chain_index)
+            else:
+                sample_range = tqdm.trange(n_sample, **kwargs)
         else:
             sample_range = range(n_sample)
         try:
