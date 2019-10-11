@@ -177,10 +177,9 @@ class ConstrainedLeapfrogIntegrator(object):
                 'tol': 1e-8, 'max_iters': 100, 'norm': maximum_norm}
         self.retraction_solver_kwargs = retraction_solver_kwargs
 
-    def retract_onto_manifold(self, state, state_prev, dh2_flow_pos_dmom):
-        self.retraction_solver(
-            state, state_prev, dh2_flow_pos_dmom, self.system,
-            **self.retraction_solver_kwargs)
+    def retract_onto_manifold(self, state, state_prev, dt):
+        self.retraction_solver(state, state_prev, dt, self.system,
+                               **self.retraction_solver_kwargs)
 
     def project_onto_cotangent_space(self, state):
         self.system.project_onto_cotangent_space(state.mom, state)
@@ -194,15 +193,11 @@ class ConstrainedLeapfrogIntegrator(object):
         for i in range(self.n_inner_step):
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
-            pos_uncons = state.pos.copy()
-            dh2_flow_dmom = self.system.dh2_flow_dmom(state, dt_i)
-            self.retract_onto_manifold(state, state_prev, dh2_flow_dmom[0])
-            state.mom += dh2_flow_dmom[1] @ (
-                dh2_flow_dmom[0].inv @ (state.pos - pos_uncons))
+            self.retract_onto_manifold(state, state_prev, dt_i)
             self.project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
-            self.retract_onto_manifold(state_back, state, -dh2_flow_dmom[0])
+            self.retract_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
                 raise NonReversibleStepError(

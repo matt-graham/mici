@@ -81,27 +81,31 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
         f'Fixed point iteration did not converge. Last error {error:.1e}.')
 
 
-def retract_onto_manifold_quasi_newton(
-        state, state_prev, dh2_flow_pos_dmom, system,
-        tol=1e-8, max_iters=100, norm=maximum_norm):
+def retract_onto_manifold_quasi_newton(state, state_prev, dt, system, tol=1e-8,
+                                       max_iters=100, norm=maximum_norm):
+    mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    inv_gram_prev = system.jacob_constr_inner_product(
-        jacob_constr_prev, dh2_flow_pos_dmom).inv
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
+    inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
+        jacob_constr_prev, dh2_flow_pos_dmom).inv * np.sign(dt)
     for i in range(max_iters):
         constr = system.constr(state)
         if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
             raise ConvergenceError(f'Quasi-Newton iteration diverged.')
         error = norm(constr)
         if error < tol:
+            state.mom -= dh2_flow_mom_dmom @ mu
             return state
-        state.pos -= dh2_flow_pos_dmom @ (
-            jacob_constr_prev.T @ (inv_gram_prev @ constr))
+        delta_mu = jacob_constr_prev.T @ (
+            inv_jacob_constr_inner_product @ constr)
+        mu += delta_mu
+        state.pos -= np.sign(dt) * dh2_flow_pos_dmom @ delta_mu
     raise ConvergenceError(
         f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
 
 
 def retract_onto_manifold_newton(
-        state, state_prev, dh2_flow_pos_dmom, system,
+        state, state_prev, dt, system,
         tol=1e-8, max_iters=100, norm=maximum_norm):
     jacob_constr_prev = system.jacob_constr(state_prev)
     for i in range(max_iters):

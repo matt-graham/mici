@@ -671,12 +671,15 @@ class ScaledOrthogonalMatrix(_AbstractSquareMatrix):
 class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
 
     def __init__(self, eigvec, eigval):
-        super().__init__(eigval.size)
         if not isinstance(eigvec, OrthogonalMatrix):
             eigvec = OrthogonalMatrix(eigvec)
+        super().__init__(eigvec.shape[0])
         self._eigvec = eigvec
         self._eigval = eigval
-        self.diag_eigval = DiagonalMatrix(eigval)
+        if not isinstance(eigval, np.ndarray) or eigval.size == 1:
+            self.diag_eigval = ScaledIdentityMatrix(eigval)
+        else:
+            self.diag_eigval = DiagonalMatrix(eigval)
 
     def _scalar_multiply(self, scalar):
         return EigendecomposedSymmetricMatrix(
@@ -700,6 +703,10 @@ class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
 
     @property
     def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                'Cannot get array representation for symmetric '
+                'eigendecomposed matrix with implicit size.')
         return self @ np.identity(self.shape[0])
 
 

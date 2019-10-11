@@ -6,7 +6,8 @@ from hmc.states import cache_in_state, multi_cache_in_state
 from hmc.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
     DenseSquareMatrix, TriangularFactoredDefiniteMatrix,
-    DensePositiveDefiniteMatrix, SoftAbsRegularisedPositiveDefiniteMatrix)
+    DensePositiveDefiniteMatrix, EigendecomposedSymmetricMatrix,
+    SoftAbsRegularisedPositiveDefiniteMatrix)
 from hmc.autodiff import autodiff_fallback
 
 
@@ -147,8 +148,8 @@ class EuclideanMetricSystem(_HamiltonianSystem):
     def h2_flow(self, state, dt):
         state.pos += dt * self.dh2_dmom(state)
 
-    def dh2_flow_dmom(self, state, dt):
-        return dt * self.metric.inv, IdentityMatrix(state.pos.size)
+    def dh2_flow_dmom(self, dt):
+        return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])
 
     def sample_momentum(self, state, rng):
         return self.metric.sqrt @ rng.standard_normal(state.pos.shape)
@@ -207,11 +208,6 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 will be used to construct the derivative of `neg_log_dens`
                 automatically if available.
         """
-        if metric is not None and not (
-                isinstance(metric, DiagonalMatrix) or
-                isinstance(metric, IdentityMatrix)):
-            raise NotImplementedError(
-                'Only currently implemented for identity and diagonal metric.')
         super().__init__(neg_log_dens, metric, grad_neg_log_dens)
 
     def h2(self, state):
@@ -238,12 +234,14 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
             cos_omega_dt * eigvec_T_mom -
             (sin_omega_dt / omega) * eigvec_T_pos)
 
-    def dh2_flow_dmom(self, state, dt):
+    def dh2_flow_dmom(self, dt):
         omega = 1. / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         return (
-            eig_hermitian_matrix(self.metric.eigvec, sin_omega_dt * omega),
-            eig_hermitian_matrix(self.metric.eigvec, cos_omega_dt))
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega),
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, cos_omega_dt))
 
 
 class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
@@ -260,18 +258,15 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     metric) is always tangential to the constraint manifold.
     """
 
-    def __init__(self, neg_log_dens, constr, dens_wrt_hausdorff=True,
-                 metric=None, grad_neg_log_dens=None, jacob_constr=None,
-                 log_det_sqrt_gram=None, gram_log_det_sqrt_gram=None):
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None):
         super().__init__(neg_log_dens=neg_log_dens, metric=metric,
                          grad_neg_log_dens=grad_neg_log_dens)
         self._constr = constr
         self.dens_wrt_hausdorff = dens_wrt_hausdorff
         self._jacob_constr = autodiff_fallback(
             jacob_constr, constr, 'jacobian_and_value', 'jacob_constr')
-        if not self.dens_wrt_hausdorff:
-            self._mhp_constr = autodiff_fallback(
-                mhp_constr, constr, 'mhp_jacobian_and_value', 'mhp_constr')
 
     @cache_in_state('pos')
     def constr(self, state):
@@ -294,7 +289,7 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         return self.gram(state).inv
 
     def log_det_sqrt_gram(self, state):
-        return 0.5 * self.gram(state).log_det_abs_sqrt
+        return 0.5 * self.gram(state).log_abs_det_sqrt
 
     def grad_log_det_sqrt_gram(self, state):
         raise NotImplementedError()
@@ -314,7 +309,6 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     def project_onto_cotangent_space(self, mom, state):
         jacob_constr = self.jacob_constr(state)
-        gram_mom = self.gram_mom(state)
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
@@ -341,13 +335,14 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
     metric) is always tangential to the constraint manifold.
     """
 
-    def __init__(self, neg_log_dens, constr, dens_wrt_hausdorff=True,
-                 metric=None, grad_neg_log_dens=None, jacob_constr=None,
-                 mhp_constr=None):
-        super().__init__(neg_log_dens=neg_log_dens, metric=metric,
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        super().__init__(neg_log_dens=neg_log_dens, constr=constr,
+                         metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
                          grad_neg_log_dens=grad_neg_log_dens,
                          jacob_constr=jacob_constr)
-        if not self.dens_wrt_hausdorff:
+        if not dens_wrt_hausdorff:
             self._mhp_constr = autodiff_fallback(
                 mhp_constr, constr, 'mhp_jacobian_and_value', 'mhp_constr')
 
@@ -357,7 +352,7 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
         return self._mhp_constr(state.pos)
 
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2):
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DensePositiveDefiniteMatrix(
                 jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T)
@@ -374,11 +369,12 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
 class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
 
-    def __init__(self, neg_log_dens, constr, dens_wrt_hausdorff=True,
-                 metric=None, grad_neg_log_dens=None, jacob_constr=None,
-                 mhp_constr=None):
-        ConstrainedEuclideanMetricSystem().__init__(
-            neg_log_dens=neg_log_dens, metric=metric,
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        DenseConstrainedEuclideanMetricSystem.__init__(
+            self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
+            dens_wrt_hausdorff=dens_wrt_hausdorff,
             grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
             mhp_constr=mhp_constr)
 
