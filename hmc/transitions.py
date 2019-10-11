@@ -123,8 +123,8 @@ class BaseMetropolisIntegrationTransition(BaseIntegrationTransition):
                 'convergence_error': isinstance(e, ConvergenceError)}
         state_p.dir *= -1
         h_final = self.system.h(state_p)
-        h_final = np.inf if np.isnan(h_final) else h_final
-        accept_prob = min(1, np.exp(h_init - h_final))
+        metrop_ratio = np.exp(h_init - h_final)
+        accept_prob = 0 if np.isnan(metrop_ratio) else min(1, metrop_ratio)
         if rng.uniform() < accept_prob:
             state = state_p
         state.dir *= -1
