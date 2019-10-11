@@ -25,7 +25,7 @@ class _AbstractMatrix(object):
                     'Scalar multiplication by zero not implemented.')
             return self._scalar_multiply(other)
         else:
-            raise NotImplementedError()
+            return NotImplemented
 
     def __rmul__(self, other):
         return self.__mul__(other)
@@ -37,7 +37,10 @@ class _AbstractMatrix(object):
                     'Scalar division by zero not implemented.')
             return self._scalar_multiply(1 / other)
         else:
-            raise NotImplementedError()
+            return NotImplemented
+
+    def __neg__(self):
+        return self._scalar_multiply(-1)
 
     def __matmul__(self, other):
         if self.shape[1] is not None and other.shape[0] != self.shape[1]:
@@ -388,14 +391,26 @@ class InverseTriangularMatrix(_AbstractSquareMatrix):
 
 class _AbstractTriangularFactoredDefiniteMatrix(_AbstractSymmetricMatrix):
 
-    def __init__(self, size, sign=1):
+    def __init__(self, array, factor, sign=1):
+        self._array = array
+        self._factor = factor
         self._sign = sign
-        super().__init__(size)
+        if array is not None:
+            super().__init__(size=array.shape[0])
+        elif factor is not None:
+            super().__init__(size=factor.shape[0])
+        else:
+            raise RuntimeError(
+                'At least one of array and factor must be specified.')
+
+    @property
+    def factor(self):
+        return self._factor
 
     @property
     def inv(self):
         return TriangularFactoredDefiniteMatrix(
-            self.factor.inv.T, sign=self._sign)
+            factor=self.factor.inv.T, sign=self._sign)
 
     @property
     def sqrt(self):
@@ -417,19 +432,15 @@ class _AbstractTriangularFactoredDefiniteMatrix(_AbstractSymmetricMatrix):
 class TriangularFactoredDefiniteMatrix(
         _AbstractTriangularFactoredDefiniteMatrix):
 
-    def __init__(self, factor, lower=True, sign=1):
+    def __init__(self, factor, lower=True, sign=1, array=None):
         if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
             factor = TriangularMatrix(factor, lower)
-        self._factor = factor
-        super().__init__(factor.shape[0], sign)
-
-    @property
-    def factor(self):
-        return self._factor
+        super().__init__(array=array, factor=factor, sign=sign)
 
     def _scalar_multiply(self, scalar):
         return TriangularFactoredDefiniteMatrix(
-            abs(scalar)**0.5 * self.factor, sign=self._sign * np.sign(scalar))
+            factor=abs(scalar)**0.5 * self.factor,
+            sign=self._sign * np.sign(scalar))
 
     def _left_matrix_multiply(self, other):
         return self._sign * (self.factor @ (self.factor.T @ other))
@@ -448,15 +459,15 @@ class TriangularFactoredDefiniteMatrix(
 
     @property
     def array(self):
-        return self._sign * (self.factor @ self.factor.array.T)
+        if self._array is None:
+            self._array = self._sign * (self.factor @ self.factor.array.T)
+        return self._array
 
 
 class DenseDefiniteMatrix(_AbstractTriangularFactoredDefiniteMatrix):
 
     def __init__(self, array, sign=1, factor=None):
-        self._array = array
-        self._factor = factor
-        super().__init__(array.shape[0], sign)
+        super().__init__(array=array, factor=factor, sign=sign)
 
     def _scalar_multiply(self, scalar):
         if (scalar > 0) == (self._sign == 1):
@@ -489,7 +500,7 @@ class DenseDefiniteMatrix(_AbstractTriangularFactoredDefiniteMatrix):
 class DensePositiveDefiniteMatrix(DenseDefiniteMatrix):
 
     def __init__(self, array, factor=None):
-        super().__init__(array, 1, factor)
+        super().__init__(array=array, sign=1, factor=factor)
 
     def _scalar_multiply(self, scalar):
         if scalar > 0:
@@ -507,7 +518,7 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix):
 class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
 
     def __init__(self, array, factor=None):
-        super().__init__(array, -1, factor)
+        super().__init__(array=array, sign=-1, factor=factor)
 
     def _scalar_multiply(self, scalar):
         if scalar > 0:
