@@ -89,9 +89,11 @@ class _AbstractSquareMatrix(_AbstractMatrix):
 
 class _AbstractSymmetricMatrix(_AbstractSquareMatrix):
 
-    def __init__(self, size):
+    def __init__(self, size, is_posdef=False, is_negdef=False):
         self._eigval = None
         self._eigvec = None
+        self._is_posdef = is_posdef
+        self._is_negdef = is_negdef
         super().__init__(size)
 
     def _compute_eigendecomposition(self):
@@ -118,11 +120,19 @@ class _AbstractSymmetricMatrix(_AbstractSquareMatrix):
     def log_abs_det(self):
         return np.log(np.abs(self.eigval)).sum()
 
+    @property
+    def is_posdef(self):
+        return self._is_posdef
+
+    @property
+    def is_negdef(self):
+        return self._is_negdef
+
 
 class IdentityMatrix(_AbstractSymmetricMatrix):
 
     def __init__(self, size=None):
-        super().__init__(size)
+        super().__init__(size, is_posdef=True, is_negdef=False)
 
     def _scalar_multiply(self, scalar):
         return ScaledIdentityMatrix(scalar, self.shape[0])
@@ -173,8 +183,10 @@ class IdentityMatrix(_AbstractSymmetricMatrix):
 class ScaledIdentityMatrix(_AbstractSymmetricMatrix):
 
     def __init__(self, scalar, size=None):
+        if scalar == 0:
+            raise ValueError('scalar must be non-zero')
         self._scalar = scalar
-        super().__init__(size)
+        super().__init__(size, is_posdef=scalar > 0, is_negdef=scalar < 0)
 
     def _scalar_multiply(self, scalar):
         return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
@@ -191,9 +203,9 @@ class ScaledIdentityMatrix(_AbstractSymmetricMatrix):
 
     @property
     def sqrt(self):
-        if self.scalar < 0:
+        if not self.is_posdef:
             raise NotImplementedError(
-                'Square-root supported only for positive semi-definite '
+                'Square-root supported only for positive definite '
                 'matrices.')
         return ScaledIdentityMatrix(self._scalar**0.5, self.shape[0])
 
@@ -258,7 +270,8 @@ class DiagonalMatrix(_AbstractSymmetricMatrix):
         if diagonal.ndim != 1:
             raise ValueError('Specified diagonal must be a 1D array.')
         self._diagonal = diagonal
-        super().__init__(diagonal.size)
+        super().__init__(diagonal.size, is_posdef=np.all(diagonal > 0),
+                         is_negdef=np.all(diagonal < 0))
 
     @property
     def diagonal(self):
@@ -396,9 +409,11 @@ class _AbstractTriangularFactoredDefiniteMatrix(_AbstractSymmetricMatrix):
         self._factor = factor
         self._sign = sign
         if array is not None:
-            super().__init__(size=array.shape[0])
+            super().__init__(size=array.shape[0], is_posdef=(sign == 1),
+                             is_negdef=(sign == -1))
         elif factor is not None:
-            super().__init__(size=factor.shape[0])
+            super().__init__(size=factor.shape[0], is_posdef=(sign == 1),
+                             is_negdef=(sign == -1))
         else:
             raise RuntimeError(
                 'At least one of array and factor must be specified.')
@@ -673,7 +688,8 @@ class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
     def __init__(self, eigvec, eigval):
         if not isinstance(eigvec, OrthogonalMatrix):
             eigvec = OrthogonalMatrix(eigvec)
-        super().__init__(eigvec.shape[0])
+        super().__init__(eigvec.shape[0], is_posdef=np.all(eigval > 0),
+                         is_negdef=np.all(eigval < 0))
         self._eigvec = eigvec
         self._eigval = eigval
         if not isinstance(eigval, np.ndarray) or eigval.size == 1:

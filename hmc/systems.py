@@ -5,7 +5,7 @@ import numpy as np
 from hmc.states import cache_in_state, multi_cache_in_state
 from hmc.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
-    DenseSquareMatrix, TriangularFactoredDefiniteMatrix,
+    DenseSquareMatrix, TriangularFactoredDefiniteMatrix, DenseDefiniteMatrix,
     DensePositiveDefiniteMatrix, EigendecomposedSymmetricMatrix,
     SoftAbsRegularisedPositiveDefiniteMatrix)
 from hmc.autodiff import autodiff_fallback
@@ -354,8 +354,9 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
-            return DensePositiveDefiniteMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T)
+            return DenseDefiniteMatrix(
+                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                sign=1 if inner_product_matrix.is_posdef else -1)
         else:
             return DenseSquareMatrix(
                 jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
