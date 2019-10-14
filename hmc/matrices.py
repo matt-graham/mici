@@ -686,7 +686,7 @@ class ScaledOrthogonalMatrix(_AbstractSquareMatrix):
 class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
 
     def __init__(self, eigvec, eigval):
-        if not isinstance(eigvec, OrthogonalMatrix):
+        if isinstance(eigvec, np.ndarray):
             eigvec = OrthogonalMatrix(eigvec)
         super().__init__(eigvec.shape[0], is_posdef=np.all(eigval > 0),
                          is_negdef=np.all(eigval < 0))
