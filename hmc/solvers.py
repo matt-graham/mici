@@ -16,19 +16,20 @@ def maximum_norm(vct):
 
 def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
                              norm=maximum_norm):
-    """Solve fixed point equation f(x) = x using direct iteration.
+    """Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
         func: Single argument function to find fixed point of.
         x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when max_abs(f(x) - x) < tol.
+        tol: Convergence tolerance - terminates when `norm(func(x) - x) < tol`.
         max_iters: Maximum number of iterations before raising exception.
+        norm: Vector norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with max_abs(f(x) - x) < tol.
+        Solution to fixed point equation with `norm(func(x) - x) < tol`.
 
     Raises:
-        ConvergenceError if not converged within max_iters iterations.
+        ConvergenceError if not converged within `max_iters` iterations.
     """
     for i in range(max_iters):
         x = func(x0)
@@ -45,7 +46,7 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
 
 def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
                                  norm=maximum_norm):
-    """Solve fixed point equation f(x) = x using Steffensen's method.
+    """Solve fixed point equation `func(x) = x` using Steffensen's method.
 
     Steffennsen's method [1] achieves quadratic convergence but at the cost of
     two function evaluations per iteration so for functions where convergence
@@ -57,14 +58,15 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
     Args:
         func: Single argument function to find fixed point of.
         x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when max_abs(f(x) - x) < tol.
+        tol: Convergence tolerance - terminates when `norm(func(x) - x) < tol`.
         max_iters: Maximum number of iterations before raising exception.
+        norm: Vector norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with max_abs(f(x) - x) < tol.
+        Solution to fixed point equation with `norm(func(x) - x) < tol`.
 
     Raises:
-        ConvergenceError if not converged within max_iters iterations.
+        ConvergenceError if not converged within `max_iters` iterations.
     """
     for i in range(max_iters):
         x1 = func(x0)
