@@ -104,10 +104,11 @@ def retract_onto_manifold_quasi_newton(state, state_prev, dt, system, tol=1e-8,
         f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
 
 
-def retract_onto_manifold_newton(
-        state, state_prev, dt, system,
-        tol=1e-8, max_iters=100, norm=maximum_norm):
+def retract_onto_manifold_newton(state, state_prev, dt, system, tol=1e-8,
+                                 max_iters=100, norm=maximum_norm):
+    mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
     for i in range(max_iters):
         jacob_constr = system.jacob_constr(state)
         constr = system.constr(state)
@@ -115,10 +116,13 @@ def retract_onto_manifold_newton(
             raise ConvergenceError(f'Newton iteration diverged.')
         error = norm(constr)
         if error < tol:
+            state.mom -= dh2_flow_mom_dmom @ mu
             return state
-        dconstr_dlambda = system.jacob_constr_inner_product(
-            jacob_constr, dh2_flow_pos_dmom, jacob_const_prev)
-        state.pos -= dh2_flow_pos_dmom @ (
-            jacob_constr_prev.T @ (dconstr_dlambda.inv @ constr))
+        delta_mu = jacob_constr_prev.T @ (
+            system.jacob_constr_inner_product(
+                jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
+            constr)
+        mu += delta_mu
+        state.pos -= dh2_flow_pos_dmom @ delta_mu
     raise ConvergenceError(
         f'Newton iteration did not converge. Last error {error:.1e}.')
