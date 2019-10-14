@@ -289,7 +289,7 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         return self.gram(state).inv
 
     def log_det_sqrt_gram(self, state):
-        return 0.5 * self.gram(state).log_abs_det_sqrt
+        return self.gram(state).log_abs_det_sqrt
 
     def grad_log_det_sqrt_gram(self, state):
         raise NotImplementedError()
