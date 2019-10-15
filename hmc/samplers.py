@@ -104,15 +104,18 @@ class MarkovChainMonteCarloMethod(object):
             n_sample, memmap_enabled, memmap_path, chain_index)
         # Initialise chain trace arrays
         traces = {}
-        for key, trace_func in trace_funcs.items():
-            var = trace_func(state)
-            if memmap_enabled:
-                filename = self._generate_memmap_filename(
-                    memmap_path, 'trace', key, chain_index)
-                traces[key] = self._open_new_memmap(
-                    filename, (n_sample,) + var.shape, np.float64, np.nan)
-            else:
-                traces[key] = np.full((n_sample,) + var.shape, np.nan)
+        for trace_func in trace_funcs:
+            for key, val in trace_func(state).items():
+                val = np.array(val) if np.isscalar(val) else val
+                init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
+                if memmap_enabled:
+                    filename = self._generate_memmap_filename(
+                        memmap_path, 'trace', key, chain_index)
+                    traces[key] = self._open_new_memmap(
+                        filename, (n_sample,) + val.shape, val.dtype, init)
+                else:
+                    traces[key] = np.full(
+                        (n_sample,) + val.shape, init, val.dtype)
         total_return_nbytes = get_size(chain_stats) + get_size(traces)
         # Check if running in parallel and if total number of bytes to be
         # returned exceeds pickle limit
@@ -147,8 +150,9 @@ class MarkovChainMonteCarloMethod(object):
                         for key, val in trans_stats.items():
                             if key in chain_stats[trans_key]:
                                 chain_stats[trans_key][key][sample_index] = val
-                for key, trace_func in trace_funcs.items():
-                    traces[key][sample_index] = trace_func(state)
+                for trace_func in trace_funcs:
+                    for key, val in trace_func(state).items():
+                        traces[key][sample_index] = val
                 if TQDM_AVAILABLE and monitor_stats is not None:
                     postfix_stats = {}
                     for (trans_key, stats_key) in monitor_stats:
@@ -196,14 +200,17 @@ class MarkovChainMonteCarloMethod(object):
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
             init_state (ChainState or array):
-               Initial chain state. Can be either an array specifying the state
-               or a `ChainState` instance.
-            trace_funcs (dict[str, callable]): Dictionary of functions which
-               compute the variables to be recorded at each chain iteration,
-               with each trace function being passed the current state
-               and returning an array corresponding to the variable(s) to be
-               stored. The keys to the functions are used to index the trace
-               arrays in the returned data.
+                Initial chain state. Can be either an array specifying the
+                state or a `ChainState` instance.
+            trace_funcs (list[callable]): List of functions which compute the
+                variables to be recorded at each chain iteration, with each
+                trace function being passed the current state and returning a
+                dictionary of scalar or array values corresponding to the
+                variable(s) to be stored. The keys in the returned dictionaries
+                are used to index the trace arrays in the returned traces
+                dictionary. If a key appears in multiple dictionaries only the
+                the value corresponding to the last trace function to return
+                that key will be stored.
 
         Kwargs:
             memmap_enabled (bool): Whether to memory-map arrays used to store
@@ -227,19 +234,21 @@ class MarkovChainMonteCarloMethod(object):
                 as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
-            traces (dict[str, array]):
-                Chain trace arrays, with one entry per function in
-                `trace_funcs` with the same key. Each entry consists of an
-                arrays with the leading dimension of the arrays corresponding
-                to the sampling (draw) index.
-            chain_stats (dict[str, dict[str, array]]):
-                Dictionary of chain transition statistics. Outer dictionary
-                contains entries for each chain transition which returns
-                statistics (e.g. acceptance probabilities) on each iteration.
-                For each such transition, a dictionary is returned with string
-                keys describing the statistics recorded and array values with
-                the leading dimension corresponding to the sampling (draw)
-                index.
+            traces (dict[str, array]): Dictionary of chain trace arrays. Values
+                in dictionary are arrays of variables outputted by trace
+                functions in `trace_funcs` with leading dimension of array
+                corresponding to the sampling (draw) index. The key for each
+                value is the corresponding key in the dictionary returned by
+                the trace function which computed the traced value.
+            chain_stats (dict[str, dict[str, array]]): Dictionary of chain
+                transition statistic dictionaries. Values in outer dictionary
+                are dictionaries of statistics for each chain transition, keyed
+                by the string key for the transition. The values in each inner
+                transition dictionary are arrays of chain statistic values with
+                the leading dimension of each array corresponding to the
+                sampling (draw) index. The key for each value is a string
+                description of the corresponding integration transition
+                statistic.
         """
         kwargs = self.__preprocess_kwargs(kwargs)
         traces, chain_stats, sample_index = self._sample_chain(
@@ -316,12 +325,15 @@ class MarkovChainMonteCarloMethod(object):
                 Initial chain states. Each entry can be either an array
                 specifying the state or a `ChainState` instance. One chain will
                 be run for each state in the iterable sequence.
-            trace_funcs (dict[str, callable]): Dictionary of functions which
-                compute the variables to be recorded at each iteration, with
-                each function being passed the current state and returning an
-                array corresponding to the variable(s) to be stored. The keys
-                to the functions are used to index the trace arrays in the
-                returned data.
+            trace_funcs (list[callable]): List of functions which compute the
+                variables to be recorded at each chain iteration, with each
+                trace function being passed the current state and returning a
+                dictionary of scalar or array values corresponding to the
+                variable(s) to be stored. The keys in the returned dictionaries
+                are used to index the trace arrays in the returned traces
+                dictionary. If a key appears in multiple dictionaries only the
+                the value corresponding to the last trace function to return
+                that key will be stored.
             n_process (int or None): Number of parallel processes to run chains
                 over. If set to one then chains will be run sequentially in
                 otherwise a `multiprocessing.Pool` object will be used to
@@ -351,22 +363,23 @@ class MarkovChainMonteCarloMethod(object):
                 as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
-            traces (dict[str, list[array]]:
-                Trace arrays, with one entry per function in `trace_funcs` with
-                the same key. Each entry consists of a list of arrays, one per
-                chain, with the first axes of the arrays corresponding to the
-                sampling (draw) index and the size and number of remaining
-                array axes is determined by the shape of the arrays returned by
-                the corresponding `trace_funcs` entry.
-            chain_stats (dict[str, dict[str, list[array]]]):
-                Dictionary of chain transition statistics. Outer dictionary
-                contains entries for each chain transition which returns
-                statistics (e.g. acceptance probabilities) on each iteration.
-                For each such transition, a dictionary is returned with string
-                keys describing the statistics recorded and values
-                corresponding to a list of 1D arrays with one array per
-                chain and the axis of the arrays corresponding to the sampling
-                (draw) index.
+            traces (dict[str, list[array]]): Dictionary of chain trace arrays.
+                Values in dictionary are list of arrays of variables outputted
+                by trace functions in `trace_funcs` with each array in the list
+                corresponding to a single chain and the leading dimension of
+                each array corresponding to the sampling (draw) index. The key
+                for each value is the corresponding key in the dictionary
+                returned by the trace function which computed the traced value.
+            chain_stats (dict[str, dict[str, list[array]]]): Dictionary of
+                chain transition statistic dictionaries. Values in outer
+                dictionary are dictionaries of statistics for each chain
+                transition, keyed by the string key for the transition. The
+                values in each inner transition dictionary are lists of arrays
+                of chain statistic values with each array in the list
+                corresponding to a single chain and the leading dimension of
+                each array corresponding to the sampling (draw) index. The key
+                for each value is a string description of the corresponding
+                integration transition statistic.
         """
         n_chain = len(init_states)
         kwargs = self.__preprocess_kwargs(kwargs)
@@ -507,7 +520,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     def __preprocess_kwargs(self, kwargs):
         # default to tracing only position component of state
         if 'trace_funcs' not in kwargs:
-            kwargs['trace_funcs'] = {'pos': lambda state: state.pos}
+            kwargs['trace_funcs'] = [lambda state: {'pos': state.pos}]
         # if `monitor_stats` specified, expand all statistics keys to key pairs
         # with transition key set to `integration_transition`
         if 'monitor_stats' in kwargs:
@@ -536,13 +549,16 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                conditional distribution.
 
         Kwargs:
-            trace_funcs (dict[str, callable]): Dictionary of functions which
-                compute the variables to be recorded at each iteration, with
-                each function being passed the current state and returning an
-                array corresponding to the variable(s) to be stored. The keys
-                to the functions are used to index the trace arrays in the
-                returned data. Default is for a single trace function which
-                records the `pos` component of the state.
+            trace_funcs (list[callable]): List of functions which compute the
+                variables to be recorded at each chain iteration, with each
+                trace function being passed the current state and returning a
+                dictionary of scalar or array values corresponding to the
+                variable(s) to be stored. The keys in the returned dictionaries
+                are used to index the trace arrays in the returned traces
+                dictionary. If a key appears in multiple dictionaries only the
+                the value corresponding to the last trace function to return
+                that key will be stored. Default is for a single trace function
+                which records the `pos` component of the state.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -561,15 +577,18 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
 
         Returns:
-            traces (dict[str, array]):
-                Chain trace arrays, with one entry per function in
-                `trace_funcs` with the same key. Each entry consists of an
-                arrays with the leading dimension of the arrays corresponding
-                to the sampling (draw) index.
-            chain_stats (dict[str, dict[str, array]]):
-                Dictionary of chain integration transition statistics, with
-                string keys describing the statistics recorded and array values
-                with the leading dimension corresponding to the sampling index.
+            traces (dict[str, array]): Dictionary of chain trace arrays. Values
+                in dictionary are arrays of variables outputted by trace
+                functions in `trace_funcs` with leading dimension of array
+                corresponding to the sampling (draw) index. The key for each
+                value is the corresponding key in the dictionary returned by
+                the trace function which computed the traced value.
+            chain_stats (dict[str, array]): Dictionary of chain integration
+                transition statistics. Values in dictionary are arrays of chain
+                statistic values with the leading dimension of each array
+                corresponding to the sampling (draw) index. The key for each
+                value is a string description of the corresponding integration
+                transition statistic.
         """
         init_state = self._preprocess_init_state(init_state)
         kwargs = self.__preprocess_kwargs(kwargs)
@@ -580,11 +599,11 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     def sample_chains(self, n_sample, init_states, **kwargs):
         """Sample one or more Markov chains from given initial states.
 
-        Performs a specified number of chain iterations (each of which may be
-        composed of multiple individual Markov transitions), recording the
-        outputs of functions of the sampled chain state after each iteration.
-        The chains may be run in parallel across multiple independent processes
-        or sequentially. In all cases all chains use independent random draws.
+        Performs a specified number of chain iterations (each of consists of a
+        momentum transition and integration transition), recording the outputs
+        of functions of the sampled chain state after each iteration. The
+        chains may be run in parallel across multiple independent processes or
+        sequentially. In all cases all chains use independent random draws.
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
@@ -603,13 +622,16 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
-            trace_funcs (dict[str, callable]): Dictionary of functions which
-                compute the variables to be recorded at each iteration, with
-                each function being passed the current state and returning an
-                array corresponding to the variable(s) to be stored. The keys
-                to the functions are used to index the trace arrays in the
-                returned data. Default is for a single trace function which
-                records the `pos` component of the state.
+            trace_funcs (list[callable]): List of functions which compute the
+                variables to be recorded at each chain iteration, with each
+                trace function being passed the current state and returning a
+                dictionary of scalar or array values corresponding to the
+                variable(s) to be stored. The keys in the returned dictionaries
+                are used to index the trace arrays in the returned traces
+                dictionary. If a key appears in multiple dictionaries only the
+                the value corresponding to the last trace function to return
+                that key will be stored. Default is for a single trace function
+                which records the `pos` component of the state.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -628,24 +650,20 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
 
         Returns:
-            traces (dict[str, list[array]] or dict[str, array]):
-                Trace arrays, with one entry per function in `trace_funcs` with
-                the same key. Each entry consists of a list of arrays, one per
-                chain, with the first axes of the arrays corresponding to the
-                sampling (draw) index, or if `stack_chain_arrays=True` each
-                entry is an array with the first axes corresponding to the
-                chain index, the second axis the sampling (draw) index; in both
-                cases the size and number of remaining array axes is determined
-                by the shape of the arrays returned by the corresponding
-                `trace_funcs` entry.
-            chain_stats (dict[str, list[array]] or dict[str, array]):
-                Chain integration transition statistics as a dictionary with
-                string keys describing the statistics recorded and values
-                corresponding to either a list of arrays with one array per
-                chain and the first axis of the arrays corresponding to the
-                sampling index, or if `stack_chain_arrays=True` each entry is
-                an array with the first axes corresponding to the chain index,
-                the second axis the sampling (draw) index.
+            traces (dict[str, list[array]]): Dictionary of chain trace arrays.
+                Values in dictionary are list of arrays of variables outputted
+                by trace functions in `trace_funcs` with each array in the list
+                corresponding to a single chain and the leading dimension of
+                each array corresponding to the sampling (draw) index. The key
+                for each value is the corresponding key in the dictionary
+                returned by the trace function which computed the traced value.
+            chain_stats (dict[str, list[array]]): Dictionary of chain
+                integration transition statistics. Values in dictionary are
+                lists of arrays of chain statistic values with each array in
+                the list corresponding to a single chain and the leading
+                dimension of each array corresponding to the sampling (draw)
+                index. The key for each value is a string description of the
+                corresponding integration transition statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
         kwargs = self.__preprocess_kwargs(kwargs)
