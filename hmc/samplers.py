@@ -180,7 +180,7 @@ class MarkovChainMonteCarloMethod(object):
                 trace_filenames = self._memmaps_to_filenames(traces)
                 stats_filenames = self._memmaps_to_filenames(chain_stats)
                 return trace_filenames, stats_filenames, sample_index
-        return traces, chain_stats, sample_index
+        return state, traces, chain_stats, sample_index
 
     def __preprocess_kwargs(self, kwargs):
         if 'memmap_enabled' not in kwargs:
@@ -234,6 +234,9 @@ class MarkovChainMonteCarloMethod(object):
                 as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
+            final_state (ChainState): State of chain after final iteration. May
+                be used to resume sampling a chain by passing as the initial
+                state to a new `sample_chain` call.
             traces (dict[str, array]): Dictionary of chain trace arrays. Values
                 in dictionary are arrays of variables outputted by trace
                 functions in `trace_funcs` with leading dimension of array
@@ -251,7 +254,7 @@ class MarkovChainMonteCarloMethod(object):
                 statistic.
         """
         kwargs = self.__preprocess_kwargs(kwargs)
-        traces, chain_stats, sample_index = self._sample_chain(
+        final_state, traces, chain_stats, sample_index = self._sample_chain(
             rng=self.rng, n_sample=n_sample, init_state=init_state,
             trace_funcs=trace_funcs, chain_index=None, parallel_chains=False,
             **kwargs)
@@ -270,15 +273,16 @@ class MarkovChainMonteCarloMethod(object):
                 f'Sampling manually interrupted at iteration {sample_index}. '
                 f'Arrays containing chain traces and statistics computed '
                 f'before interruption will be returned.')
-        return traces, chain_stats
+        return final_state, traces, chain_stats
 
-    def _collate_chain_outputs(
-            self, n_sample, traces_stats_and_sample_indices, load_memmaps):
+    def _collate_chain_outputs(self, n_sample, chain_outputs, load_memmaps):
+        final_states_stack = []
         traces_stack = {}
-        n_chain = len(traces_stats_and_sample_indices)
+        n_chain = len(chain_outputs)
         chain_stats_stack = {}
-        for chain_index, (traces, chain_stats, sample_index) in enumerate(
-                traces_stats_and_sample_indices):
+        for chain_index, chain_output in enumerate(chain_outputs):
+            final_state, traces, chain_stats, sample_index = chain_output
+            final_states_stack.append(final_state)
             for key, val in traces.items():
                 if load_memmaps:
                     val = np.lib.format.open_memmap(val)
@@ -307,7 +311,7 @@ class MarkovChainMonteCarloMethod(object):
                         chain_stats_stack[trans_key][key] = [val]
                     else:
                         chain_stats_stack[trans_key][key].append(val)
-        return traces_stack, chain_stats_stack
+        return final_states_stack, traces_stack, chain_stats_stack
 
     def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
                       **kwargs):
@@ -363,6 +367,9 @@ class MarkovChainMonteCarloMethod(object):
                 as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
+            final_states (list[ChainState]): States of chains after final
+                iteration. May be used to resume sampling a chain by passing as
+                the initial states to a new `sample_chains` call.
             traces (dict[str, list[array]]): Dictionary of chain trace arrays.
                 Values in dictionary are list of arrays of variables outputted
                 by trace functions in `trace_funcs` with each array in the list
@@ -403,13 +410,14 @@ class MarkovChainMonteCarloMethod(object):
         if n_process == 1:
             # Using single process therefore run chains sequentially
             for c, shared_kwargs in enumerate(shared_kwargs_list):
-                traces, chain_stats, n_sample_chain = self._sample_chain(
+                final_state, traces, stats, sample_index = self._sample_chain(
                     **shared_kwargs, parallel_chains=False)
-                chain_outputs.append((traces, chain_stats, n_sample_chain))
-                if n_sample_chain != n_sample:
+                chain_outputs.append(
+                    (final_state, traces, stats, sample_index))
+                if sample_index != n_sample:
                     logger.error(
                         f'Sampling manually interrupted at chain {c} iteration'
-                        f' {n_sample_chain}. Arrays containing chain traces'
+                        f' {sample_index}. Arrays containing chain traces'
                         f' and statistics computed before interruption will'
                         f' be returned.')
                     break
@@ -494,7 +502,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 to propose new values for the state.
             momentum_transition: Markov transition operator which updates only
                 the momentum component of the chain state. If set to `None` a
-                transitiion operator which independently samples the momentum
+                transition operator which independently samples the momentum
                 from its conditional distribution will be used.
         """
         self.system = system
@@ -577,6 +585,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
 
         Returns:
+            final_state (ChainState): State of chain after final iteration. May
+                be used to resume sampling a chain by passing as the initial
+                state to a new `sample_chain` call.
             traces (dict[str, array]): Dictionary of chain trace arrays. Values
                 in dictionary are arrays of variables outputted by trace
                 functions in `trace_funcs` with leading dimension of array
@@ -592,9 +603,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         """
         init_state = self._preprocess_init_state(init_state)
         kwargs = self.__preprocess_kwargs(kwargs)
-        traces, chain_stats = super().sample_chain(
+        final_state, traces, chain_stats = super().sample_chain(
             n_sample, init_state, **kwargs)
-        return traces, chain_stats.get('integration_transition', {})
+        chain_stats = chain_stats.get('integration_transition', {})
+        return final_state, traces, chain_stats
 
     def sample_chains(self, n_sample, init_states, **kwargs):
         """Sample one or more Markov chains from given initial states.
@@ -650,6 +662,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
 
         Returns:
+            final_states (list[ChainState]): States of chains after final
+                iteration. May be used to resume sampling a chain by passing as
+                the initial states to a new `sample_chains` call.
             traces (dict[str, list[array]]): Dictionary of chain trace arrays.
                 Values in dictionary are list of arrays of variables outputted
                 by trace functions in `trace_funcs` with each array in the list
@@ -667,9 +682,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
         kwargs = self.__preprocess_kwargs(kwargs)
-        traces, chain_stats = super().sample_chains(
+        final_states, traces, chain_stats = super().sample_chains(
             n_sample, init_states, **kwargs)
-        return traces, chain_stats.get('integration_transition', {})
+        chain_stats = chain_stats.get('integration_transition', {})
+        return final_states, traces, chain_stats
 
 
 class StaticMetropolisHMC(HamiltonianMCMC):
