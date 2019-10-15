@@ -8,7 +8,7 @@ from collections import OrderedDict
 import numpy as np
 import hmc
 import hmc.transitions as trans
-from hmc.states import ChainState, HamiltonianState
+from hmc.states import ChainState
 from hmc.utils import get_size, get_valid_filename
 
 try:
@@ -96,10 +96,17 @@ class MarkovChainMonteCarloMethod(object):
     def _sample_chain(self, rng, n_sample, init_state, trace_funcs,
                       chain_index, parallel_chains, memmap_enabled=False,
                       memmap_path=None, monitor_stats=None):
-        if not isinstance(init_state, ChainState):
-            state = ChainState(init_state)
-        else:
-            state = init_state
+        for trans_key, transition in self.transitions.items():
+            for var_key in transition.state_variables:
+                if var_key not in init_state:
+                    raise ValueError(
+                        f'init_state does contain have {var_key} value '
+                        f'required by {trans_key} transition.')
+        if not isinstance(init_state, (ChainState, dict)):
+            raise TypeError(
+                'init_state should be a dictionary or `ChainState`.')
+        state = (ChainState(**init_state) if isinstance(init_state, dict)
+                 else init_state)
         chain_stats = self._init_chain_stats(
             n_sample, memmap_enabled, memmap_path, chain_index)
         # Initialise chain trace arrays
@@ -199,11 +206,12 @@ class MarkovChainMonteCarloMethod(object):
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
-            init_state (ChainState or array):
-                Initial chain state. Can be either an array specifying the
-                state or a `ChainState` instance.
-            trace_funcs (list[callable]): List of functions which compute the
-                variables to be recorded at each chain iteration, with each
+            init_state (ChainState or dict): Initial chain state. Either a
+                `ChainState` object or a dictionary with entries specifying
+                initial values for all state variables used by chain
+                transition `sample` methods.
+            trace_funcs (Iterable[callable]): List of functions which compute
+                the variables to be recorded at each chain iteration, with each
                 trace function being passed the current state and returning a
                 dictionary of scalar or array values corresponding to the
                 variable(s) to be stored. The keys in the returned dictionaries
@@ -325,12 +333,12 @@ class MarkovChainMonteCarloMethod(object):
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
-            init_states (Iterable[ChainState] or Iterable[array]):
-                Initial chain states. Each entry can be either an array
-                specifying the state or a `ChainState` instance. One chain will
-                be run for each state in the iterable sequence.
-            trace_funcs (list[callable]): List of functions which compute the
-                variables to be recorded at each chain iteration, with each
+            init_states (Iterable[ChainState] or Iterable[dict]): Initial
+                chain states. Each entry can be either a `ChainState` object or
+                a dictionary with entries specifying initial values for all
+                state variables used by chain transition `sample` methods.
+            trace_funcs (Iterable[callable]): List of functions which compute
+                the variables to be recorded at each chain iteration, with each
                 trace function being passed the current state and returning a
                 dictionary of scalar or array values corresponding to the
                 variable(s) to be stored. The keys in the returned dictionaries
@@ -514,13 +522,14 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             integration_transition=integration_transition))
 
     def _preprocess_init_state(self, init_state):
-        """Make sure initial state is a HamiltonianState and has momentum."""
+        """Make sure initial state is a ChainState and has momentum."""
         if isinstance(init_state, np.ndarray):
-            # If array use to set position component of new HamiltonianState
-            init_state = HamiltonianState(pos=init_state)
-        elif not isinstance(init_state, HamiltonianState):
+            # If array use to set position component of new ChainState
+            init_state = ChainState(pos=init_state, mom=None, dir=1)
+        elif not isinstance(init_state, ChainState) or 'mom' not in init_state:
             raise TypeError(
-                'init_state should be a NumPy array or `HamiltonianState`.')
+                'init_state should be an array or `ChainState` with '
+                '`mom` attribute.')
         if init_state.mom is None:
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
@@ -549,12 +558,11 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
-            init_states (HamiltonianState or array):
-               Initial chain state. The state can be either an array specifying
-               the state position component or a `HamiltonianState` instance.
-               If an array is passed or the `mom` attribute of the state is not
-               set, a momentum component will be independently sampled from its
-               conditional distribution.
+            init_state (ChainState or array): Initial chain state. The state
+                can be either an array specifying the state position component
+                or a `ChainState` instance. If an array is passed or the `mom`
+                attribute of the state is not set, a momentum component will be
+                independently sampled from its conditional distribution.
 
         Kwargs:
             trace_funcs (list[callable]): List of functions which compute the
@@ -619,13 +627,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
-            init_states (Iterable[HamiltonianState] or Iterable[array]):
-                Initial chain states. Each state can be either an array
-                specifying the state position component or a `HamiltonianState`
-                instance. If an array is passed or the `mom` attribute of the
-                state is not set, a momentum component will be independently
-                sampled from its conditional distribution. One chain will be
-                run for each state in the iterable sequence.
+            init_states (Iterable[ChainState] or Iterable[array]): Initial
+                chain states. Each state can be either an array specifying the
+                state position component or a `ChainState` instance. If an
+                array is passed or the `mom` attribute of the state is not set,
+                a momentum component will be independently sampled from its
+                conditional distribution. One chain will be run for each state
+                in the iterable sequence.
 
         Kwargs:
             n_process (int or None): Number of parallel processes to run chains

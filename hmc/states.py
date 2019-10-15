@@ -18,12 +18,12 @@ def cache_in_state(*depends_on):
     def cache_in_state_decorator(method):
         def wrapper(self, state):
             key = (type(self).__name__ + '.' + method.__name__, id(self))
-            if key not in state.cache:
+            if key not in state._cache:
                 for dep in depends_on:
-                    state.dependencies[dep].add(key)
-            if key not in state.cache or state.cache[key] is None:
-                state.cache[key] = method(self, state)
-            return state.cache[key]
+                    state._dependencies[dep].add(key)
+            if key not in state._cache or state._cache[key] is None:
+                state._cache[key] = method(self, state)
+            return state._cache[key]
         return wrapper
     return cache_in_state_decorator
 
@@ -57,17 +57,17 @@ def multi_cache_in_state(depends_on, vars, primary_index=0):
             prim_key = (type_prefix + vars[primary_index], id_)
             keys = [(type_prefix + v, id_) for v in vars]
             for i, key in enumerate(keys):
-                if key not in state.cache:
+                if key not in state._cache:
                     for dep in depends_on:
-                        state.dependencies[dep].add(key)
-            if prim_key not in state.cache or state.cache[prim_key] is None:
+                        state._dependencies[dep].add(key)
+            if prim_key not in state._cache or state._cache[prim_key] is None:
                 vals = method(self, state)
                 if isinstance(vals, tuple):
                     for k, v in zip(keys, vals):
-                        state.cache[k] = v
+                        state._cache[k] = v
                 else:
-                    state.cache[prim_key] = vals
-            return state.cache[prim_key]
+                    state._cache[prim_key] = vals
+            return state._cache[prim_key]
         return wrapper
     return multi_cache_in_state_decorator
 
@@ -80,16 +80,30 @@ class ChainState(object):
     values are subsequently reused.
     """
 
-    def __init__(self, dependencies=None, cache=None, **vars):
+    def __init__(self, _dependencies=None, _cache=None, **vars):
+        """Create a new `ChainState` instance.
+
+        Any keyword arguments passed to the constructor will be used to set
+        state variable attributes of state object for example
+
+            state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)
+
+        will return a `ChainState` instance `state` with variable attributes
+        `state.pos`, `state.mom` and `state.dir` with initial values set to
+        `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
+        `_dependencies` and `_cache` are reserved for the dependency set and
+        cache dictionary respectively used to implement the caching of derived
+        quantities and cannot be used as state variable names.
+        """
         # set vars attribute by directly writing to __dict__ to ensure set
         # before any cally to __setattr__
         self.__dict__['vars'] = vars
-        if dependencies is None:
-            dependencies = {name: set() for name in vars}
-        self.dependencies = dependencies
-        if cache is None:
-            cache = {}
-        self.cache = cache
+        if _dependencies is None:
+            _dependencies = {name: set() for name in vars}
+        self._dependencies = _dependencies
+        if _cache is None:
+            _cache = {}
+        self._cache = _cache
 
     def __getattr__(self, name):
         if name in self.vars:
@@ -102,10 +116,13 @@ class ChainState(object):
         if name in self.vars:
             self.vars[name] = value
             # clear any dependent cached values
-            for dep in self.dependencies[name]:
-                self.cache[dep] = None
+            for dep in self._dependencies[name]:
+                self._cache[dep] = None
         else:
             return super().__setattr__(name, value)
+
+    def __contains__(self, name):
+        return name in self.vars
 
     def copy(self):
         """Create a deep copy of the state object.
@@ -115,7 +132,7 @@ class ChainState(object):
             affecting the original object's attributes.
         """
         return type(self)(
-            cache=self.cache.copy(), dependencies=self.dependencies,
+            _cache=self._cache.copy(), _dependencies=self._dependencies,
             **{name: copy.copy(val) for name, val in self.vars.items()})
 
     def __str__(self):
@@ -133,20 +150,5 @@ class ChainState(object):
 
     def __setstate__(self, state):
         self.__dict__['vars'] = state
-        self.dependencies = {name: set() for name in self.vars}
-        self.cache = {}
-
-
-class HamiltonianState(ChainState):
-    """Chain state with position, momentum and integration direction variables.
-
-    As well as recording the position and momentum state values and integration
-    direction binary indicator, the state object is also used to cache derived
-    quantities such as (components of) the Hamiltonian function and gradients
-    for the current position and momentum values to avoid recalculation when
-    these values are reused.
-    """
-
-    def __init__(self, pos, mom=None, dir=1, dependencies=None, cache=None):
-        super().__init__(
-            pos=pos, mom=mom, dir=dir, dependencies=dependencies, cache=cache)
+        self._dependencies = {name: set() for name in self.vars}
+        self._cache = {}
