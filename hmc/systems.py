@@ -119,9 +119,15 @@ class EuclideanMetricSystem(_HamiltonianSystem):
                 measure, with the corresponding distribution on the position
                 space being the target distribution it is wished to draw
                 approximate samples from.
-            metric (Matrix or None): Matrix object corresponding to covariance
-                of Gaussian marginal distribution on momentum vector. If `None`
-                is passed (the default), the identity matrix will be used.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
             grad_neg_log_dens (callable or None): Function which given a
                 position vector returns the derivative of the negative
                 logarithm of the unnormalised density specified by
@@ -135,7 +141,19 @@ class EuclideanMetricSystem(_HamiltonianSystem):
                 automatically.
         """
         super().__init__(neg_log_dens, grad_neg_log_dens)
-        self.metric = IdentityMatrix() if metric is None else metric
+        if metric is None:
+            self.metric = IdentityMatrix()
+        elif isinstance(metric, np.ndarray):
+            if metric.ndim == 1:
+                self.metric = PositiveDiagonalMatrix(metric)
+            elif metric.ndim == 2:
+                self.metric = DensePositiveDefiniteMatrix(metric)
+            else:
+                raise ValueError('If NumPy ndarray value is used for `metric`'
+                                 ' must be either 1D (diagonal matrix) or 2D '
+                                 '(dense positive definite matrix)')
+        else:
+            self.metric = metric
 
     @cache_in_state('mom')
     def h2(self, state):
