@@ -232,7 +232,7 @@ class MarkovChainMonteCarloMethod(object):
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
-            monitor_stats (list[tuple(str, str)]): List of tuples of string
+            monitor_stats (Iterable[tuple(str, str)]): List of tuples of string
                 key pairs, with first entry the key of a Markov transition in
                 the `transitions` dict passed to the the `__init__` method and
                 the second entry the key of a chain statistic that will be
@@ -365,7 +365,7 @@ class MarkovChainMonteCarloMethod(object):
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
-            monitor_stats (list[tuple(str, str)]): List of tuples of string
+            monitor_stats (Iterable[tuple(str, str)]): List of tuples of string
                 key pairs, with first entry the key of a Markov transition in
                 the `transitions` dict passed to the the `__init__` method and
                 the second entry the key of a chain statistic that will be
@@ -565,8 +565,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 independently sampled from its conditional distribution.
 
         Kwargs:
-            trace_funcs (list[callable]): List of functions which compute the
-                variables to be recorded at each chain iteration, with each
+            trace_funcs (Iterable[callable]): List of functions which compute
+                the variables to be recorded at each chain iteration, with each
                 trace function being passed the current state and returning a
                 dictionary of scalar or array values corresponding to the
                 variable(s) to be stored. The keys in the returned dictionaries
@@ -586,11 +586,11 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
-            monitor_stats (list[str]): List of string keys of chain statistics
-                to monitor mean of over samples computed so far during sampling
-                by printing as postfix to progress bar (if `tqdm` is
-                installed). Default is to print only the mean `accept_prob`
-                statistic.
+            monitor_stats (Iterable[str]): List of string keys of chain
+                statistics to monitor mean of over samples computed so far
+                during sampling by printing as postfix to progress bar (if
+                `tqdm` is installed). Default is to print only the mean
+                `accept_prob` statistic.
 
         Returns:
             final_state (ChainState): State of chain after final iteration. May
@@ -642,8 +642,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
-            trace_funcs (list[callable]): List of functions which compute the
-                variables to be recorded at each chain iteration, with each
+            trace_funcs (Iterable[callable]): List of functions which compute
+                the variables to be recorded at each chain iteration, with each
                 trace function being passed the current state and returning a
                 dictionary of scalar or array values corresponding to the
                 variable(s) to be stored. The keys in the returned dictionaries
@@ -663,11 +663,11 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
-            monitor_stats (list[str]): List of string keys of chain statistics
-                to monitor mean of over samples computed so far during sampling
-                by printing as postfix to progress bar (if `tqdm` is
-                installed). Default is to print only the mean `accept_prob`
-                statistic.
+            monitor_stats (Iterable[str]): List of string keys of chain
+                statistics to monitor mean of over samples computed so far
+                during sampling by printing as postfix to progress bar (if
+                `tqdm` is installed). Default is to print only the mean
+                `accept_prob` statistic.
 
         Returns:
             final_states (list[ChainState]): States of chains after final
@@ -783,7 +783,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
 
 
 class DynamicMultinomialHMC(HamiltonianMCMC):
-    """Dynamic integration time HMCMC with multinomial sampling of new state.
+    """Dynamic integration time H-MCMC with multinomial sampling of new state.
 
     In each transition a binary tree of states is recursively computed by
     integrating randomly forward and backward in time by a number of steps
