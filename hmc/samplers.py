@@ -33,16 +33,6 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def extract_pos(state):
-    """Helper function to extract position from chain state."""
-    return state.pos
-
-
-def extract_mom(state):
-    """Helper function to extract momentum from chain state."""
-    return state.mom
-
-
 def _ignore_sigint_initialiser():
     """Initialiser for multi-process workers to force ignoring SIGINT."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -104,8 +94,8 @@ class MarkovChainMonteCarloMethod(object):
         return chain_stats
 
     def _sample_chain(self, rng, n_sample, init_state, trace_funcs,
-                      chain_index, parallel_chains, memmap_enabled,
-                      memmap_path):
+                      chain_index, parallel_chains, memmap_enabled=False,
+                      memmap_path=None, monitor_stats=None):
         if not isinstance(init_state, ChainState):
             state = ChainState(init_state)
         else:
@@ -159,6 +149,18 @@ class MarkovChainMonteCarloMethod(object):
                                 chain_stats[trans_key][key][sample_index] = val
                 for key, trace_func in trace_funcs.items():
                     traces[key][sample_index] = trace_func(state)
+                if TQDM_AVAILABLE and monitor_stats is not None:
+                    postfix_stats = {}
+                    for (trans_key, stats_key) in monitor_stats:
+                        if (trans_key not in chain_stats or
+                                stats_key not in chain_stats[trans_key]):
+                            logger.warning(
+                                f'Statistics key pair {(trans_key, stats_key)}'
+                                f' to be monitored is not valid.')
+                        print_key = f'mean({stats_key})'
+                        postfix_stats[print_key] = np.mean(
+                            chain_stats[trans_key][stats_key][:sample_index+1])
+                    sample_range.set_postfix(postfix_stats)
         except KeyboardInterrupt:
             if memmap_enabled:
                 for trace in traces.values():
@@ -176,8 +178,15 @@ class MarkovChainMonteCarloMethod(object):
                 return trace_filenames, stats_filenames, sample_index
         return traces, chain_stats, sample_index
 
-    def sample_chain(self, n_sample, init_state, trace_funcs,
-                     memmap_enabled=False, memmap_path=None):
+    def __preprocess_kwargs(self, kwargs):
+        if 'memmap_enabled' not in kwargs:
+            kwargs['memmap_enabled'] = False
+        # Create temporary directory if memory mapping and no path provided
+        if kwargs['memmap_enabled'] and 'memmap_path' not in kwargs:
+            kwargs['memmap_path'] = tempfile.mkdtemp()
+        return kwargs
+
+    def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -195,16 +204,27 @@ class MarkovChainMonteCarloMethod(object):
                and returning an array corresponding to the variable(s) to be
                stored. The keys to the functions are used to index the trace
                arrays in the returned data.
+
+        Kwargs:
             memmap_enabled (bool): Whether to memory-map arrays used to store
-               chain data to files on disk to avoid excessive system memory
-               usage for long chains and/or large chain states. The chain
-               data is written to `.npy` files in the directory specified by
-               `memmap_path` (or a temporary directory if not provided). These
-               files persist after the termination of the function so should be
-               manually deleted when no longer required.
+                chain data to files on disk to avoid excessive system memory
+                usage for long chains and/or large chain states. The chain data
+                is written to `.npy` files in the directory specified by
+                `memmap_path` (or a temporary directory if not provided). These
+                files persist after the termination of the function so should
+                be manually deleted when no longer required. Default is to
+                for memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
-               data to. If not provided, a temporary directory will be created
-               and the chain data written to files there.
+                data to. If not provided, a temporary directory will be created
+                and the chain data written to files there.
+            monitor_stats (list[tuple(str, str)]): List of tuples of string
+                key pairs, with first entry the key of a Markov transition in
+                the `transitions` dict passed to the the `__init__` method and
+                the second entry the key of a chain statistic that will be
+                returned in the `chain_stats` dictionary. The mean over samples
+                computed so far of the chain statistics associated with any
+                valid key-pairs will be monitored during sampling  by printing
+                as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
             traces (dict[str, array]):
@@ -221,13 +241,11 @@ class MarkovChainMonteCarloMethod(object):
                 the leading dimension corresponding to the sampling (draw)
                 index.
         """
-        # Create temporary directory if memory mapping and no path provided
-        if memmap_enabled and memmap_path is None:
-            memmap_path = tempfile.mkdtemp()
+        kwargs = self.__preprocess_kwargs(kwargs)
         traces, chain_stats, sample_index = self._sample_chain(
             rng=self.rng, n_sample=n_sample, init_state=init_state,
             trace_funcs=trace_funcs, chain_index=None, parallel_chains=False,
-            memmap_enabled=memmap_enabled, memmap_path=memmap_path)
+            **kwargs)
         if sample_index != n_sample:
             # Sampling interrupted therefore truncate returned arrays
             # Using resize methods makes agnostic to whether array is
@@ -283,7 +301,7 @@ class MarkovChainMonteCarloMethod(object):
         return traces_stack, chain_stats_stack
 
     def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
-                      memmap_enabled=False, memmap_path=None):
+                      **kwargs):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -310,16 +328,27 @@ class MarkovChainMonteCarloMethod(object):
                 dynamically assign the chains across multiple processes. If
                 set to `None` then the number of processes will default to the
                 output of `os.cpu_count()`.
+
+        Kwargs:
             memmap_enabled (bool): Whether to memory-map arrays used to store
-               chain data to files on disk to avoid excessive system memory
-               usage for long chains and/or large chain states. The chain data
-               is written to `.npy` files in the directory specified by
-               `memmap_path` (or a temporary directory if not provided). These
-               files persist after the termination of the function so should be
-               manually deleted when no longer required.
+                chain data to files on disk to avoid excessive system memory
+                usage for long chains and/or large chain states. The chain data
+                is written to `.npy` files in the directory specified by
+                `memmap_path` (or a temporary directory if not provided). These
+                files persist after the termination of the function so should
+                be manually deleted when no longer required. Default is to
+                for memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
-               data to. If not provided, a temporary directory will be created
-               and the chain data written to files there.
+                data to. If not provided, a temporary directory will be created
+                and the chain data written to files there.
+            monitor_stats (list[tuple(str, str)]): List of tuples of string
+                key pairs, with first entry the key of a Markov transition in
+                the `transitions` dict passed to the the `__init__` method and
+                the second entry the key of a chain statistic that will be
+                returned in the `chain_stats` dictionary. The mean over samples
+                computed so far of the chain statistics associated with any
+                valid key-pairs will be monitored during sampling  by printing
+                as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
             traces (dict[str, list[array]]:
@@ -340,9 +369,7 @@ class MarkovChainMonteCarloMethod(object):
                 (draw) index.
         """
         n_chain = len(init_states)
-        # Create temp directory if memory-mapping enabled and no path provided
-        if memmap_enabled and memmap_path is None:
-            memmap_path = tempfile.mkdtemp()
+        kwargs = self.__preprocess_kwargs(kwargs)
         if RANDOMGEN_AVAILABLE:
             seed = self.rng.randint(2**64, dtype='uint64')
             rngs = [randomgen.Xorshift1024(seed).jump(i).generator
@@ -358,14 +385,13 @@ class MarkovChainMonteCarloMethod(object):
                 'init_state': init_state,
                 'trace_funcs': trace_funcs,
                 'chain_index': c,
-                'memmap_enabled': memmap_enabled,
-                'memmap_path': memmap_path
+                **kwargs
             } for c, (rng, init_state) in enumerate(zip(rngs, init_states))]
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            for c, kwargs in enumerate(shared_kwargs_list):
+            for c, shared_kwargs in enumerate(shared_kwargs_list):
                 traces, chain_stats, n_sample_chain = self._sample_chain(
-                    **kwargs, parallel_chains=False)
+                    **shared_kwargs, parallel_chains=False)
                 chain_outputs.append((traces, chain_stats, n_sample_chain))
                 if n_sample_chain != n_sample:
                     logger.error(
@@ -384,8 +410,8 @@ class MarkovChainMonteCarloMethod(object):
                 results = [
                     pool.apply_async(
                         self._sample_chain,
-                        kwds=dict(**kwargs, parallel_chains=True))
-                    for kwargs in shared_kwargs_list]
+                        kwds=dict(**shared_kwargs, parallel_chains=True))
+                    for shared_kwargs in shared_kwargs_list]
                 for result in results:
                     chain_outputs.append(result.get())
                     n_completed += 1
@@ -398,15 +424,16 @@ class MarkovChainMonteCarloMethod(object):
                     err_message += (
                         f' Data for {n_completed} completed chains will be '
                         f'returned.')
-                if memmap_enabled:
+                if kwargs['memmap_enabled']:
                     err_message += (
                         f' All data recorded so far including in progress '
-                        f'chains is available in directory {memmap_path}.')
+                        f'chains is available in directory '
+                        f'{kwargs["memmap_path"]}.')
                 logger.error(err_message)
         # When running parallel jobs with memory-mapping enabled, data arrays
         # returned by processes as file paths to array memory-maps therfore
         # load memory-maps objects from file before returing results
-        load_memmaps = memmap_enabled and n_process > 1
+        load_memmaps = kwargs['memmap_enabled'] and n_process > 1
         return self._collate_chain_outputs(
             n_sample, chain_outputs, load_memmaps)
 
@@ -477,7 +504,22 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
 
-    def sample_chain(self, n_sample, init_state, trace_funcs=None, **kwargs):
+    def __preprocess_kwargs(self, kwargs):
+        # default to tracing only position component of state
+        if 'trace_funcs' not in kwargs:
+            kwargs['trace_funcs'] = {'pos': lambda state: state.pos}
+        # if `monitor_stats` specified, expand all statistics keys to key pairs
+        # with transition key set to `integration_transition`
+        if 'monitor_stats' in kwargs:
+            kwargs['monitor_stats'] = [
+                ('integration_transition', stats_key)
+                for stats_key in kwargs['monitor_stats']]
+        else:
+            kwargs['monitor_stats'] = [
+                ('integration_transition', 'accept_prob')]
+        return kwargs
+
+    def sample_chain(self, n_sample, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -492,24 +534,31 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                If an array is passed or the `mom` attribute of the state is not
                set, a momentum component will be independently sampled from its
                conditional distribution.
+
+        Kwargs:
             trace_funcs (dict[str, callable]): Dictionary of functions which
                 compute the variables to be recorded at each iteration, with
                 each function being passed the current state and returning an
                 array corresponding to the variable(s) to be stored. The keys
                 to the functions are used to index the trace arrays in the
-                returned data.
-
-        Kwargs:
+                returned data. Default is for a single trace function which
+                records the `pos` component of the state.
             memmap_enabled (bool): Whether to memory-map arrays used to store
-               chain data to files on disk to avoid excessive system memory
-               usage for long chains and/or large chain states. The chain data
-               is written to `.npy` files in the directory specified by
-               `memmap_path` (or a temporary directory if not provided). These
-               files persist after the termination of the function so should be
-               manually deleted when no longer required.
+                chain data to files on disk to avoid excessive system memory
+                usage for long chains and/or large chain states. The chain data
+                is written to `.npy` files in the directory specified by
+                `memmap_path` (or a temporary directory if not provided). These
+                files persist after the termination of the function so should
+                be manually deleted when no longer required. Default is to
+                for memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
-               data to. If not provided, a temporary directory will be created
-               and the chain data written to files there.
+                data to. If not provided, a temporary directory will be created
+                and the chain data written to files there.
+            monitor_stats (list[str]): List of string keys of chain statistics
+                to monitor mean of over samples computed so far during sampling
+                by printing as postfix to progress bar (if `tqdm` is
+                installed). Default is to print only the mean `accept_prob`
+                statistic.
 
         Returns:
             traces (dict[str, array]):
@@ -523,13 +572,12 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 with the leading dimension corresponding to the sampling index.
         """
         init_state = self._preprocess_init_state(init_state)
-        if trace_funcs is None:
-            trace_funcs = {'pos': extract_pos}
+        kwargs = self.__preprocess_kwargs(kwargs)
         traces, chain_stats = super().sample_chain(
-            n_sample, init_state, trace_funcs, **kwargs)
+            n_sample, init_state, **kwargs)
         return traces, chain_stats.get('integration_transition', {})
 
-    def sample_chains(self, n_sample, init_states, trace_funcs=None, **kwargs):
+    def sample_chains(self, n_sample, init_states, **kwargs):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -547,32 +595,37 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 state is not set, a momentum component will be independently
                 sampled from its conditional distribution. One chain will be
                 run for each state in the iterable sequence.
-            trace_funcs (dict[str, callable]): Dictionary of functions which
-                compute the variables to be recorded at each iteration, with
-                each function being passed the current state and returning an
-                array corresponding to the variable(s) to be stored. By default
-                (or if set to `None`) a single function which returns the
-                position component of the state is used. The keys to the
-                functions are used to index the chain variable arrays in the
-                returned data.
 
         Kwargs:
             n_process (int or None): Number of parallel processes to run chains
                 over. If set to one then chains will be run sequentially in
                 otherwise a `multiprocessing.Pool` object will be used to
                 dynamically assign the chains across multiple processes. If set
-                to `None` then the number of processes will default to the
-                output of `os.cpu_count()`.
+                to `None` then the number of processes will be set to the
+                output of `os.cpu_count()`. Default is `n_process=1`.
+            trace_funcs (dict[str, callable]): Dictionary of functions which
+                compute the variables to be recorded at each iteration, with
+                each function being passed the current state and returning an
+                array corresponding to the variable(s) to be stored. The keys
+                to the functions are used to index the trace arrays in the
+                returned data. Default is for a single trace function which
+                records the `pos` component of the state.
             memmap_enabled (bool): Whether to memory-map arrays used to store
-               chain data to files on disk to avoid excessive system memory
-               usage for long chains and/or large chain states. The chain data
-               is written to `.npy` files in the directory specified by
-               `memmap_path` (or a temporary directory if not provided). These
-               files persist after the termination of the function so should be
-               manually deleted when no longer required.
+                chain data to files on disk to avoid excessive system memory
+                usage for long chains and/or large chain states. The chain data
+                is written to `.npy` files in the directory specified by
+                `memmap_path` (or a temporary directory if not provided). These
+                files persist after the termination of the function so should
+                be manually deleted when no longer required. Default is to
+                for memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
-               data to. If not provided, a temporary directory will be created
-               and the chain data written to files there.
+                data to. If not provided, a temporary directory will be created
+                and the chain data written to files there.
+            monitor_stats (list[str]): List of string keys of chain statistics
+                to monitor mean of over samples computed so far during sampling
+                by printing as postfix to progress bar (if `tqdm` is
+                installed). Default is to print only the mean `accept_prob`
+                statistic.
 
         Returns:
             traces (dict[str, list[array]] or dict[str, array]):
@@ -595,10 +648,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 the second axis the sampling (draw) index.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
-        if trace_funcs is None:
-            trace_funcs = {'pos': extract_pos}
+        kwargs = self.__preprocess_kwargs(kwargs)
         traces, chain_stats = super().sample_chains(
-            n_sample, init_states, trace_funcs, **kwargs)
+            n_sample, init_states, **kwargs)
         return traces, chain_stats.get('integration_transition', {})
 
 
