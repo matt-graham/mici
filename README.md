@@ -86,14 +86,14 @@ rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
 prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
 mean = rng.normal(size=n_dim)
 
-# Deine potential energy (negative log density) for the Gaussian target
-# distribution (gradient will be automatically calculated using autograd)
-def pot_energy(pos):
+# Deine negative log density for the Gaussian target distribution (gradient 
+# will be automatically calculated using autograd)
+def neg_log_dens(pos):
     pos_minus_mean = pos - mean
     return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
 
 # Specify Hamiltonian system with isotropic Gaussian kinetic energy
-system = hmc.systems.EuclideanMetricSystem(pot_energy)
+system = hmc.systems.EuclideanMetricSystem(neg_log_dens)
 
 # Hamiltonian is separable therefore use explicit leapfrog integrator
 integrator = hmc.integrators.LeapfrogIntegrator(system, step_size=0.15)
@@ -106,7 +106,7 @@ sampler = hmc.samplers.DynamicMultinomialHMC(system, integrator, rng)
 init_pos = rng.normal(size=n_dim)
 
 # Sample a Markov chain with 1000 transitions
-traces, chain_stats = sampler.sample_chain(1000, init_pos)
+final_state, traces, chain_stats = sampler.sample_chain(1000, init_pos)
 
 # Print RMSE in mean estimate
 mean_rmse = np.mean((traces['pos'].mean(0) - mean)**2)**0.5
