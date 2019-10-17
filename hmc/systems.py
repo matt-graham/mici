@@ -414,11 +414,13 @@ class RiemannianMetricSystem(_HamiltonianSystem):
     """
 
     def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
-                 vjp_metric_func=None, grad_neg_log_dens=None):
+                 vjp_metric_func=None, grad_neg_log_dens=None,
+                 metric_kwargs=None):
         self._metric_matrix_class = metric_matrix_class
-        self._metric_func = metric
+        self._metric_func = metric_func
         self._vjp_metric_func = autodiff_fallback(
             vjp_metric_func, metric_func, 'vjp_and_value', 'vjp_metric_func')
+        self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
         super().__init__(neg_log_dens, grad_neg_log_dens)
 
     @cache_in_state('pos')
@@ -431,20 +433,21 @@ class RiemannianMetricSystem(_HamiltonianSystem):
 
     @cache_in_state('pos')
     def metric(self, state):
-        return self._metric_matrix_class(self.metric_func(state))
+        return self._metric_matrix_class(
+            self.metric_func(state), **self._metric_kwargs)
 
     def h(self, state):
         return self.h1(state) + self.h2(state)
 
     def h1(self, state):
-        return self.neg_log_dens(state) + self.metric(state).log_det_abs_sqrt
+        return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt
 
     def dh1_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
         # be computed in forward pass and cached
-        vjp_metric = self.vjp_metric(state)
+        vjp_metric = self.vjp_metric_func(state)
         return (self.grad_neg_log_dens(state) +
-                vjp_metric(self.metric(state).grad_log_det_abs_sqrt))
+                vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
 
     def h2(self, state):
         return 0.5 * state.mom @ self.metric(state).inv @ state.mom
@@ -527,7 +530,8 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         super().__init__(neg_log_dens,
                          SoftAbsRegularisedPositiveDefiniteMatrix,
                          self._hess_neg_log_dens, self._mtp_neg_log_dens,
-                         grad_neg_log_dens)
+                         grad_neg_log_dens,
+                         metric_kwargs={'softabs_coeff': softabs_coeff})
 
     def metric_func(self, state):
         return self.hess_neg_log_dens(state)
