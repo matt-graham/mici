@@ -6,7 +6,7 @@ frameworks may be available as alternative fallbacks in the future.
 
 AUTOGRAD_AVAILABLE = True
 try:
-    import hmc.autograd_wrapper as autograd_wrapper
+    import mici.autograd_wrapper as autograd_wrapper
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 

@@ -1,8 +1,8 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
-from hmc.errors import NonReversibleStepError
-from hmc.solvers import (maximum_norm, solve_fixed_point_direct,
-                         retract_onto_manifold_quasi_newton)
+from mici.errors import NonReversibleStepError
+from mici.solvers import (maximum_norm, solve_fixed_point_direct,
+                          retract_onto_manifold_quasi_newton)
 
 
 class ExplicitLeapfrogIntegrator(object):

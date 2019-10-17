@@ -2,13 +2,13 @@
 
 import logging
 import numpy as np
-from hmc.states import cache_in_state, multi_cache_in_state
-from hmc.matrices import (
+from mici.states import cache_in_state, multi_cache_in_state
+from mici.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
     DenseSquareMatrix, TriangularFactoredDefiniteMatrix, DenseDefiniteMatrix,
     DensePositiveDefiniteMatrix, EigendecomposedSymmetricMatrix,
     SoftAbsRegularisedPositiveDefiniteMatrix)
-from hmc.autodiff import autodiff_fallback
+from mici.autodiff import autodiff_fallback
 
 
 class _HamiltonianSystem(object):

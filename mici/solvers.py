@@ -1,6 +1,6 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
-from hmc.errors import ConvergenceError
+from mici.errors import ConvergenceError
 import numpy as np
 
 

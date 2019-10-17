@@ -1,48 +1,26 @@
-# Hamiltonian Monte Carlo
+<img src='images/mici-logo-rectangular.svg' width='400px'/>
 
-Implementations of various Hamiltonian dynamics based Markov chain Monte Carlo
-(MCMC) samplers in Python. A modular design is used to as far as possible
-allowing mixing and matching elements of different proposed extensions to the
-original Hybrid Monte Carlo algorithm proposed in Duane et al. (1987).
+**Mici** is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.
 
-## Implemented methods
+## Features
 
-Samplers
+Key features include
 
-  * Static integration time with Metropolis sampling (Duane et al., 1987)
-  * Random integration time with Metropolis sampling (Mackenzie, 1989)
-  * Correlated momentum updates in Metropolis samplers (Horowitz, 1991)
-  * Dynamic integration time with multinomial sampling (Betancourt, 2017)
-
-Hamiltonian systems
-
-  * Euclidean-metric systems - isotropic, diagonal and dense metrics
-  * Riemannian-metric systems (Girolami and Calderhead, 2011) inluding the
-    log density Hessian based *SoftAbs* metric (Betancourt, 2013)
-  * Euclidean-metric systems subject to holonomic constraints (Hartmann and
-    Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and
-    Stoltz, 2018) and for inference in differentiable generative models when 
-    conditioning on observed outputs (Graham and Storkey, 2017a)
-
-Numerical integrators
-
-  * Explicit leapfrog for separable Hamiltonian systems
-  * Implicit leapfrog for non-separable Hamiltonian systems
-  * Geodesic leapfrog for constrained Hamiltonian systems
-  * 'Split' leapfrog for Hamiltonian systems with an analytically tractable
-    component for which the exact flow can be solved (Shahbaba et al., 2014)
-
+  * implementations of MCMC methods for sampling from distributions on embedded manifolds implicitly-defined by a constraint equation and distributions on Riemannian manifolds with a user-specified metric,
+  * a modular design allowing use of a wide range of inference algorithms by mixing and matching different components and making it easy for users to extend the package and use within their own code, 
+  * computational efficient inference achieved by transparently caching the results of expensive operations and intermediate results calculated in derivative computations allow later reuse without recalculation, 
+  * memory efficient inference for large models by memory-mapping chains to disk, allowing long runs on large models without hitting memory issues.
 
 ## Installation
 
-To install and use the package the minimal requirements are a Python 3.6+
+To install and use Mici the minimal requirements are a Python 3.6+
 environment with [NumPy](http://www.numpy.org/) (tested with v1.15.0) and
 [SciPy](https://www.scipy.org) (tested with v1.1.0) installed.
 
 From a local clone of the repository run `python setup.py install` to install
 the package in the current Python environment.
 
-## Optional dependencies
+If available in the installed Python environment the following additional packages provide extra functionality and features
 
   * [Autograd](https://github.com/HIPS/autograd): if available will be used to 
     automatically compute the required derivatives of the model functions 
@@ -51,7 +29,7 @@ the package in the current Python environment.
   * [tqdm](https://github.com/tqdm/tqdm): if available a simple progress bar 
     will be shown during sampling.
   * [Arviz](https://arviz-devs.github.io/arviz/index.html#): if available 
-    outputs of a sampling run can be returned in an `arviz.InferenceData` 
+    outputs of a sampling run can be converted to an `arviz.InferenceData` 
     container object, allowing straightforward use of the extensive Arviz 
     visualisation and diagnostic functionality.
   * [multiprocess](https://github.com/uqfoundation/multiprocess) and 
@@ -65,6 +43,43 @@ the package in the current Python environment.
     chains in parallel, with the `jump` method of the object used to 
     reproducibly generate independent substreams.
 
+## Why Mici?
+
+Mici is named for [Augusta 'Mici' Teller](https://en.wikipedia.org/wiki/Augusta_H._Teller), who along with [Arriana Rosenbluth](https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth) developed the code for the [MANIAC I](https://en.wikipedia.org/wiki/MANIAC_I) computer used in the seminal paper [*Equations of State Calculations by Fast Computing Machines*](https://doi.org/10.1063%2F1.1699114) which introduced the first example of a Markov chain Monte Carlo method. 
+
+
+## Related projects
+
+Other Python packages for performing MCMC inference include [PyMC3](https://github.com/pymc-devs/pymc3), [PyStan](https://github.com/stan-dev/pystan) (the Python interface to [Stan](http://mc-stan.org/)), [Pyro](https://github.com/pyro-ppl/pyro) / [NumPyro](https://github.com/pyro-ppl/numpyro), [TensorFlow Probability](https://github.com/tensorflow/probability), [emcee](https://github.com/dfm/emcee) and [Sampyl](https://github.com/mcleonard/sampyl).
+
+Unlike PyMC3, PyStan, (Num)Pyro and TensorFlow Probability which are complete probabilistic programming frameworks including functionality for definining a probabilistic model / program, but like emcee and Sampyl, Mici is solely focussed on providing implementations of inference algorithms, with the user expected to be able to define at a minimum a function specifying the negative log (unnormalised) density of the distribution of interest. 
+
+Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling loop into external compiled non-Python code, in mici the sampling loop is run directly within Python. This has the consequence that for small models in which the negative log density of the target distribution and other model functions are cheap to evaluate, the interpreter overhead in iterating over the chains in Python can dominate the computational cost, making sampling much slower than packages which outsource the sampling loop to a efficient compiled implementation.
+
+ ## Overview of package
+ 
+ Three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
+ 
+ `mici.systems` - Hamiltonian systems encapsulating model functions and their derivatives
+
+   * `EuclideanMetricSystem` - systems with metric on position space with constant matrix representation (e.g. identity, diagonal and dense),
+   * `GaussianEuclideanMetricSystem` - systems in which target distribution is defined by density with respect to standard Gaussian measure on position space allowing analytically solving for quadratic components of Hamiltonian (Shahbaba et al., 2014),
+   * `RiemannianMetricSystem` - systems with metric on position spce with position-dependent matrix representation (Girolami and Calderhead, 2011),
+   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric (Betancourt, 2013)
+   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric systems subject to holonomic constraints (Hartmann andSchütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018)
+
+`mici.integrators` - symplectic integrators for Hamiltonian dynamics
+
+  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems,
+  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems,
+  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for  Hamiltonian systems subject to holnomic constraints.
+
+`mici.samplers` - MCMC samplers for peforming inference
+
+  * `StaticMetropolisHMC` - Static integration time with Metropolis sampling (Duane et al., 1987)
+  * `RandomMetropolisHMC` - Random integration time with Metropolis sampling (Mackenzie, 1989)
+  * `DynamicMultinomialHMC` - Dynamic integration time with multinomial sampling (Hoffman and Gelman, 2014; Betancourt, 2017)
+
 ## Example usage
 
 A simple complete example of using the package to sample from a multivariate
@@ -74,8 +89,8 @@ isotropic covariance Gaussian marginal distribution on the momenta) with the
 dynamic integration time HMC implementation described in Betancourt (2017),
 which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
 
-```python
-import hmc
+```Python
+import mici
 import autograd.numpy as np
 
 # Generate random precision and mean parameters for a Gaussian
@@ -93,14 +108,14 @@ def neg_log_dens(pos):
     return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
 
 # Specify Hamiltonian system with isotropic Gaussian kinetic energy
-system = hmc.systems.EuclideanMetricSystem(neg_log_dens)
+system = mici.systems.EuclideanMetricSystem(neg_log_dens)
 
 # Hamiltonian is separable therefore use explicit leapfrog integrator
-integrator = hmc.integrators.LeapfrogIntegrator(system, step_size=0.15)
+integrator = mici.integrators.LeapfrogIntegrator(system, step_size=0.15)
 
 # Use dynamic integration-time HMC implementation with multinomial 
 # sampling from trajectories
-sampler = hmc.samplers.DynamicMultinomialHMC(system, integrator, rng)
+sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
 
 # Sample an initial position from zero-mean isotropic Gaussian
 init_pos = rng.normal(size=n_dim)
@@ -148,9 +163,6 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
      Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
  12. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
      *arXiv preprint arXiv:1701.02434*.
- 13. Graham, M.M. and Storkey, A.J., 2017a. Asymptotically exact inference in 
-     differentiable generative models. *Electronic Journal of Statistics*, 
-     11(2), pp.5105-5164.
- 14. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
+ 13. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
      for sampling probability measures on submanifolds. *arXiv preprint
      1807.02356*.

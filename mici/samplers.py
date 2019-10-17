@@ -6,10 +6,10 @@ import tempfile
 import signal
 from collections import OrderedDict
 import numpy as np
-import hmc
-import hmc.transitions as trans
-from hmc.states import ChainState
-from hmc.utils import get_size, get_valid_filename
+import mici
+import mici.transitions as trans
+from mici.states import ChainState
+from mici.utils import get_size, get_valid_filename
 
 try:
     import tqdm

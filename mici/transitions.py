@@ -2,8 +2,8 @@
 
 import logging
 import numpy as np
-from hmc.utils import LogRepFloat
-from hmc.errors import (
+from mici.utils import LogRepFloat
+from mici.errors import (
     IntegratorError, NonReversibleStepError, ConvergenceError)
 
 logger = logging.getLogger(__name__)

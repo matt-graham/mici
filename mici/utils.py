@@ -5,7 +5,7 @@ from math import log, exp, log1p, expm1, inf, nan
 import types
 import sys
 import inspect
-import hmc
+import mici
 
 
 try:
@@ -78,22 +78,22 @@ try:
                 f'not match any transition in `chain_stats`.')
         if sample_stats_key is not None:
             return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=hmc),
+                posterior=arviz.dict_to_dataset(traces, library=mici),
                 sample_stats=arviz.dict_to_dataset(
-                    chain_stats[sample_stats_key], library=hmc))
+                    chain_stats[sample_stats_key], library=mici))
         elif not isinstance(next(iter(chain_stats.values())), dict):
             # chain_stats dictionary value not another dictionary therefore
             # assume corresponds to statistics for a single transition
             return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=hmc),
-                sample_stats=arviz.dict_to_dataset(chain_stats, library=hmc))
+                posterior=arviz.dict_to_dataset(traces, library=mici),
+                sample_stats=arviz.dict_to_dataset(chain_stats, library=mici))
         elif len(chain_stats) == 1:
             # single transtition statistics dictionary in chain_stats therefore
             # unambiguous to set sample_stats
             return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=hmc),
+                posterior=arviz.dict_to_dataset(traces, library=mici),
                 sample_stats=arviz.dict_to_dataset(
-                    chain_stats.popitem()[1], library=hmc))
+                    chain_stats.popitem()[1], library=mici))
         else:
             raise ValueError(
                 '`sample_stats_key` must be specified as `chain_stats` '
