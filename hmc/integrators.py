@@ -22,6 +22,12 @@ class ExplicitLeapfrogIntegrator(object):
     """
 
     def __init__(self, system, step_size):
+        if not hasattr(system, 'h1_flow') or not hasattr(system, 'h2_flow'):
+            raise ValueError(
+                'Explicit leapfrog integrator can only be used for systems '
+                'with explicit `h1_flow` and `h2_flow` Hamiltonian component '
+                'flow maps. For systems in which only `h1_flow` is available '
+                'the `ImplicitLeapfrogIntegrator` class may be used instead.')
         self.system = system
         self.step_size = step_size
 

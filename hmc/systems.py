@@ -77,9 +77,6 @@ class _HamiltonianSystem(object):
     def h2(self, state):
         raise NotImplementedError()
 
-    def h2_flow(self, state):
-        raise NotImplementedError()
-
     def h(self, state):
         return self.h1(state) + self.h2(state)
 
