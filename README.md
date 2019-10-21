@@ -7,8 +7,8 @@
 Key features include
 
   * implementations of MCMC methods for sampling from distributions on embedded manifolds implicitly-defined by a constraint equation and distributions on Riemannian manifolds with a user-specified metric,
-  * a modular design allowing use of a wide range of inference algorithms by mixing and matching different components and making it easy for users to extend the package and use within their own code, 
-  * computational efficient inference achieved by transparently caching the results of expensive operations and intermediate results calculated in derivative computations allow later reuse without recalculation, 
+  * a modular design allowing use of a wide range of inference algorithms by mixing and matching different components, making it easy for users to extend the package and use within their own code, 
+  * computational efficient inference via transparent caching of the results of expensive operations and intermediate results calculated in derivative computations allowing later reuse without recalculation, 
   * memory efficient inference for large models by memory-mapping chains to disk, allowing long runs on large models without hitting memory issues.
 
 ## Installation
@@ -58,36 +58,33 @@ Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling
 
  ## Overview of package
  
- Three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
+ The three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
  
- `mici.systems` - Hamiltonian systems encapsulating model functions and their derivatives
+ [`mici.systems`](mici/systems.py) - Hamiltonian systems encapsulating model functions and their derivatives
 
-   * `EuclideanMetricSystem` - systems with metric on position space with constant matrix representation (e.g. identity, diagonal and dense),
-   * `GaussianEuclideanMetricSystem` - systems in which target distribution is defined by density with respect to standard Gaussian measure on position space allowing analytically solving for quadratic components of Hamiltonian (Shahbaba et al., 2014),
-   * `RiemannianMetricSystem` - systems with metric on position spce with position-dependent matrix representation (Girolami and Calderhead, 2011),
-   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric (Betancourt, 2013)
-   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric systems subject to holonomic constraints (Hartmann andSchütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018)
+   * `EuclideanMetricSystem` - systems with a metric on the position space with a constant matrix representation,
+   * `GaussianEuclideanMetricSystem` - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian (Shahbaba et al., 2014),
+   * `RiemannianMetricSystem` - systems with a metric on the position space with a position-dependent matrix representation (Girolami and Calderhead, 2011),
+   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric matrix representation (Betancourt, 2013),
+   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject to holonomic constraints (Hartmann and Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018) with a dense constraint function Jacobian matrix,
 
-`mici.integrators` - symplectic integrators for Hamiltonian dynamics
+[`mici.integrators`](mici/integrators.py) - symplectic integrators for Hamiltonian dynamics
 
-  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems,
-  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems,
-  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for  Hamiltonian systems subject to holnomic constraints.
+  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (Leimkulher and Reich, 2004),
+  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (Leimkulher and Reich, 2004),
+  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (Andersen, 1983; Leimkuhler and Reich, 1994)
 
-`mici.samplers` - MCMC samplers for peforming inference
+[`mici.samplers`](mici/samplers.py) - MCMC samplers for peforming inference
 
-  * `StaticMetropolisHMC` - Static integration time with Metropolis sampling (Duane et al., 1987)
-  * `RandomMetropolisHMC` - Random integration time with Metropolis sampling (Mackenzie, 1989)
-  * `DynamicMultinomialHMC` - Dynamic integration time with multinomial sampling (Hoffman and Gelman, 2014; Betancourt, 2017)
+  * `StaticMetropolisHMC` - Static integration time Hamiltonian Monte Carlo with Metropolis accept step (Duane et al., 1987),
+  * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (Mackenzie, 1989),
+  * `DynamicMultinomialHMC` - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (Hoffman and Gelman, 2014; Betancourt, 2017).
 
 ## Example usage
 
 A simple complete example of using the package to sample from a multivariate
-Gaussian distribution with randomly generated parameters is given below. Here an
-isotropic Euclidean metric Hamiltonian system is used (corresponding to a
-isotropic covariance Gaussian marginal distribution on the momenta) with the
-dynamic integration time HMC implementation described in Betancourt (2017),
-which is a extension of the NUTS algorithm (Hoffman and Gelman, 2014).
+Gaussian distribution with randomly generated parameters is given below. Here a Hamiltonian system with a Euclidean metric with identity matrix representation is used (corresponding to a standard normal distribution on the momenta) with a
+dynamic integration time HMC implementation.
 
 ```Python
 import mici
@@ -107,7 +104,7 @@ def neg_log_dens(pos):
     pos_minus_mean = pos - mean
     return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
 
-# Specify Hamiltonian system with isotropic Gaussian kinetic energy
+# Specify Hamiltonian system with default identity metric
 system = mici.systems.EuclideanMetricSystem(neg_log_dens)
 
 # Hamiltonian is separable therefore use explicit leapfrog integrator
@@ -117,7 +114,7 @@ integrator = mici.integrators.LeapfrogIntegrator(system, step_size=0.15)
 # sampling from trajectories
 sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
 
-# Sample an initial position from zero-mean isotropic Gaussian
+# Sample an initial position from a zero-mean identity-covariance Gaussian
 init_pos = rng.normal(size=n_dim)
 
 # Sample a Markov chain with 1000 transitions
@@ -134,35 +131,38 @@ print(f'Mean accept prob: {mean_accept_prob:0.2f}')
 
 ## References
 
-  1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+  1. Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm 
+     for molecular dynamics calculations. *Journal of Computational Physics*, 
+     52(1), pp.24-34.
+  2. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
      Hybrid Monte Carlo. *Physics letters B*, 195(2), pp.216-222.
-  2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+  3. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
      *Physics Letters B*, 226(3-4), pp.369-371.
-  3. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
+  4. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
      *Physics Letters  B*, 268(CERN-TH-6172-91), pp.247-252.
-  4. Neal, R. M., 1994. An improved acceptance procedure for the hybrid Monte
-     Carlo algorithm. *Journal of Computational Physics*, 111:194–203.
-  5. Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo
+  5. Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained 
+     Hamiltonian systems. *Mathematics of Computation*, 63(208), pp.589-605.
+  6. Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). 
+     *Cambridge University Press*.
+  7. Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo
      algorithm and the problem of calculating the free energy in several
      variables. *ZAMM ‐ Journal of Applied Mathematics and Mechanics*, 85(10),
      pp.700-710.
-  6. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
-     *Handbook of Markov Chain Monte Carlo*, 2(11), p.2.
-  7. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+  8. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
      Hamiltonian Monte Varlo methods. *Journal of the Royal Statistical Society:
      Series B (Statistical Methodology)*, 73(2), pp.123-214.
-  8. Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods
+  9. Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods
      on implicitly defined manifolds. In *Artificial intelligence and statistics*
      (pp. 161-172).
- 9.  Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
+ 10. Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
      Monte Carlo. In *Geometric science of information* (pp. 327-334).
- 10. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively
+ 11. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively
      setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine
      Learning Research*, 15(1), pp.1593-1623.
- 11. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
+ 12. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
      Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
- 12. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+ 13. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
      *arXiv preprint arXiv:1701.02434*.
- 13. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
+ 14. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
      for sampling probability measures on submanifolds. *arXiv preprint
      1807.02356*.
