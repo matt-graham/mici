@@ -80,53 +80,87 @@ Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling
   * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (Mackenzie, 1989),
   * `DynamicMultinomialHMC` - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (Hoffman and Gelman, 2014; Betancourt, 2017).
 
-## Example usage
+## Example: sampling on a torus
 
-A simple complete example of using the package to sample from a multivariate
-Gaussian distribution with randomly generated parameters is given below. Here a Hamiltonian system with a Euclidean metric with identity matrix representation is used (corresponding to a standard normal distribution on the momenta) with a
-dynamic integration time HMC implementation.
+<img src='images/torus-samples.gif' width='360px'/>
+
+A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use `autograd` to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function) and sample four chains in parallel using `multiprocess`.
 
 ```Python
-import mici
+from mici import systems, integrators, samplers
 import autograd.numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.animation as animation
 
-# Generate random precision and mean parameters for a Gaussian
-n_dim = 50
+# Define fixed model parameters
+R = 1.0  # toroidal radius ∈ (0, ∞)
+r = 0.5  # poloidal radius ∈ (0, R)
+α = 0.9  # density fluctuation amplitude ∈ [0, 1)
+
+# Define constraint function such that the set {q : constr(q) == 0} is a torus
+def constr(q):
+    x, y, z = q.T
+    return np.stack([((x**2 + y**2)**0.5 - R)**2 + z**2 - r**2], -1)
+
+# Define negative log density for the target distribution on torus
+# (with respect to 2D 'area' measure for torus)
+def neg_log_dens(q):
+    x, y, z = q.T
+    θ = np.arctan2(y, x)
+    ϕ = np.arctan2(z, x / np.cos(θ) - R)
+    return np.log1p(r * np.cos(ϕ) / R) - np.log1p(np.sin(4*θ) * np.cos(ϕ) * α)
+
+# Specify constrained Hamiltonian system with default identity metric
+system = systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)
+
+# System is constrained therefore use constrained leapfrog integrator
+integrator = integrators.ConstrainedLeapfrogIntegrator(system, step_size=0.2)
+
+# Seed a random number generator
 rng = np.random.RandomState(seed=1234)
-rnd_eigvec, _ = np.linalg.qr(rng.normal(size=(n_dim, n_dim)))
-rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
-prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
-mean = rng.normal(size=n_dim)
 
-# Define negative log density for the Gaussian target distribution (gradient 
-# will be automatically calculated using autograd)
-def neg_log_dens(pos):
-    pos_minus_mean = pos - mean
-    return 0.5 * pos_minus_mean @ prec @ pos_minus_mean
+# Use dynamic integration-time HMC implementation as MCMC sampler
+sampler = samplers.DynamicMultinomialHMC(system, integrator, rng)
 
-# Specify Hamiltonian system with default identity metric
-system = mici.systems.EuclideanMetricSystem(neg_log_dens)
+# Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²
+# x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)
+n_chain = 4
+θ_init, ϕ_init = rng.uniform(0, 2 * np.pi, size=(2, n_chain))
+q_init = np.stack([
+    (R + r * np.cos(ϕ_init)) * np.cos(θ_init),
+    (R + r * np.cos(ϕ_init)) * np.sin(θ_init),
+    r * np.sin(ϕ_init)], -1)
 
-# Hamiltonian is separable therefore use explicit leapfrog integrator
-integrator = mici.integrators.LeapfrogIntegrator(system, step_size=0.15)
+# Define function to extract variables to trace during sampling
+def trace_func(state):
+    x, y, z = state.pos
+    return {'x': x, 'y': y, 'z': z}
 
-# Use dynamic integration-time HMC implementation with multinomial 
-# sampling from trajectories
-sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
+# Sample four chains of 2500 samples in parallel
+final_states, traces, stats = sampler.sample_chains(
+    n_sample=2500, init_states=q_init, n_process=4, trace_funcs=[trace_func])
 
-# Sample an initial position from a zero-mean identity-covariance Gaussian
-init_pos = rng.normal(size=n_dim)
+# Print average accept probability and number of integrator steps per chain
+for c in range(n_chain):
+    print(f"Chain {c}:")
+    print(f"  Average accept prob. = {stats['accept_prob'][c].mean():.2f}")
+    print(f"  Average number steps = {stats['n_step'][c].mean():.1f}")
 
-# Sample a Markov chain with 1000 transitions
-final_state, traces, chain_stats = sampler.sample_chain(1000, init_pos)
+# Visualise concatentated chain samples as animated 3D scatter plot   
+fig = plt.figure(figsize=(4, 4))
+ax = Axes3D(fig, [0., 0., 1., 1.], proj_type='ortho')
+points_3d, = ax.plot(*(np.concatenate(traces[k]) for k in 'xyz'), '.', ms=0.5)
+ax.axis('off')
+for set_lim in [ax.set_xlim, ax.set_ylim, ax.set_zlim]:
+    set_lim((-1, 1))
 
-# Print RMSE in mean estimate
-mean_rmse = np.mean((traces['pos'].mean(0) - mean)**2)**0.5
-print(f'Mean estimate RMSE: {mean_rmse}')
+def update(i):
+    angle = 45 * (np.sin(2 * np.pi * i / 60) + 1)
+    ax.view_init(elev=angle, azim=angle)
+    return (points_3d,)
 
-# Print average acceptance probability
-mean_accept_prob = chain_stats['accept_prob'].mean()
-print(f'Mean accept prob: {mean_accept_prob:0.2f}')
+anim = animation.FuncAnimation(fig, update, frames=60, interval=100, blit=True)
 ```
 
 ## References
