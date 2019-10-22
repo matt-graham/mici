@@ -98,7 +98,7 @@ rnd_eigval = np.exp(rng.normal(size=n_dim) * 2)
 prec = (rnd_eigvec / rnd_eigval) @ rnd_eigvec.T
 mean = rng.normal(size=n_dim)
 
-# Deine negative log density for the Gaussian target distribution (gradient 
+# Define negative log density for the Gaussian target distribution (gradient 
 # will be automatically calculated using autograd)
 def neg_log_dens(pos):
     pos_minus_mean = pos - mean
