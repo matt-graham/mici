@@ -179,8 +179,7 @@ class ConstrainedLeapfrogIntegrator(object):
         self.reverse_check_norm = reverse_check_norm
         self.retraction_solver = retraction_solver
         if retraction_solver_kwargs is None:
-            retraction_solver_kwargs = {
-                'tol': 1e-8, 'max_iters': 100, 'norm': maximum_norm}
+            retraction_solver_kwargs = {}
         self.retraction_solver_kwargs = retraction_solver_kwargs
 
     def retract_onto_manifold(self, state, state_prev, dt):

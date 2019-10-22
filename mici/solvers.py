@@ -83,48 +83,62 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
         f'Fixed point iteration did not converge. Last error {error:.1e}.')
 
 
-def retract_onto_manifold_quasi_newton(state, state_prev, dt, system, tol=1e-8,
-                                       max_iters=100, norm=maximum_norm):
+def retract_onto_manifold_quasi_newton(
+        state, state_prev, dt, system, convergence_tol=1e-9,
+        divergence_tol=1e10, max_iters=50, norm=maximum_norm):
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom).inv
     for i in range(max_iters):
-        constr = system.constr(state)
-        if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
-            raise ConvergenceError(f'Quasi-Newton iteration diverged.')
-        error = norm(constr)
-        if error < tol:
-            state.mom -= dh2_flow_mom_dmom @ mu
-            return state
-        delta_mu = jacob_constr_prev.T @ (
-            inv_jacob_constr_inner_product @ constr)
-        mu += delta_mu
-        state.pos -= dh2_flow_pos_dmom @ delta_mu
+        try:
+            constr = system.constr(state)
+            error = norm(constr)
+            if error > divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    'Quasi-Newton iteration diverged. Last error {err:.1e}.')
+            elif error < convergence_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
+            delta_mu = jacob_constr_prev.T @ (
+                inv_jacob_constr_inner_product @ constr)
+            mu += delta_mu
+            state.pos -= dh2_flow_pos_dmom @ delta_mu
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
+            raise ConvergenceError(
+                f'ValueError during Quasi-Newton iteration ({e}).')
     raise ConvergenceError(
         f'Quasi-Newton iteration did not converge. Last error {error:.1e}.')
 
 
-def retract_onto_manifold_newton(state, state_prev, dt, system, tol=1e-8,
-                                 max_iters=100, norm=maximum_norm):
+def retract_onto_manifold_newton(
+        state, state_prev, dt, system, convergence_tol=1e-9,
+        divergence_tol=1e10, max_iters=50, norm=maximum_norm):
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
     for i in range(max_iters):
-        jacob_constr = system.jacob_constr(state)
-        constr = system.constr(state)
-        if np.any(np.isinf(constr)) or np.any(np.isnan(constr)):
-            raise ConvergenceError(f'Newton iteration diverged.')
-        error = norm(constr)
-        if error < tol:
-            state.mom -= dh2_flow_mom_dmom @ mu
-            return state
-        delta_mu = jacob_constr_prev.T @ (
-            system.jacob_constr_inner_product(
-                jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
-            constr)
-        mu += delta_mu
-        state.pos -= dh2_flow_pos_dmom @ delta_mu
+        try:
+            jacob_constr = system.jacob_constr(state)
+            constr = system.constr(state)
+            error = norm(constr)
+            if error > divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    'Newton iteration diverged. Last error {err:.1e}.')
+            if error < convergence_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
+            delta_mu = jacob_constr_prev.T @ (
+                system.jacob_constr_inner_product(
+                    jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
+                constr)
+            mu += delta_mu
+            state.pos -= dh2_flow_pos_dmom @ delta_mu
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
+            raise ConvergenceError(
+                f'ValueError during Newton iteration ({e}).')
     raise ConvergenceError(
         f'Newton iteration did not converge. Last error {error:.1e}.')
