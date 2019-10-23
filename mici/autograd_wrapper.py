@@ -52,13 +52,13 @@ if AUTOGRAD_AVAILABLE:
         For a vector-valued function `fun` the matrix-Hessian-product (MHP) is
         here defined as a function of a matrix `m` corresponding to
 
-            mhp(m) = sum(m[:, :] * h[:, :, :], axis=(-1, -2))
+            mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
 
         where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3
         tensor of second-order partial derivatives of the vector-valued
         function, such that
 
-            h[k, i, j] = (d**2 f[i]) / (dx[j] * dx[k])
+            h[i, j, k] = (d**2 f[i]) / (dx[j] * dx[k])
 
         Assumes that the function `fun` broadcasts along the first dimension of
         the input being differentiated with respect to such that a batch of
