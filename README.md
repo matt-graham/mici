@@ -1,5 +1,7 @@
 <img src='images/mici-logo-rectangular.svg' width='400px'/>
 
+[![PyPI version](https://badge.fury.io/py/mici.svg)](https://badge.fury.io/py/mici)
+
 **Mici** is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.
 
 ## Features
@@ -17,8 +19,9 @@ To install and use Mici the minimal requirements are a Python 3.6+
 environment with [NumPy](http://www.numpy.org/) (tested with v1.15.0) and
 [SciPy](https://www.scipy.org) (tested with v1.1.0) installed.
 
-From a local clone of the repository run `python setup.py install` to install
-the package in the current Python environment.
+The latest Mici release on PyPI can be installed in the current Python environment by running
+
+```pip install mici```
 
 If available in the installed Python environment the following additional packages provide extra functionality and features
 
@@ -47,14 +50,13 @@ If available in the installed Python environment the following additional packag
 
 Mici is named for [Augusta 'Mici' Teller](https://en.wikipedia.org/wiki/Augusta_H._Teller), who along with [Arriana Rosenbluth](https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth) developed the code for the [MANIAC I](https://en.wikipedia.org/wiki/MANIAC_I) computer used in the seminal paper [*Equations of State Calculations by Fast Computing Machines*](https://doi.org/10.1063%2F1.1699114) which introduced the first example of a Markov chain Monte Carlo method. 
 
-
 ## Related projects
 
 Other Python packages for performing MCMC inference include [PyMC3](https://github.com/pymc-devs/pymc3), [PyStan](https://github.com/stan-dev/pystan) (the Python interface to [Stan](http://mc-stan.org/)), [Pyro](https://github.com/pyro-ppl/pyro) / [NumPyro](https://github.com/pyro-ppl/numpyro), [TensorFlow Probability](https://github.com/tensorflow/probability), [emcee](https://github.com/dfm/emcee) and [Sampyl](https://github.com/mcleonard/sampyl).
 
 Unlike PyMC3, PyStan, (Num)Pyro and TensorFlow Probability which are complete probabilistic programming frameworks including functionality for definining a probabilistic model / program, but like emcee and Sampyl, Mici is solely focussed on providing implementations of inference algorithms, with the user expected to be able to define at a minimum a function specifying the negative log (unnormalised) density of the distribution of interest. 
 
-Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling loop into external compiled non-Python code, in mici the sampling loop is run directly within Python. This has the consequence that for small models in which the negative log density of the target distribution and other model functions are cheap to evaluate, the interpreter overhead in iterating over the chains in Python can dominate the computational cost, making sampling much slower than packages which outsource the sampling loop to a efficient compiled implementation.
+Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling loop into external compiled non-Python code, in Mici the sampling loop is run directly within Python. This has the consequence that for small models in which the negative log density of the target distribution and other model functions are cheap to evaluate, the interpreter overhead in iterating over the chains in Python can dominate the computational cost, making sampling much slower than packages which outsource the sampling loop to a efficient compiled implementation.
 
  ## Overview of package
  
