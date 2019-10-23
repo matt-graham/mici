@@ -1,4 +1,4 @@
-import hmc.matrices as matrices
+import mici.matrices as matrices
 import numpy as np
 import numpy.linalg as nla
 import scipy.linalg as sla

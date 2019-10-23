@@ -1,8 +1,8 @@
 import numpy as np
-import hmc.integrators as integrators
-import hmc.systems as systems
-import hmc.states as states
-from hmc.errors import IntegratorError
+import mici.integrators as integrators
+import mici.systems as systems
+import mici.states as states
+from mici.errors import IntegratorError
 
 SEED = 3046987125
 SIZES = {1, 2, 5, 10}
@@ -118,7 +118,7 @@ class TestLeapfrogIntegratorWithEuclideanMetricSystemLinear(
             lambda q: 0.5 * np.sum(q**2), grad_neg_log_dens=lambda q: q)
         self.integrator = integrators.LeapfrogIntegrator(system, 0.5)
         self.states = {size: [
-                states.HamiltonianState(pos=q, mom=p)
+                states.ChainState(pos=q, mom=p, dir=1)
                 for q, p in self.rng.standard_normal((N_STATE, 2, size))]
             for size in SIZES}
         self.h_diff_tol = 5e-3
@@ -133,7 +133,7 @@ class TestLeapfrogIntegratorWithEuclideanMetricSystemNonLinear(
             lambda q: 0.25 * np.sum(q**4), grad_neg_log_dens=lambda q: q**3)
         self.integrator = integrators.LeapfrogIntegrator(system, 0.1)
         self.states = {size: [
-                states.HamiltonianState(pos=q, mom=p)
+                states.ChainState(pos=q, mom=p, dir=1)
                 for q, p in self.rng.standard_normal((N_STATE, 2, size))]
             for size in SIZES}
         self.h_diff_tol = 2e-2
@@ -148,7 +148,7 @@ class TestLeapfrogIntegratorWithGaussianEuclideanMetricLinearSystem(
             lambda q: 0, grad_neg_log_dens=lambda q: 0 * q)
         self.integrator = integrators.LeapfrogIntegrator(system, 0.5)
         self.states = {size: [
-                states.HamiltonianState(pos=q, mom=p)
+                states.ChainState(pos=q, mom=p, dir=1)
                 for q, p in self.rng.standard_normal((N_STATE, 2, size))]
             for size in SIZES}
         self.h_diff_tol = 1e-10
@@ -164,7 +164,7 @@ class TestLeapfrogIntegratorWithGaussianEuclideanMetricLinearSystem(
             grad_neg_log_dens=lambda q: 0.5 * q**3)
         self.integrator = integrators.LeapfrogIntegrator(system, 0.1)
         self.states = {size: [
-                states.HamiltonianState(pos=q, mom=p)
+                states.ChainState(pos=q, mom=p, dir=1)
                 for q, p in self.rng.standard_normal((N_STATE, 2, size))]
             for size in SIZES}
         self.h_diff_tol = 1e-2
