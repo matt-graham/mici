@@ -14,7 +14,7 @@ def maximum_norm(vct):
     return np.max(abs(vct))
 
 
-def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
+def solve_fixed_point_direct(func, x0, tol=1e-9, max_iters=100,
                              norm=maximum_norm):
     """Solve fixed point equation `func(x) = x` using direct iteration.
 
@@ -44,7 +44,7 @@ def solve_fixed_point_direct(func, x0, tol=1e-8, max_iters=100,
         f'Fixed point iteration did not converge. Last error {error:.1e}.')
 
 
-def solve_fixed_point_steffensen(func, x0, tol=1e-8, max_iters=100,
+def solve_fixed_point_steffensen(func, x0, tol=1e-9, max_iters=100,
                                  norm=maximum_norm):
     """Solve fixed point equation `func(x) = x` using Steffensen's method.
 
