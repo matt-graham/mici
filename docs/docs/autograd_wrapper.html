@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.1" />
-<title>mici.errors API documentation</title>
-<meta name="description" content="Exception types." />
+<title>mici.autograd_wrapper API documentation</title>
+<meta name="description" content="Additional autograd differential operators." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,28 +17,131 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>mici.errors</code></h1>
+<h1 class="title">Package <code>mici.autograd_wrapper</code></h1>
 </header>
 <section id="section-intro">
-<p>Exception types.</p>
+<p>Additional autograd differential operators.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/errors.py#L0-L12" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/autograd_wrapper.py#L0-L115" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Exception types.&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Additional autograd differential operators.&#34;&#34;&#34;
 
+AUTOGRAD_AVAILABLE = True
+try:
+    from autograd import make_vjp as vjp_and_value
+    from autograd.wrap_util import unary_to_nary
+    from autograd.builtins import tuple as atuple
+    from autograd.core import make_vjp
+    from autograd.extend import vspace
+    import autograd.numpy as np
+except ImportError:
+    AUTOGRAD_AVAILABLE = False
 
-class IntegratorError(RuntimeError):
-    &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;
+if AUTOGRAD_AVAILABLE:
 
+    @unary_to_nary
+    def grad_and_value(fun, x):
+        &#34;&#34;&#34;
+        Returns a function that returns both gradient and value of a function.
+        &#34;&#34;&#34;
+        vjp, val = make_vjp(fun, x)
+        if not vspace(val).size == 1:
+            raise TypeError(&#34;grad_and_value only applies to real scalar-output&#34;
+                            &#34; functions.&#34;)
+        return vjp(vspace(val).ones()), val
 
-class NonReversibleStepError(IntegratorError):
-    &#34;&#34;&#34;Error raised when integrator step fails reversibility check.&#34;&#34;&#34;
+    @unary_to_nary
+    def jacobian_and_value(fun, x):
+        &#34;&#34;&#34;
+        Returns a function that returns both the Jacobian and value of a
+        function.
 
+        Assumes that the function `fun` broadcasts along the first dimension of
+        the input being differentiated with respect to such that a batch of
+        outputs can be computed concurrently for a batch of inputs.
+        &#34;&#34;&#34;
+        val = fun(x)
+        v_vspace = vspace(val)
+        x_vspace = vspace(x)
+        x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
+        vjp_rep, _ = make_vjp(fun, x_rep)
+        jacobian_shape = v_vspace.shape + x_vspace.shape
+        basis_vectors = np.array([b for b in v_vspace.standard_basis()])
+        jacobian = vjp_rep(basis_vectors)
+        return np.reshape(jacobian, jacobian_shape), val
 
-class ConvergenceError(IntegratorError):
-    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
+    @unary_to_nary
+    def mhp_jacobian_and_value(fun, x):
+        &#34;&#34;&#34;
+        Returns a function that returns MHP, Jacobian and value of a function.
+
+        For a vector-valued function `fun` the matrix-Hessian-product (MHP) is
+        here defined as a function of a matrix `m` corresponding to
+
+            mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
+
+        where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3
+        tensor of second-order partial derivatives of the vector-valued
+        function, such that
+
+            h[i, j, k] = (d**2 f[i]) / (dx[j] * dx[k])
+
+        Assumes that the function `fun` broadcasts along the first dimension of
+        the input being differentiated with respect to such that a batch of
+        outputs can be computed concurrently for a batch of inputs.
+        &#34;&#34;&#34;
+        mhp, (jacob, val) = make_vjp(
+            lambda x: atuple(jacobian_and_value(fun)(x)), x)
+        return lambda m: mhp((m, vspace(val).zeros())), jacob, val
+
+    @unary_to_nary
+    def hessian_grad_and_value(fun, x):
+        &#34;&#34;&#34;
+        Returns a function that returns the Hessian, gradient and value of a
+        function.
+
+        Assumes that the function `fun` broadcasts along the first dimension of
+        the input being differentiated with respect to such that a batch of
+        outputs can be computed concurrently for a batch of inputs.
+        &#34;&#34;&#34;
+        def grad_fun(x):
+            vjp, val = make_vjp(fun, x)
+            return vjp(vspace(val).ones()), val
+        x_vspace = vspace(x)
+        x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
+        vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
+        hessian_shape = x_vspace.shape + x_vspace.shape
+        basis_vectors = np.array([b for b in x_vspace.standard_basis()])
+        hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
+        return np.reshape(hessian, hessian_shape), grad[0], val[0]
+
+    @unary_to_nary
+    def mtp_hessian_grad_and_value(fun, x):
+        &#34;&#34;&#34;
+        Returns a function that returns MTP, Jacobian and value of a function.
+
+        For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
+        here defined as a function of a matrix `m` corresponding to
+
+            mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
+
+        where `t` is the &#39;Tressian&#39; of `f = fun(x)` wrt `x` i.e. the rank-3
+        tensor of third-order partial derivatives of the scalar-valued function
+        such that
+
+            t[i, j, k] = d**3 f / (dx[i] * dx[j] * dx[k])
+
+        Assumes that the function `fun` broadcasts along the first dimension of
+        the input being differentiated with respect to such that a batch of
+        outputs can be computed concurrently for a batch of inputs.
+        &#34;&#34;&#34;
+        mtp, (hessian, grad, val) = make_vjp(
+            lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
+        return (
+            lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
+            hessian, grad, val)</code></pre>
 </details>
 </section>
 <section>
@@ -48,85 +151,12 @@ class ConvergenceError(IntegratorError):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="mici.errors.IntegratorError"><code class="flex name class">
-<span>class <span class="ident">IntegratorError</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Error raised when integrator step fails.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/errors.py#L4-L5" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class IntegratorError(RuntimeError):
-    &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.RuntimeError</li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="mici.errors.NonReversibleStepError" href="#mici.errors.NonReversibleStepError">NonReversibleStepError</a></li>
-<li><a title="mici.errors.ConvergenceError" href="#mici.errors.ConvergenceError">ConvergenceError</a></li>
-</ul>
-</dd>
-<dt id="mici.errors.NonReversibleStepError"><code class="flex name class">
-<span>class <span class="ident">NonReversibleStepError</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Error raised when integrator step fails reversibility check.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/errors.py#L8-L9" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class NonReversibleStepError(IntegratorError):
-    &#34;&#34;&#34;Error raised when integrator step fails reversibility check.&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
-<li>builtins.RuntimeError</li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="mici.errors.ConvergenceError"><code class="flex name class">
-<span>class <span class="ident">ConvergenceError</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Error raised when solver fails to converge within allowed iterations.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/errors.py#L12-L13" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class ConvergenceError(IntegratorError):
-    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
-<li>builtins.RuntimeError</li>
-<li>builtins.Exception</li>
-<li>builtins.BaseException</li>
-</ul>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
 <header>
 <a class="homelink" rel="home" title="mici docs home" href="index.html">
-<img src="../logo.png" alt="mici">
+<img width="400" src="../logo.png" alt="mici">
 </a>
 </header>
 <div class="toc">
@@ -136,19 +166,6 @@ class ConvergenceError(IntegratorError):
 <li><h3>Package</h3>
 <ul>
 <li><code><a title="mici" href="index.html">mici</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></code></h4>
-</li>
-<li>
-<h4><code><a title="mici.errors.NonReversibleStepError" href="#mici.errors.NonReversibleStepError">NonReversibleStepError</a></code></h4>
-</li>
-<li>
-<h4><code><a title="mici.errors.ConvergenceError" href="#mici.errors.ConvergenceError">ConvergenceError</a></code></h4>
-</li>
 </ul>
 </li>
 </ul>

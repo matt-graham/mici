@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.1" />
-<title>mici API documentation</title>
-<meta name="description" content="MCMC samplers based on simulating Hamiltonian dynamics on a manifold." />
+<title>mici.errors API documentation</title>
+<meta name="description" content="Exception types." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -17,110 +17,138 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>mici</code></h1>
+<h1 class="title">Package <code>mici.errors</code></h1>
 </header>
 <section id="section-intro">
-<p>MCMC samplers based on simulating Hamiltonian dynamics on a manifold.</p>
+<p>Exception types.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/__init__.py#L0-L13" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/errors.py#L0-L12" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python"># -*- coding: utf-8 -*-
-&#34;&#34;&#34; MCMC samplers based on simulating Hamiltonian dynamics on a manifold. &#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Exception types.&#34;&#34;&#34;
 
-__authors__ = &#39;Matt Graham&#39;
-__license__ = &#39;MIT&#39;
 
-import mici.integrators
-import mici.matrices
-import mici.samplers
-import mici.solvers
-import mici.states
-import mici.systems
-import mici.transitions
-import mici.utils</code></pre>
+class IntegratorError(RuntimeError):
+    &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;
+
+
+class NonReversibleStepError(IntegratorError):
+    &#34;&#34;&#34;Error raised when integrator step fails reversibility check.&#34;&#34;&#34;
+
+
+class ConvergenceError(IntegratorError):
+    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="mici.autodiff" href="autodiff.html">mici.autodiff</a></code></dt>
+<dt id="mici.errors.IntegratorError"><code class="flex name class">
+<span>class <span class="ident">IntegratorError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>Automatic differentation fallback for constructing derivative functions …</p></section>
+<section class="desc"><p>Error raised when integrator step fails.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/errors.py#L4-L5" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class IntegratorError(RuntimeError):
+    &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.errors.NonReversibleStepError" href="#mici.errors.NonReversibleStepError">NonReversibleStepError</a></li>
+<li><a title="mici.errors.ConvergenceError" href="#mici.errors.ConvergenceError">ConvergenceError</a></li>
+</ul>
 </dd>
-<dt><code class="name"><a title="mici.autograd_wrapper" href="autograd_wrapper.html">mici.autograd_wrapper</a></code></dt>
+<dt id="mici.errors.NonReversibleStepError"><code class="flex name class">
+<span>class <span class="ident">NonReversibleStepError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>Additional autograd differential operators.</p></section>
+<section class="desc"><p>Error raised when integrator step fails reversibility check.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/errors.py#L8-L9" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class NonReversibleStepError(IntegratorError):
+    &#34;&#34;&#34;Error raised when integrator step fails reversibility check.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
-<dt><code class="name"><a title="mici.errors" href="errors.html">mici.errors</a></code></dt>
+<dt id="mici.errors.ConvergenceError"><code class="flex name class">
+<span>class <span class="ident">ConvergenceError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
 <dd>
-<section class="desc"><p>Exception types.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.integrators" href="integrators.html">mici.integrators</a></code></dt>
-<dd>
-<section class="desc"><p>Symplectic integrators for simulation of Hamiltonian dynamics.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.matrices" href="matrices.html">mici.matrices</a></code></dt>
-<dd>
-<section class="desc"><p>Structured matrix classes implementing basic linear algebra operations.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.samplers" href="samplers.html">mici.samplers</a></code></dt>
-<dd>
-<section class="desc"><p>Monte Carlo sampler classes for peforming inference.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.solvers" href="solvers.html">mici.solvers</a></code></dt>
-<dd>
-<section class="desc"><p>Solvers for non-linear systems of equations for implicit integrators.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.states" href="states.html">mici.states</a></code></dt>
-<dd>
-<section class="desc"><p>Objects for recording state of a Markov chain.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.systems" href="systems.html">mici.systems</a></code></dt>
-<dd>
-<section class="desc"><p>Hamiltonian systems encapsulating energy functions and their derivatives.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.transitions" href="transitions.html">mici.transitions</a></code></dt>
-<dd>
-<section class="desc"><p>Markov chain transition operators.</p></section>
-</dd>
-<dt><code class="name"><a title="mici.utils" href="utils.html">mici.utils</a></code></dt>
-<dd>
-<section class="desc"><p>Utility functions and classes.</p></section>
+<section class="desc"><p>Error raised when solver fails to converge within allowed iterations.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/errors.py#L12-L13" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ConvergenceError(IntegratorError):
+    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
 </section>
 </article>
 <nav id="sidebar">
 <header>
 <a class="homelink" rel="home" title="mici docs home" href="index.html">
-<img src="../logo.png" alt="mici">
+<img width="400" src="../logo.png" alt="mici">
 </a>
 </header>
 <div class="toc">
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Modules</a></h3>
+<li><h3>Package</h3>
 <ul>
-<li><code><a title="mici.autodiff" href="autodiff.html">mici.autodiff</a></code></li>
-<li><code><a title="mici.autograd_wrapper" href="autograd_wrapper.html">mici.autograd_wrapper</a></code></li>
-<li><code><a title="mici.errors" href="errors.html">mici.errors</a></code></li>
-<li><code><a title="mici.integrators" href="integrators.html">mici.integrators</a></code></li>
-<li><code><a title="mici.matrices" href="matrices.html">mici.matrices</a></code></li>
-<li><code><a title="mici.samplers" href="samplers.html">mici.samplers</a></code></li>
-<li><code><a title="mici.solvers" href="solvers.html">mici.solvers</a></code></li>
-<li><code><a title="mici.states" href="states.html">mici.states</a></code></li>
-<li><code><a title="mici.systems" href="systems.html">mici.systems</a></code></li>
-<li><code><a title="mici.transitions" href="transitions.html">mici.transitions</a></code></li>
-<li><code><a title="mici.utils" href="utils.html">mici.utils</a></code></li>
+<li><code><a title="mici" href="index.html">mici</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.errors.NonReversibleStepError" href="#mici.errors.NonReversibleStepError">NonReversibleStepError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.errors.ConvergenceError" href="#mici.errors.ConvergenceError">ConvergenceError</a></code></h4>
+</li>
 </ul>
 </li>
 </ul>
