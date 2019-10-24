@@ -1,6 +1,7 @@
 """Objects for recording state of a Markov chain."""
 
 import copy
+from functools import wraps
 
 
 def cache_in_state(*depends_on):
@@ -16,6 +17,7 @@ def cache_in_state(*depends_on):
            changes.
     """
     def cache_in_state_decorator(method):
+        @wraps(method)
         def wrapper(self, state):
             key = (type(self).__name__ + '.' + method.__name__, id(self))
             if key not in state._cache:
@@ -40,17 +42,18 @@ def multi_cache_in_state(depends_on, vars, primary_index=0):
     differentation implementation of its gradient.
 
     Args:
-        depends_on: a list of strings defining which state variables the
-            computed values depend on e.g. ['pos', 'mom'], such that the cache
-            is correctly cleared when one of these parent dependency's value
-            changes.
-        vars: a list of strings defining the variables in the state cache dict
-            corresponding to the outputs of the wrapped function (method) in
-            the corresponding returned order.
-        primary_index: index of primary output of function (i.e. value to be
-            returned) in vars list / position in output of function.
+        depends_on (List[str]): A list of strings defining which state
+            variables the computed values depend on e.g. `['pos', 'mom']`, such
+            that the cache is correctly cleared when one of these parent
+            dependency's value changes.
+        vars (List[str]): A list of strings defining the variables in the state
+            cache dict corresponding to the outputs of the wrapped function
+            (method) in the corresponding returned order.
+        primary_index (int): Index of primary output of function (i.e. value to
+            be returned) in vars list / position in output of function.
     """
     def multi_cache_in_state_decorator(method):
+        @wraps(method)
         def wrapper(self, state):
             id_ = id(self)
             type_prefix = type(self).__name__ + '.'
@@ -128,8 +131,8 @@ class ChainState(object):
         """Create a deep copy of the state object.
 
         Returns:
-            A copy of the state object which can be updated without
-            affecting the original object's attributes.
+            state_copy (ChainState): A copy of the state object which can be
+                updated without affecting the original object's attributes.
         """
         return type(self)(
             _cache=self._cache.copy(), _dependencies=self._dependencies,
