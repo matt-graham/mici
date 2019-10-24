@@ -12,6 +12,7 @@
 <style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
 <body>
 <main>
@@ -24,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L0-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L0-L323" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Utility functions and classes.&#34;&#34;&#34;
 
@@ -52,7 +53,7 @@ try:
             tqdm.tqdm.write(msg)
 
     def setup_tqdm_logger():
-        &#34;&#34;&#34;Returns a logger which redirects log output to tqdm.write.&#34;&#34;&#34;
+        &#34;&#34;&#34;Returns a logger which redirects log output to `tqdm.write`.&#34;&#34;&#34;
         logger = logging.getLogger()
         handler = TqdmHandler()
         logger.addHandler(handler)
@@ -75,11 +76,11 @@ try:
         `sample_chains` call.
 
         Args:
-            traces (dict[str, list[array]]): Trace arrays, with one entry per
+            traces (Dict[str, List[array]]): Trace arrays, with one entry per
                 function in `trace_funcs` passed to sampler method. Each entry
                 consists of a list of arrays, one per chain, with the first
                 axes of the arrays corresponding to the sampling (draw) index.
-            chain_stats (dict[str, list[array]]): Chain integration transition
+            chain_stats (Dict[str, List[array]]): Chain integration transition
                 statistics as a dictionary with string keys describing the
                 statistics recorded and values corresponding to a list of
                 arrays with one array per chain and the first axis of the
@@ -89,7 +90,7 @@ try:
                 `sampling_stats` group in the returned `InferenceData` object.
 
         Returns:
-            arvix.InferenceData:
+            arviz.InferenceData:
                 An arviz data container with groups `posterior` and
                 &#39;sample_stats&#39;, both of instances of `xarray.Dataset`. The
                 `posterior` group corresponds to the chain variable traces
@@ -138,6 +139,12 @@ def get_valid_filename(string):
     or underscore (_).
 
     Based on https://stackoverflow.com/a/295146/4798943
+
+    Args:
+        string (str): String file name to process.
+
+    Returns:
+        str: Generated file name.
     &#34;&#34;&#34;
     return &#39;&#39;.join(c for c in string if (c.isalnum() or c in &#39;._- &#39;))
 
@@ -151,23 +158,12 @@ def get_size(obj, seen=None):
 
     Copyright (c) [2018] [Wissam Jarjoui]
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the &#34;Software&#34;),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
+    Args:
+        obj (object): Object to calculate size of.
+        seen (None or Set): Set of objects seen so far.
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED &#34;AS IS&#34;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
+    Returns:
+        int: Byte size of `obj`.
     &#34;&#34;&#34;
     size = sys.getsizeof(obj)
     if seen is None:
@@ -200,36 +196,11 @@ def get_size(obj, seen=None):
     return size
 
 
-def inherit_docstrings(cls):
-    &#34;&#34;&#34;Class decorator to inherit parent class docstrings if not specified.
-
-    Taken from https://stackoverflow.com/a/38601305/4798943.
-    &#34;&#34;&#34;
-    for name, func in vars(cls).items():
-        if isinstance(func, types.FunctionType) and not func.__doc__:
-            for parent in cls.__bases__:
-                parfunc = getattr(parent, name, None)
-                if parfunc and getattr(parfunc, &#39;__doc__&#39;, None):
-                    func.__doc__ = parfunc.__doc__
-                    break
-        elif isinstance(func, property) and not func.fget.__doc__:
-            for parent in cls.__bases__:
-                parprop = getattr(parent, name, None)
-                if parprop and getattr(parprop.fget, &#39;__doc__&#39;, None):
-                    newprop = property(fget=func.fget,
-                                       fset=func.fset,
-                                       fdel=func.fdel,
-                                       doc=parprop.fget.__doc__)
-                    setattr(cls, name, newprop)
-                    break
-
-    return cls
-
-
 LOG_2 = log(2.)
 
 
 def log1p_exp(val):
+    &#34;&#34;&#34;Numerically stable implementation of `log(1 + exp(val))`.&#34;&#34;&#34;
     if val &gt; 0.:
         return val + log1p(exp(-val))
     else:
@@ -237,6 +208,7 @@ def log1p_exp(val):
 
 
 def log1m_exp(val):
+    &#34;&#34;&#34;Numerically stable implementation of `log(1 - exp(val))`.&#34;&#34;&#34;
     if val &gt;= 0.:
         return nan
     elif val &gt; LOG_2:
@@ -246,6 +218,7 @@ def log1m_exp(val):
 
 
 def log_sum_exp(val1, val2):
+    &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) + exp(val2))`.&#34;&#34;&#34;
     if val1 &gt; val2:
         return val1 + log1p_exp(val2 - val1)
     else:
@@ -253,6 +226,7 @@ def log_sum_exp(val1, val2):
 
 
 def log_diff_exp(val1, val2):
+    &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) - exp(val2))`.&#34;&#34;&#34;
     if val1 &lt; val2:
         return nan
     elif val1 == val2:
@@ -390,14 +364,14 @@ class LogRepFloat(object):
 <span>def <span class="ident">setup_tqdm_logger</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Returns a logger which redirects log output to tqdm.write.</p></section>
+<section class="desc"><p>Returns a logger which redirects log output to <code>tqdm.write</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L26-L31" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L26-L31" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def setup_tqdm_logger():
-    &#34;&#34;&#34;Returns a logger which redirects log output to tqdm.write.&#34;&#34;&#34;
+    &#34;&#34;&#34;Returns a logger which redirects log output to `tqdm.write`.&#34;&#34;&#34;
     logger = logging.getLogger()
     handler = TqdmHandler()
     logger.addHandler(handler)
@@ -414,12 +388,12 @@ multiple-chain sampler output i.e. the returned values from a
 <code>sample_chains</code> call.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>traces</code></strong> :&ensp;<code>dict</code>[<code>str</code>, <code>list</code>[<code>array</code>]]</dt>
+<dt><strong><code>traces</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
 <dd>Trace arrays, with one entry per
 function in <code>trace_funcs</code> passed to sampler method. Each entry
 consists of a list of arrays, one per chain, with the first
 axes of the arrays corresponding to the sampling (draw) index.</dd>
-<dt><strong><code>chain_stats</code></strong> :&ensp;<code>dict</code>[<code>str</code>, <code>list</code>[<code>array</code>]]</dt>
+<dt><strong><code>chain_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
 <dd>Chain integration transition
 statistics as a dictionary with string keys describing the
 statistics recorded and values corresponding to a list of
@@ -432,7 +406,7 @@ arrays corresponding to the sampling index.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>arvix.InferenceData</code>:</dt>
+<dt><code>arviz.InferenceData</code>:</dt>
 <dd>An arviz data container with groups <code>posterior</code> and
 'sample_stats', both of instances of <code>xarray.Dataset</code>. The
 <code>posterior</code> group corresponds to the chain variable traces
@@ -445,7 +419,7 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L41-L100" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L41-L100" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def convert_to_arviz_inference_data(
         traces, chain_stats, sample_stats_key=None):
@@ -456,11 +430,11 @@ argument should be specified to indicate which to use).</dd>
     `sample_chains` call.
 
     Args:
-        traces (dict[str, list[array]]): Trace arrays, with one entry per
+        traces (Dict[str, List[array]]): Trace arrays, with one entry per
             function in `trace_funcs` passed to sampler method. Each entry
             consists of a list of arrays, one per chain, with the first
             axes of the arrays corresponding to the sampling (draw) index.
-        chain_stats (dict[str, list[array]]): Chain integration transition
+        chain_stats (Dict[str, List[array]]): Chain integration transition
             statistics as a dictionary with string keys describing the
             statistics recorded and values corresponding to a list of
             arrays with one array per chain and the first axis of the
@@ -470,7 +444,7 @@ argument should be specified to indicate which to use).</dd>
             `sampling_stats` group in the returned `InferenceData` object.
 
     Returns:
-        arvix.InferenceData:
+        arviz.InferenceData:
             An arviz data container with groups `posterior` and
             &#39;sample_stats&#39;, both of instances of `xarray.Dataset`. The
             `posterior` group corresponds to the chain variable traces
@@ -516,11 +490,21 @@ argument should be specified to indicate which to use).</dd>
 <section class="desc"><p>Generate a valid filename from a string.</p>
 <p>Strips all characters which are not alphanumeric or a period (.), dash (-)
 or underscore (_).</p>
-<p>Based on <a href="https://stackoverflow.com/a/295146/4798943">https://stackoverflow.com/a/295146/4798943</a></p></section>
+<p>Based on <a href="https://stackoverflow.com/a/295146/4798943">https://stackoverflow.com/a/295146/4798943</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
+<dd>String file name to process.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>str</code></strong></dt>
+<dd>Generated file name.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L106-L114" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L106-L120" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_valid_filename(string):
     &#34;&#34;&#34;Generate a valid filename from a string.
@@ -529,6 +513,12 @@ or underscore (_).</p>
     or underscore (_).
 
     Based on https://stackoverflow.com/a/295146/4798943
+
+    Args:
+        string (str): String file name to process.
+
+    Returns:
+        str: Generated file name.
     &#34;&#34;&#34;
     return &#39;&#39;.join(c for c in string if (c.isalnum() or c in &#39;._- &#39;))</code></pre>
 </details>
@@ -541,25 +531,22 @@ or underscore (_).</p>
 <p>Original source: <a href="https://github.com/bosswissam/pysize">https://github.com/bosswissam/pysize</a></p>
 <p>MIT License</p>
 <p>Copyright (c) [2018] [Wissam Jarjoui]</p>
-<p>Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:</p>
-<p>The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.</p>
-<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.</p></section>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>obj</code></strong> :&ensp;<code>object</code></dt>
+<dd>Object to calculate size of.</dd>
+<dt><strong><code>seen</code></strong> :&ensp;<code>None</code> or <code>Set</code></dt>
+<dd>Set of objects seen so far.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>int</code></strong></dt>
+<dd>Byte size of <code>obj</code>.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L117-L172" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L123-L167" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_size(obj, seen=None):
     &#34;&#34;&#34;Recursively finds size of objects in bytes.
@@ -570,23 +557,12 @@ DEALINGS IN THE SOFTWARE.</p></section>
 
     Copyright (c) [2018] [Wissam Jarjoui]
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the &#34;Software&#34;),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
+    Args:
+        obj (object): Object to calculate size of.
+        seen (None or Set): Set of objects seen so far.
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED &#34;AS IS&#34;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
+    Returns:
+        int: Byte size of `obj`.
     &#34;&#34;&#34;
     size = sys.getsizeof(obj)
     if seen is None:
@@ -619,54 +595,18 @@ DEALINGS IN THE SOFTWARE.</p></section>
     return size</code></pre>
 </details>
 </dd>
-<dt id="mici.utils.inherit_docstrings"><code class="name flex">
-<span>def <span class="ident">inherit_docstrings</span></span>(<span>cls)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Class decorator to inherit parent class docstrings if not specified.</p>
-<p>Taken from <a href="https://stackoverflow.com/a/38601305/4798943.">https://stackoverflow.com/a/38601305/4798943.</a></p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L175-L198" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def inherit_docstrings(cls):
-    &#34;&#34;&#34;Class decorator to inherit parent class docstrings if not specified.
-
-    Taken from https://stackoverflow.com/a/38601305/4798943.
-    &#34;&#34;&#34;
-    for name, func in vars(cls).items():
-        if isinstance(func, types.FunctionType) and not func.__doc__:
-            for parent in cls.__bases__:
-                parfunc = getattr(parent, name, None)
-                if parfunc and getattr(parfunc, &#39;__doc__&#39;, None):
-                    func.__doc__ = parfunc.__doc__
-                    break
-        elif isinstance(func, property) and not func.fget.__doc__:
-            for parent in cls.__bases__:
-                parprop = getattr(parent, name, None)
-                if parprop and getattr(parprop.fget, &#39;__doc__&#39;, None):
-                    newprop = property(fget=func.fget,
-                                       fset=func.fset,
-                                       fdel=func.fdel,
-                                       doc=parprop.fget.__doc__)
-                    setattr(cls, name, newprop)
-                    break
-
-    return cls</code></pre>
-</details>
-</dd>
 <dt id="mici.utils.log1p_exp"><code class="name flex">
 <span>def <span class="ident">log1p_exp</span></span>(<span>val)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Numerically stable implementation of <code>log(1 + exp(val))</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L204-L208" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L173-L178" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log1p_exp(val):
+    &#34;&#34;&#34;Numerically stable implementation of `log(1 + exp(val))`.&#34;&#34;&#34;
     if val &gt; 0.:
         return val + log1p(exp(-val))
     else:
@@ -677,13 +617,14 @@ DEALINGS IN THE SOFTWARE.</p></section>
 <span>def <span class="ident">log1m_exp</span></span>(<span>val)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Numerically stable implementation of <code>log(1 - exp(val))</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L211-L217" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L181-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log1m_exp(val):
+    &#34;&#34;&#34;Numerically stable implementation of `log(1 - exp(val))`.&#34;&#34;&#34;
     if val &gt;= 0.:
         return nan
     elif val &gt; LOG_2:
@@ -696,13 +637,14 @@ DEALINGS IN THE SOFTWARE.</p></section>
 <span>def <span class="ident">log_sum_exp</span></span>(<span>val1, val2)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Numerically stable implementation of <code>log(exp(val1) + exp(val2))</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L220-L224" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L191-L196" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log_sum_exp(val1, val2):
+    &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) + exp(val2))`.&#34;&#34;&#34;
     if val1 &gt; val2:
         return val1 + log1p_exp(val2 - val1)
     else:
@@ -713,13 +655,14 @@ DEALINGS IN THE SOFTWARE.</p></section>
 <span>def <span class="ident">log_diff_exp</span></span>(<span>val1, val2)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Numerically stable implementation of <code>log(exp(val1) - exp(val2))</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L227-L233" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L199-L206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log_diff_exp(val1, val2):
+    &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) - exp(val2))`.&#34;&#34;&#34;
     if val1 &lt; val2:
         return nan
     elif val1 == val2:
@@ -743,7 +686,7 @@ DEALINGS IN THE SOFTWARE.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L16-L24" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L16-L24" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TqdmHandler(logging.StreamHandler):
     &#34;&#34;&#34;Simple log handler which uses tqdm write method.&#34;&#34;&#34;
@@ -779,7 +722,7 @@ output to the stream.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L22-L24" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L22-L24" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def emit(self, record):
     msg = self.format(record)
@@ -799,7 +742,7 @@ numerically stable implementations where possible.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L236-L351" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L209-L324" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LogRepFloat(object):
     &#34;&#34;&#34;Numerically stable logarithmic representation of positive float values.
@@ -926,7 +869,7 @@ numerically stable implementations where possible.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/utils.py#L259-L264" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/utils.py#L232-L237" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def val(self):
@@ -962,7 +905,6 @@ def val(self):
 <li><code><a title="mici.utils.convert_to_arviz_inference_data" href="#mici.utils.convert_to_arviz_inference_data">convert_to_arviz_inference_data</a></code></li>
 <li><code><a title="mici.utils.get_valid_filename" href="#mici.utils.get_valid_filename">get_valid_filename</a></code></li>
 <li><code><a title="mici.utils.get_size" href="#mici.utils.get_size">get_size</a></code></li>
-<li><code><a title="mici.utils.inherit_docstrings" href="#mici.utils.inherit_docstrings">inherit_docstrings</a></code></li>
 <li><code><a title="mici.utils.log1p_exp" href="#mici.utils.log1p_exp">log1p_exp</a></code></li>
 <li><code><a title="mici.utils.log1m_exp" href="#mici.utils.log1m_exp">log1m_exp</a></code></li>
 <li><code><a title="mici.utils.log_sum_exp" href="#mici.utils.log_sum_exp">log_sum_exp</a></code></li>

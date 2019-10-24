@@ -12,6 +12,7 @@
 <style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
 <body>
 <main>
@@ -24,10 +25,11 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L0-L550" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L0-L645" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
 
+from abc import ABC, abstractmethod
 import logging
 import numpy as np
 from mici.states import cache_in_state, multi_cache_in_state
@@ -39,20 +41,21 @@ from mici.matrices import (
 from mici.autodiff import autodiff_fallback
 
 
-class _HamiltonianSystem(object):
-    &#34;&#34;&#34;Base class for Hamiltonian systems.
+class System(ABC):
+    r&#34;&#34;&#34;Base class for Hamiltonian systems.
 
-    The Hamiltonian function `h` is assumed to have the general form
+    The Hamiltonian function \(h\) is assumed to have the general form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components. The exact
-    Hamiltonian flow for the `h1` component can be computed however depending
-    on the form of `h2` the corresponding Hamiltonian flow may or may not be
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) Hamiltonian component functions. The exact
+    Hamiltonian flow for the \(h_1\) component can be always be computed as it
+    depends only on the position variable however depending on the form of
+    \(h_2\) the corresponding exact Hamiltonian flow may or may not be
     simulable.
 
-    By default `h1` is assumed to correspond to the negative logarithm of an
+    By default \(h_1\) is assumed to correspond to the negative logarithm of an
     unnormalised density on the position variables with respect to the Lebesgue
     measure, with the corresponding distribution on the position space being
     the target distribution it is wished to draw approximate samples from.
@@ -61,24 +64,23 @@ class _HamiltonianSystem(object):
     def __init__(self, neg_log_dens, grad_neg_log_dens=None):
         &#34;&#34;&#34;
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the Lebesgue
-                measure, with the corresponding distribution on the position
-                space being the target distribution it is wished to draw
-                approximate samples from.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to the position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) an automatic differentiation fallback
-                will be used to attempt to construct the derivative of
-                `neg_log_dens` automatically.
-
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
@@ -87,63 +89,157 @@ class _HamiltonianSystem(object):
 
     @cache_in_state(&#39;pos&#39;)
     def neg_log_dens(self, state):
+        &#34;&#34;&#34;Negative logarithm of unnormalised density of target distribution.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of computed negative log density.
+        &#34;&#34;&#34;
         return self._neg_log_dens(state.pos)
 
     @multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
     def grad_neg_log_dens(self, state):
+        &#34;&#34;&#34;Derivative of negative log density with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `neg_log_dens(state)` derivative with respect to
+                `state.pos`.
+        &#34;&#34;&#34;
         return self._grad_neg_log_dens(state.pos)
 
     def h1(self, state):
+        &#34;&#34;&#34;Hamiltonian component depending only on position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h1` Hamiltonian component.
+        &#34;&#34;&#34;
         return self.neg_log_dens(state)
 
     def dh1_dpos(self, state):
+        &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of computed `h1` derivative.
+        &#34;&#34;&#34;
         return self.grad_neg_log_dens(state)
 
     def h1_flow(self, state, dt):
+        &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
+
+        `state` argument is modified in place.
+
+        Args:
+            state (mici.states.ChainState): State to start flow at.
+            dt (float): Time interval to simulate flow for.
+        &#34;&#34;&#34;
         state.mom -= dt * self.dh1_dpos(state)
 
+    @abstractmethod
     def h2(self, state):
-        raise NotImplementedError()
+        &#34;&#34;&#34;Hamiltonian component depending on momentum and optionally position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h2` Hamiltonian component.
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def dh2_dmom(self, state):
+        &#34;&#34;&#34;Derivative of `h2` Hamiltonian component with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h2(state)` derivative with respect to `state.pos`.
+        &#34;&#34;&#34;
 
     def h(self, state):
+        &#34;&#34;&#34;Hamiltonian function for system.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of Hamiltonian.
+        &#34;&#34;&#34;
         return self.h1(state) + self.h2(state)
 
     def dh_dpos(self, state):
+        &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.pos`.
+        &#34;&#34;&#34;
         if hasattr(self, &#39;dh2_dpos&#39;):
             return self.dh1_dpos(state) + self.dh2_dpos(state)
         else:
             return self.dh1_dpos(state)
 
     def dh_dmom(self, state):
+        &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.mom`.
+        &#34;&#34;&#34;
         return self.dh2_dmom(state)
 
+    @abstractmethod
     def sample_momentum(self, state, rng):
-        raise NotImplementedError()
+        &#34;&#34;&#34;
+        Sample a momentum from its conditional distribution given a position.
+
+        Args:
+            state (mici.states.ChainState): State defining position to
+               condition on.
+
+        Returns:
+            mom (array): Sampled momentum.
+        &#34;&#34;&#34;
 
 
-class EuclideanMetricSystem(_HamiltonianSystem):
-    &#34;&#34;&#34;Hamiltonian system with fixed covariance Gaussian-distributed momenta.
+class EuclideanMetricSystem(System):
+    r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor),
-    so that the `h2` Hamiltonian component is
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\), so that the
+    \(h_2\) Hamiltonian component is
 
-        h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor.
+    where \(q\) and \(p\) are the position and momentum variables respectively.
     &#34;&#34;&#34;
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         &#34;&#34;&#34;
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the Lebesgue
-                measure, with the corresponding distribution on the position
-                space being the target distribution it is wished to draw
-                approximate samples from.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
             metric (None or array or Matrix): Matrix object corresponding to
                 matrix representation of metric on position space and
                 covariance of Gaussian marginal distribution on momentum
@@ -153,17 +249,17 @@ class EuclideanMetricSystem(_HamiltonianSystem):
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to the position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) it will be attempted to use automatic
-                differentiation to construct the derivative of `neg_log_dens`
-                automatically.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -423,7 +519,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
             mhp_constr=mhp_constr)
 
 
-class RiemannianMetricSystem(_HamiltonianSystem):
+class RiemannianMetricSystem(System):
     &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
 
     The momentum variables are assumed to have a zero-mean Gaussian conditional
@@ -588,29 +684,621 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="mici.systems.System"><code class="flex name class">
+<span>class <span class="ident">System</span></span>
+<span>(</span><span>neg_log_dens, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for Hamiltonian systems.</p>
+<p>The Hamiltonian function <span><span class="MathJax_Preview">h</span><script type="math/tex">h</script></span> is assumed to have the general form</p>
+<p><span><span class="MathJax_Preview"> h(q, p) = h_1(q) + h_2(q, p) </span><script type="math/tex; mode=display"> h(q, p) = h_1(q) + h_2(q, p) </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively,
+and <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> and <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> Hamiltonian component functions. The exact
+Hamiltonian flow for the <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> component can be always be computed as it
+depends only on the position variable however depending on the form of
+<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> the corresponding exact Hamiltonian flow may or may not be
+simulable.</p>
+<p>By default <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> is assumed to correspond to the negative logarithm of an
+unnormalised density on the position variables with respect to the Lebesgue
+measure, with the corresponding distribution on the position space being
+the target distribution it is wished to draw approximate samples from.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Function which given a
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L15-L188" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class System(ABC):
+    r&#34;&#34;&#34;Base class for Hamiltonian systems.
+
+    The Hamiltonian function \(h\) is assumed to have the general form
+
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
+
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) Hamiltonian component functions. The exact
+    Hamiltonian flow for the \(h_1\) component can be always be computed as it
+    depends only on the position variable however depending on the form of
+    \(h_2\) the corresponding exact Hamiltonian flow may or may not be
+    simulable.
+
+    By default \(h_1\) is assumed to correspond to the negative logarithm of an
+    unnormalised density on the position variables with respect to the Lebesgue
+    measure, with the corresponding distribution on the position space being
+    the target distribution it is wished to draw approximate samples from.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
+        &#34;&#34;&#34;
+        self._neg_log_dens = neg_log_dens
+        self._grad_neg_log_dens = autodiff_fallback(
+            grad_neg_log_dens, neg_log_dens,
+            &#39;grad_and_value&#39;, &#39;grad_neg_log_dens&#39;)
+
+    @cache_in_state(&#39;pos&#39;)
+    def neg_log_dens(self, state):
+        &#34;&#34;&#34;Negative logarithm of unnormalised density of target distribution.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of computed negative log density.
+        &#34;&#34;&#34;
+        return self._neg_log_dens(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def grad_neg_log_dens(self, state):
+        &#34;&#34;&#34;Derivative of negative log density with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `neg_log_dens(state)` derivative with respect to
+                `state.pos`.
+        &#34;&#34;&#34;
+        return self._grad_neg_log_dens(state.pos)
+
+    def h1(self, state):
+        &#34;&#34;&#34;Hamiltonian component depending only on position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h1` Hamiltonian component.
+        &#34;&#34;&#34;
+        return self.neg_log_dens(state)
+
+    def dh1_dpos(self, state):
+        &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of computed `h1` derivative.
+        &#34;&#34;&#34;
+        return self.grad_neg_log_dens(state)
+
+    def h1_flow(self, state, dt):
+        &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
+
+        `state` argument is modified in place.
+
+        Args:
+            state (mici.states.ChainState): State to start flow at.
+            dt (float): Time interval to simulate flow for.
+        &#34;&#34;&#34;
+        state.mom -= dt * self.dh1_dpos(state)
+
+    @abstractmethod
+    def h2(self, state):
+        &#34;&#34;&#34;Hamiltonian component depending on momentum and optionally position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h2` Hamiltonian component.
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def dh2_dmom(self, state):
+        &#34;&#34;&#34;Derivative of `h2` Hamiltonian component with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h2(state)` derivative with respect to `state.pos`.
+        &#34;&#34;&#34;
+
+    def h(self, state):
+        &#34;&#34;&#34;Hamiltonian function for system.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of Hamiltonian.
+        &#34;&#34;&#34;
+        return self.h1(state) + self.h2(state)
+
+    def dh_dpos(self, state):
+        &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.pos`.
+        &#34;&#34;&#34;
+        if hasattr(self, &#39;dh2_dpos&#39;):
+            return self.dh1_dpos(state) + self.dh2_dpos(state)
+        else:
+            return self.dh1_dpos(state)
+
+    def dh_dmom(self, state):
+        &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.mom`.
+        &#34;&#34;&#34;
+        return self.dh2_dmom(state)
+
+    @abstractmethod
+    def sample_momentum(self, state, rng):
+        &#34;&#34;&#34;
+        Sample a momentum from its conditional distribution given a position.
+
+        Args:
+            state (mici.states.ChainState): State defining position to
+               condition on.
+
+        Returns:
+            mom (array): Sampled momentum.
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.System.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Negative logarithm of unnormalised density of target distribution.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>Value of computed negative log density.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L61-L71" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def neg_log_dens(self, state):
+    &#34;&#34;&#34;Negative logarithm of unnormalised density of target distribution.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        float: Value of computed negative log density.
+    &#34;&#34;&#34;
+    return self._neg_log_dens(state.pos)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of negative log density with respect to position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of <code>neg_log_dens(state)</code> derivative with respect to
+<code>state.pos</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L73-L84" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+def grad_neg_log_dens(self, state):
+    &#34;&#34;&#34;Derivative of negative log density with respect to position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of `neg_log_dens(state)` derivative with respect to
+            `state.pos`.
+    &#34;&#34;&#34;
+    return self._grad_neg_log_dens(state.pos)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Hamiltonian component depending only on position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>Value of <code>h1</code> Hamiltonian component.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L86-L95" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h1(self, state):
+    &#34;&#34;&#34;Hamiltonian component depending only on position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        float: Value of `h1` Hamiltonian component.
+    &#34;&#34;&#34;
+    return self.neg_log_dens(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of computed <code>h1</code> derivative.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L97-L106" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh1_dpos(self, state):
+    &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of computed `h1` derivative.
+    &#34;&#34;&#34;
+    return self.grad_neg_log_dens(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component.</p>
+<p><code>state</code> argument is modified in place.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to start flow at.</dd>
+<dt><strong><code>dt</code></strong> :&ensp;<code>float</code></dt>
+<dd>Time interval to simulate flow for.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L108-L117" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h1_flow(self, state, dt):
+    &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
+
+    `state` argument is modified in place.
+
+    Args:
+        state (mici.states.ChainState): State to start flow at.
+        dt (float): Time interval to simulate flow for.
+    &#34;&#34;&#34;
+    state.mom -= dt * self.dh1_dpos(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Hamiltonian component depending on momentum and optionally position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>Value of <code>h2</code> Hamiltonian component.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L119-L128" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def h2(self, state):
+    &#34;&#34;&#34;Hamiltonian component depending on momentum and optionally position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        float: Value of `h2` Hamiltonian component.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of <code>h2(state)</code> derivative with respect to <code>state.pos</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L130-L139" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def dh2_dmom(self, state):
+    &#34;&#34;&#34;Derivative of `h2` Hamiltonian component with respect to momentum.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of `h2(state)` derivative with respect to `state.pos`.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Hamiltonian function for system.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>Value of Hamiltonian.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L141-L150" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h(self, state):
+    &#34;&#34;&#34;Hamiltonian function for system.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        float: Value of Hamiltonian.
+    &#34;&#34;&#34;
+    return self.h1(state) + self.h2(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of Hamiltonian with respect to position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of <code>h(state)</code> derivative with respect to <code>state.pos</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L152-L164" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh_dpos(self, state):
+    &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of `h(state)` derivative with respect to `state.pos`.
+    &#34;&#34;&#34;
+    if hasattr(self, &#39;dh2_dpos&#39;):
+        return self.dh1_dpos(state) + self.dh2_dpos(state)
+    else:
+        return self.dh1_dpos(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of Hamiltonian with respect to momentum.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of <code>h(state)</code> derivative with respect to <code>state.mom</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L166-L175" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh_dmom(self, state):
+    &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of `h(state)` derivative with respect to `state.mom`.
+    &#34;&#34;&#34;
+    return self.dh2_dmom(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.System.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a momentum from its conditional distribution given a position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State defining position to
+condition on.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>mom</code></strong> :&ensp;<code>array</code></dt>
+<dd>Sampled momentum.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L177-L188" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def sample_momentum(self, state, rng):
+    &#34;&#34;&#34;
+    Sample a momentum from its conditional distribution given a position.
+
+    Args:
+        state (mici.states.ChainState): State defining position to
+           condition on.
+
+    Returns:
+        mom (array): Sampled momentum.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="mici.systems.EuclideanMetricSystem"><code class="flex name class">
 <span>class <span class="ident">EuclideanMetricSystem</span></span>
 <span>(</span><span>neg_log_dens, metric=None, grad_neg_log_dens=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Hamiltonian system with fixed covariance Gaussian-distributed momenta.</p>
-<p>The momentum variables are taken to be independent of the position
-variables and with a zero-mean Gaussian marginal distribution with
-covariance specified by a fixed positive-definite matrix (metric tensor),
-so that the <code>h2</code> Hamiltonian component is</p>
-<pre><code>h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>inv(metric)</code> is the matrix inverse of the metric tensor.</p>
+<section class="desc"><p>Hamiltonian system with a Euclidean metric on the position space.</p>
+<p>Here Euclidean metric is defined to mean a metric with a fixed positive
+definite matrix representation <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>. The momentum variables are taken to
+be independent of the position variables and with a zero-mean Gaussian
+marginal distribution with covariance specified by <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>, so that the
+<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T M^{-1} p </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Function which given a
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
 <dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
 <dd>Matrix object corresponding to
 matrix representation of metric on position space and
@@ -621,47 +1309,47 @@ specify a metric with diagonal matrix representation and the
 array to the matrix diagonal. If a 2D array is passed then this
 is assumed to specify a metric with a dense positive definite
 matrix representation specified by the array.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) it will be attempted to use automatic
-differentiation to construct the derivative of <code>neg_log_dens</code>
-automatically.</dd>
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L96-L170" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L191-L265" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class EuclideanMetricSystem(_HamiltonianSystem):
-    &#34;&#34;&#34;Hamiltonian system with fixed covariance Gaussian-distributed momenta.
+<pre><code class="python">class EuclideanMetricSystem(System):
+    r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor),
-    so that the `h2` Hamiltonian component is
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\), so that the
+    \(h_2\) Hamiltonian component is
 
-        h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor.
+    where \(q\) and \(p\) are the position and momentum variables respectively.
     &#34;&#34;&#34;
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         &#34;&#34;&#34;
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the Lebesgue
-                measure, with the corresponding distribution on the position
-                space being the target distribution it is wished to draw
-                approximate samples from.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
             metric (None or array or Matrix): Matrix object corresponding to
                 matrix representation of metric on position space and
                 covariance of Gaussian marginal distribution on momentum
@@ -671,17 +1359,17 @@ automatically.</dd>
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to the position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) it will be attempted to use automatic
-                differentiation to construct the derivative of `neg_log_dens`
-                automatically.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -717,7 +1405,8 @@ automatically.</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -730,40 +1419,38 @@ automatically.</dd>
 <span>def <span class="ident">h2</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L250-L252" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+def h2(self, state):
+    return 0.5 * state.mom @ self.metric.inv @ state.mom</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.EuclideanMetricSystem.dh2_dmom"><code class="name flex">
 <span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L254-L256" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+def dh2_dmom(self, state):
+    return self.metric.inv @ state.mom</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.EuclideanMetricSystem.h2_flow"><code class="name flex">
@@ -774,7 +1461,7 @@ automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L163-L164" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L258-L259" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     state.pos += dt * self.dh2_dmom(state)</code></pre>
@@ -788,7 +1475,7 @@ automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L166-L167" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L261-L262" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])</code></pre>
@@ -798,15 +1485,99 @@ automatically.</dd>
 <span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.sample_momentum" href="#mici.systems.System.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L169-L170" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L264-L265" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
 </details>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.neg_log_dens" href="#mici.systems.System.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.grad_neg_log_dens" href="#mici.systems.System.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h1" href="#mici.systems.System.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh1_dpos" href="#mici.systems.System.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h1_flow" href="#mici.systems.System.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h" href="#mici.systems.System.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh_dpos" href="#mici.systems.System.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh_dmom" href="#mici.systems.System.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
 </dl>
 </dd>
@@ -867,7 +1638,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L173-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L268-L354" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
@@ -960,7 +1731,8 @@ automatically if available.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -972,11 +1744,15 @@ automatically if available.</dd>
 <span>def <span class="ident">h2</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L228-L230" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L323-L325" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return (0.5 * state.pos @ state.pos +
@@ -987,20 +1763,19 @@ automatically if available.</dd>
 <span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L327-L329" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+def dh2_dmom(self, state):
+    return self.metric.inv @ state.mom</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_dpos"><code class="name flex">
@@ -1011,16 +1786,11 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L331-L333" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+def dh2_dpos(self, state):
+    return state.pos</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="name flex">
@@ -1031,7 +1801,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L240-L250" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L335-L345" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1054,7 +1824,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L252-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L347-L354" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1065,6 +1835,96 @@ automatically if available.</dd>
         EigendecomposedSymmetricMatrix(
             self.metric.eigvec, cos_omega_dt))</code></pre>
 </details>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.sample_momentum" href="#mici.systems.EuclideanMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.neg_log_dens" href="#mici.systems.EuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.EuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1" href="#mici.systems.EuclideanMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh1_dpos" href="#mici.systems.EuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1_flow" href="#mici.systems.EuclideanMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h" href="#mici.systems.EuclideanMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dpos" href="#mici.systems.EuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dmom" href="#mici.systems.EuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
 </dl>
 </dd>
@@ -1085,13 +1945,13 @@ due to the requirment that velocity (momentum pre-multiplied by inverse
 metric) is always tangential to the constraint manifold.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Function which given a
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
 <dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
 <dd>Matrix object corresponding to
 matrix representation of metric on position space and
@@ -1102,23 +1962,23 @@ specify a metric with diagonal matrix representation and the
 array to the matrix diagonal. If a 2D array is passed then this
 is assumed to specify a metric with a dense positive definite
 matrix representation specified by the array.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) it will be attempted to use automatic
-differentiation to construct the derivative of <code>neg_log_dens</code>
-automatically.</dd>
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L339-L382" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L434-L477" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
@@ -1169,7 +2029,8 @@ automatically.</dd>
 <ul class="hlist">
 <li>mici.systems._ConstrainedEuclideanMetricSystem</li>
 <li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1185,25 +2046,12 @@ automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L54-L70" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L459-L462" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    id_ = id(self)
-    type_prefix = type(self).__name__ + &#39;.&#39;
-    prim_key = (type_prefix + vars[primary_index], id_)
-    keys = [(type_prefix + v, id_) for v in vars]
-    for i, key in enumerate(keys):
-        if key not in state._cache:
-            for dep in depends_on:
-                state._dependencies[dep].add(key)
-    if prim_key not in state._cache or state._cache[prim_key] is None:
-        vals = method(self, state)
-        if isinstance(vals, tuple):
-            for k, v in zip(keys, vals):
-                state._cache[k] = v
-        else:
-            state._cache[prim_key] = vals
-    return state._cache[prim_key]</code></pre>
+<pre><code class="python">@multi_cache_in_state(
+    [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
+def mhp_constr(self, state):
+    return self._mhp_constr(state.pos)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><code class="name flex">
@@ -1214,7 +2062,7 @@ automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L369-L377" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L464-L472" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
         self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
@@ -1235,17 +2083,123 @@ automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L474-L477" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def grad_log_det_sqrt_gram(self, state):
+    return self.mhp_constr(state)(
+        self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
 </details>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.sample_momentum" href="#mici.systems.EuclideanMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.neg_log_dens" href="#mici.systems.EuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.EuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1" href="#mici.systems.EuclideanMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh1_dpos" href="#mici.systems.EuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1_flow" href="#mici.systems.EuclideanMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h" href="#mici.systems.EuclideanMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dpos" href="#mici.systems.EuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dmom" href="#mici.systems.EuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
 </dd>
 </dl>
 </dd>
@@ -1306,7 +2260,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L385-L395" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L480-L490" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
@@ -1326,8 +2280,122 @@ automatically if available.</dd>
 <li><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></li>
 <li>mici.systems._ConstrainedEuclideanMetricSystem</li>
 <li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.h2" href="#mici.systems.GaussianEuclideanMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.sample_momentum" href="#mici.systems.GaussianEuclideanMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.neg_log_dens" href="#mici.systems.GaussianEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.GaussianEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.h1" href="#mici.systems.GaussianEuclideanMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.dh1_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.h1_flow" href="#mici.systems.GaussianEuclideanMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.h" href="#mici.systems.GaussianEuclideanMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.dh_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code>.<code><a title="mici.systems.GaussianEuclideanMetricSystem.dh_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+</dl>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem"><code class="flex name class">
 <span>class <span class="ident">RiemannianMetricSystem</span></span>
@@ -1350,32 +2418,32 @@ Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L398-L466" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L493-L561" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class RiemannianMetricSystem(_HamiltonianSystem):
+<pre><code class="python">class RiemannianMetricSystem(System):
     &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
 
     The momentum variables are assumed to have a zero-mean Gaussian conditional
@@ -1447,7 +2515,8 @@ will be used to attempt to construct the derivative of
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -1467,16 +2536,11 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L521-L523" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def metric_func(self, state):
+    return self._metric_func(state.pos)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.vjp_metric_func"><code class="name flex">
@@ -1487,25 +2551,11 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L54-L70" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L525-L527" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    id_ = id(self)
-    type_prefix = type(self).__name__ + &#39;.&#39;
-    prim_key = (type_prefix + vars[primary_index], id_)
-    keys = [(type_prefix + v, id_) for v in vars]
-    for i, key in enumerate(keys):
-        if key not in state._cache:
-            for dep in depends_on:
-                state._dependencies[dep].add(key)
-    if prim_key not in state._cache or state._cache[prim_key] is None:
-        vals = method(self, state)
-        if isinstance(vals, tuple):
-            for k, v in zip(keys, vals):
-                state._cache[k] = v
-        else:
-            state._cache[prim_key] = vals
-    return state._cache[prim_key]</code></pre>
+<pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
+def vjp_metric_func(self, state):
+    return self._vjp_metric_func(state.pos)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.metric"><code class="name flex">
@@ -1516,27 +2566,27 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L19-L26" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L529-L532" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
-    if key not in state._cache:
-        for dep in depends_on:
-            state._dependencies[dep].add(key)
-    if key not in state._cache or state._cache[key] is None:
-        state._cache[key] = method(self, state)
-    return state._cache[key]</code></pre>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def metric(self, state):
+    return self._metric_matrix_class(
+        self.metric_func(state), **self._metric_kwargs)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.h"><code class="name flex">
 <span>def <span class="ident">h</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h" href="#mici.systems.System.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L439-L440" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L534-L535" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     return self.h1(state) + self.h2(state)</code></pre>
@@ -1546,11 +2596,15 @@ will be used to attempt to construct the derivative of
 <span>def <span class="ident">h1</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h1" href="#mici.systems.System.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L442-L443" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L537-L538" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt</code></pre>
@@ -1560,11 +2614,15 @@ will be used to attempt to construct the derivative of
 <span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh1_dpos" href="#mici.systems.System.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L445-L450" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L540-L545" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -1578,11 +2636,15 @@ will be used to attempt to construct the derivative of
 <span>def <span class="ident">h2</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L452-L453" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L547-L548" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
@@ -1596,7 +2658,7 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L455-L460" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L550-L555" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -1610,11 +2672,15 @@ will be used to attempt to construct the derivative of
 <span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L462-L463" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L557-L558" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dmom(self, state):
     return self.metric(state).inv @ state.mom</code></pre>
@@ -1624,15 +2690,69 @@ will be used to attempt to construct the derivative of
 <span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.sample_momentum" href="#mici.systems.System.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L465-L466" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L560-L561" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
 </details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.neg_log_dens" href="#mici.systems.System.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.grad_neg_log_dens" href="#mici.systems.System.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h1_flow" href="#mici.systems.System.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh_dpos" href="#mici.systems.System.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh_dmom" href="#mici.systems.System.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
 </dl>
 </dd>
@@ -1657,30 +2777,30 @@ Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L469-L475" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L564-L570" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -1693,8 +2813,122 @@ will be used to attempt to construct the derivative of
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+</dl>
 </dd>
 <dt id="mici.systems.DiagonalRiemannianMetricSystem"><code class="flex name class">
 <span>class <span class="ident">DiagonalRiemannianMetricSystem</span></span>
@@ -1717,30 +2951,30 @@ Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L478-L484" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L573-L579" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -1753,8 +2987,122 @@ will be used to attempt to construct the derivative of
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+</dl>
 </dd>
 <dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem"><code class="flex name class">
 <span>class <span class="ident">CholeskyFactoredRiemannianMetricSystem</span></span>
@@ -1777,30 +3125,30 @@ Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L487-L493" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L582-L588" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -1813,8 +3161,122 @@ will be used to attempt to construct the derivative of
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+</dl>
 </dd>
 <dt id="mici.systems.DenseRiemannianMetricSystem"><code class="flex name class">
 <span>class <span class="ident">DenseRiemannianMetricSystem</span></span>
@@ -1837,30 +3299,30 @@ Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L496-L502" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L591-L597" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -1873,8 +3335,122 @@ will be used to attempt to construct the derivative of
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.DenseRiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+</dl>
 </dd>
 <dt id="mici.systems.SoftAbsRiemannianMetricSystem"><code class="flex name class">
 <span>class <span class="ident">SoftAbsRiemannianMetricSystem</span></span>
@@ -1895,30 +3471,30 @@ Hamiltonian Monte Carlo. In Geometric science of information
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the Lebesgue
-measure, with the corresponding distribution on the position
-space being the target distribution it is wished to draw
-approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to the position vector argument.
-Optionally the function may instead return a pair of values
-with the first being the value of the <code>neg_log_dens</code> evaluated
-at the passed position vector and the second being the value of
-its derivative with respect to the position argument. If <code>None</code>
-is passed (the default) an automatic differentiation fallback
-will be used to attempt to construct the derivative of
-<code>neg_log_dens</code> automatically.</dd>
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
+<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>Function which given a
+position array returns the derivative of the negative logarithm
+of the unnormalised density specified by <code>neg_log_dens</code> with
+respect to the position array argument. Optionally the function
+may instead return a pair of values with the first being the
+array corresponding to the derivative and the second being the
+value of the <code>neg_log_dens</code> evaluated at the passed position
+array. If <code>None</code> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct
+the derivative of <code>neg_log_dens</code> automatically.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L505-L551" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L600-L646" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
@@ -1971,7 +3547,8 @@ will be used to attempt to construct the derivative of
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
-<li>mici.systems._HamiltonianSystem</li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1983,7 +3560,7 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L536-L537" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L631-L632" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def metric_func(self, state):
     return self.hess_neg_log_dens(state)</code></pre>
@@ -1997,7 +3574,7 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/systems.py#L539-L540" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L634-L635" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def vjp_metric_func(self, state):
     return self.mtp_neg_log_dens(state)</code></pre>
@@ -2011,25 +3588,12 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L54-L70" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L637-L640" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    id_ = id(self)
-    type_prefix = type(self).__name__ + &#39;.&#39;
-    prim_key = (type_prefix + vars[primary_index], id_)
-    keys = [(type_prefix + v, id_) for v in vars]
-    for i, key in enumerate(keys):
-        if key not in state._cache:
-            for dep in depends_on:
-                state._dependencies[dep].add(key)
-    if prim_key not in state._cache or state._cache[prim_key] is None:
-        vals = method(self, state)
-        if isinstance(vals, tuple):
-            for k, v in zip(keys, vals):
-                state._cache[k] = v
-        else:
-            state._cache[prim_key] = vals
-    return state._cache[prim_key]</code></pre>
+<pre><code class="python">@multi_cache_in_state(
+    [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+def hess_neg_log_dens(self, state):
+    return self._hess_neg_log_dens(state.pos)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens"><code class="name flex">
@@ -2040,26 +3604,124 @@ will be used to attempt to construct the derivative of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/states.py#L54-L70" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L642-L646" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def wrapper(self, state):
-    id_ = id(self)
-    type_prefix = type(self).__name__ + &#39;.&#39;
-    prim_key = (type_prefix + vars[primary_index], id_)
-    keys = [(type_prefix + v, id_) for v in vars]
-    for i, key in enumerate(keys):
-        if key not in state._cache:
-            for dep in depends_on:
-                state._dependencies[dep].add(key)
-    if prim_key not in state._cache or state._cache[prim_key] is None:
-        vals = method(self, state)
-        if isinstance(vals, tuple):
-            for k, v in zip(keys, vals):
-                state._cache[k] = v
-        else:
-            state._cache[prim_key] = vals
-    return state._cache[prim_key]</code></pre>
+<pre><code class="python">@multi_cache_in_state(
+    [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
+              &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+def mtp_neg_log_dens(self, state):
+    return self._mtp_neg_log_dens(state.pos)</code></pre>
 </details>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code>.<code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
 </dl>
 </dd>
@@ -2084,23 +3746,56 @@ will be used to attempt to construct the derivative of
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="mici.systems.System" href="#mici.systems.System">System</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.System.neg_log_dens" href="#mici.systems.System.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.System.grad_neg_log_dens" href="#mici.systems.System.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.System.h1" href="#mici.systems.System.h1">h1</a></code></li>
+<li><code><a title="mici.systems.System.dh1_dpos" href="#mici.systems.System.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.System.h1_flow" href="#mici.systems.System.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code></li>
+<li><code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.System.h" href="#mici.systems.System.h">h</a></code></li>
+<li><code><a title="mici.systems.System.dh_dpos" href="#mici.systems.System.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.System.dh_dmom" href="#mici.systems.System.dh_dmom">dh_dmom</a></code></li>
+<li><code><a title="mici.systems.System.sample_momentum" href="#mici.systems.System.sample_momentum">sample_momentum</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="mici.systems.EuclideanMetricSystem.h2" href="#mici.systems.EuclideanMetricSystem.h2">h2</a></code></li>
 <li><code><a title="mici.systems.EuclideanMetricSystem.dh2_dmom" href="#mici.systems.EuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
 <li><code><a title="mici.systems.EuclideanMetricSystem.h2_flow" href="#mici.systems.EuclideanMetricSystem.h2_flow">h2_flow</a></code></li>
 <li><code><a title="mici.systems.EuclideanMetricSystem.dh2_flow_dmom" href="#mici.systems.EuclideanMetricSystem.dh2_flow_dmom">dh2_flow_dmom</a></code></li>
 <li><code><a title="mici.systems.EuclideanMetricSystem.sample_momentum" href="#mici.systems.EuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.neg_log_dens" href="#mici.systems.EuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.EuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.h1" href="#mici.systems.EuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.dh1_dpos" href="#mici.systems.EuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.h1_flow" href="#mici.systems.EuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.h" href="#mici.systems.EuclideanMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.dh_dpos" href="#mici.systems.EuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.dh_dmom" href="#mici.systems.EuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h2" href="#mici.systems.GaussianEuclideanMetricSystem.h2">h2</a></code></li>
 <li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
 <li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_dpos">dh2_dpos</a></code></li>
 <li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h2_flow" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow">h2_flow</a></code></li>
 <li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom">dh2_flow_dmom</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.sample_momentum" href="#mici.systems.GaussianEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.neg_log_dens" href="#mici.systems.GaussianEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.GaussianEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h1" href="#mici.systems.GaussianEuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh1_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h1_flow" href="#mici.systems.GaussianEuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h" href="#mici.systems.GaussianEuclideanMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
 </ul>
 </li>
 <li>
@@ -2109,10 +3804,34 @@ will be used to attempt to construct the derivative of
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr">mhp_constr</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h1" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dmom" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">GaussianDenseConstrainedEuclideanMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1_flow" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dmom" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code></h4>
@@ -2127,27 +3846,95 @@ will be used to attempt to construct the derivative of
 <li><code><a title="mici.systems.RiemannianMetricSystem.dh2_dpos" href="#mici.systems.RiemannianMetricSystem.dh2_dpos">dh2_dpos</a></code></li>
 <li><code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
 <li><code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.neg_log_dens" href="#mici.systems.RiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.RiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.h1_flow" href="#mici.systems.RiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.dh_dpos" href="#mici.systems.RiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.dh_dmom" href="#mici.systems.RiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.ScalarRiemannianMetricSystem" href="#mici.systems.ScalarRiemannianMetricSystem">ScalarRiemannianMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.h" href="#mici.systems.ScalarRiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.h1" href="#mici.systems.ScalarRiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.dh1_dpos" href="#mici.systems.ScalarRiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.h2" href="#mici.systems.ScalarRiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.dh2_dmom" href="#mici.systems.ScalarRiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.sample_momentum" href="#mici.systems.ScalarRiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.neg_log_dens" href="#mici.systems.ScalarRiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.ScalarRiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.h1_flow" href="#mici.systems.ScalarRiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.dh_dpos" href="#mici.systems.ScalarRiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.ScalarRiemannianMetricSystem.dh_dmom" href="#mici.systems.ScalarRiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.DiagonalRiemannianMetricSystem" href="#mici.systems.DiagonalRiemannianMetricSystem">DiagonalRiemannianMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.h" href="#mici.systems.DiagonalRiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.h1" href="#mici.systems.DiagonalRiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.dh1_dpos" href="#mici.systems.DiagonalRiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.h2" href="#mici.systems.DiagonalRiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.dh2_dmom" href="#mici.systems.DiagonalRiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.sample_momentum" href="#mici.systems.DiagonalRiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.neg_log_dens" href="#mici.systems.DiagonalRiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.DiagonalRiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.h1_flow" href="#mici.systems.DiagonalRiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.dh_dpos" href="#mici.systems.DiagonalRiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.DiagonalRiemannianMetricSystem.dh_dmom" href="#mici.systems.DiagonalRiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem">CholeskyFactoredRiemannianMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.h" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.h1" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh1_dpos" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.h2" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh2_dmom" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.sample_momentum" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.neg_log_dens" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.h1_flow" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dpos" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dmom" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.DenseRiemannianMetricSystem" href="#mici.systems.DenseRiemannianMetricSystem">DenseRiemannianMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.h" href="#mici.systems.DenseRiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.h1" href="#mici.systems.DenseRiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.dh1_dpos" href="#mici.systems.DenseRiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.h2" href="#mici.systems.DenseRiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.dh2_dmom" href="#mici.systems.DenseRiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.sample_momentum" href="#mici.systems.DenseRiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.neg_log_dens" href="#mici.systems.DenseRiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.DenseRiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.h1_flow" href="#mici.systems.DenseRiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.dh_dpos" href="#mici.systems.DenseRiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.DenseRiemannianMetricSystem.dh_dmom" href="#mici.systems.DenseRiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="mici.systems.SoftAbsRiemannianMetricSystem" href="#mici.systems.SoftAbsRiemannianMetricSystem">SoftAbsRiemannianMetricSystem</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.metric_func" href="#mici.systems.SoftAbsRiemannianMetricSystem.metric_func">metric_func</a></code></li>
 <li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.vjp_metric_func" href="#mici.systems.SoftAbsRiemannianMetricSystem.vjp_metric_func">vjp_metric_func</a></code></li>
 <li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.hess_neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.hess_neg_log_dens">hess_neg_log_dens</a></code></li>
 <li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens">mtp_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.h" href="#mici.systems.SoftAbsRiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.h1" href="#mici.systems.SoftAbsRiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.dh1_dpos" href="#mici.systems.SoftAbsRiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.h2" href="#mici.systems.SoftAbsRiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.dh2_dmom" href="#mici.systems.SoftAbsRiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.sample_momentum" href="#mici.systems.SoftAbsRiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.grad_neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.h1_flow" href="#mici.systems.SoftAbsRiemannianMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.dh_dpos" href="#mici.systems.SoftAbsRiemannianMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.dh_dmom" href="#mici.systems.SoftAbsRiemannianMetricSystem.dh_dmom">dh_dmom</a></code></li>
 </ul>
 </li>
 </ul>

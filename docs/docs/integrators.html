@@ -12,6 +12,7 @@
 <style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
 <body>
 <main>
@@ -24,29 +25,68 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L0-L217" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L0-L344" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
+from abc import ABC, abstractmethod
 from mici.errors import NonReversibleStepError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
                           retract_onto_manifold_quasi_newton)
 
+__pdoc__ = {}
 
-class ExplicitLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+
+class Integrator(ABC):
+    &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
+
+    def __init__(self, system, step_size):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+        &#34;&#34;&#34;
+        self.system = system
+        self.step_size = step_size
+
+    @abstractmethod
+    def step(self, state):
+        &#34;&#34;&#34;Perform a single integrator step from a supplied state.
+
+        Args:
+            state (mici.states.ChainState): System state to perform integrator
+                step from.
+
+        Returns:
+            new_state (mici.states.ChainState): New object corresponding to
+                stepped state.
+        &#34;&#34;&#34;
+
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is Integrator:
+            if any(&#34;step&#34; in B.__dict__ for B in C.__mro__):
+                return True
+        return NotImplemented
+
+
+class ExplicitLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
     The Hamiltonian function is assumed to be expressible as the sum of two
     analytically tractable components for which the corresponding Hamiltonian
     flows can be exactly simulated. Specifically it is assumed that the
-    Hamiltonian function `h` takes the form
+    Hamiltonian function \(h\) takes the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components for which the exact
-    flows can be computed.
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
+    exact flows can be computed.
+
+    `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size):
@@ -56,8 +96,7 @@ class ExplicitLeapfrogIntegrator(object):
                 &#39;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#39;
                 &#39;flow maps. For systems in which only `h1_flow` is available &#39;
                 &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
 
     def step(self, state):
         dt = state.dir * self.step_size
@@ -69,28 +108,61 @@ class ExplicitLeapfrogIntegrator(object):
 
 
 LeapfrogIntegrator = ExplicitLeapfrogIntegrator
+__pdoc__[&#39;LeapfrogIntegrator&#39;] = False
 
 
-class ImplicitLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+class ImplicitLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Implicit leapfrog integrator for Hamiltonian with non-separable component.
 
-    The Hamiltonian function is assumed to take the form
+    The Hamiltonian function \(h\) is assumed to take the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h2` is a non-separable function of the position and momentum variables
-    and for which exact simulation of the correspond Hamiltonian flow is not
-    possible. A pair of implicit component updates are used to approximate the
-    flow due to the `h2` Hamiltonian component, with a fixed-point iteration
-    used to solve the non-linear system of equations.
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    \(h_1\) is a Hamiltonian component function for which the exact flow can be
+    computed and \(h_2\) is a non-separable Hamiltonian component function of
+    the position and momentum variables and for which exact simulation of the
+    correspond Hamiltonian flow is not possible. A pair of implicit component
+    updates are used to approximate the flow due to the \(h_2\) Hamiltonian
+    component, with a fixed-point iteration used to solve the non-linear system
+    of equations.
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
-                 **fixed_point_solver_kwargs):
+                 fixed_point_solver_kwargs=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+            reverse_check_tol (float): Tolerance for check of reversibility of
+                implicit sub-steps which involve iterative solving of a
+                non-linear system of equations. The step is assumed to be
+                reversible if sequentially applying the forward and adjoint
+                updates to a state returns to a state with a position component
+                within a distance (defined by the `reverse_check_norm`
+                argument) of `reverse_check_tol` of the original state position
+                component. If this condition is not met a
+                `mici.errors.NonReversibleStepError` exception is raised.
+            reverse_check_norm (Callable[[array], float]): Norm function
+                accepting a single one-dimensional array input and returning a
+                non-negative floating point value defining the distance to use
+                in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            fixed_point_solver (\
+                    Callable[[Callable[array], array], array]): Function which
+                given a function `func` and initial guess `x0` iteratively
+                solves the fixed point equation `func(x) = x` initialising the
+                iteration with `x0` and returning an array corresponding to the
+                solution if the iteration converges or raising a
+                `mici.errors.ConvergenceError` otherwise. Defaults to
+                `mici.solvers.solve_fixed_point_direct`.
+            fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
+                of any keyword arguments to `fixed_point_solver`.
+        &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.reverse_check_tol = reverse_check_tol
@@ -98,21 +170,21 @@ class ImplicitLeapfrogIntegrator(object):
         self.fixed_point_solver = fixed_point_solver
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
-    def solve_fixed_point(self, fixed_point_func, x_init):
+    def _solve_fixed_point(self, fixed_point_func, x_init):
         return self.fixed_point_solver(
             fixed_point_func, x_init, **self.fixed_point_solver_kwargs)
 
-    def step_a(self, state, dt):
+    def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
 
-    def step_b_fwd(self, state, dt):
+    def _step_b_fwd(self, state, dt):
         def fixed_point_func(mom):
             state.mom = mom
             return mom_init - dt * self.system.dh2_dpos(state)
         mom_init = state.mom
-        state.mom = self.solve_fixed_point(fixed_point_func, mom_init)
+        state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
-    def step_b_adj(self, state, dt):
+    def _step_b_adj(self, state, dt):
         mom_init = state.mom.copy()
         state.mom -= dt * self.system.dh2_dpos(state)
         state_back = state.copy()
@@ -123,7 +195,7 @@ class ImplicitLeapfrogIntegrator(object):
                 f&#39;Non-reversible step. Distance between initial and &#39;
                 f&#39;forward-backward integrated momentums = {rev_diff:.1e}.&#39;)
 
-    def step_c_fwd(self, state, dt):
+    def _step_c_fwd(self, state, dt):
         pos_init = state.pos.copy()
         state.pos += dt * self.system.dh2_dmom(state)
         state_back = state.copy()
@@ -134,55 +206,55 @@ class ImplicitLeapfrogIntegrator(object):
                 f&#39;Non-reversible step. Distance between initial and &#39;
                 f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
 
-    def step_c_adj(self, state, dt):
+    def _step_c_adj(self, state, dt):
         def fixed_point_func(pos):
             state.pos = pos
             return pos_init + dt * self.system.dh2_dmom(state)
         pos_init = state.pos
-        state.pos = self.solve_fixed_point(fixed_point_func, pos_init)
+        state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
     def step(self, state):
         dt = 0.5 * state.dir * self.step_size
         state = state.copy()
-        self.step_a(state, dt)
-        self.step_b_fwd(state, dt)
-        self.step_c_fwd(state, dt)
-        self.step_c_adj(state, dt)
-        self.step_b_adj(state, dt)
-        self.step_a(state, dt)
+        self._step_a(state, dt)
+        self._step_b_fwd(state, dt)
+        self._step_c_fwd(state, dt)
+        self._step_c_adj(state, dt)
+        self._step_b_adj(state, dt)
+        self._step_a(state, dt)
         return state
 
 
-class ConstrainedLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+class ConstrainedLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Leapfrog integrator for constrained Hamiltonian systems.
 
     The Hamiltonian function is assumed to be expressible as the sum of two
     components for which the corresponding (unconstrained) Hamiltonian flows
     can be exactly simulated. Specifically it is assumed that the Hamiltonian
-    function `h` takes the form
+    function \(h\) takes the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components for which the exact
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) Hamiltonian component functions for which the exact
     flows can be computed.
 
     The system is assumed to be additionally subject to a set of holonomic
     constraints on the position component of the state i.e. that all valid
     states must satisfy
 
-        all(constr(pos) == 0)
+    \[ c(q) = 0. \]
 
-    for some vector constraint function `constr`, with the set of positions
-    satisfying the constraints implicitly defining a manifold. There is also
-    a corresponding constraint implied on the momentum variables which can
-    be derived by differentiating the above with respect to time and using
-    that under the Hamiltonian dynamics the time derivative of the position
-    is equal to the negative derivative of the Hamiltonian function with
-    respect to the momentum
+    for some differentiable and surjective vector constraint function \(c\) and
+    the set of positions satisfying the constraints implicitly defining a
+    manifold. There is also a corresponding constraint implied on the momentum
+    variables which can be derived by differentiating the above with respect to
+    time and using that under the Hamiltonian dynamics the time derivative of
+    the position is equal to the negative derivative of the Hamiltonian
+    function with respect to the momentum
 
-        all(jacob_constr(pos) @ dh2_dmom(mom) == 0)
+    \[ \partial c(q) \nabla_2 h(q, p) = 0. \]
 
     The set of momentum variables satisfying the above for given position
     variables is termed the cotangent space of the manifold (at a position),
@@ -191,7 +263,7 @@ class ConstrainedLeapfrogIntegrator(object):
     is termed the cotangent bundle.
 
     The integrator exactly preserves these constraints at all steps, such that
-    if an initial position momentum pair `(pos, mom)` are in the cotangent
+    if an initial position momentum pair \((q, p)\) are in the cotangent
     bundle, the corresponding pair after calling the `step` method of the
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
@@ -200,6 +272,62 @@ class ConstrainedLeapfrogIntegrator(object):
                  reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
                  retraction_solver=retract_onto_manifold_quasi_newton,
                  retraction_solver_kwargs=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+            n_inner_step (int): Positive integer specifying number of &#39;inner&#39;
+                constrained `system.h2_flow` steps to take within each overall
+                step. As the derivative `system.dh1_dpos` is not evaluated
+                during the `system.h2_flow` steps, if this derivative is
+                relatively expensive to compute compared to evaluating
+                `system.h2_flow` then compared to using `n_inner_step = 1` (the
+                default) for a given `step_size` it can be more computationally
+                efficient to use `n_inner_step &gt; 1` in combination within a
+                larger `step_size`, thus reducing the number of
+                `system.dh1_dpos` evaluations to simulate forward a given time
+                while still controlling the effective time step used for the
+                constrained `system.h2_flow` steps which involve solving a
+                non-linear system of equations to retract the position
+                component of the updated state back on to the manifold, with
+                the iterative solver typically diverging if the time step used
+                is too large.
+            reverse_check_tol (float): Tolerance for check of reversibility of
+                implicit sub-steps which involve iterative solving of a
+                non-linear system of equations. The step is assumed to be
+                reversible if sequentially applying the forward and adjoint
+                updates to a state returns to a state with a position component
+                within a distance (defined by the `reverse_check_norm`
+                argument) of `reverse_check_tol` of the original state position
+                component. If this condition is not met a
+                `mici.errors.NonReversibleStepError` exception is raised.
+            reverse_check_norm (Callable[[array], float]): Norm function
+                accepting a single one-dimensional array input and returning a
+                non-negative floating point value defining the distance to use
+                in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            retraction_solver (\
+                    Callable[[ChainState, ChainState, float, System], \
+                              ChainState]): Function which given two
+                states `state` and `state_prev`, floating point time step `dt`
+                and a Hamiltonian system object `system` solves the non-linear
+                system of equations in `lambda`
+
+                    system.constr(
+                        state.pos + dh2_flow_pos_dmom @
+                            system.jacob_constr(state_prev).T @ lambda) == 0
+
+                where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
+                derivative of the action of the (linear) `system.h2_flow` map
+                on the state momentum component with respect to the position
+                component. This is used to retract the state position
+                component back on to the manifold after an unconstrained
+                `system.h2_flow` update. Defaults to
+                `mici.solvers.retract_onto_manifold_quasi_newton`.
+            retraction_solver_kwargs (None or Dict[str, object]): Dictionary of
+                any keyword arguments to `retraction_solver`.
+        &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
@@ -210,27 +338,27 @@ class ConstrainedLeapfrogIntegrator(object):
             retraction_solver_kwargs = {}
         self.retraction_solver_kwargs = retraction_solver_kwargs
 
-    def retract_onto_manifold(self, state, state_prev, dt):
+    def _retract_onto_manifold(self, state, state_prev, dt):
         self.retraction_solver(state, state_prev, dt, self.system,
                                **self.retraction_solver_kwargs)
 
-    def project_onto_cotangent_space(self, state):
+    def _project_onto_cotangent_space(self, state):
         self.system.project_onto_cotangent_space(state.mom, state)
 
-    def step_a(self, state, dt):
+    def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
-        self.project_onto_cotangent_space(state)
+        self._project_onto_cotangent_space(state)
 
-    def step_b(self, state, dt):
+    def _step_b(self, state, dt):
         dt_i = dt / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
-            self.retract_onto_manifold(state, state_prev, dt_i)
-            self.project_onto_cotangent_space(state)
+            self._retract_onto_manifold(state, state_prev, dt_i)
+            self._project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
-            self.retract_onto_manifold(state_back, state, -dt_i)
+            self._retract_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -240,9 +368,9 @@ class ConstrainedLeapfrogIntegrator(object):
     def step(self, state):
         dt = state.dir * self.step_size
         state = state.copy()
-        self.step_a(state, 0.5 * dt)
-        self.step_b(state, dt)
-        self.step_a(state, 0.5 * dt)
+        self._step_a(state, 0.5 * dt)
+        self._step_b(state, dt)
+        self._step_a(state, 0.5 * dt)
         return state</code></pre>
 </details>
 </section>
@@ -255,6 +383,108 @@ class ConstrainedLeapfrogIntegrator(object):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="mici.integrators.Integrator"><code class="flex name class">
+<span>class <span class="ident">Integrator</span></span>
+<span>(</span><span>system, step_size)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for integrators.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to integrate the
+dynamics of.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L11-L42" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class Integrator(ABC):
+    &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
+
+    def __init__(self, system, step_size):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+        &#34;&#34;&#34;
+        self.system = system
+        self.step_size = step_size
+
+    @abstractmethod
+    def step(self, state):
+        &#34;&#34;&#34;Perform a single integrator step from a supplied state.
+
+        Args:
+            state (mici.states.ChainState): System state to perform integrator
+                step from.
+
+        Returns:
+            new_state (mici.states.ChainState): New object corresponding to
+                stepped state.
+        &#34;&#34;&#34;
+
+    @classmethod
+    def __subclasshook__(cls, C):
+        if cls is Integrator:
+            if any(&#34;step&#34; in B.__dict__ for B in C.__mro__):
+                return True
+        return NotImplemented</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator">ExplicitLeapfrogIntegrator</a></li>
+<li><a title="mici.integrators.ImplicitLeapfrogIntegrator" href="#mici.integrators.ImplicitLeapfrogIntegrator">ImplicitLeapfrogIntegrator</a></li>
+<li><a title="mici.integrators.ConstrainedLeapfrogIntegrator" href="#mici.integrators.ConstrainedLeapfrogIntegrator">ConstrainedLeapfrogIntegrator</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.integrators.Integrator.step"><code class="name flex">
+<span>def <span class="ident">step</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Perform a single integrator step from a supplied state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>System state to perform integrator
+step from.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>new_state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>New object corresponding to
+stepped state.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def step(self, state):
+    &#34;&#34;&#34;Perform a single integrator step from a supplied state.
+
+    Args:
+        state (mici.states.ChainState): System state to perform integrator
+            step from.
+
+    Returns:
+        new_state (mici.states.ChainState): New object corresponding to
+            stepped state.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="mici.integrators.ExplicitLeapfrogIntegrator"><code class="flex name class">
 <span>class <span class="ident">ExplicitLeapfrogIntegrator</span></span>
 <span>(</span><span>system, step_size)</span>
@@ -264,31 +494,41 @@ class ConstrainedLeapfrogIntegrator(object):
 <p>The Hamiltonian function is assumed to be expressible as the sum of two
 analytically tractable components for which the corresponding Hamiltonian
 flows can be exactly simulated. Specifically it is assumed that the
-Hamiltonian function <code>h</code> takes the form</p>
-<pre><code>h(pos, mom) = h1(pos) + h2(pos, mom)
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>h1(pos)</code> and <code>h2(pos, mom)</code> Hamiltonian components for which the exact
-flows can be computed.</p></section>
+Hamiltonian function <span><span class="MathJax_Preview">h</span><script type="math/tex">h</script></span> takes the form</p>
+<p><span><span class="MathJax_Preview"> h(q, p) = h_1(q) + h_2(q, p) </span><script type="math/tex; mode=display"> h(q, p) = h_1(q) + h_2(q, p) </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively,
+and <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> and <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> are Hamiltonian component functions for which the
+exact flows can be computed.</p>
+<p><code>LeapfrogIntegrator</code> is an alias for <a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator"><code>ExplicitLeapfrogIntegrator</code></a>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to integrate the
+dynamics of.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L8-L40" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L45-L78" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class ExplicitLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+<pre><code class="python">class ExplicitLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
     The Hamiltonian function is assumed to be expressible as the sum of two
     analytically tractable components for which the corresponding Hamiltonian
     flows can be exactly simulated. Specifically it is assumed that the
-    Hamiltonian function `h` takes the form
+    Hamiltonian function \(h\) takes the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components for which the exact
-    flows can be computed.
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
+    exact flows can be computed.
+
+    `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size):
@@ -298,8 +538,7 @@ flows can be computed.</p></section>
                 &#39;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#39;
                 &#39;flow maps. For systems in which only `h1_flow` is available &#39;
                 &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
 
     def step(self, state):
         dt = state.dir * self.step_size
@@ -309,94 +548,34 @@ flows can be computed.</p></section>
         self.system.h1_flow(state, 0.5 * dt)
         return state</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.integrators.ExplicitLeapfrogIntegrator.step"><code class="name flex">
 <span>def <span class="ident">step</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L34-L40" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step(self, state):
-    dt = state.dir * self.step_size
-    state = state.copy()
-    self.system.h1_flow(state, 0.5 * dt)
-    self.system.h2_flow(state, dt)
-    self.system.h1_flow(state, 0.5 * dt)
-    return state</code></pre>
-</details>
-</dd>
+<section class="desc"><p>Perform a single integrator step from a supplied state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>System state to perform integrator
+step from.</dd>
 </dl>
-</dd>
-<dt id="mici.integrators.ExplicitLeapfrogIntegrator"><code class="flex name class">
-<span>class <span class="ident">LeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Leapfrog integrator for Hamiltonian systems with tractable component flows.</p>
-<p>The Hamiltonian function is assumed to be expressible as the sum of two
-analytically tractable components for which the corresponding Hamiltonian
-flows can be exactly simulated. Specifically it is assumed that the
-Hamiltonian function <code>h</code> takes the form</p>
-<pre><code>h(pos, mom) = h1(pos) + h2(pos, mom)
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>h1(pos)</code> and <code>h2(pos, mom)</code> Hamiltonian components for which the exact
-flows can be computed.</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L8-L40" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class ExplicitLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
-    Leapfrog integrator for Hamiltonian systems with tractable component flows.
-
-    The Hamiltonian function is assumed to be expressible as the sum of two
-    analytically tractable components for which the corresponding Hamiltonian
-    flows can be exactly simulated. Specifically it is assumed that the
-    Hamiltonian function `h` takes the form
-
-        h(pos, mom) = h1(pos) + h2(pos, mom)
-
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components for which the exact
-    flows can be computed.
-    &#34;&#34;&#34;
-
-    def __init__(self, system, step_size):
-        if not hasattr(system, &#39;h1_flow&#39;) or not hasattr(system, &#39;h2_flow&#39;):
-            raise ValueError(
-                &#39;Explicit leapfrog integrator can only be used for systems &#39;
-                &#39;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#39;
-                &#39;flow maps. For systems in which only `h1_flow` is available &#39;
-                &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
-        self.system = system
-        self.step_size = step_size
-
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
-        self.system.h1_flow(state, 0.5 * dt)
-        self.system.h2_flow(state, dt)
-        self.system.h1_flow(state, 0.5 * dt)
-        return state</code></pre>
-</details>
-<h3>Methods</h3>
+<h2 id="returns">Returns</h2>
 <dl>
-<dt id="mici.integrators.ExplicitLeapfrogIntegrator.step"><code class="name flex">
-<span>def <span class="ident">step</span></span>(<span>self, state)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
+<dt><strong><code>new_state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>New object corresponding to
+stepped state.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L34-L40" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L72-L78" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size
@@ -411,44 +590,113 @@ flows can be computed.</p></section>
 </dd>
 <dt id="mici.integrators.ImplicitLeapfrogIntegrator"><code class="flex name class">
 <span>class <span class="ident">ImplicitLeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size, reverse_check_tol=1e-08, reverse_check_norm=&lt;function maximum_norm&gt;, fixed_point_solver=&lt;function solve_fixed_point_direct&gt;, **fixed_point_solver_kwargs)</span>
+<span>(</span><span>system, step_size, reverse_check_tol=1e-08, reverse_check_norm=&lt;function maximum_norm&gt;, fixed_point_solver=&lt;function solve_fixed_point_direct&gt;, fixed_point_solver_kwargs=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Implicit leapfrog integrator for Hamiltonian with non-separable component.</p>
-<p>The Hamiltonian function is assumed to take the form</p>
-<pre><code>h(pos, mom) = h1(pos) + h2(pos, mom)
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>h2</code> is a non-separable function of the position and momentum variables
-and for which exact simulation of the correspond Hamiltonian flow is not
-possible. A pair of implicit component updates are used to approximate the
-flow due to the <code>h2</code> Hamiltonian component, with a fixed-point iteration
-used to solve the non-linear system of equations.</p></section>
+<p>The Hamiltonian function <span><span class="MathJax_Preview">h</span><script type="math/tex">h</script></span> is assumed to take the form</p>
+<p><span><span class="MathJax_Preview"> h(q, p) = h_1(q) + h_2(q, p) </span><script type="math/tex; mode=display"> h(q, p) = h_1(q) + h_2(q, p) </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively,
+<span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> is a Hamiltonian component function for which the exact flow can be
+computed and <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is a non-separable Hamiltonian component function of
+the position and momentum variables and for which exact simulation of the
+correspond Hamiltonian flow is not possible. A pair of implicit component
+updates are used to approximate the flow due to the <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> Hamiltonian
+component, with a fixed-point iteration used to solve the non-linear system
+of equations.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to integrate the
+dynamics of.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step.</dd>
+<dt><strong><code>reverse_check_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Tolerance for check of reversibility of
+implicit sub-steps which involve iterative solving of a
+non-linear system of equations. The step is assumed to be
+reversible if sequentially applying the forward and adjoint
+updates to a state returns to a state with a position component
+within a distance (defined by the <code>reverse_check_norm</code>
+argument) of <code>reverse_check_tol</code> of the original state position
+component. If this condition is not met a
+<a title="mici.errors.NonReversibleStepError" href="errors.html#mici.errors.NonReversibleStepError"><code>NonReversibleStepError</code></a> exception is raised.</dd>
+<dt><strong><code>reverse_check_norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm function
+accepting a single one-dimensional array input and returning a
+non-negative floating point value defining the distance to use
+in the reversibility check. Defaults to
+<a title="mici.solvers.maximum_norm" href="solvers.html#mici.solvers.maximum_norm"><code>maximum_norm()</code></a>.</dd>
+<dt><strong><code>fixed_point_solver</code></strong> :&ensp;
+<code>Callable</code>[[<code>Callable</code>[<code>array</code>], <code>array</code>], <code>array</code>]</dt>
+<dd>Function which
+given a function <code>func</code> and initial guess <code>x0</code> iteratively
+solves the fixed point equation <code>func(x) = x</code> initialising the
+iteration with <code>x0</code> and returning an array corresponding to the
+solution if the iteration converges or raising a
+<a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> otherwise. Defaults to
+<a title="mici.solvers.solve_fixed_point_direct" href="solvers.html#mici.solvers.solve_fixed_point_direct"><code>solve_fixed_point_direct()</code></a>.</dd>
+<dt><strong><code>fixed_point_solver_kwargs</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>object</code>]</dt>
+<dd>Dictionary
+of any keyword arguments to <code>fixed_point_solver</code>.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L46-L125" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L85-L196" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class ImplicitLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+<pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Implicit leapfrog integrator for Hamiltonian with non-separable component.
 
-    The Hamiltonian function is assumed to take the form
+    The Hamiltonian function \(h\) is assumed to take the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h2` is a non-separable function of the position and momentum variables
-    and for which exact simulation of the correspond Hamiltonian flow is not
-    possible. A pair of implicit component updates are used to approximate the
-    flow due to the `h2` Hamiltonian component, with a fixed-point iteration
-    used to solve the non-linear system of equations.
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    \(h_1\) is a Hamiltonian component function for which the exact flow can be
+    computed and \(h_2\) is a non-separable Hamiltonian component function of
+    the position and momentum variables and for which exact simulation of the
+    correspond Hamiltonian flow is not possible. A pair of implicit component
+    updates are used to approximate the flow due to the \(h_2\) Hamiltonian
+    component, with a fixed-point iteration used to solve the non-linear system
+    of equations.
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
-                 **fixed_point_solver_kwargs):
+                 fixed_point_solver_kwargs=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+            reverse_check_tol (float): Tolerance for check of reversibility of
+                implicit sub-steps which involve iterative solving of a
+                non-linear system of equations. The step is assumed to be
+                reversible if sequentially applying the forward and adjoint
+                updates to a state returns to a state with a position component
+                within a distance (defined by the `reverse_check_norm`
+                argument) of `reverse_check_tol` of the original state position
+                component. If this condition is not met a
+                `mici.errors.NonReversibleStepError` exception is raised.
+            reverse_check_norm (Callable[[array], float]): Norm function
+                accepting a single one-dimensional array input and returning a
+                non-negative floating point value defining the distance to use
+                in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            fixed_point_solver (\
+                    Callable[[Callable[array], array], array]): Function which
+                given a function `func` and initial guess `x0` iteratively
+                solves the fixed point equation `func(x) = x` initialising the
+                iteration with `x0` and returning an array corresponding to the
+                solution if the iteration converges or raising a
+                `mici.errors.ConvergenceError` otherwise. Defaults to
+                `mici.solvers.solve_fixed_point_direct`.
+            fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
+                of any keyword arguments to `fixed_point_solver`.
+        &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.reverse_check_tol = reverse_check_tol
@@ -456,21 +704,21 @@ used to solve the non-linear system of equations.</p></section>
         self.fixed_point_solver = fixed_point_solver
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
-    def solve_fixed_point(self, fixed_point_func, x_init):
+    def _solve_fixed_point(self, fixed_point_func, x_init):
         return self.fixed_point_solver(
             fixed_point_func, x_init, **self.fixed_point_solver_kwargs)
 
-    def step_a(self, state, dt):
+    def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
 
-    def step_b_fwd(self, state, dt):
+    def _step_b_fwd(self, state, dt):
         def fixed_point_func(mom):
             state.mom = mom
             return mom_init - dt * self.system.dh2_dpos(state)
         mom_init = state.mom
-        state.mom = self.solve_fixed_point(fixed_point_func, mom_init)
+        state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
-    def step_b_adj(self, state, dt):
+    def _step_b_adj(self, state, dt):
         mom_init = state.mom.copy()
         state.mom -= dt * self.system.dh2_dpos(state)
         state_back = state.copy()
@@ -481,7 +729,7 @@ used to solve the non-linear system of equations.</p></section>
                 f&#39;Non-reversible step. Distance between initial and &#39;
                 f&#39;forward-backward integrated momentums = {rev_diff:.1e}.&#39;)
 
-    def step_c_fwd(self, state, dt):
+    def _step_c_fwd(self, state, dt):
         pos_init = state.pos.copy()
         state.pos += dt * self.system.dh2_dmom(state)
         state_back = state.copy()
@@ -492,154 +740,54 @@ used to solve the non-linear system of equations.</p></section>
                 f&#39;Non-reversible step. Distance between initial and &#39;
                 f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
 
-    def step_c_adj(self, state, dt):
+    def _step_c_adj(self, state, dt):
         def fixed_point_func(pos):
             state.pos = pos
             return pos_init + dt * self.system.dh2_dmom(state)
         pos_init = state.pos
-        state.pos = self.solve_fixed_point(fixed_point_func, pos_init)
+        state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
     def step(self, state):
         dt = 0.5 * state.dir * self.step_size
         state = state.copy()
-        self.step_a(state, dt)
-        self.step_b_fwd(state, dt)
-        self.step_c_fwd(state, dt)
-        self.step_c_adj(state, dt)
-        self.step_b_adj(state, dt)
-        self.step_a(state, dt)
+        self._step_a(state, dt)
+        self._step_b_fwd(state, dt)
+        self._step_c_fwd(state, dt)
+        self._step_c_adj(state, dt)
+        self._step_b_adj(state, dt)
+        self._step_a(state, dt)
         return state</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.solve_fixed_point"><code class="name flex">
-<span>def <span class="ident">solve_fixed_point</span></span>(<span>self, fixed_point_func, x_init)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L73-L75" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def solve_fixed_point(self, fixed_point_func, x_init):
-    return self.fixed_point_solver(
-        fixed_point_func, x_init, **self.fixed_point_solver_kwargs)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.step_a"><code class="name flex">
-<span>def <span class="ident">step_a</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L77-L78" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_a(self, state, dt):
-    self.system.h1_flow(state, dt)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.step_b_fwd"><code class="name flex">
-<span>def <span class="ident">step_b_fwd</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L80-L85" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_b_fwd(self, state, dt):
-    def fixed_point_func(mom):
-        state.mom = mom
-        return mom_init - dt * self.system.dh2_dpos(state)
-    mom_init = state.mom
-    state.mom = self.solve_fixed_point(fixed_point_func, mom_init)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.step_b_adj"><code class="name flex">
-<span>def <span class="ident">step_b_adj</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L87-L96" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_b_adj(self, state, dt):
-    mom_init = state.mom.copy()
-    state.mom -= dt * self.system.dh2_dpos(state)
-    state_back = state.copy()
-    self.step_b_fwd(state_back, -dt)
-    rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
-    if rev_diff &gt; self.reverse_check_tol:
-        raise NonReversibleStepError(
-            f&#39;Non-reversible step. Distance between initial and &#39;
-            f&#39;forward-backward integrated momentums = {rev_diff:.1e}.&#39;)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.step_c_fwd"><code class="name flex">
-<span>def <span class="ident">step_c_fwd</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L98-L107" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_c_fwd(self, state, dt):
-    pos_init = state.pos.copy()
-    state.pos += dt * self.system.dh2_dmom(state)
-    state_back = state.copy()
-    self.step_c_adj(state_back, -dt)
-    rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
-    if rev_diff &gt; self.reverse_check_tol:
-        raise NonReversibleStepError(
-            f&#39;Non-reversible step. Distance between initial and &#39;
-            f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ImplicitLeapfrogIntegrator.step_c_adj"><code class="name flex">
-<span>def <span class="ident">step_c_adj</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L109-L114" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_c_adj(self, state, dt):
-    def fixed_point_func(pos):
-        state.pos = pos
-        return pos_init + dt * self.system.dh2_dmom(state)
-    pos_init = state.pos
-    state.pos = self.solve_fixed_point(fixed_point_func, pos_init)</code></pre>
-</details>
-</dd>
 <dt id="mici.integrators.ImplicitLeapfrogIntegrator.step"><code class="name flex">
 <span>def <span class="ident">step</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></code>.<code><a title="mici.integrators.Integrator.step" href="#mici.integrators.Integrator.step">step</a></code>
+</p>
+<section class="desc inherited"><p>Perform a single integrator step from a supplied state …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L116-L125" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L187-L196" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = 0.5 * state.dir * self.step_size
     state = state.copy()
-    self.step_a(state, dt)
-    self.step_b_fwd(state, dt)
-    self.step_c_fwd(state, dt)
-    self.step_c_adj(state, dt)
-    self.step_b_adj(state, dt)
-    self.step_a(state, dt)
+    self._step_a(state, dt)
+    self._step_b_fwd(state, dt)
+    self._step_c_fwd(state, dt)
+    self._step_c_adj(state, dt)
+    self._step_b_adj(state, dt)
+    self._step_a(state, dt)
     return state</code></pre>
 </details>
 </dd>
@@ -654,70 +802,131 @@ used to solve the non-linear system of equations.</p></section>
 <p>The Hamiltonian function is assumed to be expressible as the sum of two
 components for which the corresponding (unconstrained) Hamiltonian flows
 can be exactly simulated. Specifically it is assumed that the Hamiltonian
-function <code>h</code> takes the form</p>
-<pre><code>h(pos, mom) = h1(pos) + h2(pos, mom)
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>h1(pos)</code> and <code>h2(pos, mom)</code> Hamiltonian components for which the exact
+function <span><span class="MathJax_Preview">h</span><script type="math/tex">h</script></span> takes the form</p>
+<p><span><span class="MathJax_Preview"> h(q, p) = h_1(q) + h_2(q, p) </span><script type="math/tex; mode=display"> h(q, p) = h_1(q) + h_2(q, p) </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively,
+and <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> and <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> Hamiltonian component functions for which the exact
 flows can be computed.</p>
 <p>The system is assumed to be additionally subject to a set of holonomic
 constraints on the position component of the state i.e. that all valid
 states must satisfy</p>
-<pre><code>all(constr(pos) == 0)
-</code></pre>
-<p>for some vector constraint function <code>constr</code>, with the set of positions
-satisfying the constraints implicitly defining a manifold. There is also
-a corresponding constraint implied on the momentum variables which can
-be derived by differentiating the above with respect to time and using
-that under the Hamiltonian dynamics the time derivative of the position
-is equal to the negative derivative of the Hamiltonian function with
-respect to the momentum</p>
-<pre><code>all(jacob_constr(pos) @ dh2_dmom(mom) == 0)
-</code></pre>
+<p><span><span class="MathJax_Preview"> c(q) = 0. </span><script type="math/tex; mode=display"> c(q) = 0. </script></span></p>
+<p>for some differentiable and surjective vector constraint function <span><span class="MathJax_Preview">c</span><script type="math/tex">c</script></span> and
+the set of positions satisfying the constraints implicitly defining a
+manifold. There is also a corresponding constraint implied on the momentum
+variables which can be derived by differentiating the above with respect to
+time and using that under the Hamiltonian dynamics the time derivative of
+the position is equal to the negative derivative of the Hamiltonian
+function with respect to the momentum</p>
+<p><span><span class="MathJax_Preview"> \partial c(q) \nabla_2 h(q, p) = 0. </span><script type="math/tex; mode=display"> \partial c(q) \nabla_2 h(q, p) = 0. </script></span></p>
 <p>The set of momentum variables satisfying the above for given position
 variables is termed the cotangent space of the manifold (at a position),
 and the set of (position, momentum) pairs for which the position is on the
 constraint manifold and the momentum in the corresponding cotangent space
 is termed the cotangent bundle.</p>
 <p>The integrator exactly preserves these constraints at all steps, such that
-if an initial position momentum pair <code>(pos, mom)</code> are in the cotangent
+if an initial position momentum pair <span><span class="MathJax_Preview">(q, p)</span><script type="math/tex">(q, p)</script></span> are in the cotangent
 bundle, the corresponding pair after calling the <code>step</code> method of the
-integrator will also be in the cotangent bundle.</p></section>
+integrator will also be in the cotangent bundle.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to integrate the
+dynamics of.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step.</dd>
+<dt><strong><code>n_inner_step</code></strong> :&ensp;<code>int</code></dt>
+<dd>Positive integer specifying number of 'inner'
+constrained <code>system.h2_flow</code> steps to take within each overall
+step. As the derivative <code>system.dh1_dpos</code> is not evaluated
+during the <code>system.h2_flow</code> steps, if this derivative is
+relatively expensive to compute compared to evaluating
+<code>system.h2_flow</code> then compared to using <code>n_inner_step = 1</code> (the
+default) for a given <code>step_size</code> it can be more computationally
+efficient to use <code>n_inner_step &gt; 1</code> in combination within a
+larger <code>step_size</code>, thus reducing the number of
+<code>system.dh1_dpos</code> evaluations to simulate forward a given time
+while still controlling the effective time step used for the
+constrained <code>system.h2_flow</code> steps which involve solving a
+non-linear system of equations to retract the position
+component of the updated state back on to the manifold, with
+the iterative solver typically diverging if the time step used
+is too large.</dd>
+<dt><strong><code>reverse_check_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Tolerance for check of reversibility of
+implicit sub-steps which involve iterative solving of a
+non-linear system of equations. The step is assumed to be
+reversible if sequentially applying the forward and adjoint
+updates to a state returns to a state with a position component
+within a distance (defined by the <code>reverse_check_norm</code>
+argument) of <code>reverse_check_tol</code> of the original state position
+component. If this condition is not met a
+<a title="mici.errors.NonReversibleStepError" href="errors.html#mici.errors.NonReversibleStepError"><code>NonReversibleStepError</code></a> exception is raised.</dd>
+<dt><strong><code>reverse_check_norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm function
+accepting a single one-dimensional array input and returning a
+non-negative floating point value defining the distance to use
+in the reversibility check. Defaults to
+<a title="mici.solvers.maximum_norm" href="solvers.html#mici.solvers.maximum_norm"><code>maximum_norm()</code></a>.</dd>
+<dt><strong><code>retraction_solver</code></strong> :&ensp;
+<code>Callable</code>[[<code>ChainState</code>, <code>ChainState</code>, <code>float</code>, <code>System</code>],
+<code>ChainState</code>]</dt>
+<dd>
+<p>Function which given two
+states <code>state</code> and <code>state_prev</code>, floating point time step <code>dt</code>
+and a Hamiltonian system object <code>system</code> solves the non-linear
+system of equations in <code>lambda</code></p>
+<pre><code>system.constr(
+    state.pos + dh2_flow_pos_dmom @
+        system.jacob_constr(state_prev).T @ lambda) == 0
+</code></pre>
+<p>where <code>dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]</code> is the
+derivative of the action of the (linear) <code>system.h2_flow</code> map
+on the state momentum component with respect to the position
+component. This is used to retract the state position
+component back on to the manifold after an unconstrained
+<code>system.h2_flow</code> update. Defaults to
+<a title="mici.solvers.retract_onto_manifold_quasi_newton" href="solvers.html#mici.solvers.retract_onto_manifold_quasi_newton"><code>retract_onto_manifold_quasi_newton()</code></a>.</p>
+</dd>
+<dt><strong><code>retraction_solver_kwargs</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>object</code>]</dt>
+<dd>Dictionary of
+any keyword arguments to <code>retraction_solver</code>.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L128-L218" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L199-L345" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class ConstrainedLeapfrogIntegrator(object):
-    &#34;&#34;&#34;
+<pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
+    r&#34;&#34;&#34;
     Leapfrog integrator for constrained Hamiltonian systems.
 
     The Hamiltonian function is assumed to be expressible as the sum of two
     components for which the corresponding (unconstrained) Hamiltonian flows
     can be exactly simulated. Specifically it is assumed that the Hamiltonian
-    function `h` takes the form
+    function \(h\) takes the form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components for which the exact
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) Hamiltonian component functions for which the exact
     flows can be computed.
 
     The system is assumed to be additionally subject to a set of holonomic
     constraints on the position component of the state i.e. that all valid
     states must satisfy
 
-        all(constr(pos) == 0)
+    \[ c(q) = 0. \]
 
-    for some vector constraint function `constr`, with the set of positions
-    satisfying the constraints implicitly defining a manifold. There is also
-    a corresponding constraint implied on the momentum variables which can
-    be derived by differentiating the above with respect to time and using
-    that under the Hamiltonian dynamics the time derivative of the position
-    is equal to the negative derivative of the Hamiltonian function with
-    respect to the momentum
+    for some differentiable and surjective vector constraint function \(c\) and
+    the set of positions satisfying the constraints implicitly defining a
+    manifold. There is also a corresponding constraint implied on the momentum
+    variables which can be derived by differentiating the above with respect to
+    time and using that under the Hamiltonian dynamics the time derivative of
+    the position is equal to the negative derivative of the Hamiltonian
+    function with respect to the momentum
 
-        all(jacob_constr(pos) @ dh2_dmom(mom) == 0)
+    \[ \partial c(q) \nabla_2 h(q, p) = 0. \]
 
     The set of momentum variables satisfying the above for given position
     variables is termed the cotangent space of the manifold (at a position),
@@ -726,7 +935,7 @@ integrator will also be in the cotangent bundle.</p></section>
     is termed the cotangent bundle.
 
     The integrator exactly preserves these constraints at all steps, such that
-    if an initial position momentum pair `(pos, mom)` are in the cotangent
+    if an initial position momentum pair \((q, p)\) are in the cotangent
     bundle, the corresponding pair after calling the `step` method of the
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
@@ -735,6 +944,62 @@ integrator will also be in the cotangent bundle.</p></section>
                  reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
                  retraction_solver=retract_onto_manifold_quasi_newton,
                  retraction_solver_kwargs=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float): Integrator time step.
+            n_inner_step (int): Positive integer specifying number of &#39;inner&#39;
+                constrained `system.h2_flow` steps to take within each overall
+                step. As the derivative `system.dh1_dpos` is not evaluated
+                during the `system.h2_flow` steps, if this derivative is
+                relatively expensive to compute compared to evaluating
+                `system.h2_flow` then compared to using `n_inner_step = 1` (the
+                default) for a given `step_size` it can be more computationally
+                efficient to use `n_inner_step &gt; 1` in combination within a
+                larger `step_size`, thus reducing the number of
+                `system.dh1_dpos` evaluations to simulate forward a given time
+                while still controlling the effective time step used for the
+                constrained `system.h2_flow` steps which involve solving a
+                non-linear system of equations to retract the position
+                component of the updated state back on to the manifold, with
+                the iterative solver typically diverging if the time step used
+                is too large.
+            reverse_check_tol (float): Tolerance for check of reversibility of
+                implicit sub-steps which involve iterative solving of a
+                non-linear system of equations. The step is assumed to be
+                reversible if sequentially applying the forward and adjoint
+                updates to a state returns to a state with a position component
+                within a distance (defined by the `reverse_check_norm`
+                argument) of `reverse_check_tol` of the original state position
+                component. If this condition is not met a
+                `mici.errors.NonReversibleStepError` exception is raised.
+            reverse_check_norm (Callable[[array], float]): Norm function
+                accepting a single one-dimensional array input and returning a
+                non-negative floating point value defining the distance to use
+                in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            retraction_solver (\
+                    Callable[[ChainState, ChainState, float, System], \
+                              ChainState]): Function which given two
+                states `state` and `state_prev`, floating point time step `dt`
+                and a Hamiltonian system object `system` solves the non-linear
+                system of equations in `lambda`
+
+                    system.constr(
+                        state.pos + dh2_flow_pos_dmom @
+                            system.jacob_constr(state_prev).T @ lambda) == 0
+
+                where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
+                derivative of the action of the (linear) `system.h2_flow` map
+                on the state momentum component with respect to the position
+                component. This is used to retract the state position
+                component back on to the manifold after an unconstrained
+                `system.h2_flow` update. Defaults to
+                `mici.solvers.retract_onto_manifold_quasi_newton`.
+            retraction_solver_kwargs (None or Dict[str, object]): Dictionary of
+                any keyword arguments to `retraction_solver`.
+        &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
@@ -745,27 +1010,27 @@ integrator will also be in the cotangent bundle.</p></section>
             retraction_solver_kwargs = {}
         self.retraction_solver_kwargs = retraction_solver_kwargs
 
-    def retract_onto_manifold(self, state, state_prev, dt):
+    def _retract_onto_manifold(self, state, state_prev, dt):
         self.retraction_solver(state, state_prev, dt, self.system,
                                **self.retraction_solver_kwargs)
 
-    def project_onto_cotangent_space(self, state):
+    def _project_onto_cotangent_space(self, state):
         self.system.project_onto_cotangent_space(state.mom, state)
 
-    def step_a(self, state, dt):
+    def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
-        self.project_onto_cotangent_space(state)
+        self._project_onto_cotangent_space(state)
 
-    def step_b(self, state, dt):
+    def _step_b(self, state, dt):
         dt_i = dt / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
-            self.retract_onto_manifold(state, state_prev, dt_i)
-            self.project_onto_cotangent_space(state)
+            self._retract_onto_manifold(state, state_prev, dt_i)
+            self._project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
-            self.retract_onto_manifold(state_back, state, -dt_i)
+            self._retract_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -775,100 +1040,38 @@ integrator will also be in the cotangent bundle.</p></section>
     def step(self, state):
         dt = state.dir * self.step_size
         state = state.copy()
-        self.step_a(state, 0.5 * dt)
-        self.step_b(state, dt)
-        self.step_a(state, 0.5 * dt)
+        self._step_a(state, 0.5 * dt)
+        self._step_b(state, dt)
+        self._step_a(state, 0.5 * dt)
         return state</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></li>
+<li>abc.ABC</li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mici.integrators.ConstrainedLeapfrogIntegrator.retract_onto_manifold"><code class="name flex">
-<span>def <span class="ident">retract_onto_manifold</span></span>(<span>self, state, state_prev, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L185-L187" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def retract_onto_manifold(self, state, state_prev, dt):
-    self.retraction_solver(state, state_prev, dt, self.system,
-                           **self.retraction_solver_kwargs)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ConstrainedLeapfrogIntegrator.project_onto_cotangent_space"><code class="name flex">
-<span>def <span class="ident">project_onto_cotangent_space</span></span>(<span>self, state)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L189-L190" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def project_onto_cotangent_space(self, state):
-    self.system.project_onto_cotangent_space(state.mom, state)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ConstrainedLeapfrogIntegrator.step_a"><code class="name flex">
-<span>def <span class="ident">step_a</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L192-L194" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_a(self, state, dt):
-    self.system.h1_flow(state, dt)
-    self.project_onto_cotangent_space(state)</code></pre>
-</details>
-</dd>
-<dt id="mici.integrators.ConstrainedLeapfrogIntegrator.step_b"><code class="name flex">
-<span>def <span class="ident">step_b</span></span>(<span>self, state, dt)</span>
-</code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L196-L210" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step_b(self, state, dt):
-    dt_i = dt / self.n_inner_step
-    for i in range(self.n_inner_step):
-        state_prev = state.copy()
-        self.system.h2_flow(state, dt_i)
-        self.retract_onto_manifold(state, state_prev, dt_i)
-        self.project_onto_cotangent_space(state)
-        state_back = state.copy()
-        self.system.h2_flow(state_back, -dt_i)
-        self.retract_onto_manifold(state_back, state, -dt_i)
-        rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
-        if rev_diff &gt; self.reverse_check_tol:
-            raise NonReversibleStepError(
-                f&#39;Non-reversible step. Distance between initial and &#39;
-                f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)</code></pre>
-</details>
-</dd>
 <dt id="mici.integrators.ConstrainedLeapfrogIntegrator.step"><code class="name flex">
 <span>def <span class="ident">step</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></code>.<code><a title="mici.integrators.Integrator.step" href="#mici.integrators.Integrator.step">step</a></code>
+</p>
+<section class="desc inherited"><p>Perform a single integrator step from a supplied state …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/integrators.py#L212-L218" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/integrators.py#L339-L345" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size
     state = state.copy()
-    self.step_a(state, 0.5 * dt)
-    self.step_b(state, dt)
-    self.step_a(state, 0.5 * dt)
+    self._step_a(state, 0.5 * dt)
+    self._step_b(state, dt)
+    self._step_a(state, 0.5 * dt)
     return state</code></pre>
 </details>
 </dd>
@@ -895,9 +1098,9 @@ integrator will also be in the cotangent bundle.</p></section>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator">ExplicitLeapfrogIntegrator</a></code></h4>
+<h4><code><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></code></h4>
 <ul class="">
-<li><code><a title="mici.integrators.ExplicitLeapfrogIntegrator.step" href="#mici.integrators.ExplicitLeapfrogIntegrator.step">step</a></code></li>
+<li><code><a title="mici.integrators.Integrator.step" href="#mici.integrators.Integrator.step">step</a></code></li>
 </ul>
 </li>
 <li>
@@ -908,23 +1111,13 @@ integrator will also be in the cotangent bundle.</p></section>
 </li>
 <li>
 <h4><code><a title="mici.integrators.ImplicitLeapfrogIntegrator" href="#mici.integrators.ImplicitLeapfrogIntegrator">ImplicitLeapfrogIntegrator</a></code></h4>
-<ul class="two-column">
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.solve_fixed_point" href="#mici.integrators.ImplicitLeapfrogIntegrator.solve_fixed_point">solve_fixed_point</a></code></li>
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step_a" href="#mici.integrators.ImplicitLeapfrogIntegrator.step_a">step_a</a></code></li>
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step_b_fwd" href="#mici.integrators.ImplicitLeapfrogIntegrator.step_b_fwd">step_b_fwd</a></code></li>
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step_b_adj" href="#mici.integrators.ImplicitLeapfrogIntegrator.step_b_adj">step_b_adj</a></code></li>
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step_c_fwd" href="#mici.integrators.ImplicitLeapfrogIntegrator.step_c_fwd">step_c_fwd</a></code></li>
-<li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step_c_adj" href="#mici.integrators.ImplicitLeapfrogIntegrator.step_c_adj">step_c_adj</a></code></li>
+<ul class="">
 <li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step" href="#mici.integrators.ImplicitLeapfrogIntegrator.step">step</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator" href="#mici.integrators.ConstrainedLeapfrogIntegrator">ConstrainedLeapfrogIntegrator</a></code></h4>
 <ul class="">
-<li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.retract_onto_manifold" href="#mici.integrators.ConstrainedLeapfrogIntegrator.retract_onto_manifold">retract_onto_manifold</a></code></li>
-<li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.project_onto_cotangent_space" href="#mici.integrators.ConstrainedLeapfrogIntegrator.project_onto_cotangent_space">project_onto_cotangent_space</a></code></li>
-<li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.step_a" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step_a">step_a</a></code></li>
-<li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.step_b" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step_b">step_b</a></code></li>
 <li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.step" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step">step</a></code></li>
 </ul>
 </li>

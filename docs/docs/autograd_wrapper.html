@@ -12,6 +12,7 @@
 <style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
 <body>
 <main>
@@ -24,10 +25,11 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/24c0527d88a4781727b5213d55b4c21767956bcf/mici/autograd_wrapper.py#L0-L115" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L0-L121" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Additional autograd differential operators.&#34;&#34;&#34;
 
+from functools import wraps
 AUTOGRAD_AVAILABLE = True
 try:
     from autograd import make_vjp as vjp_and_value
@@ -39,109 +41,114 @@ try:
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 
-if AUTOGRAD_AVAILABLE:
 
-    @unary_to_nary
-    def grad_and_value(fun, x):
-        &#34;&#34;&#34;
-        Returns a function that returns both gradient and value of a function.
-        &#34;&#34;&#34;
+def _wrapped_unary_to_nary(func):
+    &#34;&#34;&#34;Use functools.wraps with unary_to_nary decorator.&#34;&#34;&#34;
+    return wraps(func)(unary_to_nary(func))
+
+
+@_wrapped_unary_to_nary
+def grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns both gradient and value of a function.
+    &#34;&#34;&#34;
+    vjp, val = make_vjp(fun, x)
+    if not vspace(val).size == 1:
+        raise TypeError(&#34;grad_and_value only applies to real scalar-output&#34;
+                        &#34; functions.&#34;)
+    return vjp(vspace(val).ones()), val
+
+
+@_wrapped_unary_to_nary
+def jacobian_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns both the Jacobian and value of a function.
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    val = fun(x)
+    v_vspace = vspace(val)
+    x_vspace = vspace(x)
+    x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
+    vjp_rep, _ = make_vjp(fun, x_rep)
+    jacobian_shape = v_vspace.shape + x_vspace.shape
+    basis_vectors = np.array([b for b in v_vspace.standard_basis()])
+    jacobian = vjp_rep(basis_vectors)
+    return np.reshape(jacobian, jacobian_shape), val
+
+
+@_wrapped_unary_to_nary
+def mhp_jacobian_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns MHP, Jacobian and value of a function.
+
+    For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here
+    defined as a function of a matrix `m` corresponding to
+
+        mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
+
+    where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3
+    tensor of second-order partial derivatives of the vector-valued function,
+    such that
+
+        h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    mhp, (jacob, val) = make_vjp(
+        lambda x: atuple(jacobian_and_value(fun)(x)), x)
+    return lambda m: mhp((m, vspace(val).zeros())), jacob, val
+
+
+@_wrapped_unary_to_nary
+def hessian_grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns the Hessian, gradient &amp; value of a function.
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    def grad_fun(x):
         vjp, val = make_vjp(fun, x)
-        if not vspace(val).size == 1:
-            raise TypeError(&#34;grad_and_value only applies to real scalar-output&#34;
-                            &#34; functions.&#34;)
         return vjp(vspace(val).ones()), val
+    x_vspace = vspace(x)
+    x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
+    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
+    hessian_shape = x_vspace.shape + x_vspace.shape
+    basis_vectors = np.array([b for b in x_vspace.standard_basis()])
+    hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
+    return np.reshape(hessian, hessian_shape), grad[0], val[0]
 
-    @unary_to_nary
-    def jacobian_and_value(fun, x):
-        &#34;&#34;&#34;
-        Returns a function that returns both the Jacobian and value of a
-        function.
 
-        Assumes that the function `fun` broadcasts along the first dimension of
-        the input being differentiated with respect to such that a batch of
-        outputs can be computed concurrently for a batch of inputs.
-        &#34;&#34;&#34;
-        val = fun(x)
-        v_vspace = vspace(val)
-        x_vspace = vspace(x)
-        x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
-        vjp_rep, _ = make_vjp(fun, x_rep)
-        jacobian_shape = v_vspace.shape + x_vspace.shape
-        basis_vectors = np.array([b for b in v_vspace.standard_basis()])
-        jacobian = vjp_rep(basis_vectors)
-        return np.reshape(jacobian, jacobian_shape), val
+@_wrapped_unary_to_nary
+def mtp_hessian_grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns MTP, Jacobian and value of a function.
 
-    @unary_to_nary
-    def mhp_jacobian_and_value(fun, x):
-        &#34;&#34;&#34;
-        Returns a function that returns MHP, Jacobian and value of a function.
+    For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
+    here defined as a function of a matrix `m` corresponding to
 
-        For a vector-valued function `fun` the matrix-Hessian-product (MHP) is
-        here defined as a function of a matrix `m` corresponding to
+        mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
 
-            mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
+    where `t` is the &#39;Tressian&#39; of `f = fun(x)` wrt `x` i.e. the rank-3 tensor
+    of third-order partial derivatives of the scalar-valued function such that
 
-        where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3
-        tensor of second-order partial derivatives of the vector-valued
-        function, such that
+        t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
 
-            h[i, j, k] = (d**2 f[i]) / (dx[j] * dx[k])
-
-        Assumes that the function `fun` broadcasts along the first dimension of
-        the input being differentiated with respect to such that a batch of
-        outputs can be computed concurrently for a batch of inputs.
-        &#34;&#34;&#34;
-        mhp, (jacob, val) = make_vjp(
-            lambda x: atuple(jacobian_and_value(fun)(x)), x)
-        return lambda m: mhp((m, vspace(val).zeros())), jacob, val
-
-    @unary_to_nary
-    def hessian_grad_and_value(fun, x):
-        &#34;&#34;&#34;
-        Returns a function that returns the Hessian, gradient and value of a
-        function.
-
-        Assumes that the function `fun` broadcasts along the first dimension of
-        the input being differentiated with respect to such that a batch of
-        outputs can be computed concurrently for a batch of inputs.
-        &#34;&#34;&#34;
-        def grad_fun(x):
-            vjp, val = make_vjp(fun, x)
-            return vjp(vspace(val).ones()), val
-        x_vspace = vspace(x)
-        x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
-        vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
-        hessian_shape = x_vspace.shape + x_vspace.shape
-        basis_vectors = np.array([b for b in x_vspace.standard_basis()])
-        hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
-        return np.reshape(hessian, hessian_shape), grad[0], val[0]
-
-    @unary_to_nary
-    def mtp_hessian_grad_and_value(fun, x):
-        &#34;&#34;&#34;
-        Returns a function that returns MTP, Jacobian and value of a function.
-
-        For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
-        here defined as a function of a matrix `m` corresponding to
-
-            mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
-
-        where `t` is the &#39;Tressian&#39; of `f = fun(x)` wrt `x` i.e. the rank-3
-        tensor of third-order partial derivatives of the scalar-valued function
-        such that
-
-            t[i, j, k] = d**3 f / (dx[i] * dx[j] * dx[k])
-
-        Assumes that the function `fun` broadcasts along the first dimension of
-        the input being differentiated with respect to such that a batch of
-        outputs can be computed concurrently for a batch of inputs.
-        &#34;&#34;&#34;
-        mtp, (hessian, grad, val) = make_vjp(
-            lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
-        return (
-            lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
-            hessian, grad, val)</code></pre>
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    mtp, (hessian, grad, val) = make_vjp(
+        lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
+    return (
+        lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
+        hessian, grad, val)</code></pre>
 </details>
 </section>
 <section>
@@ -149,6 +156,192 @@ if AUTOGRAD_AVAILABLE:
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="mici.autograd_wrapper.grad_and_value"><code class="name flex">
+<span>def <span class="ident">grad_and_value</span></span>(<span>fun, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Makes a function that returns both gradient and value of a function.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L21-L30" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@_wrapped_unary_to_nary
+def grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns both gradient and value of a function.
+    &#34;&#34;&#34;
+    vjp, val = make_vjp(fun, x)
+    if not vspace(val).size == 1:
+        raise TypeError(&#34;grad_and_value only applies to real scalar-output&#34;
+                        &#34; functions.&#34;)
+    return vjp(vspace(val).ones()), val</code></pre>
+</details>
+</dd>
+<dt id="mici.autograd_wrapper.jacobian_and_value"><code class="name flex">
+<span>def <span class="ident">jacobian_and_value</span></span>(<span>fun, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Makes a function that returns both the Jacobian and value of a function.</p>
+<p>Assumes that the function <code>fun</code> broadcasts along the first dimension of the
+input being differentiated with respect to such that a batch of outputs can
+be computed concurrently for a batch of inputs.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L33-L50" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@_wrapped_unary_to_nary
+def jacobian_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns both the Jacobian and value of a function.
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    val = fun(x)
+    v_vspace = vspace(val)
+    x_vspace = vspace(x)
+    x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
+    vjp_rep, _ = make_vjp(fun, x_rep)
+    jacobian_shape = v_vspace.shape + x_vspace.shape
+    basis_vectors = np.array([b for b in v_vspace.standard_basis()])
+    jacobian = vjp_rep(basis_vectors)
+    return np.reshape(jacobian, jacobian_shape), val</code></pre>
+</details>
+</dd>
+<dt id="mici.autograd_wrapper.mhp_jacobian_and_value"><code class="name flex">
+<span>def <span class="ident">mhp_jacobian_and_value</span></span>(<span>fun, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Makes a function that returns MHP, Jacobian and value of a function.</p>
+<p>For a vector-valued function <code>fun</code> the matrix-Hessian-product (MHP) is here
+defined as a function of a matrix <code>m</code> corresponding to</p>
+<pre><code>mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
+</code></pre>
+<p>where <code>h</code> is the vector-Hessian of <code>f = fun(x)</code> wrt <code>x</code> i.e. the rank-3
+tensor of second-order partial derivatives of the vector-valued function,
+such that</p>
+<pre><code>h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
+</code></pre>
+<p>Assumes that the function <code>fun</code> broadcasts along the first dimension of the
+input being differentiated with respect to such that a batch of outputs can
+be computed concurrently for a batch of inputs.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L53-L75" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@_wrapped_unary_to_nary
+def mhp_jacobian_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns MHP, Jacobian and value of a function.
+
+    For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here
+    defined as a function of a matrix `m` corresponding to
+
+        mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))
+
+    where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3
+    tensor of second-order partial derivatives of the vector-valued function,
+    such that
+
+        h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    mhp, (jacob, val) = make_vjp(
+        lambda x: atuple(jacobian_and_value(fun)(x)), x)
+    return lambda m: mhp((m, vspace(val).zeros())), jacob, val</code></pre>
+</details>
+</dd>
+<dt id="mici.autograd_wrapper.hessian_grad_and_value"><code class="name flex">
+<span>def <span class="ident">hessian_grad_and_value</span></span>(<span>fun, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Makes a function that returns the Hessian, gradient &amp; value of a function.</p>
+<p>Assumes that the function <code>fun</code> broadcasts along the first dimension of the
+input being differentiated with respect to such that a batch of outputs can
+be computed concurrently for a batch of inputs.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L78-L96" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@_wrapped_unary_to_nary
+def hessian_grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns the Hessian, gradient &amp; value of a function.
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    def grad_fun(x):
+        vjp, val = make_vjp(fun, x)
+        return vjp(vspace(val).ones()), val
+    x_vspace = vspace(x)
+    x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
+    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
+    hessian_shape = x_vspace.shape + x_vspace.shape
+    basis_vectors = np.array([b for b in x_vspace.standard_basis()])
+    hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
+    return np.reshape(hessian, hessian_shape), grad[0], val[0]</code></pre>
+</details>
+</dd>
+<dt id="mici.autograd_wrapper.mtp_hessian_grad_and_value"><code class="name flex">
+<span>def <span class="ident">mtp_hessian_grad_and_value</span></span>(<span>fun, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Makes a function that returns MTP, Jacobian and value of a function.</p>
+<p>For a scalar-valued function <code>fun</code> the matrix-Tressian-product (MTP) is
+here defined as a function of a matrix <code>m</code> corresponding to</p>
+<pre><code>mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
+</code></pre>
+<p>where <code>t</code> is the 'Tressian' of <code>f = fun(x)</code> wrt <code>x</code> i.e. the rank-3 tensor
+of third-order partial derivatives of the scalar-valued function such that</p>
+<pre><code>t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
+</code></pre>
+<p>Assumes that the function <code>fun</code> broadcasts along the first dimension of the
+input being differentiated with respect to such that a batch of outputs can
+be computed concurrently for a batch of inputs.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/autograd_wrapper.py#L99-L122" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@_wrapped_unary_to_nary
+def mtp_hessian_grad_and_value(fun, x):
+    &#34;&#34;&#34;
+    Makes a function that returns MTP, Jacobian and value of a function.
+
+    For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
+    here defined as a function of a matrix `m` corresponding to
+
+        mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
+
+    where `t` is the &#39;Tressian&#39; of `f = fun(x)` wrt `x` i.e. the rank-3 tensor
+    of third-order partial derivatives of the scalar-valued function such that
+
+        t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
+
+    Assumes that the function `fun` broadcasts along the first dimension of the
+    input being differentiated with respect to such that a batch of outputs can
+    be computed concurrently for a batch of inputs.
+    &#34;&#34;&#34;
+    mtp, (hessian, grad, val) = make_vjp(
+        lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
+    return (
+        lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
+        hessian, grad, val)</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -166,6 +359,15 @@ if AUTOGRAD_AVAILABLE:
 <li><h3>Package</h3>
 <ul>
 <li><code><a title="mici" href="index.html">mici</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="mici.autograd_wrapper.grad_and_value" href="#mici.autograd_wrapper.grad_and_value">grad_and_value</a></code></li>
+<li><code><a title="mici.autograd_wrapper.jacobian_and_value" href="#mici.autograd_wrapper.jacobian_and_value">jacobian_and_value</a></code></li>
+<li><code><a title="mici.autograd_wrapper.mhp_jacobian_and_value" href="#mici.autograd_wrapper.mhp_jacobian_and_value">mhp_jacobian_and_value</a></code></li>
+<li><code><a title="mici.autograd_wrapper.hessian_grad_and_value" href="#mici.autograd_wrapper.hessian_grad_and_value">hessian_grad_and_value</a></code></li>
+<li><code><a title="mici.autograd_wrapper.mtp_hessian_grad_and_value" href="#mici.autograd_wrapper.mtp_hessian_grad_and_value">mtp_hessian_grad_and_value</a></code></li>
 </ul>
 </li>
 </ul>
