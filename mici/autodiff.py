@@ -4,11 +4,7 @@ Currently only Autograd is available as a backend but other backend
 frameworks may be available as alternative fallbacks in the future.
 """
 
-AUTOGRAD_AVAILABLE = True
-try:
-    import mici.autograd_wrapper as autograd_wrapper
-except ImportError:
-    AUTOGRAD_AVAILABLE = False
+import mici.autograd_wrapper as autograd_wrapper
 
 
 """List of names of valid differential operators.
@@ -60,8 +56,8 @@ def autodiff_fallback(diff_func, func, diff_op_name, name):
     elif diff_op_name not in DIFF_OPS:
         raise ValueError(
             f'Differential operator {diff_op_name} is not defined.')
-    elif AUTOGRAD_AVAILABLE:
+    elif autograd_wrapper.AUTOGRAD_AVAILABLE:
         return getattr(autograd_wrapper, diff_op_name)(func)
-    elif not AUTOGRAD_AVAILABLE:
+    elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
         raise ValueError(
             f'Autograd not available therefore {name} must be provided.')
