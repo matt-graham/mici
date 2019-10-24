@@ -2,6 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/mici.svg)](https://badge.fury.io/py/mici)
 [![API documentation](https://img.shields.io/badge/API_docs-grey.svg)](https://matt-graham.github.io/mici/docs)
+[![DOI](https://zenodo.org/badge/52494384.svg)](https://zenodo.org/badge/latestdoi/52494384)
+
 
 **Mici** is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.
 
