@@ -1,5 +1,7 @@
-"""Markov chain transition operators."""
+"""Markov transition kernels."""
 
+from abc import ABC, abstractmethod
+from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
@@ -9,19 +11,45 @@ from mici.errors import (
 logger = logging.getLogger(__name__)
 
 
-class _AbstractMomentumTransition(object):
-    """Base class for momentum transitions."""
+class MomentumTransition(ABC):
+    """Base class for momentum transitions.
+
+    Markov transition  kernel which leaves the conditional distribution on the
+    momentum under the canonical distribution invariant, updating only the
+    momentum component of the chain state.
+    """
 
     def __init__(self, system):
         """
         Args:
-            system: Hamiltonian system to be simulated.
+            system (mici.systems.System): Hamiltonian system defining
+                conditional distribution on momentum to leave invariant.
         """
         self.system = system
         self.state_variables = {'mom'}
 
+    @abstractmethod
+    def sample(self, state, rng):
+        """Sample a new momentum component to state.
 
-class IndependentMomentumTransition(_AbstractMomentumTransition):
+        Assigns a new momentum component to state by sampling from a Markov
+        transition kernel which leaves the conditional distribution on the
+        momentum under the canonical distribution defined by the Hamiltonian
+        system invariant.
+
+        Args:
+            state (mici.states.ChainState): Current chain state to sample new
+                momentum (momentum updated in place).
+            rng (RandomState): NumPy RandomState random number generator.
+
+        Returns:
+            state (mici.states.ChainState): Updated state object.
+            trans_stats (Dict or None): Any statistics computed during the
+                transition to be recorded or `None` if no statistics.
+        """
+
+
+class IndependentMomentumTransition(MomentumTransition):
     """Independent momentum transition.
 
     Independently resamples the momentum component of the state from its
@@ -33,7 +61,7 @@ class IndependentMomentumTransition(_AbstractMomentumTransition):
         return state, None
 
 
-class CorrelatedMomentumTransition(_AbstractMomentumTransition):
+class CorrelatedMomentumTransition(MomentumTransition):
     """Correlated (partial) momentum transition.
 
     Rather than independently sampling a new momentum, instead a pertubative
@@ -64,6 +92,13 @@ class CorrelatedMomentumTransition(_AbstractMomentumTransition):
     """
 
     def __init__(self, system, mom_resample_coeff=1.):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system defining
+                conditional distribution on momentum to leave invariant.
+            mom_resample_coeff (float): Scalar value in [0, 1] defining the
+                momentum resampling coefficient.
+        """
         super().__init__(system)
         self.mom_resample_coeff = mom_resample_coeff
 
@@ -77,14 +112,21 @@ class CorrelatedMomentumTransition(_AbstractMomentumTransition):
         return state, None
 
 
-class _AbstractIntegrationTransition(object):
+class IntegrationTransition(ABC):
+    """Base class for integration transtions.
+
+    Markov transition kernel which leaves canonical distribution invariant and
+    jointly updates the position and momentum components of the chain state by
+    integrating the Hamiltonian dynamics of the system to propose new values
+    for the state.
+    """
 
     def __init__(self, system, integrator):
         """
         Args:
-            system: Hamiltonian system to be simulated.
-            integrator: Symplectic integrator appropriate to the specified
-                Hamiltonian system.
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            integrator (mici.integrators.Integrator): Symplectic integrator
+                appropriate to the specified Hamiltonian system.
         """
         self.system = system
         self.integrator = integrator
@@ -97,8 +139,26 @@ class _AbstractIntegrationTransition(object):
         }
         self.state_variables = {'pos', 'mom', 'dir'}
 
+    @abstractmethod
+    def sample(self, state, rng):
+        """Sample a position-momentum pair using integration based proposal(s).
 
-class _AbstractMetropolisIntegrationTransition(_AbstractIntegrationTransition):
+        Samples new position and momentum values from a Markov transition
+        kernel which leaves the canonical distribution on the state space
+        corresponding to the Hamiltonian system invariant.
+
+        Args:
+            state (mici.states.ChainState): Current chain state.
+            rng (RandomState): NumPy RandomState random number generator.
+
+        Returns:
+            state (mici.states.ChainState): Updated state object.
+            trans_stats (Dict or None): Any statistics computed during the
+                transition to be recorded or `None` if no statistics.
+        """
+
+
+class MetropolisIntegrationTransition(IntegrationTransition):
     """Base for HMC methods using a Metropolis accept step to sample new state.
 
     In each transition a trajectory is generated by integrating the Hamiltonian
@@ -140,8 +200,7 @@ class _AbstractMetropolisIntegrationTransition(_AbstractIntegrationTransition):
         return state, stats
 
 
-class MetropolisStaticIntegrationTransition(
-        _AbstractMetropolisIntegrationTransition):
+class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
     """Static integration transition with Metropolis sampling of new state.
 
     In this variant the trajectory is generated by integrating the state
@@ -158,15 +217,23 @@ class MetropolisStaticIntegrationTransition(
     """
 
     def __init__(self, system, integrator, n_step):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            integrator (mici.integrators.Integrator): Symplectic integrator
+                appropriate to the specified Hamiltonian system.
+            n_step (int): Number of integrator steps to simulate in each
+                transition.
+        """
         super().__init__(system, integrator)
+        assert n_step > 0, 'Number of integrator steps must be positive'
         self.n_step = n_step
 
     def sample(self, state, rng):
         return self._sample_n_step(state, self.n_step, rng)
 
 
-class MetropolisRandomIntegrationTransition(
-        _AbstractMetropolisIntegrationTransition):
+class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
     """Random integration transition with Metropolis sampling of new state.
 
     In each transition a trajectory is generated by integrating the state in
@@ -185,9 +252,21 @@ class MetropolisRandomIntegrationTransition(
     """
 
     def __init__(self, system, integrator, n_step_range):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            integrator (mici.integrators.Integrator): Symplectic integrator
+                appropriate to the specified Hamiltonian system.
+            n_step_range (Tuple[int, int]): Tuple `(lower, upper)` with two
+                positive integer entries `lower` and `upper` (with
+                `upper > lower`) specifying respectively the lower and upper
+                bounds (inclusive) of integer interval to uniformly draw random
+                number integrator steps to simulate in each transition.
+        """
         super().__init__(system, integrator)
         n_step_lower, n_step_upper = n_step_range
-        assert n_step_lower > 0 and n_step_lower < n_step_upper
+        assert n_step_lower > 0 and n_step_lower < n_step_upper, (
+            'Range bounds must be non-negative and first entry less than last')
         self.n_step_range = n_step_range
 
     def sample(self, state, rng):
@@ -205,13 +284,13 @@ def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     reducing the distance between the terminal state positions.
 
     Args:
-        system (HamiltonianSystem): Hamiltonian system being integrated.
-        state_1 (ChainState): First terminal state of trajectory.
-        state_2 (ChainState): Second terminal state of trajectory.
+        system (mici.systems.System): Hamiltonian system being integrated.
+        state_1 (mici.states.ChainState): First terminal state of trajectory.
+        state_2 (mici.states.ChainState): Second terminal state of trajectory.
         sum_mom (array): Sum of momentums of trajectory states.
 
     Returns:
-        True if termination criterion is satisfied.
+        terminate (bool): True if termination criterion is satisfied.
 
     References:
 
@@ -236,13 +315,13 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     two points is general no longer a straight line.
 
     Args:
-        system (HamiltonianSystem): Hamiltonian system being integrated.
-        state_1 (ChainState): First terminal state of trajectory.
-        state_2 (ChainState): Second terminal state of trajectory.
+        system (mici.systems.System): Hamiltonian system being integrated.
+        state_1 (mici.states.ChainState): First terminal state of trajectory.
+        state_2 (mici.states.ChainState): Second terminal state of trajectory.
         sum_mom (array): Sum of momentums of trajectory states.
 
     Returns:
-        True if termination criterion is satisfied.
+        terminate (bool): True if termination criterion is satisfied.
 
     References:
 
@@ -257,7 +336,7 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
         np.sum(system.dh_dmom(state_2) * sum_mom) < 0)
 
 
-class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
+class MultinomialDynamicIntegrationTransition(IntegrationTransition):
     """Dynamic integration transition with multinomial sampling of new state.
 
     In each transition a binary tree of states is recursively computed by
@@ -280,16 +359,33 @@ class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
     def __init__(self, system, integrator,
                  max_tree_depth=10, max_delta_h=1000,
                  termination_criterion=riemannian_no_u_turn_criterion):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            integrator (mici.integrators.Integrator): Symplectic integrator
+                appropriate to the specified Hamiltonian system.
+            max_tree_depth (int): Maximum depth to expand trajectory binary
+                tree to. The maximum number of integrator steps corresponds to
+                `2**max_tree_depth`.
+            max_delta_h (float): Maximum change to tolerate in the Hamiltonian
+                function over a trajectory before signalling a divergence.
+            termination_criterion (Callable[\
+                    [System, ChainState, ChainState, array], bool]): Function
+                computing criterion to use to determine when to terminate
+                trajectory tree expansion. The function should take a
+                Hamiltonian system as its first argument, a pair of states
+                corresponding to the two edge nodes in the trajectory
+                (sub-)tree being checked and an array containing the sum of the
+                momentums over the trajectory (sub)-tree. Defaults to
+                `riemannian_no_u_turn_criterion`.
+        """
         super().__init__(system, integrator)
+        assert max_tree_depth > 0, 'max_tree_depth must be non-negative'
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
-        self._termination_criterion = termination_criterion
+        self._termination_criterion = partial(termination_criterion, system)
         self.statistic_types['tree_depth'] = (np.int64, -1)
         self.statistic_types['diverging'] = (np.bool, False)
-
-    def termination_criterion(self, state_1, state_2, sum_mom):
-        return self._termination_criterion(
-            self.system, state_1, state_2, sum_mom)
 
     # Key to subscripts used in build_tree and sample_dynamics_transition
     # _p : proposal
@@ -347,7 +443,7 @@ class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
         sum_weight += sum_weight_s
         # calculate termination criteria for subtree
         sum_mom_s = sum_mom_i + sum_mom_o
-        terminate_s = self.termination_criterion(state_i, state_o, sum_mom_s)
+        terminate_s = self._termination_criterion(state_i, state_o, sum_mom_s)
         # update overall tree summed momentum
         sum_mom += sum_mom_s
         return terminate_s, state_i, state_o, state_p
@@ -385,7 +481,7 @@ class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
                 state_n = state_p
             sum_weight += sum_weight_s
             sum_mom += sum_mom_s
-            if self.termination_criterion(state_l, state_r, sum_mom):
+            if self._termination_criterion(state_l, state_r, sum_mom):
                 break
         if stats['n_step'] > 0:
             stats['accept_prob'] = stats['sum_acc_prob'] / stats['n_step']
