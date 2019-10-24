@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Python implementations of Hamiltonian dynamics based MCMC samplers. """
+""" MCMC samplers based on simulating Hamiltonian dynamics on a manifold. """
 
 __authors__ = 'Matt Graham'
 __license__ = 'MIT'
