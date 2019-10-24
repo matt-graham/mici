@@ -24,7 +24,7 @@ try:
             tqdm.tqdm.write(msg)
 
     def setup_tqdm_logger():
-        """Returns a logger which redirects log output to tqdm.write."""
+        """Returns a logger which redirects log output to `tqdm.write`."""
         logger = logging.getLogger()
         handler = TqdmHandler()
         logger.addHandler(handler)
@@ -47,11 +47,11 @@ try:
         `sample_chains` call.
 
         Args:
-            traces (dict[str, list[array]]): Trace arrays, with one entry per
+            traces (Dict[str, List[array]]): Trace arrays, with one entry per
                 function in `trace_funcs` passed to sampler method. Each entry
                 consists of a list of arrays, one per chain, with the first
                 axes of the arrays corresponding to the sampling (draw) index.
-            chain_stats (dict[str, list[array]]): Chain integration transition
+            chain_stats (Dict[str, List[array]]): Chain integration transition
                 statistics as a dictionary with string keys describing the
                 statistics recorded and values corresponding to a list of
                 arrays with one array per chain and the first axis of the
@@ -61,7 +61,7 @@ try:
                 `sampling_stats` group in the returned `InferenceData` object.
 
         Returns:
-            arvix.InferenceData:
+            arviz.InferenceData:
                 An arviz data container with groups `posterior` and
                 'sample_stats', both of instances of `xarray.Dataset`. The
                 `posterior` group corresponds to the chain variable traces
@@ -110,6 +110,12 @@ def get_valid_filename(string):
     or underscore (_).
 
     Based on https://stackoverflow.com/a/295146/4798943
+
+    Args:
+        string (str): String file name to process.
+
+    Returns:
+        str: Generated file name.
     """
     return ''.join(c for c in string if (c.isalnum() or c in '._- '))
 
@@ -123,23 +129,12 @@ def get_size(obj, seen=None):
 
     Copyright (c) [2018] [Wissam Jarjoui]
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the "Software"),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
+    Args:
+        obj (object): Object to calculate size of.
+        seen (None or Set): Set of objects seen so far.
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
+    Returns:
+        int: Byte size of `obj`.
     """
     size = sys.getsizeof(obj)
     if seen is None:
@@ -184,6 +179,7 @@ def log1p_exp(val):
 
 
 def log1m_exp(val):
+    """Numerically stable implementation of `log(1 - exp(val))`."""
     if val >= 0.:
         return nan
     elif val > LOG_2:
@@ -193,6 +189,7 @@ def log1m_exp(val):
 
 
 def log_sum_exp(val1, val2):
+    """Numerically stable implementation of `log(exp(val1) + exp(val2))`."""
     if val1 > val2:
         return val1 + log1p_exp(val2 - val1)
     else:
@@ -200,6 +197,7 @@ def log_sum_exp(val1, val2):
 
 
 def log_diff_exp(val1, val2):
+    """Numerically stable implementation of `log(exp(val1) - exp(val2))`."""
     if val1 < val2:
         return nan
     elif val1 == val2:
