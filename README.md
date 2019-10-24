@@ -1,6 +1,7 @@
 <img src='images/mici-logo-rectangular.svg' width='400px'/>
 
 [![PyPI version](https://badge.fury.io/py/mici.svg)](https://badge.fury.io/py/mici)
+[![API documentation](https://img.shields.io/badge/API_docs-grey.svg)](https://matt-graham.github.io/mici/docs)
 
 **Mici** is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.
 
@@ -60,7 +61,7 @@ Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling
 
  ## Overview of package
  
- The three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
+API documentation for the package is available [here](https://matt-graham.github.io/mici/docs). The three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
  
  [`mici.systems`](mici/systems.py) - Hamiltonian systems encapsulating model functions and their derivatives
 
