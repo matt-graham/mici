@@ -1,5 +1,6 @@
 """Hamiltonian systems encapsulating energy functions and their derivatives."""
 
+from abc import ABC, abstractmethod
 import logging
 import numpy as np
 from mici.states import cache_in_state, multi_cache_in_state
@@ -11,20 +12,21 @@ from mici.matrices import (
 from mici.autodiff import autodiff_fallback
 
 
-class _HamiltonianSystem(object):
-    """Base class for Hamiltonian systems.
+class System(ABC):
+    r"""Base class for Hamiltonian systems.
 
-    The Hamiltonian function `h` is assumed to have the general form
+    The Hamiltonian function \(h\) is assumed to have the general form
 
-        h(pos, mom) = h1(pos) + h2(pos, mom)
+    \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components. The exact
-    Hamiltonian flow for the `h1` component can be computed however depending
-    on the form of `h2` the corresponding Hamiltonian flow may or may not be
+    where \(q\) and \(p\) are the position and momentum variables respectively,
+    and \(h_1\) and \(h_2\) Hamiltonian component functions. The exact
+    Hamiltonian flow for the \(h_1\) component can be always be computed as it
+    depends only on the position variable however depending on the form of
+    \(h_2\) the corresponding exact Hamiltonian flow may or may not be
     simulable.
 
-    By default `h1` is assumed to correspond to the negative logarithm of an
+    By default \(h_1\) is assumed to correspond to the negative logarithm of an
     unnormalised density on the position variables with respect to the Lebesgue
     measure, with the corresponding distribution on the position space being
     the target distribution it is wished to draw approximate samples from.
@@ -33,24 +35,23 @@ class _HamiltonianSystem(object):
     def __init__(self, neg_log_dens, grad_neg_log_dens=None):
         """
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the Lebesgue
-                measure, with the corresponding distribution on the position
-                space being the target distribution it is wished to draw
-                approximate samples from.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to the position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) an automatic differentiation fallback
-                will be used to attempt to construct the derivative of
-                `neg_log_dens` automatically.
-
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
         """
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
@@ -59,63 +60,157 @@ class _HamiltonianSystem(object):
 
     @cache_in_state('pos')
     def neg_log_dens(self, state):
+        """Negative logarithm of unnormalised density of target distribution.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of computed negative log density.
+        """
         return self._neg_log_dens(state.pos)
 
     @multi_cache_in_state(['pos'], ['grad_neg_log_dens', 'neg_log_dens'])
     def grad_neg_log_dens(self, state):
+        """Derivative of negative log density with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `neg_log_dens(state)` derivative with respect to
+                `state.pos`.
+        """
         return self._grad_neg_log_dens(state.pos)
 
     def h1(self, state):
+        """Hamiltonian component depending only on position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h1` Hamiltonian component.
+        """
         return self.neg_log_dens(state)
 
     def dh1_dpos(self, state):
+        """Derivative of `h1` Hamiltonian component with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of computed `h1` derivative.
+        """
         return self.grad_neg_log_dens(state)
 
     def h1_flow(self, state, dt):
+        """Apply exact flow map corresponding to `h1` Hamiltonian component.
+
+        `state` argument is modified in place.
+
+        Args:
+            state (mici.states.ChainState): State to start flow at.
+            dt (float): Time interval to simulate flow for.
+        """
         state.mom -= dt * self.dh1_dpos(state)
 
+    @abstractmethod
     def h2(self, state):
-        raise NotImplementedError()
+        """Hamiltonian component depending on momentum and optionally position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of `h2` Hamiltonian component.
+        """
+
+    @abstractmethod
+    def dh2_dmom(self, state):
+        """Derivative of `h2` Hamiltonian component with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h2(state)` derivative with respect to `state.pos`.
+        """
 
     def h(self, state):
+        """Hamiltonian function for system.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            float: Value of Hamiltonian.
+        """
         return self.h1(state) + self.h2(state)
 
     def dh_dpos(self, state):
+        """Derivative of Hamiltonian with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.pos`.
+        """
         if hasattr(self, 'dh2_dpos'):
             return self.dh1_dpos(state) + self.dh2_dpos(state)
         else:
             return self.dh1_dpos(state)
 
     def dh_dmom(self, state):
+        """Derivative of Hamiltonian with respect to momentum.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h(state)` derivative with respect to `state.mom`.
+        """
         return self.dh2_dmom(state)
 
+    @abstractmethod
     def sample_momentum(self, state, rng):
-        raise NotImplementedError()
+        """
+        Sample a momentum from its conditional distribution given a position.
+
+        Args:
+            state (mici.states.ChainState): State defining position to
+               condition on.
+
+        Returns:
+            mom (array): Sampled momentum.
+        """
 
 
-class EuclideanMetricSystem(_HamiltonianSystem):
-    """Hamiltonian system with fixed covariance Gaussian-distributed momenta.
+class EuclideanMetricSystem(System):
+    r"""Hamiltonian system with a Euclidean metric on the position space.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor),
-    so that the `h2` Hamiltonian component is
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\), so that the
+    \(h_2\) Hamiltonian component is
 
-        h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor.
+    where \(q\) and \(p\) are the position and momentum variables respectively.
     """
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         """
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the Lebesgue
-                measure, with the corresponding distribution on the position
-                space being the target distribution it is wished to draw
-                approximate samples from.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
             metric (None or array or Matrix): Matrix object corresponding to
                 matrix representation of metric on position space and
                 covariance of Gaussian marginal distribution on momentum
@@ -125,17 +220,17 @@ class EuclideanMetricSystem(_HamiltonianSystem):
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to the position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) it will be attempted to use automatic
-                differentiation to construct the derivative of `neg_log_dens`
-                automatically.
+            grad_neg_log_dens (None or Callable[[array], array or \
+                   Tuple[array, float]]): Function which given a
+                position array returns the derivative of the negative logarithm
+                of the unnormalised density specified by `neg_log_dens` with
+                respect to the position array argument. Optionally the function
+                may instead return a pair of values with the first being the
+                array corresponding to the derivative and the second being the
+                value of the `neg_log_dens` evaluated at the passed position
+                array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct
+                the derivative of `neg_log_dens` automatically.
         """
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -395,7 +490,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
             mhp_constr=mhp_constr)
 
 
-class RiemannianMetricSystem(_HamiltonianSystem):
+class RiemannianMetricSystem(System):
     """Riemannian Hamiltonian system with a position dependent metric tensor.
 
     The momentum variables are assumed to have a zero-mean Gaussian conditional
