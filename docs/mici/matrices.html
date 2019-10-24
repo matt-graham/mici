@@ -1,0 +1,2967 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.1" />
+<title>mici.matrices API documentation</title>
+<meta name="description" content="Structured matrix classes implementing basic linear algebra operations." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>mici.matrices</code></h1>
+</header>
+<section id="section-intro">
+<p>Structured matrix classes implementing basic linear algebra operations.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L0-L800" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Structured matrix classes implementing basic linear algebra operations.&#34;&#34;&#34;
+
+import numpy as np
+import numpy.linalg as nla
+import scipy.linalg as sla
+
+
+class _AbstractMatrix(object):
+
+    __array_priority__ = 1
+
+    def __init__(self, shape):
+        self.shape = shape
+
+    def __array__(self):
+        if hasattr(self, &#39;array&#39;):
+            return self.array
+        else:
+            raise NotImplementedError()
+
+    def __mul__(self, other):
+        if np.isscalar(other) or np.ndim(other) == 0:
+            if other == 0:
+                raise NotImplementedError(
+                    &#39;Scalar multiplication by zero not implemented.&#39;)
+            return self._scalar_multiply(other)
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if np.isscalar(other) or np.ndim(other) == 0:
+            if other == 0:
+                raise NotImplementedError(
+                    &#39;Scalar division by zero not implemented.&#39;)
+            return self._scalar_multiply(1 / other)
+        else:
+            return NotImplemented
+
+    def __neg__(self):
+        return self._scalar_multiply(-1)
+
+    def __matmul__(self, other):
+        if self.shape[1] is not None and other.shape[0] != self.shape[1]:
+            raise ValueError(
+                f&#39;Inconsistent dimensions for matrix multiplication: &#39;
+                f&#39;{self.shape} and {other.shape}.&#39;)
+        try:
+            return self._left_matrix_multiply(other)
+        except NotImplementedError:
+            return MatrixProduct(self, other)
+
+    def __rmatmul__(self, other):
+        if self.shape[0] is not None and other.shape[-1] != self.shape[0]:
+            raise ValueError(
+                f&#39;Inconsistent dimensions for matrix multiplication: &#39;
+                f&#39;{other.shape} and {self.shape}.&#39;)
+        return self._right_matrix_multiply(other)
+
+    @property
+    def array(self):
+        return self._array
+
+    def _left_matrix_multiply(self, other):
+        return self.array @ other
+
+    def _right_matrix_multiply(self, other):
+        return other @ self.array
+
+    def _scalar_multiply(self, other):
+        raise NotImplementedError()
+
+
+class _AbstractSquareMatrix(_AbstractMatrix):
+
+    def __init__(self, size):
+        super().__init__((size, size))
+
+    @property
+    def log_abs_det_sqrt(self):
+        return 0.5 * self.log_abs_det
+
+    @property
+    def diagonal(self):
+        return self.array.diagonal()
+
+
+class _AbstractSymmetricMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, size, is_posdef=False, is_negdef=False):
+        self._eigval = None
+        self._eigvec = None
+        self._is_posdef = is_posdef
+        self._is_negdef = is_negdef
+        super().__init__(size)
+
+    def _compute_eigendecomposition(self):
+        self._eigval, eigvec = nla.eigh(self.array)
+        self._eigvec = OrthogonalMatrix(eigvec)
+
+    @property
+    def eigval(self):
+        if self._eigval is None or self._eigvec is None:
+            self._compute_eigendecomposition()
+        return self._eigval
+
+    @property
+    def eigvec(self):
+        if self._eigval is None or self._eigvec is None:
+            self._compute_eigendecomposition()
+        return self._eigvec
+
+    @property
+    def T(self):
+        return self
+
+    @property
+    def log_abs_det(self):
+        return np.log(np.abs(self.eigval)).sum()
+
+    @property
+    def is_posdef(self):
+        return self._is_posdef
+
+    @property
+    def is_negdef(self):
+        return self._is_negdef
+
+
+class IdentityMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, size=None):
+        super().__init__(size, is_posdef=True, is_negdef=False)
+
+    def _scalar_multiply(self, scalar):
+        return ScaledIdentityMatrix(scalar, self.shape[0])
+
+    def _left_matrix_multiply(self, other):
+        return other
+
+    def _right_matrix_multiply(self, other):
+        return other
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def sqrt(self):
+        return self
+
+    @property
+    def eigvec(self):
+        return self
+
+    @property
+    def inv(self):
+        return self
+
+    @property
+    def diagonal(self):
+        return np.ones(self.shape[0])
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for identity matrix with &#39;
+                &#39;implicit size.&#39;)
+        return np.identity(self.shape[0])
+
+    @property
+    def log_abs_det(self):
+        return 0.
+
+    @property
+    def log_abs_det_sqrt(self):
+        return 0.
+
+
+class ScaledIdentityMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, scalar, size=None):
+        if scalar == 0:
+            raise ValueError(&#39;scalar must be non-zero&#39;)
+        self._scalar = scalar
+        super().__init__(size, is_posdef=scalar &gt; 0, is_negdef=scalar &lt; 0)
+
+    def _scalar_multiply(self, scalar):
+        return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
+
+    def _left_matrix_multiply(self, other):
+        return self._scalar * other
+
+    def _right_matrix_multiply(self, other):
+        return self._scalar * other
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def sqrt(self):
+        if not self.is_posdef:
+            raise NotImplementedError(
+                &#39;Square-root supported only for positive definite &#39;
+                &#39;matrices.&#39;)
+        return ScaledIdentityMatrix(self._scalar**0.5, self.shape[0])
+
+    @property
+    def eigvec(self):
+        return IdentityMatrix(self.shape[0])
+
+    @property
+    def inv(self):
+        return ScaledIdentityMatrix(1 / self._scalar, self.shape[0])
+
+    @property
+    def diagonal(self):
+        return self._scalar * np.ones(self.shape[0])
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for scaled identity matrix &#39;
+                &#39;with implicit size.&#39;)
+        return self._scalar * np.identity(self.shape[0])
+
+    @property
+    def log_abs_det(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get log determinant for scaled identity matrix with &#39;
+                &#39;implicit size.&#39;)
+        return self.shape[0] * np.log(abs(self._scalar))
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * self.shape[0] / self._scalar
+
+    def grad_quadratic_form_inv(self, vector):
+        return -np.sum(vector**2) / self._scalar**2
+
+
+class PositiveScaledIdentityMatrix(ScaledIdentityMatrix):
+
+    def __init__(self, scalar, size=None):
+        if scalar &lt; 0:
+            raise ValueError(&#39;Scalar multiplier must be positive.&#39;)
+        super().__init__(scalar, size)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveScaledIdentityMatrix(
+                scalar * self._scalar, self.shape[0])
+        else:
+            return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
+
+    @property
+    def sqrt(self):
+        return PositiveScaledIdentityMatrix(self._scalar**0.5, self.shape[0])
+
+
+class DiagonalMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, diagonal):
+        if diagonal.ndim != 1:
+            raise ValueError(&#39;Specified diagonal must be a 1D array.&#39;)
+        self._diagonal = diagonal
+        super().__init__(diagonal.size, is_posdef=np.all(diagonal &gt; 0),
+                         is_negdef=np.all(diagonal &lt; 0))
+
+    @property
+    def diagonal(self):
+        return self._diagonal
+
+    def _scalar_multiply(self, scalar):
+        return DiagonalMatrix(self.diagonal * scalar)
+
+    def _left_matrix_multiply(self, other):
+        if other.ndim == 2:
+            return self.diagonal[:, None] * other
+        elif other.ndim == 1:
+            return self.diagonal * other
+        else:
+            raise ValueError(
+                &#39;Left matrix multiplication only defined for one or two &#39;
+                &#39;dimensional right hand sides.&#39;)
+
+    def _right_matrix_multiply(self, other):
+        return self.diagonal * other
+
+    @property
+    def eigvec(self):
+        return IdentityMatrix(self.shape[0])
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def inv(self):
+        return DiagonalMatrix(1. / self.diagonal)
+
+    @property
+    def array(self):
+        return np.diag(self.diagonal)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 / self.diagonal
+
+    def grad_quadratic_form_inv(self, vector):
+        return -(self.inv @ vector)**2
+
+
+class PositiveDiagonalMatrix(DiagonalMatrix):
+
+    def __init__(self, diagonal):
+        if not np.all(diagonal &gt;= 0):
+            raise ValueError(&#39;Diagonal values must all be positive.&#39;)
+        super().__init__(diagonal)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveDiagonalMatrix(self.diagonal * scalar)
+        else:
+            return DiagonalMatrix(self.diagonal * scalar)
+
+    @property
+    def sqrt(self):
+        return PositiveDiagonalMatrix(self.diagonal**0.5)
+
+
+class TriangularMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array, lower=True):
+        self._array = array
+        self.lower = lower
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return TriangularMatrix(self.array * scalar, self.lower)
+
+    @property
+    def inv(self):
+        return InverseTriangularMatrix(self.array, lower=self.lower)
+
+    @property
+    def T(self):
+        return TriangularMatrix(self.array.T, lower=not self.lower)
+
+    @property
+    def log_abs_det(self):
+        return np.log(np.abs(self.diagonal)).sum()
+
+
+class InverseTriangularMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, inverse_array, lower=True):
+        self._inverse_array = inverse_array
+        self.lower = lower
+        super().__init__(inverse_array.shape[0])
+
+    @property
+    def inverse_array(self):
+        return self._inverse_array
+
+    def _scalar_multiply(self, scalar):
+        return InverseTriangularMatrix(self.inverse_array / scalar, self.lower)
+
+    def _left_matrix_multiply(self, other):
+        return sla.solve_triangular(
+            self.inverse_array, other, lower=self.lower)
+
+    def _right_matrix_multiply(self, other):
+        return sla.solve_triangular(
+            self.inverse_array, other.T, lower=self.lower, trans=1).T
+
+    @property
+    def inv(self):
+        return TriangularMatrix(self.inverse_array, lower=self.lower)
+
+    @property
+    def T(self):
+        return InverseTriangularMatrix(
+            self.inverse_array.T, lower=not self.lower)
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[0])
+
+    @property
+    def diagonal(self):
+        return 1. / self.inverse_array.diagonal()
+
+    @property
+    def log_abs_det(self):
+        return -self.inv.log_abs_det
+
+
+class _AbstractTriangularFactoredDefiniteMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, array, factor, sign=1):
+        self._array = array
+        self._factor = factor
+        self._sign = sign
+        if array is not None:
+            super().__init__(size=array.shape[0], is_posdef=(sign == 1),
+                             is_negdef=(sign == -1))
+        elif factor is not None:
+            super().__init__(size=factor.shape[0], is_posdef=(sign == 1),
+                             is_negdef=(sign == -1))
+        else:
+            raise RuntimeError(
+                &#39;At least one of array and factor must be specified.&#39;)
+
+    @property
+    def factor(self):
+        return self._factor
+
+    @property
+    def inv(self):
+        return TriangularFactoredDefiniteMatrix(
+            factor=self.factor.inv.T, sign=self._sign)
+
+    @property
+    def sqrt(self):
+        if self._sign == 1:
+            return self.factor
+        else:
+            raise NotImplementedError(
+                &#39;Square-root not supported for negative definite matrices.&#39;)
+
+    @property
+    def log_abs_det(self):
+        return 2 * self.factor.log_abs_det
+
+    @property
+    def log_abs_det_sqrt(self):
+        return self.factor.log_abs_det
+
+
+class TriangularFactoredDefiniteMatrix(
+        _AbstractTriangularFactoredDefiniteMatrix):
+
+    def __init__(self, factor, lower=True, sign=1, array=None):
+        if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
+            factor = TriangularMatrix(factor, lower)
+        super().__init__(array=array, factor=factor, sign=sign)
+
+    def _scalar_multiply(self, scalar):
+        return TriangularFactoredDefiniteMatrix(
+            factor=abs(scalar)**0.5 * self.factor,
+            sign=self._sign * np.sign(scalar))
+
+    def _left_matrix_multiply(self, other):
+        return self._sign * (self.factor @ (self.factor.T @ other))
+
+    def _right_matrix_multiply(self, other):
+        return self._sign * ((other @ self.factor) @ self.factor.T)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return self.factor.inv.T.array
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_factor_vector = self.factor.inv @ vector
+        inv_vector = self.inv @ vector
+        return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)
+
+    @property
+    def array(self):
+        if self._array is None:
+            self._array = self._sign * (self.factor @ self.factor.array.T)
+        return self._array
+
+
+class DenseDefiniteMatrix(_AbstractTriangularFactoredDefiniteMatrix):
+
+    def __init__(self, array, sign=1, factor=None):
+        super().__init__(array=array, factor=factor, sign=sign)
+
+    def _scalar_multiply(self, scalar):
+        if (scalar &gt; 0) == (self._sign == 1):
+            return DenseDefiniteMatrix(
+                scalar * self.array, 1,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DenseDefiniteMatrix(
+                scalar * self.array, -1,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+
+    @property
+    def factor(self):
+        if self._factor is None:
+            self._factor = TriangularMatrix(
+                nla.cholesky(self._sign * self._array), True)
+        return self._factor
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * self.inv.array
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_metric_vector = self.inv @ vector
+        return -np.outer(inv_metric_vector, inv_metric_vector)
+
+
+class DensePositiveDefiniteMatrix(DenseDefiniteMatrix):
+
+    def __init__(self, array, factor=None):
+        super().__init__(array=array, sign=1, factor=factor)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DenseNegativeDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+
+
+class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
+
+    def __init__(self, array, factor=None):
+        super().__init__(array=array, sign=-1, factor=factor)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return DenseNegativeDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+
+
+class DenseSquareMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array, transposed=False, lu_and_piv=None):
+        self._array = array
+        self._transposed = transposed
+        self._lu_and_piv = lu_and_piv
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        if self._lu_and_piv is None:
+            return DenseSquareMatrix(scalar * self.array, self._transposed)
+        else:
+            old_lu, piv = self._lu_and_piv
+            # Multiply upper-triangle by scalar
+            new_lu = old_lu + (scalar - 1) * np.triu(old_lu)
+            return DenseSquareMatrix(
+                scalar * self.array, self._transposed, (new_lu, piv))
+
+    @property
+    def lu_and_piv(self):
+        if self._lu_and_piv is None:
+            self._lu_and_piv = sla.lu_factor(self.array)
+        return self._lu_and_piv
+
+    @property
+    def log_abs_det(self):
+        return np.log(np.abs(self.lu_and_piv[0].diagonal())).sum()
+
+    @property
+    def T(self):
+        return DenseSquareMatrix(
+            self.array.T, not self._transposed, self.lu_and_piv)
+
+    @property
+    def inv(self):
+        return InverseLUFactoredSquareMatrix(
+            self.array, self._transposed, self.lu_and_piv)
+
+
+class InverseLUFactoredSquareMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, inverse_array, transposed, inverse_lu_and_piv):
+        self._inverse_array = inverse_array
+        self._inverse_lu_and_piv = inverse_lu_and_piv
+        self._transposed = transposed
+        super().__init__(inverse_array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        old_inv_lu, piv = self._inverse_lu_and_piv
+        # Divide upper-triangle by scalar
+        new_inv_lu = old_inv_lu - (scalar - 1) / scalar * np.triu(old_inv_lu)
+        return InverseLUFactoredSquareMatrix(
+            self._inverse_array / scalar, self._transposed, (new_inv_lu, piv))
+
+    def _left_matrix_multiply(self, other):
+        return sla.lu_solve(
+            self._inverse_lu_and_piv, other, 1 if self._transposed else 0)
+
+    def _right_matrix_multiply(self, other):
+        return sla.lu_solve(
+            self._inverse_lu_and_piv, other.T, 0 if self._transposed else 1).T
+
+    @property
+    def log_abs_det(self):
+        return -np.log(np.abs(self._inverse_lu_and_piv[0].diagonal())).sum()
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[0])
+
+    @property
+    def inv(self):
+        return DenseSquareMatrix(
+            self._inverse_array, self._transposed, self._inverse_lu_and_piv)
+
+    @property
+    def T(self):
+        return InverseLUFactoredSquareMatrix(
+            self._inverse_array, not self._transposed,
+            self._inverse_lu_and_piv)
+
+
+class OrthogonalMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array):
+        self._array = array
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return ScaledOrthogonalMatrix(scalar, self.array)
+
+    @property
+    def log_abs_det(self):
+        return 0
+
+    @property
+    def T(self):
+        return OrthogonalMatrix(self.array.T)
+
+    @property
+    def inv(self):
+        return self.T
+
+
+class ScaledOrthogonalMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, scalar, orth_array):
+        self._scalar = scalar
+        self._orth_array = orth_array
+        super().__init__(orth_array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return ScaledOrthogonalMatrix(scalar * self._scalar, self._orth_array)
+
+    @property
+    def array(self):
+        return self._scalar * self._orth_array
+
+    @property
+    def diagonal(self):
+        return self._scalar * self._orth_array.diagonal()
+
+    @property
+    def log_abs_det(self):
+        return self.shape[0] * np.log(abs(self._scalar))
+
+    @property
+    def T(self):
+        return ScaledOrthogonalMatrix(self._scalar, self._orth_array.T)
+
+    @property
+    def inv(self):
+        return ScaledOrthogonalMatrix(1 / self._scalar, self._orth_array.T)
+
+
+class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, eigvec, eigval):
+        if isinstance(eigvec, np.ndarray):
+            eigvec = OrthogonalMatrix(eigvec)
+        super().__init__(eigvec.shape[0], is_posdef=np.all(eigval &gt; 0),
+                         is_negdef=np.all(eigval &lt; 0))
+        self._eigvec = eigvec
+        self._eigval = eigval
+        if not isinstance(eigval, np.ndarray) or eigval.size == 1:
+            self.diag_eigval = ScaledIdentityMatrix(eigval)
+        else:
+            self.diag_eigval = DiagonalMatrix(eigval)
+
+    def _scalar_multiply(self, scalar):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, self.eigval * scalar)
+
+    def _left_matrix_multiply(self, other):
+        return self.eigvec @ (self.diag_eigval @ (self.eigvec.T @ other))
+
+    def _right_matrix_multiply(self, other):
+        return ((other @ self.eigvec) @ self.diag_eigval) @ self.eigvec.T
+
+    @property
+    def sqrt(self):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, self.eigval**0.5)
+
+    @property
+    def inv(self):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, 1 / self.eigval)
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for symmetric &#39;
+                &#39;eigendecomposed matrix with implicit size.&#39;)
+        return self @ np.identity(self.shape[0])
+
+
+class SoftAbsRegularisedPositiveDefiniteMatrix(EigendecomposedSymmetricMatrix):
+
+    def __init__(self, symmetric_array, softabs_coeff):
+        &#34;&#34;&#34;
+        Args:
+            softabs_coeff (float): Positive regularisation coefficient for
+                smooth approximation to absolute value. As the value tends to
+                infinity the approximation becomes increasingly close to the
+                absolute function.
+        &#34;&#34;&#34;
+        if softabs_coeff &lt;= 0:
+            raise ValueError(&#39;softabs_coeff must be positive.&#39;)
+        self._softabs_coeff = softabs_coeff
+        self.unreg_eigval, eigvec = nla.eigh(symmetric_array)
+        eigval = self.softabs(self.unreg_eigval)
+        super().__init__(eigvec, eigval)
+
+    def softabs(self, x):
+        &#34;&#34;&#34;Smooth approximation to absolute function.&#34;&#34;&#34;
+        return x / np.tanh(x * self._softabs_coeff)
+
+    def grad_softabs(self, x):
+        &#34;&#34;&#34;Derivative of smooth approximation to absolute function.&#34;&#34;&#34;
+        return (
+            1. / np.tanh(self._softabs_coeff * x) -
+            self._softabs_coeff * x / np.sinh(self._softabs_coeff * x)**2)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * (
+            self.eigvec @ DiagonalMatrix(
+                self.grad_softabs(self.unreg_eigval) / self.eigval) @
+            self.eigvec.T)
+
+    def grad_quadratic_form_inv(self, vector):
+        num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
+        num_j_mtx += np.diag(self.grad_softabs(self.unreg_eigval))
+        den_j_mtx = self.unreg_eigval[:, None] - self.unreg_eigval[None, :]
+        np.fill_diagonal(den_j_mtx, 1)
+        j_mtx = num_j_mtx / den_j_mtx
+        e_vct = (self.eigvec.T @ vector) / self.eigval
+        return -(
+            (self.eigvec @ (np.outer(e_vct, e_vct) * j_mtx)) @ self.eigvec.T)
+
+
+class MatrixProduct(_AbstractMatrix):
+
+    def __init__(self, matrices):
+        self._matrices = matrices
+        super().__init__((matrices[0].shape[0], matrices[-1].shape[1]))
+
+    def _scalar_multiply(self, scalar):
+        return MatrixProduct((
+            ScaledIdentityMatrix(scalar, self.shape[0]), *self.matrices))
+
+    def _left_matrix_multiply(self, other):
+        for matrix in reversed(self._matrices):
+            other = matrix @ other
+        return other
+
+    def _right_matrix_multiply(self, other):
+        for matrix in self._matrices:
+            other = other @ matrix
+        return other
+
+    @property
+    def T(self):
+        return MatrixProduct(
+            [matrix.T for matrix in reversed(self._matrices)])
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[1])</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mici.matrices.IdentityMatrix"><code class="flex name class">
+<span>class <span class="ident">IdentityMatrix</span></span>
+<span>(</span><span>size=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L132-L180" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class IdentityMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, size=None):
+        super().__init__(size, is_posdef=True, is_negdef=False)
+
+    def _scalar_multiply(self, scalar):
+        return ScaledIdentityMatrix(scalar, self.shape[0])
+
+    def _left_matrix_multiply(self, other):
+        return other
+
+    def _right_matrix_multiply(self, other):
+        return other
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def sqrt(self):
+        return self
+
+    @property
+    def eigvec(self):
+        return self
+
+    @property
+    def inv(self):
+        return self
+
+    @property
+    def diagonal(self):
+        return np.ones(self.shape[0])
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for identity matrix with &#39;
+                &#39;implicit size.&#39;)
+        return np.identity(self.shape[0])
+
+    @property
+    def log_abs_det(self):
+        return 0.
+
+    @property
+    def log_abs_det_sqrt(self):
+        return 0.</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.IdentityMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L146-L148" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigval(self):
+    return self.diagonal</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L150-L152" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def sqrt(self):
+    return self</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L154-L156" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigvec(self):
+    return self</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L158-L160" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return self</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L162-L164" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def diagonal(self):
+    return np.ones(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L166-L172" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    if self.shape[0] is None:
+        raise RuntimeError(
+            &#39;Cannot get array representation for identity matrix with &#39;
+            &#39;implicit size.&#39;)
+    return np.identity(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L174-L176" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return 0.</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.IdentityMatrix.log_abs_det_sqrt"><code class="name">var <span class="ident">log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L178-L180" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det_sqrt(self):
+    return 0.</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix"><code class="flex name class">
+<span>class <span class="ident">ScaledIdentityMatrix</span></span>
+<span>(</span><span>scalar, size=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L183-L245" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ScaledIdentityMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, scalar, size=None):
+        if scalar == 0:
+            raise ValueError(&#39;scalar must be non-zero&#39;)
+        self._scalar = scalar
+        super().__init__(size, is_posdef=scalar &gt; 0, is_negdef=scalar &lt; 0)
+
+    def _scalar_multiply(self, scalar):
+        return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
+
+    def _left_matrix_multiply(self, other):
+        return self._scalar * other
+
+    def _right_matrix_multiply(self, other):
+        return self._scalar * other
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def sqrt(self):
+        if not self.is_posdef:
+            raise NotImplementedError(
+                &#39;Square-root supported only for positive definite &#39;
+                &#39;matrices.&#39;)
+        return ScaledIdentityMatrix(self._scalar**0.5, self.shape[0])
+
+    @property
+    def eigvec(self):
+        return IdentityMatrix(self.shape[0])
+
+    @property
+    def inv(self):
+        return ScaledIdentityMatrix(1 / self._scalar, self.shape[0])
+
+    @property
+    def diagonal(self):
+        return self._scalar * np.ones(self.shape[0])
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for scaled identity matrix &#39;
+                &#39;with implicit size.&#39;)
+        return self._scalar * np.identity(self.shape[0])
+
+    @property
+    def log_abs_det(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get log determinant for scaled identity matrix with &#39;
+                &#39;implicit size.&#39;)
+        return self.shape[0] * np.log(abs(self._scalar))
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * self.shape[0] / self._scalar
+
+    def grad_quadratic_form_inv(self, vector):
+        return -np.sum(vector**2) / self._scalar**2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.PositiveScaledIdentityMatrix" href="#mici.matrices.PositiveScaledIdentityMatrix">PositiveScaledIdentityMatrix</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.ScaledIdentityMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L200-L202" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigval(self):
+    return self.diagonal</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L204-L210" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def sqrt(self):
+    if not self.is_posdef:
+        raise NotImplementedError(
+            &#39;Square-root supported only for positive definite &#39;
+            &#39;matrices.&#39;)
+    return ScaledIdentityMatrix(self._scalar**0.5, self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L212-L214" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigvec(self):
+    return IdentityMatrix(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L216-L218" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return ScaledIdentityMatrix(1 / self._scalar, self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L220-L222" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def diagonal(self):
+    return self._scalar * np.ones(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L224-L230" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    if self.shape[0] is None:
+        raise RuntimeError(
+            &#39;Cannot get array representation for scaled identity matrix &#39;
+            &#39;with implicit size.&#39;)
+    return self._scalar * np.identity(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L232-L238" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    if self.shape[0] is None:
+        raise RuntimeError(
+            &#39;Cannot get log determinant for scaled identity matrix with &#39;
+            &#39;implicit size.&#39;)
+    return self.shape[0] * np.log(abs(self._scalar))</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledIdentityMatrix.grad_log_abs_det_sqrt"><code class="name">var <span class="ident">grad_log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L240-L242" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def grad_log_abs_det_sqrt(self):
+    return 0.5 * self.shape[0] / self._scalar</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.matrices.ScaledIdentityMatrix.grad_quadratic_form_inv"><code class="name flex">
+<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L244-L245" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_quadratic_form_inv(self, vector):
+    return -np.sum(vector**2) / self._scalar**2</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.PositiveScaledIdentityMatrix"><code class="flex name class">
+<span>class <span class="ident">PositiveScaledIdentityMatrix</span></span>
+<span>(</span><span>scalar, size=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L248-L264" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class PositiveScaledIdentityMatrix(ScaledIdentityMatrix):
+
+    def __init__(self, scalar, size=None):
+        if scalar &lt; 0:
+            raise ValueError(&#39;Scalar multiplier must be positive.&#39;)
+        super().__init__(scalar, size)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveScaledIdentityMatrix(
+                scalar * self._scalar, self.shape[0])
+        else:
+            return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
+
+    @property
+    def sqrt(self):
+        return PositiveScaledIdentityMatrix(self._scalar**0.5, self.shape[0])</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.ScaledIdentityMatrix" href="#mici.matrices.ScaledIdentityMatrix">ScaledIdentityMatrix</a></li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.PositiveScaledIdentityMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L262-L264" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def sqrt(self):
+    return PositiveScaledIdentityMatrix(self._scalar**0.5, self.shape[0])</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix"><code class="flex name class">
+<span>class <span class="ident">DiagonalMatrix</span></span>
+<span>(</span><span>diagonal)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L267-L317" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DiagonalMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, diagonal):
+        if diagonal.ndim != 1:
+            raise ValueError(&#39;Specified diagonal must be a 1D array.&#39;)
+        self._diagonal = diagonal
+        super().__init__(diagonal.size, is_posdef=np.all(diagonal &gt; 0),
+                         is_negdef=np.all(diagonal &lt; 0))
+
+    @property
+    def diagonal(self):
+        return self._diagonal
+
+    def _scalar_multiply(self, scalar):
+        return DiagonalMatrix(self.diagonal * scalar)
+
+    def _left_matrix_multiply(self, other):
+        if other.ndim == 2:
+            return self.diagonal[:, None] * other
+        elif other.ndim == 1:
+            return self.diagonal * other
+        else:
+            raise ValueError(
+                &#39;Left matrix multiplication only defined for one or two &#39;
+                &#39;dimensional right hand sides.&#39;)
+
+    def _right_matrix_multiply(self, other):
+        return self.diagonal * other
+
+    @property
+    def eigvec(self):
+        return IdentityMatrix(self.shape[0])
+
+    @property
+    def eigval(self):
+        return self.diagonal
+
+    @property
+    def inv(self):
+        return DiagonalMatrix(1. / self.diagonal)
+
+    @property
+    def array(self):
+        return np.diag(self.diagonal)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 / self.diagonal
+
+    def grad_quadratic_form_inv(self, vector):
+        return -(self.inv @ vector)**2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.PositiveDiagonalMatrix" href="#mici.matrices.PositiveDiagonalMatrix">PositiveDiagonalMatrix</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.DiagonalMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L276-L278" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def diagonal(self):
+    return self._diagonal</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L296-L298" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigvec(self):
+    return IdentityMatrix(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L300-L302" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def eigval(self):
+    return self.diagonal</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L304-L306" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return DiagonalMatrix(1. / self.diagonal)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L308-L310" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    return np.diag(self.diagonal)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DiagonalMatrix.grad_log_abs_det_sqrt"><code class="name">var <span class="ident">grad_log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L312-L314" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def grad_log_abs_det_sqrt(self):
+    return 0.5 / self.diagonal</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.matrices.DiagonalMatrix.grad_quadratic_form_inv"><code class="name flex">
+<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L316-L317" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_quadratic_form_inv(self, vector):
+    return -(self.inv @ vector)**2</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.PositiveDiagonalMatrix"><code class="flex name class">
+<span>class <span class="ident">PositiveDiagonalMatrix</span></span>
+<span>(</span><span>diagonal)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L320-L335" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class PositiveDiagonalMatrix(DiagonalMatrix):
+
+    def __init__(self, diagonal):
+        if not np.all(diagonal &gt;= 0):
+            raise ValueError(&#39;Diagonal values must all be positive.&#39;)
+        super().__init__(diagonal)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveDiagonalMatrix(self.diagonal * scalar)
+        else:
+            return DiagonalMatrix(self.diagonal * scalar)
+
+    @property
+    def sqrt(self):
+        return PositiveDiagonalMatrix(self.diagonal**0.5)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.DiagonalMatrix" href="#mici.matrices.DiagonalMatrix">DiagonalMatrix</a></li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.PositiveDiagonalMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L333-L335" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def sqrt(self):
+    return PositiveDiagonalMatrix(self.diagonal**0.5)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.TriangularMatrix"><code class="flex name class">
+<span>class <span class="ident">TriangularMatrix</span></span>
+<span>(</span><span>array, lower=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L338-L358" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class TriangularMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array, lower=True):
+        self._array = array
+        self.lower = lower
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return TriangularMatrix(self.array * scalar, self.lower)
+
+    @property
+    def inv(self):
+        return InverseTriangularMatrix(self.array, lower=self.lower)
+
+    @property
+    def T(self):
+        return TriangularMatrix(self.array.T, lower=not self.lower)
+
+    @property
+    def log_abs_det(self):
+        return np.log(np.abs(self.diagonal)).sum()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.TriangularMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L348-L350" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return InverseTriangularMatrix(self.array, lower=self.lower)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.TriangularMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L352-L354" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return TriangularMatrix(self.array.T, lower=not self.lower)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.TriangularMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L356-L358" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return np.log(np.abs(self.diagonal)).sum()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix"><code class="flex name class">
+<span>class <span class="ident">InverseTriangularMatrix</span></span>
+<span>(</span><span>inverse_array, lower=True)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L361-L402" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class InverseTriangularMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, inverse_array, lower=True):
+        self._inverse_array = inverse_array
+        self.lower = lower
+        super().__init__(inverse_array.shape[0])
+
+    @property
+    def inverse_array(self):
+        return self._inverse_array
+
+    def _scalar_multiply(self, scalar):
+        return InverseTriangularMatrix(self.inverse_array / scalar, self.lower)
+
+    def _left_matrix_multiply(self, other):
+        return sla.solve_triangular(
+            self.inverse_array, other, lower=self.lower)
+
+    def _right_matrix_multiply(self, other):
+        return sla.solve_triangular(
+            self.inverse_array, other.T, lower=self.lower, trans=1).T
+
+    @property
+    def inv(self):
+        return TriangularMatrix(self.inverse_array, lower=self.lower)
+
+    @property
+    def T(self):
+        return InverseTriangularMatrix(
+            self.inverse_array.T, lower=not self.lower)
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[0])
+
+    @property
+    def diagonal(self):
+        return 1. / self.inverse_array.diagonal()
+
+    @property
+    def log_abs_det(self):
+        return -self.inv.log_abs_det</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.InverseTriangularMatrix.inverse_array"><code class="name">var <span class="ident">inverse_array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L368-L370" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inverse_array(self):
+    return self._inverse_array</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L383-L385" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return TriangularMatrix(self.inverse_array, lower=self.lower)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L387-L390" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return InverseTriangularMatrix(
+        self.inverse_array.T, lower=not self.lower)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L392-L394" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    return self @ np.identity(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L396-L398" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def diagonal(self):
+    return 1. / self.inverse_array.diagonal()</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseTriangularMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L400-L402" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return -self.inv.log_abs_det</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix"><code class="flex name class">
+<span>class <span class="ident">TriangularFactoredDefiniteMatrix</span></span>
+<span>(</span><span>factor, lower=True, sign=1, array=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L447-L479" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class TriangularFactoredDefiniteMatrix(
+        _AbstractTriangularFactoredDefiniteMatrix):
+
+    def __init__(self, factor, lower=True, sign=1, array=None):
+        if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
+            factor = TriangularMatrix(factor, lower)
+        super().__init__(array=array, factor=factor, sign=sign)
+
+    def _scalar_multiply(self, scalar):
+        return TriangularFactoredDefiniteMatrix(
+            factor=abs(scalar)**0.5 * self.factor,
+            sign=self._sign * np.sign(scalar))
+
+    def _left_matrix_multiply(self, other):
+        return self._sign * (self.factor @ (self.factor.T @ other))
+
+    def _right_matrix_multiply(self, other):
+        return self._sign * ((other @ self.factor) @ self.factor.T)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return self.factor.inv.T.array
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_factor_vector = self.factor.inv @ vector
+        inv_vector = self.inv @ vector
+        return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)
+
+    @property
+    def array(self):
+        if self._array is None:
+            self._array = self._sign * (self.factor @ self.factor.array.T)
+        return self._array</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractTriangularFactoredDefiniteMatrix</li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det_sqrt"><code class="name">var <span class="ident">grad_log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L466-L468" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def grad_log_abs_det_sqrt(self):
+    return self.factor.inv.T.array</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L475-L479" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    if self._array is None:
+        self._array = self._sign * (self.factor @ self.factor.array.T)
+    return self._array</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.grad_quadratic_form_inv"><code class="name flex">
+<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L470-L473" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_quadratic_form_inv(self, vector):
+    inv_factor_vector = self.factor.inv @ vector
+    inv_vector = self.inv @ vector
+    return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.DenseDefiniteMatrix"><code class="flex name class">
+<span>class <span class="ident">DenseDefiniteMatrix</span></span>
+<span>(</span><span>array, sign=1, factor=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L482-L512" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseDefiniteMatrix(_AbstractTriangularFactoredDefiniteMatrix):
+
+    def __init__(self, array, sign=1, factor=None):
+        super().__init__(array=array, factor=factor, sign=sign)
+
+    def _scalar_multiply(self, scalar):
+        if (scalar &gt; 0) == (self._sign == 1):
+            return DenseDefiniteMatrix(
+                scalar * self.array, 1,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DenseDefiniteMatrix(
+                scalar * self.array, -1,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+
+    @property
+    def factor(self):
+        if self._factor is None:
+            self._factor = TriangularMatrix(
+                nla.cholesky(self._sign * self._array), True)
+        return self._factor
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * self.inv.array
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_metric_vector = self.inv @ vector
+        return -np.outer(inv_metric_vector, inv_metric_vector)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractTriangularFactoredDefiniteMatrix</li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.DensePositiveDefiniteMatrix" href="#mici.matrices.DensePositiveDefiniteMatrix">DensePositiveDefiniteMatrix</a></li>
+<li><a title="mici.matrices.DenseNegativeDefiniteMatrix" href="#mici.matrices.DenseNegativeDefiniteMatrix">DenseNegativeDefiniteMatrix</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.DenseDefiniteMatrix.factor"><code class="name">var <span class="ident">factor</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L499-L504" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def factor(self):
+    if self._factor is None:
+        self._factor = TriangularMatrix(
+            nla.cholesky(self._sign * self._array), True)
+    return self._factor</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DenseDefiniteMatrix.grad_log_abs_det_sqrt"><code class="name">var <span class="ident">grad_log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L506-L508" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def grad_log_abs_det_sqrt(self):
+    return 0.5 * self.inv.array</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv"><code class="name flex">
+<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L510-L512" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_quadratic_form_inv(self, vector):
+    inv_metric_vector = self.inv @ vector
+    return -np.outer(inv_metric_vector, inv_metric_vector)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.DensePositiveDefiniteMatrix"><code class="flex name class">
+<span>class <span class="ident">DensePositiveDefiniteMatrix</span></span>
+<span>(</span><span>array, factor=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L515-L530" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DensePositiveDefiniteMatrix(DenseDefiniteMatrix):
+
+    def __init__(self, array, factor=None):
+        super().__init__(array=array, sign=1, factor=factor)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DenseNegativeDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
+<li>mici.matrices._AbstractTriangularFactoredDefiniteMatrix</li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+</dd>
+<dt id="mici.matrices.DenseNegativeDefiniteMatrix"><code class="flex name class">
+<span>class <span class="ident">DenseNegativeDefiniteMatrix</span></span>
+<span>(</span><span>array, factor=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L533-L548" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
+
+    def __init__(self, array, factor=None):
+        super().__init__(array=array, sign=-1, factor=factor)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return DenseNegativeDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)
+        else:
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
+                None if self._factor is None else
+                abs(scalar)**0.5 * self._factor)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
+<li>mici.matrices._AbstractTriangularFactoredDefiniteMatrix</li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+</dd>
+<dt id="mici.matrices.DenseSquareMatrix"><code class="flex name class">
+<span>class <span class="ident">DenseSquareMatrix</span></span>
+<span>(</span><span>array, transposed=False, lu_and_piv=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L551-L587" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseSquareMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array, transposed=False, lu_and_piv=None):
+        self._array = array
+        self._transposed = transposed
+        self._lu_and_piv = lu_and_piv
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        if self._lu_and_piv is None:
+            return DenseSquareMatrix(scalar * self.array, self._transposed)
+        else:
+            old_lu, piv = self._lu_and_piv
+            # Multiply upper-triangle by scalar
+            new_lu = old_lu + (scalar - 1) * np.triu(old_lu)
+            return DenseSquareMatrix(
+                scalar * self.array, self._transposed, (new_lu, piv))
+
+    @property
+    def lu_and_piv(self):
+        if self._lu_and_piv is None:
+            self._lu_and_piv = sla.lu_factor(self.array)
+        return self._lu_and_piv
+
+    @property
+    def log_abs_det(self):
+        return np.log(np.abs(self.lu_and_piv[0].diagonal())).sum()
+
+    @property
+    def T(self):
+        return DenseSquareMatrix(
+            self.array.T, not self._transposed, self.lu_and_piv)
+
+    @property
+    def inv(self):
+        return InverseLUFactoredSquareMatrix(
+            self.array, self._transposed, self.lu_and_piv)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.DenseSquareMatrix.lu_and_piv"><code class="name">var <span class="ident">lu_and_piv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L569-L573" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def lu_and_piv(self):
+    if self._lu_and_piv is None:
+        self._lu_and_piv = sla.lu_factor(self.array)
+    return self._lu_and_piv</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DenseSquareMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L575-L577" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return np.log(np.abs(self.lu_and_piv[0].diagonal())).sum()</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DenseSquareMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L579-L582" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return DenseSquareMatrix(
+        self.array.T, not self._transposed, self.lu_and_piv)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DenseSquareMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L584-L587" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return InverseLUFactoredSquareMatrix(
+        self.array, self._transposed, self.lu_and_piv)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.InverseLUFactoredSquareMatrix"><code class="flex name class">
+<span>class <span class="ident">InverseLUFactoredSquareMatrix</span></span>
+<span>(</span><span>inverse_array, transposed, inverse_lu_and_piv)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L590-L630" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class InverseLUFactoredSquareMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, inverse_array, transposed, inverse_lu_and_piv):
+        self._inverse_array = inverse_array
+        self._inverse_lu_and_piv = inverse_lu_and_piv
+        self._transposed = transposed
+        super().__init__(inverse_array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        old_inv_lu, piv = self._inverse_lu_and_piv
+        # Divide upper-triangle by scalar
+        new_inv_lu = old_inv_lu - (scalar - 1) / scalar * np.triu(old_inv_lu)
+        return InverseLUFactoredSquareMatrix(
+            self._inverse_array / scalar, self._transposed, (new_inv_lu, piv))
+
+    def _left_matrix_multiply(self, other):
+        return sla.lu_solve(
+            self._inverse_lu_and_piv, other, 1 if self._transposed else 0)
+
+    def _right_matrix_multiply(self, other):
+        return sla.lu_solve(
+            self._inverse_lu_and_piv, other.T, 0 if self._transposed else 1).T
+
+    @property
+    def log_abs_det(self):
+        return -np.log(np.abs(self._inverse_lu_and_piv[0].diagonal())).sum()
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[0])
+
+    @property
+    def inv(self):
+        return DenseSquareMatrix(
+            self._inverse_array, self._transposed, self._inverse_lu_and_piv)
+
+    @property
+    def T(self):
+        return InverseLUFactoredSquareMatrix(
+            self._inverse_array, not self._transposed,
+            self._inverse_lu_and_piv)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.InverseLUFactoredSquareMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L613-L615" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return -np.log(np.abs(self._inverse_lu_and_piv[0].diagonal())).sum()</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseLUFactoredSquareMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L617-L619" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    return self @ np.identity(self.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseLUFactoredSquareMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L621-L624" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return DenseSquareMatrix(
+        self._inverse_array, self._transposed, self._inverse_lu_and_piv)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.InverseLUFactoredSquareMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L626-L630" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return InverseLUFactoredSquareMatrix(
+        self._inverse_array, not self._transposed,
+        self._inverse_lu_and_piv)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.OrthogonalMatrix"><code class="flex name class">
+<span>class <span class="ident">OrthogonalMatrix</span></span>
+<span>(</span><span>array)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L633-L652" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class OrthogonalMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, array):
+        self._array = array
+        super().__init__(array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return ScaledOrthogonalMatrix(scalar, self.array)
+
+    @property
+    def log_abs_det(self):
+        return 0
+
+    @property
+    def T(self):
+        return OrthogonalMatrix(self.array.T)
+
+    @property
+    def inv(self):
+        return self.T</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.OrthogonalMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L642-L644" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return 0</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.OrthogonalMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L646-L648" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return OrthogonalMatrix(self.array.T)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.OrthogonalMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L650-L652" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return self.T</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.ScaledOrthogonalMatrix"><code class="flex name class">
+<span>class <span class="ident">ScaledOrthogonalMatrix</span></span>
+<span>(</span><span>scalar, orth_array)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L655-L683" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ScaledOrthogonalMatrix(_AbstractSquareMatrix):
+
+    def __init__(self, scalar, orth_array):
+        self._scalar = scalar
+        self._orth_array = orth_array
+        super().__init__(orth_array.shape[0])
+
+    def _scalar_multiply(self, scalar):
+        return ScaledOrthogonalMatrix(scalar * self._scalar, self._orth_array)
+
+    @property
+    def array(self):
+        return self._scalar * self._orth_array
+
+    @property
+    def diagonal(self):
+        return self._scalar * self._orth_array.diagonal()
+
+    @property
+    def log_abs_det(self):
+        return self.shape[0] * np.log(abs(self._scalar))
+
+    @property
+    def T(self):
+        return ScaledOrthogonalMatrix(self._scalar, self._orth_array.T)
+
+    @property
+    def inv(self):
+        return ScaledOrthogonalMatrix(1 / self._scalar, self._orth_array.T)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.ScaledOrthogonalMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L665-L667" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    return self._scalar * self._orth_array</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledOrthogonalMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L669-L671" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def diagonal(self):
+    return self._scalar * self._orth_array.diagonal()</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledOrthogonalMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L673-L675" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def log_abs_det(self):
+    return self.shape[0] * np.log(abs(self._scalar))</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledOrthogonalMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L677-L679" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return ScaledOrthogonalMatrix(self._scalar, self._orth_array.T)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.ScaledOrthogonalMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L681-L683" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return ScaledOrthogonalMatrix(1 / self._scalar, self._orth_array.T)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.EigendecomposedSymmetricMatrix"><code class="flex name class">
+<span>class <span class="ident">EigendecomposedSymmetricMatrix</span></span>
+<span>(</span><span>eigvec, eigval)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L686-L726" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class EigendecomposedSymmetricMatrix(_AbstractSymmetricMatrix):
+
+    def __init__(self, eigvec, eigval):
+        if isinstance(eigvec, np.ndarray):
+            eigvec = OrthogonalMatrix(eigvec)
+        super().__init__(eigvec.shape[0], is_posdef=np.all(eigval &gt; 0),
+                         is_negdef=np.all(eigval &lt; 0))
+        self._eigvec = eigvec
+        self._eigval = eigval
+        if not isinstance(eigval, np.ndarray) or eigval.size == 1:
+            self.diag_eigval = ScaledIdentityMatrix(eigval)
+        else:
+            self.diag_eigval = DiagonalMatrix(eigval)
+
+    def _scalar_multiply(self, scalar):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, self.eigval * scalar)
+
+    def _left_matrix_multiply(self, other):
+        return self.eigvec @ (self.diag_eigval @ (self.eigvec.T @ other))
+
+    def _right_matrix_multiply(self, other):
+        return ((other @ self.eigvec) @ self.diag_eigval) @ self.eigvec.T
+
+    @property
+    def sqrt(self):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, self.eigval**0.5)
+
+    @property
+    def inv(self):
+        return EigendecomposedSymmetricMatrix(
+            self.eigvec, 1 / self.eigval)
+
+    @property
+    def array(self):
+        if self.shape[0] is None:
+            raise RuntimeError(
+                &#39;Cannot get array representation for symmetric &#39;
+                &#39;eigendecomposed matrix with implicit size.&#39;)
+        return self @ np.identity(self.shape[0])</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix">SoftAbsRegularisedPositiveDefiniteMatrix</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.EigendecomposedSymmetricMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L710-L713" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def sqrt(self):
+    return EigendecomposedSymmetricMatrix(
+        self.eigvec, self.eigval**0.5)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.EigendecomposedSymmetricMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L715-L718" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return EigendecomposedSymmetricMatrix(
+        self.eigvec, 1 / self.eigval)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.EigendecomposedSymmetricMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L720-L726" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    if self.shape[0] is None:
+        raise RuntimeError(
+            &#39;Cannot get array representation for symmetric &#39;
+            &#39;eigendecomposed matrix with implicit size.&#39;)
+    return self @ np.identity(self.shape[0])</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix"><code class="flex name class">
+<span>class <span class="ident">SoftAbsRegularisedPositiveDefiniteMatrix</span></span>
+<span>(</span><span>symmetric_array, softabs_coeff)</span>
+</code></dt>
+<dd>
+<section class="desc"><h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>softabs_coeff</code></strong> :&ensp;<code>float</code></dt>
+<dd>Positive regularisation coefficient for
+smooth approximation to absolute value. As the value tends to
+infinity the approximation becomes increasingly close to the
+absolute function.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L729-L771" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class SoftAbsRegularisedPositiveDefiniteMatrix(EigendecomposedSymmetricMatrix):
+
+    def __init__(self, symmetric_array, softabs_coeff):
+        &#34;&#34;&#34;
+        Args:
+            softabs_coeff (float): Positive regularisation coefficient for
+                smooth approximation to absolute value. As the value tends to
+                infinity the approximation becomes increasingly close to the
+                absolute function.
+        &#34;&#34;&#34;
+        if softabs_coeff &lt;= 0:
+            raise ValueError(&#39;softabs_coeff must be positive.&#39;)
+        self._softabs_coeff = softabs_coeff
+        self.unreg_eigval, eigvec = nla.eigh(symmetric_array)
+        eigval = self.softabs(self.unreg_eigval)
+        super().__init__(eigvec, eigval)
+
+    def softabs(self, x):
+        &#34;&#34;&#34;Smooth approximation to absolute function.&#34;&#34;&#34;
+        return x / np.tanh(x * self._softabs_coeff)
+
+    def grad_softabs(self, x):
+        &#34;&#34;&#34;Derivative of smooth approximation to absolute function.&#34;&#34;&#34;
+        return (
+            1. / np.tanh(self._softabs_coeff * x) -
+            self._softabs_coeff * x / np.sinh(self._softabs_coeff * x)**2)
+
+    @property
+    def grad_log_abs_det_sqrt(self):
+        return 0.5 * (
+            self.eigvec @ DiagonalMatrix(
+                self.grad_softabs(self.unreg_eigval) / self.eigval) @
+            self.eigvec.T)
+
+    def grad_quadratic_form_inv(self, vector):
+        num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
+        num_j_mtx += np.diag(self.grad_softabs(self.unreg_eigval))
+        den_j_mtx = self.unreg_eigval[:, None] - self.unreg_eigval[None, :]
+        np.fill_diagonal(den_j_mtx, 1)
+        j_mtx = num_j_mtx / den_j_mtx
+        e_vct = (self.eigvec.T @ vector) / self.eigval
+        return -(
+            (self.eigvec @ (np.outer(e_vct, e_vct) * j_mtx)) @ self.eigvec.T)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.EigendecomposedSymmetricMatrix" href="#mici.matrices.EigendecomposedSymmetricMatrix">EigendecomposedSymmetricMatrix</a></li>
+<li>mici.matrices._AbstractSymmetricMatrix</li>
+<li>mici.matrices._AbstractSquareMatrix</li>
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_log_abs_det_sqrt"><code class="name">var <span class="ident">grad_log_abs_det_sqrt</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L756-L761" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def grad_log_abs_det_sqrt(self):
+    return 0.5 * (
+        self.eigvec @ DiagonalMatrix(
+            self.grad_softabs(self.unreg_eigval) / self.eigval) @
+        self.eigvec.T)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.softabs"><code class="name flex">
+<span>def <span class="ident">softabs</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Smooth approximation to absolute function.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L746-L748" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def softabs(self, x):
+    &#34;&#34;&#34;Smooth approximation to absolute function.&#34;&#34;&#34;
+    return x / np.tanh(x * self._softabs_coeff)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_softabs"><code class="name flex">
+<span>def <span class="ident">grad_softabs</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of smooth approximation to absolute function.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L750-L754" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_softabs(self, x):
+    &#34;&#34;&#34;Derivative of smooth approximation to absolute function.&#34;&#34;&#34;
+    return (
+        1. / np.tanh(self._softabs_coeff * x) -
+        self._softabs_coeff * x / np.sinh(self._softabs_coeff * x)**2)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_quadratic_form_inv"><code class="name flex">
+<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L763-L771" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def grad_quadratic_form_inv(self, vector):
+    num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
+    num_j_mtx += np.diag(self.grad_softabs(self.unreg_eigval))
+    den_j_mtx = self.unreg_eigval[:, None] - self.unreg_eigval[None, :]
+    np.fill_diagonal(den_j_mtx, 1)
+    j_mtx = num_j_mtx / den_j_mtx
+    e_vct = (self.eigvec.T @ vector) / self.eigval
+    return -(
+        (self.eigvec @ (np.outer(e_vct, e_vct) * j_mtx)) @ self.eigvec.T)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.matrices.MatrixProduct"><code class="flex name class">
+<span>class <span class="ident">MatrixProduct</span></span>
+<span>(</span><span>matrices)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L774-L801" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class MatrixProduct(_AbstractMatrix):
+
+    def __init__(self, matrices):
+        self._matrices = matrices
+        super().__init__((matrices[0].shape[0], matrices[-1].shape[1]))
+
+    def _scalar_multiply(self, scalar):
+        return MatrixProduct((
+            ScaledIdentityMatrix(scalar, self.shape[0]), *self.matrices))
+
+    def _left_matrix_multiply(self, other):
+        for matrix in reversed(self._matrices):
+            other = matrix @ other
+        return other
+
+    def _right_matrix_multiply(self, other):
+        for matrix in self._matrices:
+            other = other @ matrix
+        return other
+
+    @property
+    def T(self):
+        return MatrixProduct(
+            [matrix.T for matrix in reversed(self._matrices)])
+
+    @property
+    def array(self):
+        return self @ np.identity(self.shape[1])</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.matrices._AbstractMatrix</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.MatrixProduct.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L794-L797" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def T(self):
+    return MatrixProduct(
+        [matrix.T for matrix in reversed(self._matrices)])</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.MatrixProduct.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/matrices.py#L799-L801" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def array(self):
+    return self @ np.identity(self.shape[1])</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="mici docs home" href="index.html">
+<img src="../logo.png" alt="mici">
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Package</h3>
+<ul>
+<li><code><a title="mici" href="index.html">mici</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mici.matrices.IdentityMatrix" href="#mici.matrices.IdentityMatrix">IdentityMatrix</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.matrices.IdentityMatrix.eigval" href="#mici.matrices.IdentityMatrix.eigval">eigval</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.sqrt" href="#mici.matrices.IdentityMatrix.sqrt">sqrt</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.eigvec" href="#mici.matrices.IdentityMatrix.eigvec">eigvec</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.inv" href="#mici.matrices.IdentityMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.diagonal" href="#mici.matrices.IdentityMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.array" href="#mici.matrices.IdentityMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.log_abs_det" href="#mici.matrices.IdentityMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.IdentityMatrix.log_abs_det_sqrt" href="#mici.matrices.IdentityMatrix.log_abs_det_sqrt">log_abs_det_sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.ScaledIdentityMatrix" href="#mici.matrices.ScaledIdentityMatrix">ScaledIdentityMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.grad_quadratic_form_inv" href="#mici.matrices.ScaledIdentityMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.eigval" href="#mici.matrices.ScaledIdentityMatrix.eigval">eigval</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.sqrt" href="#mici.matrices.ScaledIdentityMatrix.sqrt">sqrt</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.eigvec" href="#mici.matrices.ScaledIdentityMatrix.eigvec">eigvec</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.inv" href="#mici.matrices.ScaledIdentityMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.diagonal" href="#mici.matrices.ScaledIdentityMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.array" href="#mici.matrices.ScaledIdentityMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.log_abs_det" href="#mici.matrices.ScaledIdentityMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.ScaledIdentityMatrix.grad_log_abs_det_sqrt" href="#mici.matrices.ScaledIdentityMatrix.grad_log_abs_det_sqrt">grad_log_abs_det_sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.PositiveScaledIdentityMatrix" href="#mici.matrices.PositiveScaledIdentityMatrix">PositiveScaledIdentityMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.PositiveScaledIdentityMatrix.sqrt" href="#mici.matrices.PositiveScaledIdentityMatrix.sqrt">sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DiagonalMatrix" href="#mici.matrices.DiagonalMatrix">DiagonalMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.DiagonalMatrix.grad_quadratic_form_inv" href="#mici.matrices.DiagonalMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.diagonal" href="#mici.matrices.DiagonalMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.eigvec" href="#mici.matrices.DiagonalMatrix.eigvec">eigvec</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.eigval" href="#mici.matrices.DiagonalMatrix.eigval">eigval</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.inv" href="#mici.matrices.DiagonalMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.array" href="#mici.matrices.DiagonalMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.DiagonalMatrix.grad_log_abs_det_sqrt" href="#mici.matrices.DiagonalMatrix.grad_log_abs_det_sqrt">grad_log_abs_det_sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.PositiveDiagonalMatrix" href="#mici.matrices.PositiveDiagonalMatrix">PositiveDiagonalMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.PositiveDiagonalMatrix.sqrt" href="#mici.matrices.PositiveDiagonalMatrix.sqrt">sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix">TriangularMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.TriangularMatrix.inv" href="#mici.matrices.TriangularMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.TriangularMatrix.T" href="#mici.matrices.TriangularMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.TriangularMatrix.log_abs_det" href="#mici.matrices.TriangularMatrix.log_abs_det">log_abs_det</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix">InverseTriangularMatrix</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.matrices.InverseTriangularMatrix.inverse_array" href="#mici.matrices.InverseTriangularMatrix.inverse_array">inverse_array</a></code></li>
+<li><code><a title="mici.matrices.InverseTriangularMatrix.inv" href="#mici.matrices.InverseTriangularMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.InverseTriangularMatrix.T" href="#mici.matrices.InverseTriangularMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.InverseTriangularMatrix.array" href="#mici.matrices.InverseTriangularMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.InverseTriangularMatrix.diagonal" href="#mici.matrices.InverseTriangularMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.InverseTriangularMatrix.log_abs_det" href="#mici.matrices.InverseTriangularMatrix.log_abs_det">log_abs_det</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.TriangularFactoredDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
+<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det_sqrt" href="#mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det_sqrt">grad_log_abs_det_sqrt</a></code></li>
+<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.array" href="#mici.matrices.TriangularFactoredDefiniteMatrix.array">array</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
+<li><code><a title="mici.matrices.DenseDefiniteMatrix.factor" href="#mici.matrices.DenseDefiniteMatrix.factor">factor</a></code></li>
+<li><code><a title="mici.matrices.DenseDefiniteMatrix.grad_log_abs_det_sqrt" href="#mici.matrices.DenseDefiniteMatrix.grad_log_abs_det_sqrt">grad_log_abs_det_sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DensePositiveDefiniteMatrix" href="#mici.matrices.DensePositiveDefiniteMatrix">DensePositiveDefiniteMatrix</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DenseNegativeDefiniteMatrix" href="#mici.matrices.DenseNegativeDefiniteMatrix">DenseNegativeDefiniteMatrix</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DenseSquareMatrix" href="#mici.matrices.DenseSquareMatrix">DenseSquareMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.DenseSquareMatrix.lu_and_piv" href="#mici.matrices.DenseSquareMatrix.lu_and_piv">lu_and_piv</a></code></li>
+<li><code><a title="mici.matrices.DenseSquareMatrix.log_abs_det" href="#mici.matrices.DenseSquareMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.DenseSquareMatrix.T" href="#mici.matrices.DenseSquareMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.DenseSquareMatrix.inv" href="#mici.matrices.DenseSquareMatrix.inv">inv</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.InverseLUFactoredSquareMatrix" href="#mici.matrices.InverseLUFactoredSquareMatrix">InverseLUFactoredSquareMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.log_abs_det" href="#mici.matrices.InverseLUFactoredSquareMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.array" href="#mici.matrices.InverseLUFactoredSquareMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.inv" href="#mici.matrices.InverseLUFactoredSquareMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.T" href="#mici.matrices.InverseLUFactoredSquareMatrix.T">T</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix">OrthogonalMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.OrthogonalMatrix.log_abs_det" href="#mici.matrices.OrthogonalMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.OrthogonalMatrix.T" href="#mici.matrices.OrthogonalMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.OrthogonalMatrix.inv" href="#mici.matrices.OrthogonalMatrix.inv">inv</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.ScaledOrthogonalMatrix" href="#mici.matrices.ScaledOrthogonalMatrix">ScaledOrthogonalMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.ScaledOrthogonalMatrix.array" href="#mici.matrices.ScaledOrthogonalMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.ScaledOrthogonalMatrix.diagonal" href="#mici.matrices.ScaledOrthogonalMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.ScaledOrthogonalMatrix.log_abs_det" href="#mici.matrices.ScaledOrthogonalMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.ScaledOrthogonalMatrix.T" href="#mici.matrices.ScaledOrthogonalMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.ScaledOrthogonalMatrix.inv" href="#mici.matrices.ScaledOrthogonalMatrix.inv">inv</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.EigendecomposedSymmetricMatrix" href="#mici.matrices.EigendecomposedSymmetricMatrix">EigendecomposedSymmetricMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.EigendecomposedSymmetricMatrix.sqrt" href="#mici.matrices.EigendecomposedSymmetricMatrix.sqrt">sqrt</a></code></li>
+<li><code><a title="mici.matrices.EigendecomposedSymmetricMatrix.inv" href="#mici.matrices.EigendecomposedSymmetricMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.EigendecomposedSymmetricMatrix.array" href="#mici.matrices.EigendecomposedSymmetricMatrix.array">array</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix">SoftAbsRegularisedPositiveDefiniteMatrix</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.softabs" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.softabs">softabs</a></code></li>
+<li><code><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_softabs" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_softabs">grad_softabs</a></code></li>
+<li><code><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
+<li><code><a title="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_log_abs_det_sqrt" href="#mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.grad_log_abs_det_sqrt">grad_log_abs_det_sqrt</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.MatrixProduct" href="#mici.matrices.MatrixProduct">MatrixProduct</a></code></h4>
+<ul class="">
+<li><code><a title="mici.matrices.MatrixProduct.T" href="#mici.matrices.MatrixProduct.T">T</a></code></li>
+<li><code><a title="mici.matrices.MatrixProduct.array" href="#mici.matrices.MatrixProduct.array">array</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+Copyright © 2019 Matt Graham
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

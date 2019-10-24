@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.1" />
+<title>mici.systems API documentation</title>
+<meta name="description" content="Hamiltonian systems encapsulating energy functions and their derivatives." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>mici.systems</code></h1>
+</header>
+<section id="section-intro">
+<p>Hamiltonian systems encapsulating energy functions and their derivatives.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L0-L550" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
+
+import logging
+import numpy as np
+from mici.states import cache_in_state, multi_cache_in_state
+from mici.matrices import (
+    IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
+    DenseSquareMatrix, TriangularFactoredDefiniteMatrix, DenseDefiniteMatrix,
+    DensePositiveDefiniteMatrix, EigendecomposedSymmetricMatrix,
+    SoftAbsRegularisedPositiveDefiniteMatrix)
+from mici.autodiff import autodiff_fallback
+
+
+class _HamiltonianSystem(object):
+    &#34;&#34;&#34;Base class for Hamiltonian systems.
+
+    The Hamiltonian function `h` is assumed to have the general form
+
+        h(pos, mom) = h1(pos) + h2(pos, mom)
+
+    where `pos` and `mom` are the position and momentum variables respectively,
+    and `h1(pos)` and `h2(pos, mom)` Hamiltonian components. The exact
+    Hamiltonian flow for the `h1` component can be computed however depending
+    on the form of `h2` the corresponding Hamiltonian flow may or may not be
+    simulable.
+
+    By default `h1` is assumed to correspond to the negative logarithm of an
+    unnormalised density on the position variables with respect to the Lebesgue
+    measure, with the corresponding distribution on the position space being
+    the target distribution it is wished to draw approximate samples from.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (callable): Function which given a position vector
+                returns the negative logarithm of an unnormalised probability
+                density on the position space with respect to the Lebesgue
+                measure, with the corresponding distribution on the position
+                space being the target distribution it is wished to draw
+                approximate samples from.
+            grad_neg_log_dens (callable or None): Function which given a
+                position vector returns the derivative of the negative
+                logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position vector argument.
+                Optionally the function may instead return a pair of values
+                with the first being the value of the `neg_log_dens` evaluated
+                at the passed position vector and the second being the value of
+                its derivative with respect to the position argument. If `None`
+                is passed (the default) an automatic differentiation fallback
+                will be used to attempt to construct the derivative of
+                `neg_log_dens` automatically.
+
+        &#34;&#34;&#34;
+        self._neg_log_dens = neg_log_dens
+        self._grad_neg_log_dens = autodiff_fallback(
+            grad_neg_log_dens, neg_log_dens,
+            &#39;grad_and_value&#39;, &#39;grad_neg_log_dens&#39;)
+
+    @cache_in_state(&#39;pos&#39;)
+    def neg_log_dens(self, state):
+        return self._neg_log_dens(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def grad_neg_log_dens(self, state):
+        return self._grad_neg_log_dens(state.pos)
+
+    def h1(self, state):
+        return self.neg_log_dens(state)
+
+    def dh1_dpos(self, state):
+        return self.grad_neg_log_dens(state)
+
+    def h1_flow(self, state, dt):
+        state.mom -= dt * self.dh1_dpos(state)
+
+    def h2(self, state):
+        raise NotImplementedError()
+
+    def h(self, state):
+        return self.h1(state) + self.h2(state)
+
+    def dh_dpos(self, state):
+        if hasattr(self, &#39;dh2_dpos&#39;):
+            return self.dh1_dpos(state) + self.dh2_dpos(state)
+        else:
+            return self.dh1_dpos(state)
+
+    def dh_dmom(self, state):
+        return self.dh2_dmom(state)
+
+    def sample_momentum(self, state, rng):
+        raise NotImplementedError()
+
+
+class EuclideanMetricSystem(_HamiltonianSystem):
+    &#34;&#34;&#34;Hamiltonian system with fixed covariance Gaussian-distributed momenta.
+
+    The momentum variables are taken to be independent of the position
+    variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by a fixed positive-definite matrix (metric tensor),
+    so that the `h2` Hamiltonian component is
+
+        h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+
+    where `pos` and `mom` are the position and momentum variables respectively,
+    and `inv(metric)` is the matrix inverse of the metric tensor.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (callable): Function which given a position vector
+                returns the negative logarithm of an unnormalised probability
+                density on the position space with respect to the Lebesgue
+                measure, with the corresponding distribution on the position
+                space being the target distribution it is wished to draw
+                approximate samples from.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
+            grad_neg_log_dens (callable or None): Function which given a
+                position vector returns the derivative of the negative
+                logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position vector argument.
+                Optionally the function may instead return a pair of values
+                with the first being the value of the `neg_log_dens` evaluated
+                at the passed position vector and the second being the value of
+                its derivative with respect to the position argument. If `None`
+                is passed (the default) it will be attempted to use automatic
+                differentiation to construct the derivative of `neg_log_dens`
+                automatically.
+        &#34;&#34;&#34;
+        super().__init__(neg_log_dens, grad_neg_log_dens)
+        if metric is None:
+            self.metric = IdentityMatrix()
+        elif isinstance(metric, np.ndarray):
+            if metric.ndim == 1:
+                self.metric = PositiveDiagonalMatrix(metric)
+            elif metric.ndim == 2:
+                self.metric = DensePositiveDefiniteMatrix(metric)
+            else:
+                raise ValueError(&#39;If NumPy ndarray value is used for `metric`&#39;
+                                 &#39; must be either 1D (diagonal matrix) or 2D &#39;
+                                 &#39;(dense positive definite matrix)&#39;)
+        else:
+            self.metric = metric
+
+    @cache_in_state(&#39;mom&#39;)
+    def h2(self, state):
+        return 0.5 * state.mom @ self.metric.inv @ state.mom
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dmom(self, state):
+        return self.metric.inv @ state.mom
+
+    def h2_flow(self, state, dt):
+        state.pos += dt * self.dh2_dmom(state)
+
+    def dh2_flow_dmom(self, dt):
+        return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])
+
+    def sample_momentum(self, state, rng):
+        return self.metric.sqrt @ rng.standard_normal(state.pos.shape)
+
+
+class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
+    &#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
+
+    The momentum variables are taken to be independent of the position
+    variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by a fixed positive-definite matrix (metric tensor).
+
+    Additionally the target distribution on the position variables is assumed
+    to be defined by an unnormalised density with respect to the standard
+    Gaussian measure on the position space (with identity covariance and zero
+    mean), with the Hamiltonian component `h1` corresponding to the negative
+    logarithm of this density rather than the density with respect to the
+    Lebesgue measure on the position space. The Hamiltonian component function
+    `h2` is therefore assumed to have the form
+
+         h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+
+    where `pos` and `mom` are the position and momentum variables respectively,
+    and `inv(metric)` is the matrix inverse of the metric tensor. In this case
+    the Hamiltonian flow due to the quadratic `h2` component can be solved for
+    analytically, allowing an integrator to be defined using this alternative
+    splitting of the Hamiltonian [1].
+
+    References:
+
+      1. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
+         Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (callable): Function which given a position vector
+                returns the negative logarithm of an unnormalised probability
+                density on the position space with respect to the standard
+                Gaussian measure on the position space, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric (Matrix or None): Matrix object corresponding to covariance
+                of Gaussian marginal distribution on momentum vector. If `None`
+                is passed (the default), the identity matrix will be used.
+            grad_neg_log_dens (callable or None): Function which given a
+                position vector returns the derivative of the negative
+                logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to its position vector argument.
+                Optionally the function may instead return a pair of values
+                with the first being the value of the `neg_log_dens` evaluated
+                at the passed position vector and the second being the value of
+                its derivative with respect to the position argument. If `None`
+                is passed (the default) an automatic differentiation backend
+                will be used to construct the derivative of `neg_log_dens`
+                automatically if available.
+        &#34;&#34;&#34;
+        super().__init__(neg_log_dens, metric, grad_neg_log_dens)
+
+    def h2(self, state):
+        return (0.5 * state.pos @ state.pos +
+                0.5 * state.mom @ self.metric.inv @ state.mom)
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dmom(self, state):
+        return self.metric.inv @ state.mom
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dpos(self, state):
+        return state.pos
+
+    def h2_flow(self, state, dt):
+        omega = 1. / self.metric.eigval**0.5
+        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+        eigvec_T_pos = self.metric.eigvec.T @ state.pos
+        eigvec_T_mom = self.metric.eigvec.T @ state.mom
+        state.pos = self.metric.eigvec @ (
+            cos_omega_dt * eigvec_T_pos +
+            (sin_omega_dt * omega) * eigvec_T_mom)
+        state.mom = self.metric.eigvec @ (
+            cos_omega_dt * eigvec_T_mom -
+            (sin_omega_dt / omega) * eigvec_T_pos)
+
+    def dh2_flow_dmom(self, dt):
+        omega = 1. / self.metric.eigval**0.5
+        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+        return (
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega),
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, cos_omega_dt))
+
+
+class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
+    &#34;&#34;&#34;Base class for Euclidean Hamiltonian systems subject to constraints.
+
+    The system is assumed to be subject to a set of holonomic constraints on
+    the position component of the state. These constraints are specified by a
+    vector constraint function which takes as argument the position component,
+    and which is equal to zero in all components when the constraints are
+    satisfied. The constraint function implicitly defines a manifold embedded
+    in the position space of constraint satisfying configurations. There are
+    also implicitly a set of constraints on the momentum component of the state
+    due to the requirment that velocity (momentum pre-multiplied by inverse
+    metric) is always tangential to the constraint manifold.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None):
+        super().__init__(neg_log_dens=neg_log_dens, metric=metric,
+                         grad_neg_log_dens=grad_neg_log_dens)
+        self._constr = constr
+        self.dens_wrt_hausdorff = dens_wrt_hausdorff
+        self._jacob_constr = autodiff_fallback(
+            jacob_constr, constr, &#39;jacobian_and_value&#39;, &#39;jacob_constr&#39;)
+
+    @cache_in_state(&#39;pos&#39;)
+    def constr(self, state):
+        return self._constr(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;jacob_constr&#39;, &#39;constr&#39;])
+    def jacob_constr(self, state):
+        return self._jacob_constr(state.pos)
+
+    def jacob_constr_inner_product(
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        raise NotImplementedError()
+
+    @cache_in_state(&#39;pos&#39;)
+    def gram(self, state):
+        return self.jacob_constr_inner_product(
+            self.jacob_constr(state), self.metric.inv)
+
+    def inv_gram(self, state):
+        return self.gram(state).inv
+
+    def log_det_sqrt_gram(self, state):
+        return self.gram(state).log_abs_det_sqrt
+
+    def grad_log_det_sqrt_gram(self, state):
+        raise NotImplementedError()
+
+    def h1(self, state):
+        if self.dens_wrt_hausdorff:
+            return self.neg_log_dens(state)
+        else:
+            return self.neg_log_dens(state) + self.log_det_sqrt_gram(state)
+
+    def dh1_dpos(self, state):
+        if self.dens_wrt_hausdorff:
+            return self.grad_neg_log_dens(state)
+        else:
+            return (self.grad_neg_log_dens(state) +
+                    self.grad_log_det_sqrt_gram(state))
+
+    def project_onto_cotangent_space(self, mom, state):
+        jacob_constr = self.jacob_constr(state)
+        # Use parenthesis to force right-to-left evaluation to avoid
+        # matrix-matrix products
+        mom -= (self.jacob_constr(state).T @ (
+                    self.inv_gram(state) @ (
+                        self.jacob_constr(state) @ (self.metric.inv @ mom))))
+
+    def sample_momentum(self, state, rng):
+        mom = super().sample_momentum(state, rng)
+        self.project_onto_cotangent_space(mom, state)
+        return mom
+
+
+class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
+    &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
+
+    The system is assumed to be subject to a set of holonomic constraints on
+    the position component of the state. These constraints are specified by a
+    vector constraint function which takes as argument the position component,
+    and which is equal to zero in all components when the constraints are
+    satisfied. The constraint function implicitly defines a manifold embedded
+    in the position space of constraint satisfying configurations. There are
+    also implicitly a set of constraints on the momentum component of the state
+    due to the requirment that velocity (momentum pre-multiplied by inverse
+    metric) is always tangential to the constraint manifold.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        super().__init__(neg_log_dens=neg_log_dens, constr=constr,
+                         metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
+                         grad_neg_log_dens=grad_neg_log_dens,
+                         jacob_constr=jacob_constr)
+        if not dens_wrt_hausdorff:
+            self._mhp_constr = autodiff_fallback(
+                mhp_constr, constr, &#39;mhp_jacobian_and_value&#39;, &#39;mhp_constr&#39;)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
+    def mhp_constr(self, state):
+        return self._mhp_constr(state.pos)
+
+    def jacob_constr_inner_product(
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
+            return DenseDefiniteMatrix(
+                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                sign=1 if inner_product_matrix.is_posdef else -1)
+        else:
+            return DenseSquareMatrix(
+                jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
+
+    @cache_in_state(&#39;pos&#39;)
+    def grad_log_det_sqrt_gram(self, state):
+        return self.mhp_constr(state)(
+            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)
+
+
+class GaussianDenseConstrainedEuclideanMetricSystem(
+        GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        DenseConstrainedEuclideanMetricSystem.__init__(
+            self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
+            dens_wrt_hausdorff=dens_wrt_hausdorff,
+            grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
+            mhp_constr=mhp_constr)
+
+
+class RiemannianMetricSystem(_HamiltonianSystem):
+    &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
+
+    The momentum variables are assumed to have a zero-mean Gaussian conditional
+    distribution given the position variables, with covariance specified by a
+    position dependent positive-definite metric tensor [1]. Due to the coupling
+    between the position and momentum variables in the quadratic form of the
+    negative log density of the Gaussian conditional distribution on the
+    momentum variables, the Hamiltonian system is non-separable, requiring use
+    of a numerical integrator with implicit steps.
+
+    References:
+
+      1. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+         Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+         Society: Series B (Statistical Methodology), 73(2), pp.123-214.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
+                 vjp_metric_func=None, grad_neg_log_dens=None,
+                 metric_kwargs=None):
+        self._metric_matrix_class = metric_matrix_class
+        self._metric_func = metric_func
+        self._vjp_metric_func = autodiff_fallback(
+            vjp_metric_func, metric_func, &#39;vjp_and_value&#39;, &#39;vjp_metric_func&#39;)
+        self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
+        super().__init__(neg_log_dens, grad_neg_log_dens)
+
+    @cache_in_state(&#39;pos&#39;)
+    def metric_func(self, state):
+        return self._metric_func(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
+    def vjp_metric_func(self, state):
+        return self._vjp_metric_func(state.pos)
+
+    @cache_in_state(&#39;pos&#39;)
+    def metric(self, state):
+        return self._metric_matrix_class(
+            self.metric_func(state), **self._metric_kwargs)
+
+    def h(self, state):
+        return self.h1(state) + self.h2(state)
+
+    def h1(self, state):
+        return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt
+
+    def dh1_dpos(self, state):
+        # Evaluate VJP of metric function before metric as metric value will
+        # be computed in forward pass and cached
+        vjp_metric = self.vjp_metric_func(state)
+        return (self.grad_neg_log_dens(state) +
+                vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
+
+    def h2(self, state):
+        return 0.5 * state.mom @ self.metric(state).inv @ state.mom
+
+    def dh2_dpos(self, state):
+        # Evaluate VJP of metric function before metric as metric value will
+        # be computed in forward pass and cached
+        vjp_metric = self.vjp_metric_func(state)
+        return 0.5 * vjp_metric(
+            self.metric(state).grad_quadratic_form_inv(state.mom))
+
+    def dh2_dmom(self, state):
+        return self.metric(state).inv @ state.mom
+
+    def sample_momentum(self, state, rng):
+        return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)
+
+
+class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_scalar_func,
+                 vjp_metric_scalar_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, PositiveScaledIdentityMatrix, metric_scalar_func,
+            vjp_metric_scalar_func, grad_neg_log_dens)
+
+
+class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_diagonal_func,
+                 vjp_metric_diagonal_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, PositiveDiagonalMatrix, metric_diagonal_func,
+            vjp_metric_diagonal_func, grad_neg_log_dens)
+
+
+class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_chol_func,
+                 vjp_metric_chol_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, TriangularFactoredDefiniteMatrix,
+            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens)
+
+
+class DenseRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_func,
+                 vjp_metric_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, DensePositiveDefiniteMatrix, metric_func,
+            vjp_metric_func, grad_neg_log_dens)
+
+
+class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
+    &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
+
+    Hamiltonian system with a position dependent metric tensor which is
+    specified to be an eigenvalue-regularised transformation of the Hessian of
+    the potential energy function (with the &#39;soft-absolute&#39; regularisation
+    ensuring all the eigenvalues are strictly positive and so the resulting
+    metric tensor is positive definite everywhere).
+
+    References:
+
+    1. Betancourt, M., 2013. A general metric for Riemannian manifold
+       Hamiltonian Monte Carlo. In Geometric science of information
+       (pp. 327-334).
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, grad_neg_log_dens=None,
+                 hess_neg_log_dens=None, mtp_neg_log_dens=None,
+                 softabs_coeff=1.):
+        self._hess_neg_log_dens = autodiff_fallback(
+            hess_neg_log_dens, neg_log_dens, &#39;hessian_grad_and_value&#39;,
+            &#39;neg_log_dens&#39;)
+        self._mtp_neg_log_dens = autodiff_fallback(
+            mtp_neg_log_dens, neg_log_dens, &#39;mtp_hessian_grad_and_value&#39;,
+            &#39;mtp_neg_log_dens&#39;)
+        super().__init__(neg_log_dens,
+                         SoftAbsRegularisedPositiveDefiniteMatrix,
+                         self._hess_neg_log_dens, self._mtp_neg_log_dens,
+                         grad_neg_log_dens,
+                         metric_kwargs={&#39;softabs_coeff&#39;: softabs_coeff})
+
+    def metric_func(self, state):
+        return self.hess_neg_log_dens(state)
+
+    def vjp_metric_func(self, state):
+        return self.mtp_neg_log_dens(state)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def hess_neg_log_dens(self, state):
+        return self._hess_neg_log_dens(state.pos)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
+                  &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def mtp_neg_log_dens(self, state):
+        return self._mtp_neg_log_dens(state.pos)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mici.systems.EuclideanMetricSystem"><code class="flex name class">
+<span>class <span class="ident">EuclideanMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Hamiltonian system with fixed covariance Gaussian-distributed momenta.</p>
+<p>The momentum variables are taken to be independent of the position
+variables and with a zero-mean Gaussian marginal distribution with
+covariance specified by a fixed positive-definite matrix (metric tensor),
+so that the <code>h2</code> Hamiltonian component is</p>
+<pre><code>h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+</code></pre>
+<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
+and <code>inv(metric)</code> is the matrix inverse of the metric tensor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
+<dd>Matrix object corresponding to
+matrix representation of metric on position space and
+covariance of Gaussian marginal distribution on momentum
+vector. If <code>None</code> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to
+specify a metric with diagonal matrix representation and the
+array to the matrix diagonal. If a 2D array is passed then this
+is assumed to specify a metric with a dense positive definite
+matrix representation specified by the array.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) it will be attempted to use automatic
+differentiation to construct the derivative of <code>neg_log_dens</code>
+automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L96-L170" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class EuclideanMetricSystem(_HamiltonianSystem):
+    &#34;&#34;&#34;Hamiltonian system with fixed covariance Gaussian-distributed momenta.
+
+    The momentum variables are taken to be independent of the position
+    variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by a fixed positive-definite matrix (metric tensor),
+    so that the `h2` Hamiltonian component is
+
+        h2(pos, mom) = 0.5 * mom @ inv(metric) @ mom
+
+    where `pos` and `mom` are the position and momentum variables respectively,
+    and `inv(metric)` is the matrix inverse of the metric tensor.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (callable): Function which given a position vector
+                returns the negative logarithm of an unnormalised probability
+                density on the position space with respect to the Lebesgue
+                measure, with the corresponding distribution on the position
+                space being the target distribution it is wished to draw
+                approximate samples from.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
+            grad_neg_log_dens (callable or None): Function which given a
+                position vector returns the derivative of the negative
+                logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position vector argument.
+                Optionally the function may instead return a pair of values
+                with the first being the value of the `neg_log_dens` evaluated
+                at the passed position vector and the second being the value of
+                its derivative with respect to the position argument. If `None`
+                is passed (the default) it will be attempted to use automatic
+                differentiation to construct the derivative of `neg_log_dens`
+                automatically.
+        &#34;&#34;&#34;
+        super().__init__(neg_log_dens, grad_neg_log_dens)
+        if metric is None:
+            self.metric = IdentityMatrix()
+        elif isinstance(metric, np.ndarray):
+            if metric.ndim == 1:
+                self.metric = PositiveDiagonalMatrix(metric)
+            elif metric.ndim == 2:
+                self.metric = DensePositiveDefiniteMatrix(metric)
+            else:
+                raise ValueError(&#39;If NumPy ndarray value is used for `metric`&#39;
+                                 &#39; must be either 1D (diagonal matrix) or 2D &#39;
+                                 &#39;(dense positive definite matrix)&#39;)
+        else:
+            self.metric = metric
+
+    @cache_in_state(&#39;mom&#39;)
+    def h2(self, state):
+        return 0.5 * state.mom @ self.metric.inv @ state.mom
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dmom(self, state):
+        return self.metric.inv @ state.mom
+
+    def h2_flow(self, state, dt):
+        state.pos += dt * self.dh2_dmom(state)
+
+    def dh2_flow_dmom(self, dt):
+        return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])
+
+    def sample_momentum(self, state, rng):
+        return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></li>
+<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.EuclideanMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.h2_flow"><code class="name flex">
+<span>def <span class="ident">h2_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L163-L164" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h2_flow(self, state, dt):
+    state.pos += dt * self.dh2_dmom(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.dh2_flow_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_flow_dmom</span></span>(<span>self, dt)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L166-L167" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh2_flow_dmom(self, dt):
+    return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.EuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L169-L170" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample_momentum(self, state, rng):
+    return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem"><code class="flex name class">
+<span>class <span class="ident">GaussianEuclideanMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Euclidean Hamiltonian system with a tractable Gaussian component.</p>
+<p>The momentum variables are taken to be independent of the position
+variables and with a zero-mean Gaussian marginal distribution with
+covariance specified by a fixed positive-definite matrix (metric tensor).</p>
+<p>Additionally the target distribution on the position variables is assumed
+to be defined by an unnormalised density with respect to the standard
+Gaussian measure on the position space (with identity covariance and zero
+mean), with the Hamiltonian component <code>h1</code> corresponding to the negative
+logarithm of this density rather than the density with respect to the
+Lebesgue measure on the position space. The Hamiltonian component function
+<code>h2</code> is therefore assumed to have the form</p>
+<pre><code> h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+</code></pre>
+<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
+and <code>inv(metric)</code> is the matrix inverse of the metric tensor. In this case
+the Hamiltonian flow due to the quadratic <code>h2</code> component can be solved for
+analytically, allowing an integrator to be defined using this alternative
+splitting of the Hamiltonian [1].</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
+Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the standard
+Gaussian measure on the position space, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>Matrix</code> or <code>None</code></dt>
+<dd>Matrix object corresponding to covariance
+of Gaussian marginal distribution on momentum vector. If <code>None</code>
+is passed (the default), the identity matrix will be used.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to its position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation backend
+will be used to construct the derivative of <code>neg_log_dens</code>
+automatically if available.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L173-L259" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
+    &#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
+
+    The momentum variables are taken to be independent of the position
+    variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by a fixed positive-definite matrix (metric tensor).
+
+    Additionally the target distribution on the position variables is assumed
+    to be defined by an unnormalised density with respect to the standard
+    Gaussian measure on the position space (with identity covariance and zero
+    mean), with the Hamiltonian component `h1` corresponding to the negative
+    logarithm of this density rather than the density with respect to the
+    Lebesgue measure on the position space. The Hamiltonian component function
+    `h2` is therefore assumed to have the form
+
+         h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+
+    where `pos` and `mom` are the position and momentum variables respectively,
+    and `inv(metric)` is the matrix inverse of the metric tensor. In this case
+    the Hamiltonian flow due to the quadratic `h2` component can be solved for
+    analytically, allowing an integrator to be defined using this alternative
+    splitting of the Hamiltonian [1].
+
+    References:
+
+      1. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
+         Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
+        &#34;&#34;&#34;
+        Args:
+            neg_log_dens (callable): Function which given a position vector
+                returns the negative logarithm of an unnormalised probability
+                density on the position space with respect to the standard
+                Gaussian measure on the position space, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric (Matrix or None): Matrix object corresponding to covariance
+                of Gaussian marginal distribution on momentum vector. If `None`
+                is passed (the default), the identity matrix will be used.
+            grad_neg_log_dens (callable or None): Function which given a
+                position vector returns the derivative of the negative
+                logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to its position vector argument.
+                Optionally the function may instead return a pair of values
+                with the first being the value of the `neg_log_dens` evaluated
+                at the passed position vector and the second being the value of
+                its derivative with respect to the position argument. If `None`
+                is passed (the default) an automatic differentiation backend
+                will be used to construct the derivative of `neg_log_dens`
+                automatically if available.
+        &#34;&#34;&#34;
+        super().__init__(neg_log_dens, metric, grad_neg_log_dens)
+
+    def h2(self, state):
+        return (0.5 * state.pos @ state.pos +
+                0.5 * state.mom @ self.metric.inv @ state.mom)
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dmom(self, state):
+        return self.metric.inv @ state.mom
+
+    @cache_in_state(&#39;mom&#39;)
+    def dh2_dpos(self, state):
+        return state.pos
+
+    def h2_flow(self, state, dt):
+        omega = 1. / self.metric.eigval**0.5
+        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+        eigvec_T_pos = self.metric.eigvec.T @ state.pos
+        eigvec_T_mom = self.metric.eigvec.T @ state.mom
+        state.pos = self.metric.eigvec @ (
+            cos_omega_dt * eigvec_T_pos +
+            (sin_omega_dt * omega) * eigvec_T_mom)
+        state.mom = self.metric.eigvec @ (
+            cos_omega_dt * eigvec_T_mom -
+            (sin_omega_dt / omega) * eigvec_T_pos)
+
+    def dh2_flow_dmom(self, dt):
+        omega = 1. / self.metric.eigval**0.5
+        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+        return (
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega),
+            EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, cos_omega_dt))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">GaussianDenseConstrainedEuclideanMetricSystem</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L228-L230" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h2(self, state):
+    return (0.5 * state.pos @ state.pos +
+            0.5 * state.mom @ self.metric.inv @ state.mom)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_dpos"><code class="name flex">
+<span>def <span class="ident">dh2_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="name flex">
+<span>def <span class="ident">h2_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L240-L250" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h2_flow(self, state, dt):
+    omega = 1. / self.metric.eigval**0.5
+    sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+    eigvec_T_pos = self.metric.eigvec.T @ state.pos
+    eigvec_T_mom = self.metric.eigvec.T @ state.mom
+    state.pos = self.metric.eigvec @ (
+        cos_omega_dt * eigvec_T_pos +
+        (sin_omega_dt * omega) * eigvec_T_mom)
+    state.mom = self.metric.eigvec @ (
+        cos_omega_dt * eigvec_T_mom -
+        (sin_omega_dt / omega) * eigvec_T_pos)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_flow_dmom</span></span>(<span>self, dt)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L252-L259" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh2_flow_dmom(self, dt):
+    omega = 1. / self.metric.eigval**0.5
+    sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+    return (
+        EigendecomposedSymmetricMatrix(
+            self.metric.eigvec, sin_omega_dt * omega),
+        EigendecomposedSymmetricMatrix(
+            self.metric.eigvec, cos_omega_dt))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem"><code class="flex name class">
+<span>class <span class="ident">DenseConstrainedEuclideanMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, constr, metric=None, dens_wrt_hausdorff=True, grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Euclidean Hamiltonian systems subject to a dense set of constraints.</p>
+<p>The system is assumed to be subject to a set of holonomic constraints on
+the position component of the state. These constraints are specified by a
+vector constraint function which takes as argument the position component,
+and which is equal to zero in all components when the constraints are
+satisfied. The constraint function implicitly defines a manifold embedded
+in the position space of constraint satisfying configurations. There are
+also implicitly a set of constraints on the momentum component of the state
+due to the requirment that velocity (momentum pre-multiplied by inverse
+metric) is always tangential to the constraint manifold.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
+<dd>Matrix object corresponding to
+matrix representation of metric on position space and
+covariance of Gaussian marginal distribution on momentum
+vector. If <code>None</code> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to
+specify a metric with diagonal matrix representation and the
+array to the matrix diagonal. If a 2D array is passed then this
+is assumed to specify a metric with a dense positive definite
+matrix representation specified by the array.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) it will be attempted to use automatic
+differentiation to construct the derivative of <code>neg_log_dens</code>
+automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L339-L382" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
+    &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
+
+    The system is assumed to be subject to a set of holonomic constraints on
+    the position component of the state. These constraints are specified by a
+    vector constraint function which takes as argument the position component,
+    and which is equal to zero in all components when the constraints are
+    satisfied. The constraint function implicitly defines a manifold embedded
+    in the position space of constraint satisfying configurations. There are
+    also implicitly a set of constraints on the momentum component of the state
+    due to the requirment that velocity (momentum pre-multiplied by inverse
+    metric) is always tangential to the constraint manifold.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        super().__init__(neg_log_dens=neg_log_dens, constr=constr,
+                         metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
+                         grad_neg_log_dens=grad_neg_log_dens,
+                         jacob_constr=jacob_constr)
+        if not dens_wrt_hausdorff:
+            self._mhp_constr = autodiff_fallback(
+                mhp_constr, constr, &#39;mhp_jacobian_and_value&#39;, &#39;mhp_constr&#39;)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
+    def mhp_constr(self, state):
+        return self._mhp_constr(state.pos)
+
+    def jacob_constr_inner_product(
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
+            return DenseDefiniteMatrix(
+                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                sign=1 if inner_product_matrix.is_posdef else -1)
+        else:
+            return DenseSquareMatrix(
+                jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
+
+    @cache_in_state(&#39;pos&#39;)
+    def grad_log_det_sqrt_gram(self, state):
+        return self.mhp_constr(state)(
+            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+<li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">GaussianDenseConstrainedEuclideanMetricSystem</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr"><code class="name flex">
+<span>def <span class="ident">mhp_constr</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L54-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    id_ = id(self)
+    type_prefix = type(self).__name__ + &#39;.&#39;
+    prim_key = (type_prefix + vars[primary_index], id_)
+    keys = [(type_prefix + v, id_) for v in vars]
+    for i, key in enumerate(keys):
+        if key not in state._cache:
+            for dep in depends_on:
+                state._dependencies[dep].add(key)
+    if prim_key not in state._cache or state._cache[prim_key] is None:
+        vals = method(self, state)
+        if isinstance(vals, tuple):
+            for k, v in zip(keys, vals):
+                state._cache[k] = v
+        else:
+            state._cache[prim_key] = vals
+    return state._cache[prim_key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><code class="name flex">
+<span>def <span class="ident">jacob_constr_inner_product</span></span>(<span>self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L369-L377" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def jacob_constr_inner_product(
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+    if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
+        return DenseDefiniteMatrix(
+            jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+            sign=1 if inner_product_matrix.is_posdef else -1)
+    else:
+        return DenseSquareMatrix(
+            jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">grad_log_det_sqrt_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem"><code class="flex name class">
+<span>class <span class="ident">GaussianDenseConstrainedEuclideanMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, constr, metric=None, dens_wrt_hausdorff=True, grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Euclidean Hamiltonian system with a tractable Gaussian component.</p>
+<p>The momentum variables are taken to be independent of the position
+variables and with a zero-mean Gaussian marginal distribution with
+covariance specified by a fixed positive-definite matrix (metric tensor).</p>
+<p>Additionally the target distribution on the position variables is assumed
+to be defined by an unnormalised density with respect to the standard
+Gaussian measure on the position space (with identity covariance and zero
+mean), with the Hamiltonian component <code>h1</code> corresponding to the negative
+logarithm of this density rather than the density with respect to the
+Lebesgue measure on the position space. The Hamiltonian component function
+<code>h2</code> is therefore assumed to have the form</p>
+<pre><code> h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+</code></pre>
+<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
+and <code>inv(metric)</code> is the matrix inverse of the metric tensor. In this case
+the Hamiltonian flow due to the quadratic <code>h2</code> component can be solved for
+analytically, allowing an integrator to be defined using this alternative
+splitting of the Hamiltonian [1].</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
+Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the standard
+Gaussian measure on the position space, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>Matrix</code> or <code>None</code></dt>
+<dd>Matrix object corresponding to covariance
+of Gaussian marginal distribution on momentum vector. If <code>None</code>
+is passed (the default), the identity matrix will be used.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to its position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation backend
+will be used to construct the derivative of <code>neg_log_dens</code>
+automatically if available.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L385-L395" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
+        GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None, mhp_constr=None):
+        DenseConstrainedEuclideanMetricSystem.__init__(
+            self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
+            dens_wrt_hausdorff=dens_wrt_hausdorff,
+            grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
+            mhp_constr=mhp_constr)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></li>
+<li><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></li>
+<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+<li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">RiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric_matrix_class, metric_func, vjp_metric_func=None, grad_neg_log_dens=None, metric_kwargs=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
+<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
+distribution given the position variables, with covariance specified by a
+position dependent positive-definite metric tensor [1]. Due to the coupling
+between the position and momentum variables in the quadratic form of the
+negative log density of the Gaussian conditional distribution on the
+momentum variables, the Hamiltonian system is non-separable, requiring use
+of a numerical integrator with implicit steps.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L398-L466" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class RiemannianMetricSystem(_HamiltonianSystem):
+    &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
+
+    The momentum variables are assumed to have a zero-mean Gaussian conditional
+    distribution given the position variables, with covariance specified by a
+    position dependent positive-definite metric tensor [1]. Due to the coupling
+    between the position and momentum variables in the quadratic form of the
+    negative log density of the Gaussian conditional distribution on the
+    momentum variables, the Hamiltonian system is non-separable, requiring use
+    of a numerical integrator with implicit steps.
+
+    References:
+
+      1. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+         Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+         Society: Series B (Statistical Methodology), 73(2), pp.123-214.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
+                 vjp_metric_func=None, grad_neg_log_dens=None,
+                 metric_kwargs=None):
+        self._metric_matrix_class = metric_matrix_class
+        self._metric_func = metric_func
+        self._vjp_metric_func = autodiff_fallback(
+            vjp_metric_func, metric_func, &#39;vjp_and_value&#39;, &#39;vjp_metric_func&#39;)
+        self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
+        super().__init__(neg_log_dens, grad_neg_log_dens)
+
+    @cache_in_state(&#39;pos&#39;)
+    def metric_func(self, state):
+        return self._metric_func(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
+    def vjp_metric_func(self, state):
+        return self._vjp_metric_func(state.pos)
+
+    @cache_in_state(&#39;pos&#39;)
+    def metric(self, state):
+        return self._metric_matrix_class(
+            self.metric_func(state), **self._metric_kwargs)
+
+    def h(self, state):
+        return self.h1(state) + self.h2(state)
+
+    def h1(self, state):
+        return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt
+
+    def dh1_dpos(self, state):
+        # Evaluate VJP of metric function before metric as metric value will
+        # be computed in forward pass and cached
+        vjp_metric = self.vjp_metric_func(state)
+        return (self.grad_neg_log_dens(state) +
+                vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
+
+    def h2(self, state):
+        return 0.5 * state.mom @ self.metric(state).inv @ state.mom
+
+    def dh2_dpos(self, state):
+        # Evaluate VJP of metric function before metric as metric value will
+        # be computed in forward pass and cached
+        vjp_metric = self.vjp_metric_func(state)
+        return 0.5 * vjp_metric(
+            self.metric(state).grad_quadratic_form_inv(state.mom))
+
+    def dh2_dmom(self, state):
+        return self.metric(state).inv @ state.mom
+
+    def sample_momentum(self, state, rng):
+        return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.ScalarRiemannianMetricSystem" href="#mici.systems.ScalarRiemannianMetricSystem">ScalarRiemannianMetricSystem</a></li>
+<li><a title="mici.systems.DiagonalRiemannianMetricSystem" href="#mici.systems.DiagonalRiemannianMetricSystem">DiagonalRiemannianMetricSystem</a></li>
+<li><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem">CholeskyFactoredRiemannianMetricSystem</a></li>
+<li><a title="mici.systems.DenseRiemannianMetricSystem" href="#mici.systems.DenseRiemannianMetricSystem">DenseRiemannianMetricSystem</a></li>
+<li><a title="mici.systems.SoftAbsRiemannianMetricSystem" href="#mici.systems.SoftAbsRiemannianMetricSystem">SoftAbsRiemannianMetricSystem</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.RiemannianMetricSystem.metric_func"><code class="name flex">
+<span>def <span class="ident">metric_func</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.vjp_metric_func"><code class="name flex">
+<span>def <span class="ident">vjp_metric_func</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L54-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    id_ = id(self)
+    type_prefix = type(self).__name__ + &#39;.&#39;
+    prim_key = (type_prefix + vars[primary_index], id_)
+    keys = [(type_prefix + v, id_) for v in vars]
+    for i, key in enumerate(keys):
+        if key not in state._cache:
+            for dep in depends_on:
+                state._dependencies[dep].add(key)
+    if prim_key not in state._cache or state._cache[prim_key] is None:
+        vals = method(self, state)
+        if isinstance(vals, tuple):
+            for k, v in zip(keys, vals):
+                state._cache[k] = v
+        else:
+            state._cache[prim_key] = vals
+    return state._cache[prim_key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.metric"><code class="name flex">
+<span>def <span class="ident">metric</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L19-L26" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    key = (type(self).__name__ + &#39;.&#39; + method.__name__, id(self))
+    if key not in state._cache:
+        for dep in depends_on:
+            state._dependencies[dep].add(key)
+    if key not in state._cache or state._cache[key] is None:
+        state._cache[key] = method(self, state)
+    return state._cache[key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L439-L440" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h(self, state):
+    return self.h1(state) + self.h2(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L442-L443" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h1(self, state):
+    return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L445-L450" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh1_dpos(self, state):
+    # Evaluate VJP of metric function before metric as metric value will
+    # be computed in forward pass and cached
+    vjp_metric = self.vjp_metric_func(state)
+    return (self.grad_neg_log_dens(state) +
+            vjp_metric(self.metric(state).grad_log_abs_det_sqrt))</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L452-L453" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h2(self, state):
+    return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.dh2_dpos"><code class="name flex">
+<span>def <span class="ident">dh2_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L455-L460" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh2_dpos(self, state):
+    # Evaluate VJP of metric function before metric as metric value will
+    # be computed in forward pass and cached
+    vjp_metric = self.vjp_metric_func(state)
+    return 0.5 * vjp_metric(
+        self.metric(state).grad_quadratic_form_inv(state.mom))</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L462-L463" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh2_dmom(self, state):
+    return self.metric(state).inv @ state.mom</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.RiemannianMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L465-L466" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample_momentum(self, state, rng):
+    return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.systems.ScalarRiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">ScalarRiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric_scalar_func, vjp_metric_scalar_func=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
+<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
+distribution given the position variables, with covariance specified by a
+position dependent positive-definite metric tensor [1]. Due to the coupling
+between the position and momentum variables in the quadratic form of the
+negative log density of the Gaussian conditional distribution on the
+momentum variables, the Hamiltonian system is non-separable, requiring use
+of a numerical integrator with implicit steps.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L469-L475" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_scalar_func,
+                 vjp_metric_scalar_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, PositiveScaledIdentityMatrix, metric_scalar_func,
+            vjp_metric_scalar_func, grad_neg_log_dens)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+</dd>
+<dt id="mici.systems.DiagonalRiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">DiagonalRiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric_diagonal_func, vjp_metric_diagonal_func=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
+<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
+distribution given the position variables, with covariance specified by a
+position dependent positive-definite metric tensor [1]. Due to the coupling
+between the position and momentum variables in the quadratic form of the
+negative log density of the Gaussian conditional distribution on the
+momentum variables, the Hamiltonian system is non-separable, requiring use
+of a numerical integrator with implicit steps.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L478-L484" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_diagonal_func,
+                 vjp_metric_diagonal_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, PositiveDiagonalMatrix, metric_diagonal_func,
+            vjp_metric_diagonal_func, grad_neg_log_dens)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+</dd>
+<dt id="mici.systems.CholeskyFactoredRiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">CholeskyFactoredRiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric_chol_func, vjp_metric_chol_func=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
+<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
+distribution given the position variables, with covariance specified by a
+position dependent positive-definite metric tensor [1]. Due to the coupling
+between the position and momentum variables in the quadratic form of the
+negative log density of the Gaussian conditional distribution on the
+momentum variables, the Hamiltonian system is non-separable, requiring use
+of a numerical integrator with implicit steps.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L487-L493" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_chol_func,
+                 vjp_metric_chol_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, TriangularFactoredDefiniteMatrix,
+            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+</dd>
+<dt id="mici.systems.DenseRiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">DenseRiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, metric_func, vjp_metric_func=None, grad_neg_log_dens=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
+<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
+distribution given the position variables, with covariance specified by a
+position dependent positive-definite metric tensor [1]. Due to the coupling
+between the position and momentum variables in the quadratic form of the
+negative log density of the Gaussian conditional distribution on the
+momentum variables, the Hamiltonian system is non-separable, requiring use
+of a numerical integrator with implicit steps.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+Hamiltonian Monte Varlo methods. Journal of the Royal Statistical
+Society: Series B (Statistical Methodology), 73(2), pp.123-214.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L496-L502" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
+
+    def __init__(self, neg_log_dens, metric_func,
+                 vjp_metric_func=None, grad_neg_log_dens=None):
+        super().__init__(
+            neg_log_dens, DensePositiveDefiniteMatrix, metric_func,
+            vjp_metric_func, grad_neg_log_dens)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem"><code class="flex name class">
+<span>class <span class="ident">SoftAbsRiemannianMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, grad_neg_log_dens=None, hess_neg_log_dens=None, mtp_neg_log_dens=None, softabs_coeff=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>SoftAbs Riemmanian metric Hamiltonian system.</p>
+<p>Hamiltonian system with a position dependent metric tensor which is
+specified to be an eigenvalue-regularised transformation of the Hessian of
+the potential energy function (with the 'soft-absolute' regularisation
+ensuring all the eigenvalues are strictly positive and so the resulting
+metric tensor is positive definite everywhere).</p>
+<p>References:</p>
+<ol>
+<li>Betancourt, M., 2013. A general metric for Riemannian manifold
+Hamiltonian Monte Carlo. In Geometric science of information
+(pp. 327-334).</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
+<dd>Function which given a position vector
+returns the negative logarithm of an unnormalised probability
+density on the position space with respect to the Lebesgue
+measure, with the corresponding distribution on the position
+space being the target distribution it is wished to draw
+approximate samples from.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dd>Function which given a
+position vector returns the derivative of the negative
+logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position vector argument.
+Optionally the function may instead return a pair of values
+with the first being the value of the <code>neg_log_dens</code> evaluated
+at the passed position vector and the second being the value of
+its derivative with respect to the position argument. If <code>None</code>
+is passed (the default) an automatic differentiation fallback
+will be used to attempt to construct the derivative of
+<code>neg_log_dens</code> automatically.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L505-L551" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
+    &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
+
+    Hamiltonian system with a position dependent metric tensor which is
+    specified to be an eigenvalue-regularised transformation of the Hessian of
+    the potential energy function (with the &#39;soft-absolute&#39; regularisation
+    ensuring all the eigenvalues are strictly positive and so the resulting
+    metric tensor is positive definite everywhere).
+
+    References:
+
+    1. Betancourt, M., 2013. A general metric for Riemannian manifold
+       Hamiltonian Monte Carlo. In Geometric science of information
+       (pp. 327-334).
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, grad_neg_log_dens=None,
+                 hess_neg_log_dens=None, mtp_neg_log_dens=None,
+                 softabs_coeff=1.):
+        self._hess_neg_log_dens = autodiff_fallback(
+            hess_neg_log_dens, neg_log_dens, &#39;hessian_grad_and_value&#39;,
+            &#39;neg_log_dens&#39;)
+        self._mtp_neg_log_dens = autodiff_fallback(
+            mtp_neg_log_dens, neg_log_dens, &#39;mtp_hessian_grad_and_value&#39;,
+            &#39;mtp_neg_log_dens&#39;)
+        super().__init__(neg_log_dens,
+                         SoftAbsRegularisedPositiveDefiniteMatrix,
+                         self._hess_neg_log_dens, self._mtp_neg_log_dens,
+                         grad_neg_log_dens,
+                         metric_kwargs={&#39;softabs_coeff&#39;: softabs_coeff})
+
+    def metric_func(self, state):
+        return self.hess_neg_log_dens(state)
+
+    def vjp_metric_func(self, state):
+        return self.mtp_neg_log_dens(state)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def hess_neg_log_dens(self, state):
+        return self._hess_neg_log_dens(state.pos)
+
+    @multi_cache_in_state(
+        [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
+                  &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
+    def mtp_neg_log_dens(self, state):
+        return self._mtp_neg_log_dens(state.pos)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></li>
+<li>mici.systems._HamiltonianSystem</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.metric_func"><code class="name flex">
+<span>def <span class="ident">metric_func</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L536-L537" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def metric_func(self, state):
+    return self.hess_neg_log_dens(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.vjp_metric_func"><code class="name flex">
+<span>def <span class="ident">vjp_metric_func</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/systems.py#L539-L540" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def vjp_metric_func(self, state):
+    return self.mtp_neg_log_dens(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.hess_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">hess_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L54-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    id_ = id(self)
+    type_prefix = type(self).__name__ + &#39;.&#39;
+    prim_key = (type_prefix + vars[primary_index], id_)
+    keys = [(type_prefix + v, id_) for v in vars]
+    for i, key in enumerate(keys):
+        if key not in state._cache:
+            for dep in depends_on:
+                state._dependencies[dep].add(key)
+    if prim_key not in state._cache or state._cache[prim_key] is None:
+        vals = method(self, state)
+        if isinstance(vals, tuple):
+            for k, v in zip(keys, vals):
+                state._cache[k] = v
+        else:
+            state._cache[prim_key] = vals
+    return state._cache[prim_key]</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">mtp_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/states.py#L54-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def wrapper(self, state):
+    id_ = id(self)
+    type_prefix = type(self).__name__ + &#39;.&#39;
+    prim_key = (type_prefix + vars[primary_index], id_)
+    keys = [(type_prefix + v, id_) for v in vars]
+    for i, key in enumerate(keys):
+        if key not in state._cache:
+            for dep in depends_on:
+                state._dependencies[dep].add(key)
+    if prim_key not in state._cache or state._cache[prim_key] is None:
+        vals = method(self, state)
+        if isinstance(vals, tuple):
+            for k, v in zip(keys, vals):
+                state._cache[k] = v
+        else:
+            state._cache[prim_key] = vals
+    return state._cache[prim_key]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="mici docs home" href="index.html">
+<img src="../logo.png" alt="mici">
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Package</h3>
+<ul>
+<li><code><a title="mici" href="index.html">mici</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code></h4>
+<ul class="">
+<li><code><a title="mici.systems.EuclideanMetricSystem.h2" href="#mici.systems.EuclideanMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.dh2_dmom" href="#mici.systems.EuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.h2_flow" href="#mici.systems.EuclideanMetricSystem.h2_flow">h2_flow</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.dh2_flow_dmom" href="#mici.systems.EuclideanMetricSystem.dh2_flow_dmom">dh2_flow_dmom</a></code></li>
+<li><code><a title="mici.systems.EuclideanMetricSystem.sample_momentum" href="#mici.systems.EuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></code></h4>
+<ul class="">
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h2" href="#mici.systems.GaussianEuclideanMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_dpos" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_dpos">dh2_dpos</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.h2_flow" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow">h2_flow</a></code></li>
+<li><code><a title="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom">dh2_flow_dmom</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code></h4>
+<ul class="">
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr">mhp_constr</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">GaussianDenseConstrainedEuclideanMetricSystem</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.systems.RiemannianMetricSystem" href="#mici.systems.RiemannianMetricSystem">RiemannianMetricSystem</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.systems.RiemannianMetricSystem.metric_func" href="#mici.systems.RiemannianMetricSystem.metric_func">metric_func</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.vjp_metric_func" href="#mici.systems.RiemannianMetricSystem.vjp_metric_func">vjp_metric_func</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.metric" href="#mici.systems.RiemannianMetricSystem.metric">metric</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.h" href="#mici.systems.RiemannianMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.h1" href="#mici.systems.RiemannianMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.dh1_dpos" href="#mici.systems.RiemannianMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.h2" href="#mici.systems.RiemannianMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.dh2_dpos" href="#mici.systems.RiemannianMetricSystem.dh2_dpos">dh2_dpos</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.dh2_dmom" href="#mici.systems.RiemannianMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.RiemannianMetricSystem.sample_momentum" href="#mici.systems.RiemannianMetricSystem.sample_momentum">sample_momentum</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.systems.ScalarRiemannianMetricSystem" href="#mici.systems.ScalarRiemannianMetricSystem">ScalarRiemannianMetricSystem</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.systems.DiagonalRiemannianMetricSystem" href="#mici.systems.DiagonalRiemannianMetricSystem">DiagonalRiemannianMetricSystem</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.systems.CholeskyFactoredRiemannianMetricSystem" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem">CholeskyFactoredRiemannianMetricSystem</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.systems.DenseRiemannianMetricSystem" href="#mici.systems.DenseRiemannianMetricSystem">DenseRiemannianMetricSystem</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.systems.SoftAbsRiemannianMetricSystem" href="#mici.systems.SoftAbsRiemannianMetricSystem">SoftAbsRiemannianMetricSystem</a></code></h4>
+<ul class="">
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.metric_func" href="#mici.systems.SoftAbsRiemannianMetricSystem.metric_func">metric_func</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.vjp_metric_func" href="#mici.systems.SoftAbsRiemannianMetricSystem.vjp_metric_func">vjp_metric_func</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.hess_neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.hess_neg_log_dens">hess_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens" href="#mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens">mtp_neg_log_dens</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+Copyright © 2019 Matt Graham
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

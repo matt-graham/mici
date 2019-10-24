@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.1" />
+<title>mici.transitions API documentation</title>
+<meta name="description" content="Markov chain transition operators." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Package <code>mici.transitions</code></h1>
+</header>
+<section id="section-intro">
+<p>Markov chain transition operators.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L0-L395" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;Markov chain transition operators.&#34;&#34;&#34;
+
+import logging
+import numpy as np
+from mici.utils import LogRepFloat
+from mici.errors import (
+    IntegratorError, NonReversibleStepError, ConvergenceError)
+
+logger = logging.getLogger(__name__)
+
+
+class _AbstractMomentumTransition(object):
+    &#34;&#34;&#34;Base class for momentum transitions.&#34;&#34;&#34;
+
+    def __init__(self, system):
+        &#34;&#34;&#34;
+        Args:
+            system: Hamiltonian system to be simulated.
+        &#34;&#34;&#34;
+        self.system = system
+        self.state_variables = {&#39;mom&#39;}
+
+
+class IndependentMomentumTransition(_AbstractMomentumTransition):
+    &#34;&#34;&#34;Independent momentum transition.
+
+    Independently resamples the momentum component of the state from its
+    conditional distribution given the remaining state.
+    &#34;&#34;&#34;
+
+    def sample(self, state, rng):
+        state.mom = self.system.sample_momentum(state, rng)
+        return state, None
+
+
+class CorrelatedMomentumTransition(_AbstractMomentumTransition):
+    &#34;&#34;&#34;Correlated (partial) momentum transition.
+
+    Rather than independently sampling a new momentum, instead a pertubative
+    Crank-Nicolson type update which produces a new momentum value with a
+    specified correlation with the previous value is used. It is assumed that
+    the conditional distribution of the momenta is zero-mean Gaussian such that
+    the Crank-Nicolson update leaves the momenta conditional distribution
+    exactly invariant. This approach is sometimes known as partial momentum
+    refreshing or updating, and was originally proposed in [1].
+
+    If the resampling coefficient is equal to zero then the momentum is not
+    randomised at all and succesive applications of the coupled integration
+    transitions will continue along the same simulated Hamiltonian trajectory.
+    When an integration transition is accepted this means the subsequent
+    simulated trajectory will continue evolving in the same direction and so
+    not randomising the momentum will reduce random-walk behaviour. However on
+    a rejection the integration direction is reversed and so without
+    randomisation the trajectory will exactly backtrack along the previous
+    tractory states. A resampling coefficient of one corresponds to the
+    standard case of independent resampling of the momenta while intermediate
+    values between zero and one correspond to varying levels of correlation
+    between the pre and post update momentums.
+
+    References:
+
+      1. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
+         Phys. Lett. B, 268(CERN-TH-6172-91), pp.247-252.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, mom_resample_coeff=1.):
+        super().__init__(system)
+        self.mom_resample_coeff = mom_resample_coeff
+
+    def sample(self, state, rng):
+        if self.mom_resample_coeff == 1:
+            state.mom = self.system.sample_momentum(state, rng)
+        elif self.mom_resample_coeff != 0:
+            mom_ind = self.system.sample_momentum(state, rng)
+            state.mom *= (1. - self.mom_resample_coeff**2)**0.5
+            state.mom += self.mom_resample_coeff * mom_ind
+        return state, None
+
+
+class _AbstractIntegrationTransition(object):
+
+    def __init__(self, system, integrator):
+        &#34;&#34;&#34;
+        Args:
+            system: Hamiltonian system to be simulated.
+            integrator: Symplectic integrator appropriate to the specified
+                Hamiltonian system.
+        &#34;&#34;&#34;
+        self.system = system
+        self.integrator = integrator
+        self.statistic_types = {
+            &#39;hamiltonian&#39;: (np.float64, np.nan),
+            &#39;n_step&#39;: (np.int64, -1),
+            &#39;accept_prob&#39;: (np.float64, np.nan),
+            &#39;non_reversible_step&#39;: (np.bool, False),
+            &#39;convergence_error&#39;: (np.bool, False)
+        }
+        self.state_variables = {&#39;pos&#39;, &#39;mom&#39;, &#39;dir&#39;}
+
+
+class _AbstractMetropolisIntegrationTransition(_AbstractIntegrationTransition):
+    &#34;&#34;&#34;Base for HMC methods using a Metropolis accept step to sample new state.
+
+    In each transition a trajectory is generated by integrating the Hamiltonian
+    dynamics from the current state in the current integration time direction
+    for a number of integrator steps.
+
+    The state at the end of the trajectory with the integration direction
+    negated (this ensuring the proposed move is an involution) is used as the
+    proposal in a Metropolis acceptance step. The integration direction is then
+    deterministically negated again irrespective of the accept decision, with
+    the effect being that on acceptance the integration direction will be equal
+    to its initial value and on rejection the integration direction will be
+    the negation of its initial value.
+    &#34;&#34;&#34;
+
+    def _sample_n_step(self, state, n_step, rng):
+        h_init = self.system.h(state)
+        state_p = state
+        try:
+            for s in range(n_step):
+                state_p = self.integrator.step(state_p)
+        except IntegratorError as e:
+            logger.info(
+                f&#39;Terminating trajectory due to integrator error:\n{e!s}&#39;)
+            return state, {
+                &#39;hamiltonian&#39;: h_init, &#39;accept_prob&#39;: 0, &#39;n_step&#39;: s,
+                &#39;non_reversible_step&#39;: isinstance(e, NonReversibleStepError),
+                &#39;convergence_error&#39;: isinstance(e, ConvergenceError)}
+        state_p.dir *= -1
+        h_final = self.system.h(state_p)
+        metrop_ratio = np.exp(h_init - h_final)
+        accept_prob = 0 if np.isnan(metrop_ratio) else min(1, metrop_ratio)
+        if rng.uniform() &lt; accept_prob:
+            state = state_p
+        state.dir *= -1
+        stats = {&#39;hamiltonian&#39;: self.system.h(state),
+                 &#39;accept_prob&#39;: accept_prob, &#39;n_step&#39;: n_step,
+                 &#39;non_reversible_step&#39;: False, &#39;convergence_error&#39;: False}
+        return state, stats
+
+
+class MetropolisStaticIntegrationTransition(
+        _AbstractMetropolisIntegrationTransition):
+    &#34;&#34;&#34;Static integration transition with Metropolis sampling of new state.
+
+    In this variant the trajectory is generated by integrating the state
+    through time a fixed number of integrator steps. This is original proposed
+    Hybrid Monte Carlo (often now instead termed Hamiltonian Monte Carlo)
+    algorithm [1,2].
+
+    References:
+
+      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+         Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.
+      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+         Handbook of Markov Chain Monte Carlo, 2(11), p.2.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, n_step):
+        super().__init__(system, integrator)
+        self.n_step = n_step
+
+    def sample(self, state, rng):
+        return self._sample_n_step(state, self.n_step, rng)
+
+
+class MetropolisRandomIntegrationTransition(
+        _AbstractMetropolisIntegrationTransition):
+    &#34;&#34;&#34;Random integration transition with Metropolis sampling of new state.
+
+    In each transition a trajectory is generated by integrating the state in
+    the current integration direction in time a random integer number of
+    integrator steps sampled from the uniform distribution on an integer
+    interval. The randomisation of the number of integration steps avoids the
+    potential of the chain mixing poorly due to using an integration time close
+    to the period of (near) periodic systems [1,2].
+
+    References:
+
+      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+         Handbook of Markov Chain Monte Carlo, 2(11), p.2.
+      2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+         Physics Letters B, 226(3-4), pp.369-371.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, n_step_range):
+        super().__init__(system, integrator)
+        n_step_lower, n_step_upper = n_step_range
+        assert n_step_lower &gt; 0 and n_step_lower &lt; n_step_upper
+        self.n_step_range = n_step_range
+
+    def sample(self, state, rng):
+        n_step = rng.random_integers(*self.n_step_range)
+        return self._sample_n_step(state, n_step, rng)
+
+
+def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    &#34;&#34;&#34;No-U-turn termination criterion for Euclidean manifolds [1].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the vector from
+    the position of the first terminal state to the position of the second
+    terminal state, corresponding to further evolution of the trajectory
+    reducing the distance between the terminal state positions.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (ChainState): First terminal state of trajectory.
+        state_2 (ChainState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+    return (
+        np.sum(system.dh_dmom(state_1) * (state_2.pos - state_1.pos)) &lt; 0 or
+        np.sum(system.dh_dmom(state_2) * (state_2.pos - state_1.pos)) &lt; 0)
+
+
+def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    &#34;&#34;&#34;Generalised no-U-turn termination criterion on Riemannian manifolds [2].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the sum of the
+    the momentums across the trajectory from the first to second terminal state
+    of the first terminal state to the position of the second terminal state.
+    This generalises the no-U-turn criterion of [1] to Riemannian manifolds
+    where due to the intrinsic curvature of the space the geodesic between
+    two points is general no longer a straight line.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (ChainState): First terminal state of trajectory.
+        state_2 (ChainState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+         manifolds. arXiv preprint arXiv:1304.1920.
+    &#34;&#34;&#34;
+    return (
+        np.sum(system.dh_dmom(state_1) * sum_mom) &lt; 0 or
+        np.sum(system.dh_dmom(state_2) * sum_mom) &lt; 0)
+
+
+class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps
+    equal to the previous tree size [1,2] until a termination criteria on the
+    tree leaves is met. The next chain state is chosen from the candidate
+    states using a progressive multinomial sampling scheme [2] based on the
+    relative probability densities of the different candidate states, with the
+    resampling biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+         Carlo. arXiv preprint arXiv:1701.02434.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=riemannian_no_u_turn_criterion):
+        super().__init__(system, integrator)
+        self.max_tree_depth = max_tree_depth
+        self.max_delta_h = max_delta_h
+        self._termination_criterion = termination_criterion
+        self.statistic_types[&#39;tree_depth&#39;] = (np.int64, -1)
+        self.statistic_types[&#39;diverging&#39;] = (np.bool, False)
+
+    def termination_criterion(self, state_1, state_2, sum_mom):
+        return self._termination_criterion(
+            self.system, state_1, state_2, sum_mom)
+
+    # Key to subscripts used in build_tree and sample_dynamics_transition
+    # _p : proposal
+    # _n : next
+    # _l : left (negative direction)
+    # _r : right (positive direction)
+    # _s : subtree
+    # _i : inner subsubtree
+    # _o : outer subsubtree
+
+    def _build_tree(
+            self, depth, state, sum_mom, sum_weight, stats, h_init, rng):
+        if depth == 0:
+            # recursion base case
+            try:
+                state = self.integrator.step(state)
+                h = self.system.h(state)
+                h = np.inf if np.isnan(h) else h
+                sum_mom += state.mom
+                sum_weight += LogRepFloat(log_val=-h)
+                stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
+                stats[&#39;n_step&#39;] += 1
+                terminate = h - h_init &gt; self.max_delta_h
+                if terminate:
+                    stats[&#39;diverging&#39;] = True
+                    logger.info(
+                        f&#39;Terminating build_tree due to integrator divergence &#39;
+                        f&#39;(delta_h = {h - h_init:.1e}).&#39;)
+            except IntegratorError as e:
+                logger.info(
+                    f&#39;Terminating build_tree due to integrator error:\n{e!s}&#39;)
+                stats[&#39;non_reversible_step&#39;] = isinstance(
+                    e, NonReversibleStepError)
+                stats[&#39;convergence_error&#39;] = isinstance(e, ConvergenceError)
+                state = None
+                terminate = True
+            return terminate, state, state, state
+        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
+        sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
+        # build inner subsubtree
+        terminate_i, state_i, state, state_pi = self._build_tree(
+            depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init, rng)
+        if terminate_i:
+            return True, None, None, None
+        # build outer subsubtree
+        terminate_o, _, state_o, state_po = self._build_tree(
+            depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init, rng)
+        if terminate_o:
+            return True, None, None, None
+        # independently sample proposal from 2 subsubtrees by relative weights
+        sum_weight_s = sum_weight_i + sum_weight_o
+        accept_o_prob = sum_weight_o / sum_weight_s
+        state_p = state_po if rng.uniform() &lt; accept_o_prob else state_pi
+        # update overall tree weight
+        sum_weight += sum_weight_s
+        # calculate termination criteria for subtree
+        sum_mom_s = sum_mom_i + sum_mom_o
+        terminate_s = self.termination_criterion(state_i, state_o, sum_mom_s)
+        # update overall tree summed momentum
+        sum_mom += sum_mom_s
+        return terminate_s, state_i, state_o, state_p
+
+    def sample(self, state, rng):
+        h_init = self.system.h(state)
+        sum_mom = state.mom.copy()
+        sum_weight = LogRepFloat(log_val=-h_init)
+        stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
+        state_n, state_l, state_r = state, state.copy(), state.copy()
+        # set integration directions of initial left and right tree leaves
+        state_l.dir = -1
+        state_r.dir = +1
+        for depth in range(self.max_tree_depth):
+            # uniformly sample direction to expand tree in
+            direction = 2 * (rng.uniform() &lt; 0.5) - 1
+            sum_mom_s = np.zeros(state.mom.shape)
+            sum_weight_s = LogRepFloat(0.)
+            if direction == 1:
+                # expand tree by adding subtree to right edge
+                terminate_s, _, state_r, state_p = self._build_tree(
+                    depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
+                    rng)
+            else:
+                # expand tree by adding subtree to left edge
+                terminate_s, _, state_l, state_p = self._build_tree(
+                    depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
+                    rng)
+            if terminate_s:
+                break
+            # progressively sample new state by choosing between
+            # current new state and proposal from new subtree, biasing
+            # towards the new subtree proposal
+            if rng.uniform() &lt; sum_weight_s / sum_weight:
+                state_n = state_p
+            sum_weight += sum_weight_s
+            sum_mom += sum_mom_s
+            if self.termination_criterion(state_l, state_r, sum_mom):
+                break
+        if stats[&#39;n_step&#39;] &gt; 0:
+            stats[&#39;accept_prob&#39;] = stats[&#39;sum_acc_prob&#39;] / stats[&#39;n_step&#39;]
+        else:
+            stats[&#39;accept_prob&#39;] = 0.
+        stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
+        stats[&#39;tree_depth&#39;] = depth
+        return state_n, stats</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="mici.transitions.euclidean_no_u_turn_criterion"><code class="name flex">
+<span>def <span class="ident">euclidean_no_u_turn_criterion</span></span>(<span>system, state_1, state_2, sum_mom)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>No-U-turn termination criterion for Euclidean manifolds [1].</p>
+<p>Terminates trajectories when the velocities at the terminal states of
+the trajectory both have negative dot products with the vector from
+the position of the first terminal state to the position of the second
+terminal state, corresponding to further evolution of the trajectory
+reducing the distance between the terminal state positions.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<code>HamiltonianSystem</code></dt>
+<dd>Hamiltonian system being integrated.</dd>
+<dt><strong><code>state_1</code></strong> :&ensp;<code>ChainState</code></dt>
+<dd>First terminal state of trajectory.</dd>
+<dt><strong><code>state_2</code></strong> :&ensp;<code>ChainState</code></dt>
+<dd>Second terminal state of trajectory.</dd>
+<dt><strong><code>sum_mom</code></strong> :&ensp;<code>array</code></dt>
+<dd>Sum of momentums of trajectory states.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>True if termination criterion is satisfied.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+</ol></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L198-L224" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    &#34;&#34;&#34;No-U-turn termination criterion for Euclidean manifolds [1].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the vector from
+    the position of the first terminal state to the position of the second
+    terminal state, corresponding to further evolution of the trajectory
+    reducing the distance between the terminal state positions.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (ChainState): First terminal state of trajectory.
+        state_2 (ChainState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+    return (
+        np.sum(system.dh_dmom(state_1) * (state_2.pos - state_1.pos)) &lt; 0 or
+        np.sum(system.dh_dmom(state_2) * (state_2.pos - state_1.pos)) &lt; 0)</code></pre>
+</details>
+</dd>
+<dt id="mici.transitions.riemannian_no_u_turn_criterion"><code class="name flex">
+<span>def <span class="ident">riemannian_no_u_turn_criterion</span></span>(<span>system, state_1, state_2, sum_mom)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Generalised no-U-turn termination criterion on Riemannian manifolds [2].</p>
+<p>Terminates trajectories when the velocities at the terminal states of
+the trajectory both have negative dot products with the sum of the
+the momentums across the trajectory from the first to second terminal state
+of the first terminal state to the position of the second terminal state.
+This generalises the no-U-turn criterion of [1] to Riemannian manifolds
+where due to the intrinsic curvature of the space the geodesic between
+two points is general no longer a straight line.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<code>HamiltonianSystem</code></dt>
+<dd>Hamiltonian system being integrated.</dd>
+<dt><strong><code>state_1</code></strong> :&ensp;<code>ChainState</code></dt>
+<dd>First terminal state of trajectory.</dd>
+<dt><strong><code>state_2</code></strong> :&ensp;<code>ChainState</code></dt>
+<dd>Second terminal state of trajectory.</dd>
+<dt><strong><code>sum_mom</code></strong> :&ensp;<code>array</code></dt>
+<dd>Sum of momentums of trajectory states.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>True if termination criterion is satisfied.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+<li>Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+manifolds. arXiv preprint arXiv:1304.1920.</li>
+</ol></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L227-L257" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
+    &#34;&#34;&#34;Generalised no-U-turn termination criterion on Riemannian manifolds [2].
+
+    Terminates trajectories when the velocities at the terminal states of
+    the trajectory both have negative dot products with the sum of the
+    the momentums across the trajectory from the first to second terminal state
+    of the first terminal state to the position of the second terminal state.
+    This generalises the no-U-turn criterion of [1] to Riemannian manifolds
+    where due to the intrinsic curvature of the space the geodesic between
+    two points is general no longer a straight line.
+
+    Args:
+        system (HamiltonianSystem): Hamiltonian system being integrated.
+        state_1 (ChainState): First terminal state of trajectory.
+        state_2 (ChainState): Second terminal state of trajectory.
+        sum_mom (array): Sum of momentums of trajectory states.
+
+    Returns:
+        True if termination criterion is satisfied.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+         manifolds. arXiv preprint arXiv:1304.1920.
+    &#34;&#34;&#34;
+    return (
+        np.sum(system.dh_dmom(state_1) * sum_mom) &lt; 0 or
+        np.sum(system.dh_dmom(state_2) * sum_mom) &lt; 0)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mici.transitions.IndependentMomentumTransition"><code class="flex name class">
+<span>class <span class="ident">IndependentMomentumTransition</span></span>
+<span>(</span><span>system)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Independent momentum transition.</p>
+<p>Independently resamples the momentum component of the state from its
+conditional distribution given the remaining state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L24-L33" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class IndependentMomentumTransition(_AbstractMomentumTransition):
+    &#34;&#34;&#34;Independent momentum transition.
+
+    Independently resamples the momentum component of the state from its
+    conditional distribution given the remaining state.
+    &#34;&#34;&#34;
+
+    def sample(self, state, rng):
+        state.mom = self.system.sample_momentum(state, rng)
+        return state, None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.transitions._AbstractMomentumTransition</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.IndependentMomentumTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L31-L33" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    state.mom = self.system.sample_momentum(state, rng)
+    return state, None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.CorrelatedMomentumTransition"><code class="flex name class">
+<span>class <span class="ident">CorrelatedMomentumTransition</span></span>
+<span>(</span><span>system, mom_resample_coeff=1.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Correlated (partial) momentum transition.</p>
+<p>Rather than independently sampling a new momentum, instead a pertubative
+Crank-Nicolson type update which produces a new momentum value with a
+specified correlation with the previous value is used. It is assumed that
+the conditional distribution of the momenta is zero-mean Gaussian such that
+the Crank-Nicolson update leaves the momenta conditional distribution
+exactly invariant. This approach is sometimes known as partial momentum
+refreshing or updating, and was originally proposed in [1].</p>
+<p>If the resampling coefficient is equal to zero then the momentum is not
+randomised at all and succesive applications of the coupled integration
+transitions will continue along the same simulated Hamiltonian trajectory.
+When an integration transition is accepted this means the subsequent
+simulated trajectory will continue evolving in the same direction and so
+not randomising the momentum will reduce random-walk behaviour. However on
+a rejection the integration direction is reversed and so without
+randomisation the trajectory will exactly backtrack along the previous
+tractory states. A resampling coefficient of one corresponds to the
+standard case of independent resampling of the momenta while intermediate
+values between zero and one correspond to varying levels of correlation
+between the pre and post update momentums.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
+Phys. Lett. B, 268(CERN-TH-6172-91), pp.247-252.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L36-L77" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class CorrelatedMomentumTransition(_AbstractMomentumTransition):
+    &#34;&#34;&#34;Correlated (partial) momentum transition.
+
+    Rather than independently sampling a new momentum, instead a pertubative
+    Crank-Nicolson type update which produces a new momentum value with a
+    specified correlation with the previous value is used. It is assumed that
+    the conditional distribution of the momenta is zero-mean Gaussian such that
+    the Crank-Nicolson update leaves the momenta conditional distribution
+    exactly invariant. This approach is sometimes known as partial momentum
+    refreshing or updating, and was originally proposed in [1].
+
+    If the resampling coefficient is equal to zero then the momentum is not
+    randomised at all and succesive applications of the coupled integration
+    transitions will continue along the same simulated Hamiltonian trajectory.
+    When an integration transition is accepted this means the subsequent
+    simulated trajectory will continue evolving in the same direction and so
+    not randomising the momentum will reduce random-walk behaviour. However on
+    a rejection the integration direction is reversed and so without
+    randomisation the trajectory will exactly backtrack along the previous
+    tractory states. A resampling coefficient of one corresponds to the
+    standard case of independent resampling of the momenta while intermediate
+    values between zero and one correspond to varying levels of correlation
+    between the pre and post update momentums.
+
+    References:
+
+      1. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
+         Phys. Lett. B, 268(CERN-TH-6172-91), pp.247-252.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, mom_resample_coeff=1.):
+        super().__init__(system)
+        self.mom_resample_coeff = mom_resample_coeff
+
+    def sample(self, state, rng):
+        if self.mom_resample_coeff == 1:
+            state.mom = self.system.sample_momentum(state, rng)
+        elif self.mom_resample_coeff != 0:
+            mom_ind = self.system.sample_momentum(state, rng)
+            state.mom *= (1. - self.mom_resample_coeff**2)**0.5
+            state.mom += self.mom_resample_coeff * mom_ind
+        return state, None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.transitions._AbstractMomentumTransition</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.CorrelatedMomentumTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L70-L77" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    if self.mom_resample_coeff == 1:
+        state.mom = self.system.sample_momentum(state, rng)
+    elif self.mom_resample_coeff != 0:
+        mom_ind = self.system.sample_momentum(state, rng)
+        state.mom *= (1. - self.mom_resample_coeff**2)**0.5
+        state.mom += self.mom_resample_coeff * mom_ind
+    return state, None</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.MetropolisStaticIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">MetropolisStaticIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, n_step)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Static integration transition with Metropolis sampling of new state.</p>
+<p>In this variant the trajectory is generated by integrating the state
+through time a fixed number of integrator steps. This is original proposed
+Hybrid Monte Carlo (often now instead termed Hamiltonian Monte Carlo)
+algorithm [1,2].</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.</li>
+<li>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+Handbook of Markov Chain Monte Carlo, 2(11), p.2.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>integrator</code></strong></dt>
+<dd>Symplectic integrator appropriate to the specified
+Hamiltonian system.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L143-L165" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class MetropolisStaticIntegrationTransition(
+        _AbstractMetropolisIntegrationTransition):
+    &#34;&#34;&#34;Static integration transition with Metropolis sampling of new state.
+
+    In this variant the trajectory is generated by integrating the state
+    through time a fixed number of integrator steps. This is original proposed
+    Hybrid Monte Carlo (often now instead termed Hamiltonian Monte Carlo)
+    algorithm [1,2].
+
+    References:
+
+      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+         Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.
+      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+         Handbook of Markov Chain Monte Carlo, 2(11), p.2.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, n_step):
+        super().__init__(system, integrator)
+        self.n_step = n_step
+
+    def sample(self, state, rng):
+        return self._sample_n_step(state, self.n_step, rng)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.transitions._AbstractMetropolisIntegrationTransition</li>
+<li>mici.transitions._AbstractIntegrationTransition</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.MetropolisStaticIntegrationTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L164-L165" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    return self._sample_n_step(state, self.n_step, rng)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.MetropolisRandomIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">MetropolisRandomIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, n_step_range)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Random integration transition with Metropolis sampling of new state.</p>
+<p>In each transition a trajectory is generated by integrating the state in
+the current integration direction in time a random integer number of
+integrator steps sampled from the uniform distribution on an integer
+interval. The randomisation of the number of integration steps avoids the
+potential of the chain mixing poorly due to using an integration time close
+to the period of (near) periodic systems [1,2].</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+Handbook of Markov Chain Monte Carlo, 2(11), p.2.</li>
+<li>Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+Physics Letters B, 226(3-4), pp.369-371.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>integrator</code></strong></dt>
+<dd>Symplectic integrator appropriate to the specified
+Hamiltonian system.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L168-L195" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class MetropolisRandomIntegrationTransition(
+        _AbstractMetropolisIntegrationTransition):
+    &#34;&#34;&#34;Random integration transition with Metropolis sampling of new state.
+
+    In each transition a trajectory is generated by integrating the state in
+    the current integration direction in time a random integer number of
+    integrator steps sampled from the uniform distribution on an integer
+    interval. The randomisation of the number of integration steps avoids the
+    potential of the chain mixing poorly due to using an integration time close
+    to the period of (near) periodic systems [1,2].
+
+    References:
+
+      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+         Handbook of Markov Chain Monte Carlo, 2(11), p.2.
+      2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+         Physics Letters B, 226(3-4), pp.369-371.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, n_step_range):
+        super().__init__(system, integrator)
+        n_step_lower, n_step_upper = n_step_range
+        assert n_step_lower &gt; 0 and n_step_lower &lt; n_step_upper
+        self.n_step_range = n_step_range
+
+    def sample(self, state, rng):
+        n_step = rng.random_integers(*self.n_step_range)
+        return self._sample_n_step(state, n_step, rng)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.transitions._AbstractMetropolisIntegrationTransition</li>
+<li>mici.transitions._AbstractIntegrationTransition</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.MetropolisRandomIntegrationTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L193-L195" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    n_step = rng.random_integers(*self.n_step_range)
+    return self._sample_n_step(state, n_step, rng)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">MultinomialDynamicIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Dynamic integration transition with multinomial sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by
+integrating randomly forward and backward in time by a number of steps
+equal to the previous tree size [1,2] until a termination criteria on the
+tree leaves is met. The next chain state is chosen from the candidate
+states using a progressive multinomial sampling scheme [2] based on the
+relative probability densities of the different candidate states, with the
+resampling biased towards states further from the current state.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+<li>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+Carlo. arXiv preprint arXiv:1701.02434.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>integrator</code></strong></dt>
+<dd>Symplectic integrator appropriate to the specified
+Hamiltonian system.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L260-L396" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class MultinomialDynamicIntegrationTransition(_AbstractIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps
+    equal to the previous tree size [1,2] until a termination criteria on the
+    tree leaves is met. The next chain state is chosen from the candidate
+    states using a progressive multinomial sampling scheme [2] based on the
+    relative probability densities of the different candidate states, with the
+    resampling biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+         Carlo. arXiv preprint arXiv:1701.02434.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=riemannian_no_u_turn_criterion):
+        super().__init__(system, integrator)
+        self.max_tree_depth = max_tree_depth
+        self.max_delta_h = max_delta_h
+        self._termination_criterion = termination_criterion
+        self.statistic_types[&#39;tree_depth&#39;] = (np.int64, -1)
+        self.statistic_types[&#39;diverging&#39;] = (np.bool, False)
+
+    def termination_criterion(self, state_1, state_2, sum_mom):
+        return self._termination_criterion(
+            self.system, state_1, state_2, sum_mom)
+
+    # Key to subscripts used in build_tree and sample_dynamics_transition
+    # _p : proposal
+    # _n : next
+    # _l : left (negative direction)
+    # _r : right (positive direction)
+    # _s : subtree
+    # _i : inner subsubtree
+    # _o : outer subsubtree
+
+    def _build_tree(
+            self, depth, state, sum_mom, sum_weight, stats, h_init, rng):
+        if depth == 0:
+            # recursion base case
+            try:
+                state = self.integrator.step(state)
+                h = self.system.h(state)
+                h = np.inf if np.isnan(h) else h
+                sum_mom += state.mom
+                sum_weight += LogRepFloat(log_val=-h)
+                stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
+                stats[&#39;n_step&#39;] += 1
+                terminate = h - h_init &gt; self.max_delta_h
+                if terminate:
+                    stats[&#39;diverging&#39;] = True
+                    logger.info(
+                        f&#39;Terminating build_tree due to integrator divergence &#39;
+                        f&#39;(delta_h = {h - h_init:.1e}).&#39;)
+            except IntegratorError as e:
+                logger.info(
+                    f&#39;Terminating build_tree due to integrator error:\n{e!s}&#39;)
+                stats[&#39;non_reversible_step&#39;] = isinstance(
+                    e, NonReversibleStepError)
+                stats[&#39;convergence_error&#39;] = isinstance(e, ConvergenceError)
+                state = None
+                terminate = True
+            return terminate, state, state, state
+        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
+        sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
+        # build inner subsubtree
+        terminate_i, state_i, state, state_pi = self._build_tree(
+            depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init, rng)
+        if terminate_i:
+            return True, None, None, None
+        # build outer subsubtree
+        terminate_o, _, state_o, state_po = self._build_tree(
+            depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init, rng)
+        if terminate_o:
+            return True, None, None, None
+        # independently sample proposal from 2 subsubtrees by relative weights
+        sum_weight_s = sum_weight_i + sum_weight_o
+        accept_o_prob = sum_weight_o / sum_weight_s
+        state_p = state_po if rng.uniform() &lt; accept_o_prob else state_pi
+        # update overall tree weight
+        sum_weight += sum_weight_s
+        # calculate termination criteria for subtree
+        sum_mom_s = sum_mom_i + sum_mom_o
+        terminate_s = self.termination_criterion(state_i, state_o, sum_mom_s)
+        # update overall tree summed momentum
+        sum_mom += sum_mom_s
+        return terminate_s, state_i, state_o, state_p
+
+    def sample(self, state, rng):
+        h_init = self.system.h(state)
+        sum_mom = state.mom.copy()
+        sum_weight = LogRepFloat(log_val=-h_init)
+        stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
+        state_n, state_l, state_r = state, state.copy(), state.copy()
+        # set integration directions of initial left and right tree leaves
+        state_l.dir = -1
+        state_r.dir = +1
+        for depth in range(self.max_tree_depth):
+            # uniformly sample direction to expand tree in
+            direction = 2 * (rng.uniform() &lt; 0.5) - 1
+            sum_mom_s = np.zeros(state.mom.shape)
+            sum_weight_s = LogRepFloat(0.)
+            if direction == 1:
+                # expand tree by adding subtree to right edge
+                terminate_s, _, state_r, state_p = self._build_tree(
+                    depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
+                    rng)
+            else:
+                # expand tree by adding subtree to left edge
+                terminate_s, _, state_l, state_p = self._build_tree(
+                    depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
+                    rng)
+            if terminate_s:
+                break
+            # progressively sample new state by choosing between
+            # current new state and proposal from new subtree, biasing
+            # towards the new subtree proposal
+            if rng.uniform() &lt; sum_weight_s / sum_weight:
+                state_n = state_p
+            sum_weight += sum_weight_s
+            sum_mom += sum_mom_s
+            if self.termination_criterion(state_l, state_r, sum_mom):
+                break
+        if stats[&#39;n_step&#39;] &gt; 0:
+            stats[&#39;accept_prob&#39;] = stats[&#39;sum_acc_prob&#39;] / stats[&#39;n_step&#39;]
+        else:
+            stats[&#39;accept_prob&#39;] = 0.
+        stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
+        stats[&#39;tree_depth&#39;] = depth
+        return state_n, stats</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>mici.transitions._AbstractIntegrationTransition</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition.termination_criterion"><code class="name flex">
+<span>def <span class="ident">termination_criterion</span></span>(<span>self, state_1, state_2, sum_mom)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L290-L292" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def termination_criterion(self, state_1, state_2, sum_mom):
+    return self._termination_criterion(
+        self.system, state_1, state_2, sum_mom)</code></pre>
+</details>
+</dd>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/46e2473fa35652a4d5c397f0dfd2bf483ffdc929/mici/transitions.py#L355-L396" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    h_init = self.system.h(state)
+    sum_mom = state.mom.copy()
+    sum_weight = LogRepFloat(log_val=-h_init)
+    stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
+    state_n, state_l, state_r = state, state.copy(), state.copy()
+    # set integration directions of initial left and right tree leaves
+    state_l.dir = -1
+    state_r.dir = +1
+    for depth in range(self.max_tree_depth):
+        # uniformly sample direction to expand tree in
+        direction = 2 * (rng.uniform() &lt; 0.5) - 1
+        sum_mom_s = np.zeros(state.mom.shape)
+        sum_weight_s = LogRepFloat(0.)
+        if direction == 1:
+            # expand tree by adding subtree to right edge
+            terminate_s, _, state_r, state_p = self._build_tree(
+                depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
+                rng)
+        else:
+            # expand tree by adding subtree to left edge
+            terminate_s, _, state_l, state_p = self._build_tree(
+                depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
+                rng)
+        if terminate_s:
+            break
+        # progressively sample new state by choosing between
+        # current new state and proposal from new subtree, biasing
+        # towards the new subtree proposal
+        if rng.uniform() &lt; sum_weight_s / sum_weight:
+            state_n = state_p
+        sum_weight += sum_weight_s
+        sum_mom += sum_mom_s
+        if self.termination_criterion(state_l, state_r, sum_mom):
+            break
+    if stats[&#39;n_step&#39;] &gt; 0:
+        stats[&#39;accept_prob&#39;] = stats[&#39;sum_acc_prob&#39;] / stats[&#39;n_step&#39;]
+    else:
+        stats[&#39;accept_prob&#39;] = 0.
+    stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
+    stats[&#39;tree_depth&#39;] = depth
+    return state_n, stats</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<header>
+<a class="homelink" rel="home" title="mici docs home" href="index.html">
+<img src="../logo.png" alt="mici">
+</a>
+</header>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Package</h3>
+<ul>
+<li><code><a title="mici" href="index.html">mici</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="mici.transitions.euclidean_no_u_turn_criterion" href="#mici.transitions.euclidean_no_u_turn_criterion">euclidean_no_u_turn_criterion</a></code></li>
+<li><code><a title="mici.transitions.riemannian_no_u_turn_criterion" href="#mici.transitions.riemannian_no_u_turn_criterion">riemannian_no_u_turn_criterion</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mici.transitions.IndependentMomentumTransition" href="#mici.transitions.IndependentMomentumTransition">IndependentMomentumTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.IndependentMomentumTransition.sample" href="#mici.transitions.IndependentMomentumTransition.sample">sample</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.CorrelatedMomentumTransition" href="#mici.transitions.CorrelatedMomentumTransition">CorrelatedMomentumTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.CorrelatedMomentumTransition.sample" href="#mici.transitions.CorrelatedMomentumTransition.sample">sample</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.MetropolisStaticIntegrationTransition" href="#mici.transitions.MetropolisStaticIntegrationTransition">MetropolisStaticIntegrationTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.MetropolisStaticIntegrationTransition.sample" href="#mici.transitions.MetropolisStaticIntegrationTransition.sample">sample</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.MetropolisRandomIntegrationTransition" href="#mici.transitions.MetropolisRandomIntegrationTransition">MetropolisRandomIntegrationTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.MetropolisRandomIntegrationTransition.sample" href="#mici.transitions.MetropolisRandomIntegrationTransition.sample">sample</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.termination_criterion" href="#mici.transitions.MultinomialDynamicIntegrationTransition.termination_criterion">termination_criterion</a></code></li>
+<li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.sample" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample">sample</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+Copyright © 2019 Matt Graham
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
