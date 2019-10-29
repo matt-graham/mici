@@ -1,6 +1,7 @@
 """Monte Carlo sampler classes for peforming inference."""
 
 import os
+from pickle import PicklingError
 import logging
 import tempfile
 import signal
@@ -26,8 +27,10 @@ except ImportError:
 # to serialise much wider range of types including autograd functions
 try:
     from multiprocess import Pool
+    MULTIPROCESS_AVAILABLE = True
 except ImportError:
     from multiprocessing import Pool
+    MULTIPROCESS_AVAILABLE = False
 
 
 logger = logging.getLogger(__name__)
@@ -463,6 +466,24 @@ class MarkovChainMonteCarloMethod(object):
                         f'chains is available in directory '
                         f'{kwargs["memmap_path"]}.')
                 logger.error(err_message)
+            except PicklingError as e:
+                if not MULTIPROCESS_AVAILABLE:
+                    raise RuntimeError(
+                        'PicklingError encountered while trying to run chains '
+                        'on multiple processes in parallel. The inbuilt '
+                        'multiprocessing module uses pickle to communicate '
+                        'between processes and pickle does support pickling '
+                        'anonymous or nested functions. If you use anonymous '
+                        'or nested functions in your model functions or are '
+                        'using autograd to automatically compute derivatives '
+                        '(autograd uses anonymous and nested functions) then '
+                        'installing the Python package multiprocess, which '
+                        'is able to serialise anonymous and nested functions '
+                        'and will be used in preference to multiprocessing by '
+                        'this package when available, may resolve this error.'
+                    ) from e
+                else:
+                    raise e
         # When running parallel jobs with memory-mapping enabled, data arrays
         # returned by processes as file paths to array memory-maps therfore
         # load memory-maps objects from file before returing results
