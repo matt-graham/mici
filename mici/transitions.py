@@ -483,8 +483,9 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
             sum_mom += sum_mom_s
             if self._termination_criterion(state_l, state_r, sum_mom):
                 break
+        sum_acc_prob = stats.pop('sum_acc_prob')
         if stats['n_step'] > 0:
-            stats['accept_prob'] = stats['sum_acc_prob'] / stats['n_step']
+            stats['accept_prob'] = sum_acc_prob / stats['n_step']
         else:
             stats['accept_prob'] = 0.
         stats['hamiltonian'] = self.system.h(state_n)
