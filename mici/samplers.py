@@ -41,6 +41,301 @@ def _ignore_sigint_initialiser():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
+def _generate_memmap_filename(dir_path, prefix, key, index):
+    key_str = get_valid_filename(str(key))
+    return os.path.join(dir_path, f'{prefix}_{index}_{key_str}.npy')
+
+
+def _open_new_memmap(filename, shape, default_val, dtype):
+    if isinstance(shape, int):
+        shape = (shape,)
+    memmap = np.lib.format.open_memmap(
+        filename, dtype=dtype, mode='w+', shape=shape)
+    memmap[:] = default_val
+    return memmap
+
+
+def _memmaps_to_filenames(obj):
+    if isinstance(obj, np.memmap):
+        return obj.filename
+    elif isinstance(obj, dict):
+        return {k: _memmaps_to_filenames(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_memmaps_to_filenames(v) for v in obj]
+
+
+def _check_and_process_init_state(state, transitions):
+    for trans_key, transition in transitions.items():
+        for var_key in transition.state_variables:
+            if var_key not in state:
+                raise ValueError(
+                    f'init_state does contain have {var_key} value required by'
+                    f' {trans_key} transition.')
+    if not isinstance(state, (ChainState, dict)):
+        raise TypeError(
+            'init_state should be a dictionary or ChainState.')
+    return ChainState(**state) if isinstance(state, dict) else state
+
+
+def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
+                      chain_index):
+    chain_stats = {}
+    for trans_key, trans in transitions.items():
+        chain_stats[trans_key] = {}
+        if hasattr(trans, 'statistic_types'):
+            for key, (dtype, val) in trans.statistic_types.items():
+                if memmap_enabled:
+                    filename = _generate_memmap_filename(
+                        memmap_path, 'stats', f'{trans_key}_{key}',
+                        chain_index)
+                    chain_stats[trans_key][key] = _open_new_memmap(
+                        filename, n_sample, val, dtype)
+                else:
+                    chain_stats[trans_key][key] = np.full(n_sample, val, dtype)
+    return chain_stats
+
+
+def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
+                 memmap_path, chain_index):
+    traces = {}
+    for trace_func in trace_funcs:
+        for key, val in trace_func(init_state).items():
+            val = np.array(val) if np.isscalar(val) else val
+            init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
+            if memmap_enabled:
+                filename = _generate_memmap_filename(
+                    memmap_path, 'trace', key, chain_index)
+                traces[key] = _open_new_memmap(
+                    filename, (n_sample,) + val.shape, init, val.dtype)
+            else:
+                traces[key] = np.full((n_sample,) + val.shape, init, val.dtype)
+    return traces
+
+
+def _check_chain_data_size(traces, chain_stats):
+    total_return_nbytes = get_size(traces) + get_size(chain_stats)
+    # Check if total number of bytes to be returned exceeds pickle limit
+    if total_return_nbytes > 2**31 - 1:
+        raise RuntimeError(
+            f'Total number of bytes allocated for chain data to be returned '
+            f'({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit for '
+            f'returning results of a process (2 GiB). Try rerunning with '
+            f' memory-mapping enabled (`memmap_enabled=True`).')
+
+
+def _chain_iterator(n_sample, chain_index, parallel_chains):
+    if TQDM_AVAILABLE:
+        kwargs = {
+            'desc': f'Chain {chain_index}', 'dynamic_ncols': True}
+        if parallel_chains:
+            return tqdm_auto.trange(n_sample, **kwargs, position=chain_index)
+        else:
+            return tqdm.trange(n_sample, **kwargs)
+    else:
+        return range(n_sample)
+
+
+def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
+    if trans_stats is not None:
+        if sample_index == 0 and trans_key not in chain_stats:
+            raise KeyError(
+                f'Transition {trans_key} returned statistics but has no '
+                f'statistic_types attribute.')
+        for key, val in trans_stats.items():
+            if sample_index == 0 and key not in chain_stats[trans_key]:
+                raise KeyError(
+                    f'Transition {trans_key} returned {key} statistic but it '
+                    f'is not included in its statistic_types attribute.')
+            chain_stats[trans_key][key][sample_index] = val
+
+
+def _flush_memmap_chain_data(traces, chain_stats):
+    for trace in traces.values():
+        trace.flush()
+    for trans_stats in chain_stats.values():
+        for stat in trans_stats.values():
+            stat.flush()
+
+
+def _try_resize_dim_0_inplace(array, new_shape_0):
+    if new_shape_0 >= array.shape[0]:
+        return array
+    try:
+        # Try to truncate arrays by resizing in place
+        array.resize((new_shape_0,) + array.shape[1:])
+        return array
+    except ValueError:
+        # In place resize not possible therefore return truncated view
+        return array[:new_shape_0]
+
+
+def _truncate_chain_data(sample_index, traces, chain_stats):
+    for key in traces:
+        traces[key] = _try_resize_dim_0_inplace(traces[key], sample_index)
+    for trans_stats in chain_stats.values():
+        for key in trans_stats:
+            trans_stats[key] = _try_resize_dim_0_inplace(
+                trans_stats[key], sample_index)
+
+
+def _sample_chain(init_state, n_sample, rng, transitions, trace_funcs,
+                  chain_index=0, parallel_chains=False, memmap_enabled=False,
+                  memmap_path=None, monitor_stats=None):
+    state = _check_and_process_init_state(init_state, transitions)
+    # Create temporary directory if memory mapping and no path provided
+    if memmap_enabled and memmap_path is None:
+        memmap_path = tempfile.mkdtemp()
+    chain_stats = _init_chain_stats(
+        transitions, n_sample, memmap_enabled, memmap_path, chain_index)
+    traces = _init_traces(
+        trace_funcs, state, n_sample, memmap_enabled, memmap_path, chain_index)
+    try:
+        sample_index = 0
+        if parallel_chains:
+            _check_chain_data_size(traces, chain_stats)
+        chain_iterator = _chain_iterator(
+            n_sample, chain_index, parallel_chains)
+        for sample_index in chain_iterator:
+            for trans_key, transition in transitions.items():
+                state, trans_stats = transition.sample(state, rng)
+                _update_chain_stats(
+                    sample_index, chain_stats, trans_key, trans_stats)
+            for trace_func in trace_funcs:
+                for key, val in trace_func(state).items():
+                    traces[key][sample_index] = val
+            if TQDM_AVAILABLE and monitor_stats is not None:
+                postfix_stats = {}
+                for (trans_key, stats_key) in monitor_stats:
+                    if (trans_key not in chain_stats or
+                            stats_key not in chain_stats[trans_key]):
+                        logger.warning(
+                            f'Statistics key pair {(trans_key, stats_key)}'
+                            f' to be monitored is not valid.')
+                    print_key = f'mean({stats_key})'
+                    postfix_stats[print_key] = np.mean(
+                        chain_stats[trans_key][stats_key][:sample_index+1])
+                chain_iterator.set_postfix(postfix_stats)
+    except KeyboardInterrupt:
+        interrupted = True
+        if sample_index != n_sample:
+            logger.error(
+                f'Sampling manually interrupted at chain {chain_index} '
+                f'iteration {sample_index}. Arrays containing chain traces and'
+                f' statistics computed before interruption will be returned.')
+            # Sampling interrupted therefore truncate returned arrays
+            _truncate_chain_data(sample_index, traces, chain_stats)
+    else:
+        interrupted = False
+    if memmap_enabled:
+        _flush_memmap_chain_data(traces, chain_stats)
+    if parallel_chains and memmap_enabled:
+            traces = _memmaps_to_filenames(traces)
+            chain_stats = _memmaps_to_filenames(chain_stats)
+    return state, traces, chain_stats, interrupted
+
+
+def _collate_chain_outputs(chain_outputs):
+    final_states_stack = []
+    traces_stack = {}
+    chain_stats_stack = {}
+    for chain_index, (final_state, traces, stats) in enumerate(chain_outputs):
+        final_states_stack.append(final_state)
+        for key, val in traces.items():
+            # if value is string => file path to memory mapped array
+            if isinstance(val, str):
+                val = np.lib.format.open_memmap(val)
+            if chain_index == 0:
+                traces_stack[key] = [val]
+            else:
+                traces_stack[key].append(val)
+        for trans_key, trans_stats in stats.items():
+            if chain_index == 0:
+                chain_stats_stack[trans_key] = {}
+            for key, val in trans_stats.items():
+                # if value is string => file path to memory mapped array
+                if isinstance(val, str):
+                    val = np.lib.format.open_memmap(val)
+                if chain_index == 0:
+                    chain_stats_stack[trans_key][key] = [val]
+                else:
+                    chain_stats_stack[trans_key][key].append(val)
+    return final_states_stack, traces_stack, chain_stats_stack
+
+
+def _get_per_chain_rngs(base_rng, n_chain):
+    if hasattr(base_rng, 'jump'):
+        return [base_rng.jump(i).generator for i in range(n_chain)]
+    elif RANDOMGEN_AVAILABLE:
+        seed = base_rng.randint(2**64, dtype='uint64')
+        return [randomgen.Xorshift1024(seed).jump(i).generator
+                for i in range(n_chain)]
+    else:
+        seeds = (base_rng.choice(2**16, n_chain, False) * 2**16 +
+                 base_rng.choice(2**16, n_chain, False))
+        return [np.random.RandomState(seed) for seed in seeds]
+
+
+def _sample_chains_sequential(init_states, rngs, **kwargs):
+    chain_outputs = []
+    for chain_index, (init_state, rng) in enumerate(zip(init_states, rngs)):
+        final_state, traces, stats, interrupted = _sample_chain(
+            init_state=init_state, rng=rng, chain_index=chain_index,
+            parallel_chains=False, **kwargs)
+        chain_outputs.append((final_state, traces, stats))
+        if interrupted:
+            break
+    return _collate_chain_outputs(chain_outputs)
+
+
+def _sample_chains_parallel(init_states, rngs, n_process, **kwargs):
+    chain_outputs = []
+    # Child processes made to ignore SIGINT signals to allow handling
+    # of KeyboardInterrupts in parent process
+    pool = Pool(n_process, _ignore_sigint_initialiser)
+    try:
+        results = [
+            pool.apply_async(
+                _sample_chain,
+                kwds={'init_state': init_state, 'rng': rng, 'chain_index': c,
+                      'parallel_chains': True, **kwargs})
+            for c, (init_state, rng) in enumerate(zip(init_states, rngs))]
+        for result in results:
+            final_state, traces, chain_stats, interrupted = result.get()
+            chain_outputs.append((final_state, traces, chain_stats))
+    except KeyboardInterrupt:
+        # Close any still running processes
+        pool.terminate()
+        pool.join()
+        err_message = 'Sampling manually interrupted.'
+        n_completed = len(chain_outputs)
+        if n_completed > 0:
+            err_message += (
+                f' Data for {n_completed} completed chains will be returned.')
+        if kwargs.get('memmap_enabled', False) and 'memmap_path' in kwargs:
+            err_message += (
+                f' All data recorded so far including in progress '
+                f'chains is available in directory {kwargs["memmap_path"]}.')
+        logger.error(err_message)
+    except PicklingError as e:
+        if not MULTIPROCESS_AVAILABLE:
+            raise RuntimeError(
+                'PicklingError encountered while trying to run chains on '
+                'multiple processes in parallel. The inbuilt multiprocessing '
+                'module uses pickle to communicate between processes and '
+                'pickle does support pickling anonymous or nested functions. '
+                'If you use anonymous or nested functions in your model '
+                'functions or are using autograd to automatically compute '
+                'derivatives (autograd uses anonymous and nested functions) '
+                'then installing the Python package multiprocess, which is '
+                'able to serialise anonymous and nested functions and will be '
+                'used in preference to multiprocessing by this package when '
+                'available, may resolve this error.'
+            ) from e
+        else:
+            raise e
+    return _collate_chain_outputs(chain_outputs)
+
+
 class MarkovChainMonteCarloMethod(object):
     """Generic Markov chain Monte Carlo (MCMC) sampler.
 
@@ -59,147 +354,11 @@ class MarkovChainMonteCarloMethod(object):
         self.rng = rng
         self.transitions = transitions
 
-    def _generate_memmap_filename(self, dir_path, prefix, key, index):
-        key_str = get_valid_filename(str(key))
-        if index is None:
-            index = 0
-        return os.path.join(dir_path, f'{prefix}_{index}_{key_str}.npy')
-
-    def _open_new_memmap(self, filename, shape, dtype, default_val):
-        memmap = np.lib.format.open_memmap(
-            filename, dtype=dtype, mode='w+', shape=shape)
-        memmap[:] = default_val
-        return memmap
-
-    def _memmaps_to_filenames(self, obj):
-        if isinstance(obj, np.memmap):
-            return obj.filename
-        elif isinstance(obj, dict):
-            return {k: self._memmaps_to_filenames(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [self._memmaps_to_filenames(v) for v in obj]
-
-    def _init_chain_stats(self, n_sample, memmap_enabled, memmap_path,
-                          chain_index):
-        chain_stats = {}
-        for trans_key, trans in self.transitions.items():
-            chain_stats[trans_key] = {}
-            if hasattr(trans, 'statistic_types'):
-                for key, (dtype, val) in trans.statistic_types.items():
-                    if memmap_enabled:
-                        filename = self._generate_memmap_filename(
-                            memmap_path, 'stats', f'{trans_key}_{key}',
-                            chain_index)
-                        chain_stats[trans_key][key] = self._open_new_memmap(
-                            filename, (n_sample,), dtype, val)
-                    else:
-                        chain_stats[trans_key][key] = np.full(
-                            n_sample, val, dtype)
-        return chain_stats
-
-    def _sample_chain(self, rng, n_sample, init_state, trace_funcs,
-                      chain_index, parallel_chains, memmap_enabled=False,
-                      memmap_path=None, monitor_stats=None):
-        for trans_key, transition in self.transitions.items():
-            for var_key in transition.state_variables:
-                if var_key not in init_state:
-                    raise ValueError(
-                        f'init_state does contain have {var_key} value '
-                        f'required by {trans_key} transition.')
-        if not isinstance(init_state, (ChainState, dict)):
-            raise TypeError(
-                'init_state should be a dictionary or `ChainState`.')
-        state = (ChainState(**init_state) if isinstance(init_state, dict)
-                 else init_state)
-        chain_stats = self._init_chain_stats(
-            n_sample, memmap_enabled, memmap_path, chain_index)
-        # Initialise chain trace arrays
-        traces = {}
-        for trace_func in trace_funcs:
-            for key, val in trace_func(state).items():
-                val = np.array(val) if np.isscalar(val) else val
-                init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
-                if memmap_enabled:
-                    filename = self._generate_memmap_filename(
-                        memmap_path, 'trace', key, chain_index)
-                    traces[key] = self._open_new_memmap(
-                        filename, (n_sample,) + val.shape, val.dtype, init)
-                else:
-                    traces[key] = np.full(
-                        (n_sample,) + val.shape, init, val.dtype)
-        total_return_nbytes = get_size(chain_stats) + get_size(traces)
-        # Check if running in parallel and if total number of bytes to be
-        # returned exceeds pickle limit
-        if parallel_chains and total_return_nbytes > 2**31 - 1:
-            raise RuntimeError(
-                f'Total number of bytes allocated for arrays to be returned '
-                f'({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit '
-                f'for returning results of a process (2 GiB). Try rerunning '
-                f'with chain memory-mapping enabled (`memmap_enabled=True`).')
-        if TQDM_AVAILABLE:
-            kwargs = {
-                'desc': f'Chain {0 if chain_index is None else chain_index}',
-                'unit': 'it',
-                'dynamic_ncols': True,
-            }
-            if parallel_chains:
-                sample_range = tqdm_auto.trange(
-                    n_sample, **kwargs, position=chain_index)
-            else:
-                sample_range = tqdm.trange(n_sample, **kwargs)
-        else:
-            sample_range = range(n_sample)
-        try:
-            for sample_index in sample_range:
-                for trans_key, transition in self.transitions.items():
-                    state, trans_stats = transition.sample(state, rng)
-                    if trans_stats is not None:
-                        if trans_key not in chain_stats:
-                            logger.warning(
-                                f'Transition {trans_key} returned statistics '
-                                f'but has no `statistic_types` attribute.')
-                        for key, val in trans_stats.items():
-                            if key in chain_stats[trans_key]:
-                                chain_stats[trans_key][key][sample_index] = val
-                for trace_func in trace_funcs:
-                    for key, val in trace_func(state).items():
-                        traces[key][sample_index] = val
-                if TQDM_AVAILABLE and monitor_stats is not None:
-                    postfix_stats = {}
-                    for (trans_key, stats_key) in monitor_stats:
-                        if (trans_key not in chain_stats or
-                                stats_key not in chain_stats[trans_key]):
-                            logger.warning(
-                                f'Statistics key pair {(trans_key, stats_key)}'
-                                f' to be monitored is not valid.')
-                        print_key = f'mean({stats_key})'
-                        postfix_stats[print_key] = np.mean(
-                            chain_stats[trans_key][stats_key][:sample_index+1])
-                    sample_range.set_postfix(postfix_stats)
-        except KeyboardInterrupt:
-            if memmap_enabled:
-                for trace in traces.values():
-                    trace.flush()
-                for trans_stats in chain_stats.values():
-                    for stat in trans_stats.values():
-                        stat.flush()
-        else:
-            # If not interrupted increment sample_index so that it equals
-            # n_sample to flag chain completed sampling
-            sample_index += 1
-        if parallel_chains and memmap_enabled:
-                trace_filenames = self._memmaps_to_filenames(traces)
-                stats_filenames = self._memmaps_to_filenames(chain_stats)
-                return trace_filenames, stats_filenames, sample_index
-        return state, traces, chain_stats, sample_index
-
-    def __preprocess_kwargs(self, kwargs):
+    def __set_sample_chain_kwargs_defaults(self, kwargs):
         if 'memmap_enabled' not in kwargs:
             kwargs['memmap_enabled'] = False
-        # Create temporary directory if memory mapping and no path provided
-        if kwargs['memmap_enabled'] and 'memmap_path' not in kwargs:
+        if kwargs['memmap_enabled'] and kwargs.get('memmap_path') is None:
             kwargs['memmap_path'] = tempfile.mkdtemp()
-        return kwargs
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -265,65 +424,12 @@ class MarkovChainMonteCarloMethod(object):
                 description of the corresponding integration transition
                 statistic.
         """
-        kwargs = self.__preprocess_kwargs(kwargs)
-        final_state, traces, chain_stats, sample_index = self._sample_chain(
-            rng=self.rng, n_sample=n_sample, init_state=init_state,
-            trace_funcs=trace_funcs, chain_index=None, parallel_chains=False,
-            **kwargs)
-        if sample_index != n_sample:
-            # Sampling interrupted therefore truncate returned arrays
-            # Using resize methods makes agnostic to whether array is
-            # memory mapped or not
-            for trans_stats in chain_stats.values():
-                for key in trans_stats:
-                    trans_stats[key].resize(
-                        (sample_index,) + trans_stats[key].shape[1:])
-            for key in traces:
-                traces[key].resize(
-                    (sample_index,) + traces[key].shape[1:])
-            logger.error(
-                f'Sampling manually interrupted at iteration {sample_index}. '
-                f'Arrays containing chain traces and statistics computed '
-                f'before interruption will be returned.')
+        self.__set_sample_chain_kwargs_defaults(kwargs)
+        final_state, traces, chain_stats, interrupted = _sample_chain(
+            init_state=init_state, n_sample=n_sample,
+            transitions=self.transitions, rng=self.rng,
+            trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
         return final_state, traces, chain_stats
-
-    def _collate_chain_outputs(self, n_sample, chain_outputs, load_memmaps):
-        final_states_stack = []
-        traces_stack = {}
-        n_chain = len(chain_outputs)
-        chain_stats_stack = {}
-        for chain_index, chain_output in enumerate(chain_outputs):
-            final_state, traces, chain_stats, sample_index = chain_output
-            final_states_stack.append(final_state)
-            for key, val in traces.items():
-                if load_memmaps:
-                    val = np.lib.format.open_memmap(val)
-                if sample_index != n_sample:
-                    # Sampling interrupted therefore truncate returned arrays
-                    # Using resize methods makes agnostic to whether array is
-                    # memory mapped or not
-                    val.resize((sample_index,) + val.shape[1:], refcheck=False)
-                if chain_index == 0:
-                    traces_stack[key] = [val]
-                else:
-                    traces_stack[key].append(val)
-            for trans_key, trans_stats in chain_stats.items():
-                if chain_index == 0:
-                    chain_stats_stack[trans_key] = {}
-                for key, val in trans_stats.items():
-                    if load_memmaps:
-                        val = np.lib.format.open_memmap(val)
-                    if sample_index != n_sample:
-                        # Sampling interrupted therefore truncate returned
-                        # arrays Using resize methods makes agnostic to whether
-                        # array is memory mapped or not
-                        val.resize((sample_index,) + val.shape[1:],
-                                   refcheck=False)
-                    if chain_index == 0:
-                        chain_stats_stack[trans_key][key] = [val]
-                    else:
-                        chain_stats_stack[trans_key][key].append(val)
-        return final_states_stack, traces_stack, chain_stats_stack
 
     def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
                       **kwargs):
@@ -401,93 +507,25 @@ class MarkovChainMonteCarloMethod(object):
                 for each value is a string description of the corresponding
                 integration transition statistic.
         """
-        n_chain = len(init_states)
-        kwargs = self.__preprocess_kwargs(kwargs)
-        if RANDOMGEN_AVAILABLE:
-            seed = self.rng.randint(2**64, dtype='uint64')
-            rngs = [randomgen.Xorshift1024(seed).jump(i).generator
-                    for i in range(n_chain)]
-        else:
-            seeds = (self.rng.choice(2**16, n_chain, False) * 2**16 +
-                     self.rng.choice(2**16, n_chain, False))
-            rngs = [np.random.RandomState(seed) for seed in seeds]
-        chain_outputs = []
-        shared_kwargs_list = [{
-                'rng': rng,
-                'n_sample': n_sample,
-                'init_state': init_state,
-                'trace_funcs': trace_funcs,
-                'chain_index': c,
-                **kwargs
-            } for c, (rng, init_state) in enumerate(zip(rngs, init_states))]
+        self.__set_sample_chain_kwargs_defaults(kwargs)
+        rngs = _get_per_chain_rngs(self.rng, len(init_states))
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            for c, shared_kwargs in enumerate(shared_kwargs_list):
-                final_state, traces, stats, sample_index = self._sample_chain(
-                    **shared_kwargs, parallel_chains=False)
-                chain_outputs.append(
-                    (final_state, traces, stats, sample_index))
-                if sample_index != n_sample:
-                    logger.error(
-                        f'Sampling manually interrupted at chain {c} iteration'
-                        f' {sample_index}. Arrays containing chain traces'
-                        f' and statistics computed before interruption will'
-                        f' be returned.')
-                    break
+            return _sample_chains_sequential(
+                init_states=init_states, rngs=rngs, n_sample=n_sample,
+                transitions=self.transitions, trace_funcs=trace_funcs,
+                **kwargs)
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            # Child processes made to ignore SIGINT signals to allow handling
-            # of KeyboardInterrupts in parent process
-            n_completed = 0
-            pool = Pool(n_process, _ignore_sigint_initialiser)
-            try:
-                results = [
-                    pool.apply_async(
-                        self._sample_chain,
-                        kwds=dict(**shared_kwargs, parallel_chains=True))
-                    for shared_kwargs in shared_kwargs_list]
-                for result in results:
-                    chain_outputs.append(result.get())
-                    n_completed += 1
-            except KeyboardInterrupt:
-                # Close any still running processes
-                pool.terminate()
-                pool.join()
-                err_message = 'Sampling manually interrupted.'
-                if n_completed > 0:
-                    err_message += (
-                        f' Data for {n_completed} completed chains will be '
-                        f'returned.')
-                if kwargs['memmap_enabled']:
-                    err_message += (
-                        f' All data recorded so far including in progress '
-                        f'chains is available in directory '
-                        f'{kwargs["memmap_path"]}.')
-                logger.error(err_message)
-            except PicklingError as e:
-                if not MULTIPROCESS_AVAILABLE:
-                    raise RuntimeError(
-                        'PicklingError encountered while trying to run chains '
-                        'on multiple processes in parallel. The inbuilt '
-                        'multiprocessing module uses pickle to communicate '
-                        'between processes and pickle does support pickling '
-                        'anonymous or nested functions. If you use anonymous '
-                        'or nested functions in your model functions or are '
-                        'using autograd to automatically compute derivatives '
-                        '(autograd uses anonymous and nested functions) then '
-                        'installing the Python package multiprocess, which '
-                        'is able to serialise anonymous and nested functions '
-                        'and will be used in preference to multiprocessing by '
-                        'this package when available, may resolve this error.'
-                    ) from e
-                else:
-                    raise e
-        # When running parallel jobs with memory-mapping enabled, data arrays
-        # returned by processes as file paths to array memory-maps therfore
-        # load memory-maps objects from file before returing results
-        load_memmaps = kwargs['memmap_enabled'] and n_process > 1
-        return self._collate_chain_outputs(
-            n_sample, chain_outputs, load_memmaps)
+            return _sample_chains_parallel(
+                init_states=init_states, rngs=rngs, n_sample=n_sample,
+                transitions=self.transitions, trace_funcs=trace_funcs,
+                n_process=n_process, **kwargs)
+
+
+def _pos_trace_func(state):
+    """Trace function which records the state position (pos) component."""
+    return {'pos': state.pos}
 
 
 class HamiltonianMCMC(MarkovChainMonteCarloMethod):
@@ -562,10 +600,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
 
-    def __preprocess_kwargs(self, kwargs):
+    def __set_sample_chain_kwargs_defaults(self, kwargs):
         # default to tracing only position component of state
         if 'trace_funcs' not in kwargs:
-            kwargs['trace_funcs'] = [lambda state: {'pos': state.pos}]
+            kwargs['trace_funcs'] = [_pos_trace_func]
         # if `monitor_stats` specified, expand all statistics keys to key pairs
         # with transition key set to `integration_transition`
         if 'monitor_stats' in kwargs:
@@ -575,7 +613,6 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         else:
             kwargs['monitor_stats'] = [
                 ('integration_transition', 'accept_prob')]
-        return kwargs
 
     def sample_chain(self, n_sample, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -638,7 +675,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 transition statistic.
         """
         init_state = self._preprocess_init_state(init_state)
-        kwargs = self.__preprocess_kwargs(kwargs)
+        self.__set_sample_chain_kwargs_defaults(kwargs)
         final_state, traces, chain_stats = super().sample_chain(
             n_sample, init_state, **kwargs)
         chain_stats = chain_stats.get('integration_transition', {})
@@ -716,7 +753,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 corresponding integration transition statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
-        kwargs = self.__preprocess_kwargs(kwargs)
+        self.__set_sample_chain_kwargs_defaults(kwargs)
         final_states, traces, chain_stats = super().sample_chains(
             n_sample, init_states, **kwargs)
         chain_stats = chain_stats.get('integration_transition', {})
