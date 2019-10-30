@@ -31,5 +31,9 @@ setuptools.setup(
     license='MIT',
     license_file='LICENSE',
     install_requires=['numpy>=1.15', 'scipy>=1.1'],
-    python_requires='>=3.6'
+    python_requires='>=3.6',
+    extras_require={
+        'autodiff':  ['autograd>=1.2', 'multiprocess>=0.70'],
+        'randomgen': ['randomgen>=1.15'],
+    }
 )
