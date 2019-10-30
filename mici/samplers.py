@@ -214,10 +214,9 @@ class MarkovChainMonteCarloMethod(object):
                 chain state. Either a `mici.states.ChainState` object or a
                 dictionary with entries specifying initial values for all state
                 variables used by chain transition `sample` methods.
-            trace_funcs (Iterable[Callable[[ChainState],\
-                                  Dict[str, array or float]]]): List of
-                functions which compute the variables to be recorded at each
-                chain iteration, with each trace function being passed the
+            trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
+                List of functions which compute the variables to be recorded at
+                each chain iteration, with each trace function being passed the
                 current state and returning a dictionary of scalar or array
                 values corresponding to the variable(s) to be stored. The keys
                 in the returned dictionaries are used to index the trace arrays
@@ -243,7 +242,7 @@ class MarkovChainMonteCarloMethod(object):
                 the second entry the key of a chain statistic that will be
                 returned in the `chain_stats` dictionary. The mean over samples
                 computed so far of the chain statistics associated with any
-                valid key-pairs will be monitored during sampling  by printing
+                valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar (if `tqdm` is installed).
 
         Returns:
@@ -338,15 +337,14 @@ class MarkovChainMonteCarloMethod(object):
 
         Args:
             n_sample (int): Number of samples (iterations) to draw per chain.
-            init_states (Iterable[ChainState] or \
-                         Iterable[Dict[str, object]]): Initial chain states.
-                Each entry can be either a `ChainState` object or a dictionary
-                with entries specifying initial values for all state variables
-                used by chain transition `sample` methods.
-            trace_funcs (Iterable[Callable[[ChainState],\
-                                  Dict[str, array or float]]]): List of
-                functions which compute the variables to be recorded at each
-                chain iteration, with each trace function being passed the
+            init_states (Iterable[ChainState] or Iterable[Dict[str, object]]):
+                Initial chain states. Each entry can be either a `ChainState`
+                object or a dictionary with entries specifying initial values
+                for all state variables used by chain transition `sample`
+                methods.
+            trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
+                List of functions which compute the variables to be recorded at
+                each chain iteration, with each trace function being passed the
                 current state and returning a dictionary of scalar or array
                 values corresponding to the variable(s) to be stored. The keys
                 in the returned dictionaries are used to index the trace arrays
@@ -529,18 +527,16 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
             rng (RandomState): Numpy RandomState random number generator.
-            integration_transition (\
-                    mici.transitions.IntegrationTransition): Markov transition
-                kernel which leaves canonical distribution invariant and
-                jointly updates the position and momentum components of the
-                chain state by integrating the Hamiltonian dynamics of the
-                system to propose new values for the state.
-            momentum_transition (None or \
-                    mici.transitions.MomentumTransition): Markov transition
-                kernel which leaves the conditional distribution on the
-                momentum under the canonical distribution invariant, updating
-                only the momentum component of the chain state. If set to
-                `None` the momentum transition operator
+            integration_transition (mici.transitions.IntegrationTransition):
+                Markov transition kernel which leaves canonical distribution
+                invariant and jointly updates the position and momentum
+                components of the chain state by integrating the Hamiltonian
+                dynamics of the system to propose new values for the state.
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
                 `mici.transitions.IndependentMomentumTransition` will be used,
                 which independently samples the momentum from its conditional
                 distribution.
@@ -598,10 +594,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 conditional distribution.
 
         Kwargs:
-            trace_funcs (Iterable[Callable[[ChainState],\
-                                  Dict[str, array or float]]]): List of
-                functions which compute the variables to be recorded at each
-                chain iteration, with each trace function being passed the
+            trace_funcs (Iterable[Callable[[ChainState], Dict[str, array ]]]):
+                List of functions which compute the variables to be recorded at
+                each chain iteration, with each trace function being passed the
                 current state and returning a dictionary of scalar or array
                 values corresponding to the variable(s) to be stored. The keys
                 in the returned dictionaries are used to index the trace arrays
@@ -629,13 +624,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             final_state (mici.states.ChainState): State of chain after final
                 iteration. May be used to resume sampling a chain by passing as
                 the initial state to a new `sample_chain` call.
-            traces (dict[str, array]): Dictionary of chain trace arrays. Values
+            traces (Dict[str, array]): Dictionary of chain trace arrays. Values
                 in dictionary are arrays of variables outputted by trace
                 functions in `trace_funcs` with leading dimension of array
                 corresponding to the sampling (draw) index. The key for each
                 value is the corresponding key in the dictionary returned by
                 the trace function which computed the traced value.
-            chain_stats (dict[str, array]): Dictionary of chain integration
+            chain_stats (Dict[str, array]): Dictionary of chain integration
                 transition statistics. Values in dictionary are arrays of chain
                 statistic values with the leading dimension of each array
                 corresponding to the sampling (draw) index. The key for each
@@ -675,10 +670,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
-            trace_funcs (Iterable[Callable[[ChainState],\
-                                  Dict[str, array or float]]]): List of
-                functions which compute the variables to be recorded at each
-                chain iteration, with each trace function being passed the
+            trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
+                List of functions which compute the variables to be recorded at
+                each chain iteration, with each trace function being passed the
                 current state and returning a dictionary of scalar or array
                 values corresponding to the variable(s) to be stored. The keys
                 in the returned dictionaries are used to index the trace arrays
@@ -703,17 +697,17 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 `accept_prob` statistic.
 
         Returns:
-            final_states (list[ChainState]): States of chains after final
+            final_states (List[ChainState]): States of chains after final
                 iteration. May be used to resume sampling a chain by passing as
                 the initial states to a new `sample_chains` call.
-            traces (dict[str, list[array]]): Dictionary of chain trace arrays.
+            traces (Dict[str, List[array]]): Dictionary of chain trace arrays.
                 Values in dictionary are list of arrays of variables outputted
                 by trace functions in `trace_funcs` with each array in the list
                 corresponding to a single chain and the leading dimension of
                 each array corresponding to the sampling (draw) index. The key
                 for each value is the corresponding key in the dictionary
                 returned by the trace function which computed the traced value.
-            chain_stats (dict[str, list[array]]): Dictionary of chain
+            chain_stats (Dict[str, List[array]]): Dictionary of chain
                 integration transition statistics. Values in dictionary are
                 lists of arrays of chain statistic values with each array in
                 the list corresponding to a single chain and the leading
@@ -765,12 +759,11 @@ class StaticMetropolisHMC(HamiltonianMCMC):
                 use to simulate dynamics in integration transition.
             n_step (int): Number of integrator steps to simulate in each
                 integration transition.
-            momentum_transition (None or \
-                    mici.transitions.MomentumTransition): Markov transition
-                kernel which leaves the conditional distribution on the
-                momentum under the canonical distribution invariant, updating
-                only the momentum component of the chain state. If set to
-                `None` the momentum transition operator
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
                 `mici.transitions.IndependentMomentumTransition` will be used,
                 which independently samples the momentum from its conditional
                 distribution.
@@ -833,12 +826,11 @@ class RandomMetropolisHMC(HamiltonianMCMC):
                 bounds (inclusive) of integer interval to uniformly draw random
                 number integrator steps to simulate in each integration
                 transition.
-            momentum_transition (None or \
-                    mici.transitions.MomentumTransition): Markov transition
-                kernel which leaves the conditional distribution on the
-                momentum under the canonical distribution invariant, updating
-                only the momentum component of the chain state. If set to
-                `None` the momentum transition operator
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
                 `mici.transitions.IndependentMomentumTransition` will be used,
                 which independently samples the momentum from its conditional
                 distribution.
@@ -897,21 +889,20 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
             max_delta_h (float): Maximum change to tolerate in the Hamiltonian
                 function over a trajectory in integrator transition before
                 signalling a divergence.
-            termination_criterion (Callable[\
-                    [System, ChainState, ChainState, array], bool]): Function
-                computing criterion to use to determine when to terminate
-                trajectory tree expansion. The function should take a
+            termination_criterion (
+                    Callable[[System, ChainState, ChainState, array], bool]):
+                Function computing criterion to use to determine when to
+                terminate trajectory tree expansion. The function should take a
                 Hamiltonian system as its first argument, a pair of states
                 corresponding to the two edge nodes in the trajectory
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `mici.transitions.riemannian_no_u_turn_criterion`.
-            momentum_transition (None or \
-                    mici.transitions.MomentumTransition): Markov transition
-                kernel which leaves the conditional distribution on the
-                momentum under the canonical distribution invariant, updating
-                only the momentum component of the chain state. If set to
-                `None` the momentum transition operator
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
                 `mici.transitions.IndependentMomentumTransition` will be used,
                 which independently samples the momentum from its conditional
                 distribution.

@@ -41,17 +41,17 @@ class System(ABC):
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         """
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
@@ -220,17 +220,17 @@ class EuclideanMetricSystem(System):
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         """
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -266,27 +266,27 @@ class EuclideanMetricSystem(System):
 
 
 class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
-    """Euclidean Hamiltonian system with a tractable Gaussian component.
+    r"""Euclidean Hamiltonian system with a tractable Gaussian component.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor).
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\).
 
     Additionally the target distribution on the position variables is assumed
     to be defined by an unnormalised density with respect to the standard
     Gaussian measure on the position space (with identity covariance and zero
-    mean), with the Hamiltonian component `h1` corresponding to the negative
+    mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
     Lebesgue measure on the position space. The Hamiltonian component function
-    `h2` is therefore assumed to have the form
+    \(h_2\) is therefore assumed to have the form
 
-         h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor. In this case
-    the Hamiltonian flow due to the quadratic `h2` component can be solved for
-    analytically, allowing an integrator to be defined using this alternative
-    splitting of the Hamiltonian [1].
+    where \(q\) and \(p\) are the position and momentum variables respectively.
+    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
+    can be solved for analytically, allowing an integrator to be defined using
+    this alternative splitting of the Hamiltonian [1].
 
     References:
 
@@ -297,19 +297,27 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         """
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the standard
-                Gaussian measure on the position space, with the corresponding
-                distribution on the position space being the target
-                distribution it is wished to draw approximate samples from.
-            metric (Matrix or None): Matrix object corresponding to covariance
-                of Gaussian marginal distribution on momentum vector. If `None`
-                is passed (the default), the identity matrix will be used.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to its position vector argument.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the standard Gaussian measure on the position space,
+                with the corresponding distribution on the position space being
+                the target distribution it is wished to draw approximate
+                samples from.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position vector returns the derivative
+                of the negative logarithm of the unnormalised density specified
+                by `neg_log_dens` with respect to its position vector argument.
                 Optionally the function may instead return a pair of values
                 with the first being the value of the `neg_log_dens` evaluated
                 at the passed position vector and the second being the value of

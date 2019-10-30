@@ -369,10 +369,10 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
                 `2**max_tree_depth`.
             max_delta_h (float): Maximum change to tolerate in the Hamiltonian
                 function over a trajectory before signalling a divergence.
-            termination_criterion (Callable[\
-                    [System, ChainState, ChainState, array], bool]): Function
-                computing criterion to use to determine when to terminate
-                trajectory tree expansion. The function should take a
+            termination_criterion (
+                    Callable[[System, ChainState, ChainState, array], bool]):
+                Function computing criterion to use to determine when to
+                terminate trajectory tree expansion. The function should take a
                 Hamiltonian system as its first argument, a pair of states
                 corresponding to the two edge nodes in the trajectory
                 (sub-)tree being checked and an array containing the sum of the

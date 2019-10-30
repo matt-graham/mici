@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L0-L645" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L0-L653" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
 
@@ -70,17 +70,17 @@ class System(ABC):
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
@@ -249,17 +249,17 @@ class EuclideanMetricSystem(System):
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -295,27 +295,27 @@ class EuclideanMetricSystem(System):
 
 
 class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
-    &#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
+    r&#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor).
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\).
 
     Additionally the target distribution on the position variables is assumed
     to be defined by an unnormalised density with respect to the standard
     Gaussian measure on the position space (with identity covariance and zero
-    mean), with the Hamiltonian component `h1` corresponding to the negative
+    mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
     Lebesgue measure on the position space. The Hamiltonian component function
-    `h2` is therefore assumed to have the form
+    \(h_2\) is therefore assumed to have the form
 
-         h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor. In this case
-    the Hamiltonian flow due to the quadratic `h2` component can be solved for
-    analytically, allowing an integrator to be defined using this alternative
-    splitting of the Hamiltonian [1].
+    where \(q\) and \(p\) are the position and momentum variables respectively.
+    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
+    can be solved for analytically, allowing an integrator to be defined using
+    this alternative splitting of the Hamiltonian [1].
 
     References:
 
@@ -326,19 +326,27 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         &#34;&#34;&#34;
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the standard
-                Gaussian measure on the position space, with the corresponding
-                distribution on the position space being the target
-                distribution it is wished to draw approximate samples from.
-            metric (Matrix or None): Matrix object corresponding to covariance
-                of Gaussian marginal distribution on momentum vector. If `None`
-                is passed (the default), the identity matrix will be used.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to its position vector argument.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the standard Gaussian measure on the position space,
+                with the corresponding distribution on the position space being
+                the target distribution it is wished to draw approximate
+                samples from.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position vector returns the derivative
+                of the negative logarithm of the unnormalised density specified
+                by `neg_log_dens` with respect to its position vector argument.
                 Optionally the function may instead return a pair of values
                 with the first being the value of the `neg_log_dens` evaluated
                 at the passed position vector and the second being the value of
@@ -711,23 +719,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L15-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L15-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class System(ABC):
     r&#34;&#34;&#34;Base class for Hamiltonian systems.
@@ -758,17 +767,17 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
@@ -933,7 +942,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L61-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L61-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def neg_log_dens(self, state):
@@ -967,7 +976,7 @@ def neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L73-L84" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L73-L84" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
 def grad_neg_log_dens(self, state):
@@ -1001,7 +1010,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L86-L95" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L86-L95" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     &#34;&#34;&#34;Hamiltonian component depending only on position.
@@ -1033,7 +1042,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L97-L106" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L97-L106" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
@@ -1063,7 +1072,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L108-L117" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L108-L117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1_flow(self, state, dt):
     &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
@@ -1095,7 +1104,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L119-L128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L119-L128" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def h2(self, state):
@@ -1127,7 +1136,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L130-L139" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L130-L139" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def dh2_dmom(self, state):
@@ -1159,7 +1168,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L141-L150" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L141-L150" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     &#34;&#34;&#34;Hamiltonian function for system.
@@ -1191,7 +1200,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L152-L164" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L152-L164" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dpos(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
@@ -1226,7 +1235,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L166-L175" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L166-L175" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dmom(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
@@ -1259,7 +1268,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L177-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L177-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample_momentum(self, state, rng):
@@ -1309,23 +1318,24 @@ specify a metric with diagonal matrix representation and the
 array to the matrix diagonal. If a 2D array is passed then this
 is assumed to specify a metric with a dense positive definite
 matrix representation specified by the array.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L191-L265" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L191-L265" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EuclideanMetricSystem(System):
     r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
@@ -1359,17 +1369,17 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
                 array to the matrix diagonal. If a 2D array is passed then this
                 is assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array.
-            grad_neg_log_dens (None or Callable[[array], array or \
-                   Tuple[array, float]]): Function which given a
-                position array returns the derivative of the negative logarithm
-                of the unnormalised density specified by `neg_log_dens` with
-                respect to the position array argument. Optionally the function
-                may instead return a pair of values with the first being the
-                array corresponding to the derivative and the second being the
-                value of the `neg_log_dens` evaluated at the passed position
-                array. If `None` is passed (the default) an automatic
-                differentiation fallback will be used to attempt to construct
-                the derivative of `neg_log_dens` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                the negative logarithm of the unnormalised density specified by
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a pair of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
@@ -1427,7 +1437,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L250-L252" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L250-L252" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def h2(self, state):
@@ -1446,7 +1456,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L254-L256" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L254-L256" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1461,7 +1471,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L258-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L258-L259" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     state.pos += dt * self.dh2_dmom(state)</code></pre>
@@ -1475,7 +1485,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L261-L262" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L261-L262" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])</code></pre>
@@ -1493,7 +1503,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L264-L265" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L264-L265" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
@@ -1587,23 +1597,22 @@ def dh2_dmom(self, state):
 </code></dt>
 <dd>
 <section class="desc"><p>Euclidean Hamiltonian system with a tractable Gaussian component.</p>
-<p>The momentum variables are taken to be independent of the position
-variables and with a zero-mean Gaussian marginal distribution with
-covariance specified by a fixed positive-definite matrix (metric tensor).</p>
+<p>Here Euclidean metric is defined to mean a metric with a fixed positive
+definite matrix representation <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>. The momentum variables are taken to
+be independent of the position variables and with a zero-mean Gaussian
+marginal distribution with covariance specified by <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>.</p>
 <p>Additionally the target distribution on the position variables is assumed
 to be defined by an unnormalised density with respect to the standard
 Gaussian measure on the position space (with identity covariance and zero
-mean), with the Hamiltonian component <code>h1</code> corresponding to the negative
+mean), with the Hamiltonian component <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> corresponding to the negative
 logarithm of this density rather than the density with respect to the
 Lebesgue measure on the position space. The Hamiltonian component function
-<code>h2</code> is therefore assumed to have the form</p>
-<pre><code> h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>inv(metric)</code> is the matrix inverse of the metric tensor. In this case
-the Hamiltonian flow due to the quadratic <code>h2</code> component can be solved for
-analytically, allowing an integrator to be defined using this alternative
-splitting of the Hamiltonian [1].</p>
+<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is therefore assumed to have the form</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.
+In this case the Hamiltonian flow due to the quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component
+can be solved for analytically, allowing an integrator to be defined using
+this alternative splitting of the Hamiltonian [1].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
@@ -1611,57 +1620,66 @@ Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the standard
-Gaussian measure on the position space, with the corresponding
-distribution on the position space being the target
-distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>metric</code></strong> :&ensp;<code>Matrix</code> or <code>None</code></dt>
-<dd>Matrix object corresponding to covariance
-of Gaussian marginal distribution on momentum vector. If <code>None</code>
-is passed (the default), the identity matrix will be used.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to its position vector argument.
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the standard Gaussian measure on the position space,
+with the corresponding distribution on the position space being
+the target distribution it is wished to draw approximate
+samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
+<dd>Matrix object corresponding to
+matrix representation of metric on position space and
+covariance of Gaussian marginal distribution on momentum
+vector. If <code>None</code> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to
+specify a metric with diagonal matrix representation and the
+array to the matrix diagonal. If a 2D array is passed then this
+is assumed to specify a metric with a dense positive definite
+matrix representation specified by the array.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position vector returns the derivative
+of the negative logarithm of the unnormalised density specified
+by <code>neg_log_dens</code> with respect to its position vector argument.
 Optionally the function may instead return a pair of values
 with the first being the value of the <code>neg_log_dens</code> evaluated
 at the passed position vector and the second being the value of
 its derivative with respect to the position argument. If <code>None</code>
 is passed (the default) an automatic differentiation backend
 will be used to construct the derivative of <code>neg_log_dens</code>
-automatically if available.</dd>
+automatically if available.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L268-L354" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L268-L362" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
-    &#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
+    r&#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
 
-    The momentum variables are taken to be independent of the position
-    variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by a fixed positive-definite matrix (metric tensor).
+    Here Euclidean metric is defined to mean a metric with a fixed positive
+    definite matrix representation \(M\). The momentum variables are taken to
+    be independent of the position variables and with a zero-mean Gaussian
+    marginal distribution with covariance specified by \(M\).
 
     Additionally the target distribution on the position variables is assumed
     to be defined by an unnormalised density with respect to the standard
     Gaussian measure on the position space (with identity covariance and zero
-    mean), with the Hamiltonian component `h1` corresponding to the negative
+    mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
     Lebesgue measure on the position space. The Hamiltonian component function
-    `h2` is therefore assumed to have the form
+    \(h_2\) is therefore assumed to have the form
 
-         h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
+    \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where `pos` and `mom` are the position and momentum variables respectively,
-    and `inv(metric)` is the matrix inverse of the metric tensor. In this case
-    the Hamiltonian flow due to the quadratic `h2` component can be solved for
-    analytically, allowing an integrator to be defined using this alternative
-    splitting of the Hamiltonian [1].
+    where \(q\) and \(p\) are the position and momentum variables respectively.
+    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
+    can be solved for analytically, allowing an integrator to be defined using
+    this alternative splitting of the Hamiltonian [1].
 
     References:
 
@@ -1672,19 +1690,27 @@ automatically if available.</dd>
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
         &#34;&#34;&#34;
         Args:
-            neg_log_dens (callable): Function which given a position vector
-                returns the negative logarithm of an unnormalised probability
-                density on the position space with respect to the standard
-                Gaussian measure on the position space, with the corresponding
-                distribution on the position space being the target
-                distribution it is wished to draw approximate samples from.
-            metric (Matrix or None): Matrix object corresponding to covariance
-                of Gaussian marginal distribution on momentum vector. If `None`
-                is passed (the default), the identity matrix will be used.
-            grad_neg_log_dens (callable or None): Function which given a
-                position vector returns the derivative of the negative
-                logarithm of the unnormalised density specified by
-                `neg_log_dens` with respect to its position vector argument.
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the standard Gaussian measure on the position space,
+                with the corresponding distribution on the position space being
+                the target distribution it is wished to draw approximate
+                samples from.
+            metric (None or array or Matrix): Matrix object corresponding to
+                matrix representation of metric on position space and
+                covariance of Gaussian marginal distribution on momentum
+                vector. If `None` is passed (the default), the identity matrix
+                will be used. If a 1D array is passed then this is assumed to
+                specify a metric with diagonal matrix representation and the
+                array to the matrix diagonal. If a 2D array is passed then this
+                is assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position vector returns the derivative
+                of the negative logarithm of the unnormalised density specified
+                by `neg_log_dens` with respect to its position vector argument.
                 Optionally the function may instead return a pair of values
                 with the first being the value of the `neg_log_dens` evaluated
                 at the passed position vector and the second being the value of
@@ -1752,7 +1778,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L323-L325" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L331-L333" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return (0.5 * state.pos @ state.pos +
@@ -1771,7 +1797,7 @@ automatically if available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L327-L329" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L335-L337" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1786,7 +1812,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L331-L333" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L339-L341" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dpos(self, state):
@@ -1801,7 +1827,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L335-L345" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L343-L353" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1824,7 +1850,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L347-L354" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L355-L362" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1962,23 +1988,24 @@ specify a metric with diagonal matrix representation and the
 array to the matrix diagonal. If a 2D array is passed then this
 is assumed to specify a metric with a dense positive definite
 matrix representation specified by the array.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L434-L477" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L442-L485" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
@@ -2046,7 +2073,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L459-L462" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L467-L470" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
@@ -2062,7 +2089,7 @@ def mhp_constr(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L464-L472" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L472-L480" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
         self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
@@ -2083,7 +2110,7 @@ def mhp_constr(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L474-L477" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L482-L485" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def grad_log_det_sqrt_gram(self, state):
@@ -2209,23 +2236,22 @@ def grad_log_det_sqrt_gram(self, state):
 </code></dt>
 <dd>
 <section class="desc"><p>Euclidean Hamiltonian system with a tractable Gaussian component.</p>
-<p>The momentum variables are taken to be independent of the position
-variables and with a zero-mean Gaussian marginal distribution with
-covariance specified by a fixed positive-definite matrix (metric tensor).</p>
+<p>Here Euclidean metric is defined to mean a metric with a fixed positive
+definite matrix representation <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>. The momentum variables are taken to
+be independent of the position variables and with a zero-mean Gaussian
+marginal distribution with covariance specified by <span><span class="MathJax_Preview">M</span><script type="math/tex">M</script></span>.</p>
 <p>Additionally the target distribution on the position variables is assumed
 to be defined by an unnormalised density with respect to the standard
 Gaussian measure on the position space (with identity covariance and zero
-mean), with the Hamiltonian component <code>h1</code> corresponding to the negative
+mean), with the Hamiltonian component <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> corresponding to the negative
 logarithm of this density rather than the density with respect to the
 Lebesgue measure on the position space. The Hamiltonian component function
-<code>h2</code> is therefore assumed to have the form</p>
-<pre><code> h2(pos, mom) = 0.5 * pos @ pos + 0.5 * mom @ inv(metric) @ mom
-</code></pre>
-<p>where <code>pos</code> and <code>mom</code> are the position and momentum variables respectively,
-and <code>inv(metric)</code> is the matrix inverse of the metric tensor. In this case
-the Hamiltonian flow due to the quadratic <code>h2</code> component can be solved for
-analytically, allowing an integrator to be defined using this alternative
-splitting of the Hamiltonian [1].</p>
+<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is therefore assumed to have the form</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.
+In this case the Hamiltonian flow due to the quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component
+can be solved for analytically, allowing an integrator to be defined using
+this alternative splitting of the Hamiltonian [1].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
@@ -2233,34 +2259,43 @@ Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
 </ol>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>callable</code></dt>
-<dd>Function which given a position vector
-returns the negative logarithm of an unnormalised probability
-density on the position space with respect to the standard
-Gaussian measure on the position space, with the corresponding
-distribution on the position space being the target
-distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>metric</code></strong> :&ensp;<code>Matrix</code> or <code>None</code></dt>
-<dd>Matrix object corresponding to covariance
-of Gaussian marginal distribution on momentum vector. If <code>None</code>
-is passed (the default), the identity matrix will be used.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
 <dd>Function which given a
-position vector returns the derivative of the negative
-logarithm of the unnormalised density specified by
-<code>neg_log_dens</code> with respect to its position vector argument.
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the standard Gaussian measure on the position space,
+with the corresponding distribution on the position space being
+the target distribution it is wished to draw approximate
+samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
+<dd>Matrix object corresponding to
+matrix representation of metric on position space and
+covariance of Gaussian marginal distribution on momentum
+vector. If <code>None</code> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to
+specify a metric with diagonal matrix representation and the
+array to the matrix diagonal. If a 2D array is passed then this
+is assumed to specify a metric with a dense positive definite
+matrix representation specified by the array.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position vector returns the derivative
+of the negative logarithm of the unnormalised density specified
+by <code>neg_log_dens</code> with respect to its position vector argument.
 Optionally the function may instead return a pair of values
 with the first being the value of the <code>neg_log_dens</code> evaluated
 at the passed position vector and the second being the value of
 its derivative with respect to the position argument. If <code>None</code>
 is passed (the default) an automatic differentiation backend
 will be used to construct the derivative of <code>neg_log_dens</code>
-automatically if available.</dd>
+automatically if available.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L480-L490" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L488-L498" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
@@ -2425,23 +2460,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L493-L561" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L501-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RiemannianMetricSystem(System):
     &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
@@ -2536,7 +2572,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L521-L523" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L529-L531" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric_func(self, state):
@@ -2551,7 +2587,7 @@ def metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L525-L527" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L533-L535" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
 def vjp_metric_func(self, state):
@@ -2566,7 +2602,7 @@ def vjp_metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L529-L532" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L537-L540" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric(self, state):
@@ -2586,7 +2622,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L534-L535" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L542-L543" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     return self.h1(state) + self.h2(state)</code></pre>
@@ -2604,7 +2640,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L537-L538" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L545-L546" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt</code></pre>
@@ -2622,7 +2658,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L540-L545" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L548-L553" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -2644,7 +2680,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L547-L548" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L555-L556" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
@@ -2658,7 +2694,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L550-L555" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L558-L563" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -2680,7 +2716,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L557-L558" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L565-L566" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dmom(self, state):
     return self.metric(state).inv @ state.mom</code></pre>
@@ -2698,7 +2734,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L560-L561" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L568-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
@@ -2784,23 +2820,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L564-L570" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L572-L578" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -2958,23 +2995,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L573-L579" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L581-L587" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3132,23 +3170,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L582-L588" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L590-L596" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3306,23 +3345,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L591-L597" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L599-L605" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3478,23 +3518,24 @@ unnormalised probability density on the position space with
 respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</dd>
-<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;<code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or
-<code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
-<dd>Function which given a
-position array returns the derivative of the negative logarithm
-of the unnormalised density specified by <code>neg_log_dens</code> with
-respect to the position array argument. Optionally the function
-may instead return a pair of values with the first being the
-array corresponding to the derivative and the second being the
-value of the <code>neg_log_dens</code> evaluated at the passed position
-array. If <code>None</code> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct
-the derivative of <code>neg_log_dens</code> automatically.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L600-L646" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L608-L654" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
@@ -3560,7 +3601,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L631-L632" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L639-L640" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def metric_func(self, state):
     return self.hess_neg_log_dens(state)</code></pre>
@@ -3574,7 +3615,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L634-L635" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L642-L643" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def vjp_metric_func(self, state):
     return self.mtp_neg_log_dens(state)</code></pre>
@@ -3588,7 +3629,7 @@ the derivative of <code>neg_log_dens</code> automatically.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L637-L640" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L645-L648" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
@@ -3604,7 +3645,7 @@ def hess_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/a58ad826caa3cfcc84d01bf084c16474ab899bd3/mici/systems.py#L642-L646" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/e455fe055eaa16217ff87e618c0ab20759f050d9/mici/systems.py#L650-L654" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
