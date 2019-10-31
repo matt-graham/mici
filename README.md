@@ -1,9 +1,16 @@
 <img src='images/mici-logo-rectangular.svg' width='400px'/>
 
-[![PyPI version](https://badge.fury.io/py/mici.svg)](https://badge.fury.io/py/mici)
-[![API documentation](https://img.shields.io/badge/API_docs-grey.svg)](https://matt-graham.github.io/mici/docs)
-[![DOI](https://zenodo.org/badge/52494384.svg)](https://zenodo.org/badge/latestdoi/52494384)
-
+<p class='badges'>
+  <a href="https://badge.fury.io/py/mici">
+    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version">
+  </a>
+  <a href="https://matt-graham.github.io/mici/docs">
+    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation">
+  </a>
+  <a href="https://zenodo.org/badge/latestdoi/52494384">
+    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI">
+  </a>
+</p>
 
 **Mici** is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.
 
