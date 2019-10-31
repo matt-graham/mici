@@ -3,4 +3,5 @@
 pdoc ../mici --html --output-dir . --template-dir templates --force
 rm -r docs
 mv mici docs
-inkscape -z -e logo.png -w 800 -h 242 ../images/mici-logo-rectangular.svg
+cp -r ../images .
+pandoc -f gfm -t html ../README.md -o index.html -s --css style.css --toc -M pagetitle='Mici - Python implementations of manifold MCMC methods'
