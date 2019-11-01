@@ -97,13 +97,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <p class='badges'>
   <a href="https://badge.fury.io/py/mici">
-    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version">
+    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
   </a>
   <a href="https://matt-graham.github.io/mici/docs">
-    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation">
+    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation"/>
   </a>
   <a href="https://zenodo.org/badge/latestdoi/52494384">
-    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI">
+    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
 </p>
 
@@ -136,30 +136,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling loop into external compiled non-Python code, in Mici the sampling loop is run directly within Python. This has the consequence that for small models in which the negative log density of the target distribution and other model functions are cheap to evaluate, the interpreter overhead in iterating over the chains in Python can dominate the computational cost, making sampling much slower than packages which outsource the sampling loop to a efficient compiled implementation.</p>
 <h2 id="overview-of-package">Overview of package</h2>
 <p>API documentation for the package is available <a href="https://matt-graham.github.io/mici/docs">here</a>. The three main user-facing modules within the <code>mici</code> package are the <code>systems</code>, <code>integrators</code> and <code>samplers</code> modules:</p>
-<p><a href="mici/systems.py"><code>mici.systems</code></a> - Hamiltonian systems encapsulating model functions and their derivatives</p>
+<p><a href="https://matt-graham.github.io/mici/docs/systems.html"><code>mici.systems</code></a> - Hamiltonian systems encapsulating model functions and their derivatives</p>
 <ul>
 <li><code>EuclideanMetricSystem</code> - systems with a metric on the position space with a constant matrix representation,</li>
-<li><code>GaussianEuclideanMetricSystem</code> - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian (Shahbaba et al., 2014),</li>
-<li><code>RiemannianMetricSystem</code> - systems with a metric on the position space with a position-dependent matrix representation (Girolami and Calderhead, 2011),</li>
-<li><code>SoftAbsRiemannianMetricSystem</code> - system with <em>SoftAbs</em> eigenvalue-regularised Hessian of negative log target density as metric matrix representation (Betancourt, 2013),</li>
-<li><code>DenseConstrainedEuclideanMetricSystem</code> - Euclidean-metric system subject to holonomic constraints (Hartmann and Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018) with a dense constraint function Jacobian matrix,</li>
+<li><code>GaussianEuclideanMetricSystem</code> - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian (<a href="#shababa2014split">Shahbaba et al., 2014</a>),</li>
+<li><code>RiemannianMetricSystem</code> - systems with a metric on the position space with a position-dependent matrix representation (<a href="#girolami2011riemann">Girolami and Calderhead, 2011</a>),</li>
+<li><code>SoftAbsRiemannianMetricSystem</code> - system with <em>SoftAbs</em> eigenvalue-regularised Hessian of negative log target density as metric matrix representation (<a href="#betancourt2013general">Betancourt, 2013</a>),</li>
+<li><code>DenseConstrainedEuclideanMetricSystem</code> - Euclidean-metric system subject to holonomic constraints (<a href="#hartmann2005constrained">Hartmann and Schütte, 2005</a>; <a href="#brubaker2012family">Brubaker, Salzmann and Urtasun, 2012</a>; <a href="#lelievre2018hybrid">Lelièvre, Rousset and Stoltz, 2018</a>) with a dense constraint function Jacobian matrix,</li>
 </ul>
-<p><a href="mici/integrators.py"><code>mici.integrators</code></a> - symplectic integrators for Hamiltonian dynamics</p>
+<p><a href="https://matt-graham.github.io/mici/docs/integrators.html"><code>mici.integrators</code></a> - symplectic integrators for Hamiltonian dynamics</p>
 <ul>
-<li><code>LeapfrogIntegrator</code> - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (Leimkulher and Reich, 2004),</li>
-<li><code>ImplicitLeapfrogIntegrator</code> - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (Leimkulher and Reich, 2004),</li>
-<li><code>ConstrainedLeapfrogIntegrator</code> - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (Andersen, 1983; Leimkuhler and Reich, 1994)</li>
+<li><code>LeapfrogIntegrator</code> - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (<a href="#leimkuhler2004simulating">Leimkulher and Reich, 2004</a>),</li>
+<li><code>ImplicitLeapfrogIntegrator</code> - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (<a href="#leimkuhler2004simulating">Leimkulher and Reich, 2004</a>),</li>
+<li><code>ConstrainedLeapfrogIntegrator</code> - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (<a href="#andersen1983rattle">Andersen, 1983</a>; <a href="#leimkuhler1994symplectic">Leimkuhler and Reich, 1994</a>)</li>
 </ul>
-<p><a href="mici/samplers.py"><code>mici.samplers</code></a> - MCMC samplers for peforming inference</p>
+<p><a href="https://matt-graham.github.io/mici/docs/samplers.html"><code>mici.samplers</code></a> - MCMC samplers for peforming inference</p>
 <ul>
-<li><code>StaticMetropolisHMC</code> - Static integration time Hamiltonian Monte Carlo with Metropolis accept step (Duane et al., 1987),</li>
-<li><code>RandomMetropolisHMC</code> - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (Mackenzie, 1989),</li>
-<li><code>DynamicMultinomialHMC</code> - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (Hoffman and Gelman, 2014; Betancourt, 2017).</li>
+<li><code>StaticMetropolisHMC</code> - Static integration time Hamiltonian Monte Carlo with Metropolis accept step (<a href="duane1987hybrid">Duane et al., 1987</a>),</li>
+<li><code>RandomMetropolisHMC</code> - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (<a href="#mackenzie1989improved">Mackenzie, 1989</a>),</li>
+<li><code>DynamicMultinomialHMC</code> - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (<a href="#hoffman2014nouturn">Hoffman and Gelman, 2014</a>; <a href="#betancourt2017conceptual">Betancourt, 2017</a>).</li>
 </ul>
 <h2 id="example-sampling-on-a-torus">Example: sampling on a torus</h2>
 <img src='images/torus-samples.gif' width='360px'/>
 
-<p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function) and sample four chains in parallel using <code>multiprocess</code>.</p>
+<p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using <code>multiprocess</code> and use <code>matplotlib</code> to plot the samples.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode Python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">from</span> mici <span class="im">import</span> systems, integrators, samplers</a>
 <a class="sourceLine" id="cb1-2" data-line-number="2"><span class="im">import</span> autograd.numpy <span class="im">as</span> np</a>
 <a class="sourceLine" id="cb1-3" data-line-number="3"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
@@ -236,20 +236,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <a class="sourceLine" id="cb1-74" data-line-number="74">anim <span class="op">=</span> animation.FuncAnimation(fig, update, frames<span class="op">=</span><span class="dv">60</span>, interval<span class="op">=</span><span class="dv">100</span>, blit<span class="op">=</span><span class="va">True</span>)</a></code></pre></div>
 <h2 id="references">References</h2>
 <ol>
-<li>Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm for molecular dynamics calculations. <em>Journal of Computational Physics</em>, 52(1), pp.24-34.</li>
-<li>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte Carlo. <em>Physics letters B</em>, 195(2), pp.216-222.</li>
-<li>Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. <em>Physics Letters B</em>, 226(3-4), pp.369-371.</li>
-<li>Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. <em>Physics Letters B</em>, 268(CERN-TH-6172-91), pp.247-252.</li>
-<li>Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained Hamiltonian systems. <em>Mathematics of Computation</em>, 63(208), pp.589-605.</li>
-<li>Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). <em>Cambridge University Press</em>.</li>
-<li>Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo algorithm and the problem of calculating the free energy in several variables. <em>ZAMM ‐ Journal of Applied Mathematics and Mechanics</em>, 85(10), pp.700-710.</li>
-<li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and Hamiltonian Monte Varlo methods. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em>, 73(2), pp.123-214.</li>
-<li>Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods on implicitly defined manifolds. In <em>Artificial intelligence and statistics</em> (pp. 161-172).</li>
-<li>Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian Monte Carlo. In <em>Geometric science of information</em> (pp. 327-334).</li>
-<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning Research</em>, 15(1), pp.1593-1623.</li>
-<li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
-<li>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo. <em>arXiv preprint arXiv:1701.02434</em>.</li>
-<li>Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods for sampling probability measures on submanifolds. <em>arXiv preprint 1807.02356</em>.</li>
+<li><a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm for molecular dynamics calculations. <em>Journal of Computational Physics</em>, 52(1), pp.24-34.</li>
+<li><a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte Carlo. <em>Physics letters B</em>, 195(2), pp.216-222.</li>
+<li><a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. <em>Physics Letters B</em>, 226(3-4), pp.369-371.</li>
+<li><a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. <em>Physics Letters B</em>, 268(CERN-TH-6172-91), pp.247-252.</li>
+<li><a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained Hamiltonian systems. <em>Mathematics of Computation</em>, 63(208), pp.589-605.</li>
+<li><a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). <em>Cambridge University Press</em>.</li>
+<li><a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo algorithm and the problem of calculating the free energy in several variables. <em>ZAMM ‐ Journal of Applied Mathematics and Mechanics</em>, 85(10), pp.700-710.</li>
+<li><a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and Hamiltonian Monte Varlo methods. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em>, 73(2), pp.123-214.</li>
+<li><a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods on implicitly defined manifolds. In <em>Artificial intelligence and statistics</em> (pp. 161-172).</li>
+<li><a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian Monte Carlo. In <em>Geometric science of information</em> (pp. 327-334).</li>
+<li><a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning Research</em>, 15(1), pp.1593-1623.</li>
+<li><a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
+<li><a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo. <em>arXiv preprint arXiv:1701.02434</em>.</li>
+<li><a id='lelievre2018hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods for sampling probability measures on submanifolds. <em>arXiv preprint 1807.02356</em>.</li>
 </ol>
 </body>
 </html>

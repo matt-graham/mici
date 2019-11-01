@@ -2,13 +2,13 @@
 
 <p class='badges'>
   <a href="https://badge.fury.io/py/mici">
-    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version">
+    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
   </a>
   <a href="https://matt-graham.github.io/mici/docs">
-    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation">
+    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation"/>
   </a>
   <a href="https://zenodo.org/badge/latestdoi/52494384">
-    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI">
+    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
 </p>
 
@@ -75,28 +75,28 @@ API documentation for the package is available [here](https://matt-graham.github
  [`mici.systems`](https://matt-graham.github.io/mici/docs/systems.html) - Hamiltonian systems encapsulating model functions and their derivatives
 
    * `EuclideanMetricSystem` - systems with a metric on the position space with a constant matrix representation,
-   * `GaussianEuclideanMetricSystem` - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian (Shahbaba et al., 2014),
-   * `RiemannianMetricSystem` - systems with a metric on the position space with a position-dependent matrix representation (Girolami and Calderhead, 2011),
-   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric matrix representation (Betancourt, 2013),
-   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject to holonomic constraints (Hartmann and Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018) with a dense constraint function Jacobian matrix,
+   * `GaussianEuclideanMetricSystem` - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian ([Shahbaba et al., 2014](#shababa2014split)),
+   * `RiemannianMetricSystem` - systems with a metric on the position space with a position-dependent matrix representation ([Girolami and Calderhead, 2011](#girolami2011riemann)),
+   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric matrix representation ([Betancourt, 2013](#betancourt2013general)),
+   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject to holonomic constraints ([Hartmann and Schütte, 2005](#hartmann2005constrained); [Brubaker, Salzmann and Urtasun, 2012](#brubaker2012family); [Lelièvre, Rousset and Stoltz, 2018](#lelievre2018hybrid)) with a dense constraint function Jacobian matrix,
 
 [`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) - symplectic integrators for Hamiltonian dynamics
 
-  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (Leimkulher and Reich, 2004),
-  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (Leimkulher and Reich, 2004),
-  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (Andersen, 1983; Leimkuhler and Reich, 1994)
+  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
+  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
+  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints ([Andersen, 1983](#andersen1983rattle); [Leimkuhler and Reich, 1994](#leimkuhler1994symplectic))
 
 [`mici.samplers`](https://matt-graham.github.io/mici/docs/samplers.html) - MCMC samplers for peforming inference
 
-  * `StaticMetropolisHMC` - Static integration time Hamiltonian Monte Carlo with Metropolis accept step (Duane et al., 1987),
-  * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (Mackenzie, 1989),
-  * `DynamicMultinomialHMC` - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (Hoffman and Gelman, 2014; Betancourt, 2017).
+  * `StaticMetropolisHMC` - Static integration time Hamiltonian Monte Carlo with Metropolis accept step ([Duane et al., 1987](duane1987hybrid)),
+  * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo with Metropolis accept step ([Mackenzie, 1989](#mackenzie1989improved)),
+  * `DynamicMultinomialHMC` - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory ([Hoffman and Gelman, 2014](#hoffman2014nouturn); [Betancourt, 2017](#betancourt2017conceptual)).
 
 ## Example: sampling on a torus
 
 <img src='images/torus-samples.gif' width='360px'/>
 
-A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use `autograd` to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function) and sample four chains in parallel using `multiprocess`.
+A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use `autograd` to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using `multiprocess` and use `matplotlib` to plot the samples.
 
 ```Python
 from mici import systems, integrators, samplers
@@ -177,38 +177,38 @@ anim = animation.FuncAnimation(fig, update, frames=60, interval=100, blit=True)
 
 ## References
 
-  1. Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm 
+  1. <a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm 
      for molecular dynamics calculations. *Journal of Computational Physics*, 
      52(1), pp.24-34.
-  2. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+  2. <a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
      Hybrid Monte Carlo. *Physics letters B*, 195(2), pp.216-222.
-  3. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+  3. <a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
      *Physics Letters B*, 226(3-4), pp.369-371.
-  4. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
+  4. <a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm.
      *Physics Letters  B*, 268(CERN-TH-6172-91), pp.247-252.
-  5. Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained 
+  5. <a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained 
      Hamiltonian systems. *Mathematics of Computation*, 63(208), pp.589-605.
-  6. Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). 
+  6. <a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). 
      *Cambridge University Press*.
-  7. Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo
+  7. <a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo
      algorithm and the problem of calculating the free energy in several
      variables. *ZAMM ‐ Journal of Applied Mathematics and Mechanics*, 85(10),
      pp.700-710.
-  8. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
+  8. <a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
      Hamiltonian Monte Varlo methods. *Journal of the Royal Statistical Society:
      Series B (Statistical Methodology)*, 73(2), pp.123-214.
-  9. Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods
+  9. <a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods
      on implicitly defined manifolds. In *Artificial intelligence and statistics*
      (pp. 161-172).
- 10. Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
+ 10. <a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
      Monte Carlo. In *Geometric science of information* (pp. 327-334).
- 11. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively
+ 11. <a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively
      setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine
      Learning Research*, 15(1), pp.1593-1623.
- 12. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
+ 12. <a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014.
      Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
- 13. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+ 13. <a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
      *arXiv preprint arXiv:1701.02434*.
- 14. Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
+ 14. <a id='lelievre2018hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods
      for sampling probability measures on submanifolds. *arXiv preprint
      1807.02356*.
