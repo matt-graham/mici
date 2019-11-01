@@ -1,5 +1,10 @@
 """Progress bar classes for tracking progress of chains."""
 
+import abc
+import html
+import sys
+from timeit import default_timer as timer
+
 try:
     from IPython import get_ipython
     from IPython.display import display as ipython_display
@@ -11,10 +16,6 @@ try:
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
-
-from timeit import default_timer as timer
-import html
-import sys
 
 
 def _in_zmq_interactive_shell():
@@ -46,14 +47,63 @@ def _format_time(total_seconds):
 
 def _update_stats_running_means(iter, means, new_vals):
     """Update dictionary of running statistics means with latest values."""
-    if iter == 0:
+    if iter == 1:
         means.update(new_vals)
     else:
         for key, val in new_vals.items():
-            means[key] += (val - means[key]) / (iter + 1)
+            means[key] += (val - means[key]) / iter
 
 
-class ProgressBar:
+class BaseProgressBar(abc.ABC):
+    """Base class defining expected interface for progress bars."""
+
+    def __init__(self, n_iter, description, position):
+        """
+        Args:
+            n_iter (int): Number of iterations to iterate over.
+            description (None or str): Description of task to prefix progress
+                bar with.
+            position (Tuple[int, int]): Tuple specifying position of progress
+                bar within a sequence with first entry corresponding to
+                zero-indexed position and the second entry the total number of
+                progress bars.
+        """
+        assert isinstance(n_iter, int) and n_iter > 0, (
+            'n_iter must be a positive integer')
+        self._n_iter = n_iter
+        self._description = description
+        self._position = position
+
+    def __iter__(self):
+        for iter in range(self._n_iter):
+            iter_dict = {}
+            yield iter, iter_dict
+            self.update(iter + 1, iter_dict, refresh=True)
+
+    def __len__(self):
+        return self._n_iter
+
+    @abc.abstractmethod
+    def update(self, iter, iter_dict, refresh=True):
+        """Update progress bar state.
+
+        Args:
+            iter (int): New value for iteration counter.
+            iter_dict (None or Dict[str, float]): Dictionary of iteration
+                statistics key-value pairs to use to update postfix stats.
+            refresh (bool): Whether to refresh display(s).
+        """
+
+    @abc.abstractmethod
+    def __enter__(self):
+        """Set up progress bar and and any associated resource."""
+
+    @abc.abstractmethod
+    def __exit__(self, *args):
+        """Close down progress bar and any associated resources."""
+
+
+class ProgressBar(BaseProgressBar):
     """Iterable object for tracking progress of an iterative task.
 
     Implements both string and HTML representations to allow richer
@@ -64,16 +114,13 @@ class ProgressBar:
     GLYPHS = ' ▏▎▍▌▋▊▉█'
     """Characters used to create string representation of progress bar."""
 
-    def __init__(self, n_iter, description=None, n_col=10, unit='it',
-                 position=(0, 1), displays=None):
+    def __init__(self, n_iter, description=None, position=(0, 1),
+                 displays=None, n_col=10, unit='it'):
         """
         Args:
             n_iter (int): Number of iterations to iterate over.
             description (None or str): Description of task to prefix progress
                 bar with.
-            n_col (int): Number of columns (characters) to use in string
-                representation of progress bar.
-            unit (str): String describing unit of per-iteration tasks.
             position (Tuple[int, int]): Tuple specifying position of progress
                 bar within a sequence with first entry corresponding to
                 zero-indexed position and the second entry the total number of
@@ -82,14 +129,13 @@ class ProgressBar:
                 visual representation(s) of progress bar. Each object much have
                 an `update` method which will be passed a single argument
                 corresponding to the current progress bar.
+            n_col (int): Number of columns (characters) to use in string
+                representation of progress bar.
+            unit (str): String describing unit of per-iteration tasks.
         """
-        assert isinstance(n_iter, int) and n_iter > 0, (
-            'n_iter must be a positive integer')
-        self._n_iter = n_iter
-        self.description = description
-        self.n_col = n_col
-        self.unit = unit
-        self._position = position
+        super().__init__(n_iter, description, position)
+        self._n_col = n_col
+        self._unit = unit
         self._counter = 0
         self._active = False
         self._start_time = None
@@ -106,6 +152,11 @@ class ProgressBar:
     def n_iter(self):
         """Total number of iterations to complete."""
         return self._n_iter
+
+    @property
+    def description(self):
+        """"Description of task being tracked."""
+        return self._description
 
     @property
     def counter(self):
@@ -139,8 +190,8 @@ class ProgressBar:
         else:
             mean_time = self._elapsed_time / self.counter
             return (
-                f'{mean_time:.2f}s/{self.unit}' if mean_time > 1
-                else f'{1/mean_time:.2f}{self.unit}/s')
+                f'{mean_time:.2f}s/{self._unit}' if mean_time > 1
+                else f'{1/mean_time:.2f}{self._unit}/s')
 
     @property
     def est_remaining_time(self):
@@ -154,17 +205,17 @@ class ProgressBar:
     @property
     def n_block_filled(self):
         """Number of filled blocks in progress bar."""
-        return int(self.n_col * self.prop_complete)
+        return int(self._n_col * self.prop_complete)
 
     @property
     def n_block_empty(self):
         """Number of empty blocks in progress bar."""
-        return self.n_col - self.n_block_filled
+        return self._n_col - self.n_block_filled
 
     @property
     def prop_partial_block(self):
         """Proportion filled in partial block in progress bar."""
-        return self.n_col * self.prop_complete - self.n_block_filled
+        return self._n_col * self.prop_complete - self.n_block_filled
 
     @property
     def filled_blocks(self):
@@ -230,21 +281,21 @@ class ProgressBar:
         self._start_time = timer()
         self._stats_dict = {}
 
-    def update(self, counter, stats_dict=None, refresh=True):
+    def update(self, iter, iter_dict=None, refresh=True):
         """Update progress bar state
 
         Args:
-            counter (int): New value for progress counter.
-            stats_dict (None or Dict[str, float]): Dictionary of iteration
-                statistics key-value pairs to print in postfix.
+            iter (int): New value for iteration counter.
+            iter_dict (None or Dict[str, float]): Dictionary of iteration
+                statistics key-value pairs to use to update postfix stats.
             refresh (bool): Whether to refresh display(s).
         """
-        if counter == 0:
+        if iter == 0:
             self.reset()
         else:
-            self.counter = counter
-            if stats_dict is not None:
-                self._stats_dict = stats_dict
+            self.counter = iter
+            if iter_dict is not None:
+                _update_stats_running_means(iter, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
         if refresh:
             self.refresh()
@@ -253,16 +304,6 @@ class ProgressBar:
         """Refresh visual display(s) of progress bar."""
         for display in self._displays:
             display.update(self)
-
-    def __len__(self):
-        return self._n_iter
-
-    def __iter__(self, *args):
-        for i in range(self.n_iter):
-            iter_dict = {}
-            yield i, iter_dict
-            _update_stats_running_means(i, self._stats_dict, iter_dict)
-            self.update(i + 1, refresh=True)
 
     def __str__(self):
         return f'{self.prefix}{self.progress_bar}{self.postfix}'
@@ -348,7 +389,7 @@ class FileDisplay:
         self._file.flush()
 
 
-class ProxyProgressBar:
+class _ProxyProgressBar:
     """Proxy progress bar that outputs progress updates to a queue.
 
     Intended for communicating progress updates from a child to parent process
@@ -379,36 +420,38 @@ class ProxyProgressBar:
         return False
 
     def __iter__(self):
-        for i in range(self._n_iter):
-            stats_dict = {}
-            yield i, stats_dict
-            self._iter_queue.put((self._job_id, i + 1, stats_dict))
+        for iter in range(self._n_iter):
+            iter_dict = {}
+            yield iter, iter_dict
+            self._iter_queue.put((self._job_id, iter + 1, iter_dict))
 
 
 if TQDM_AVAILABLE:
 
-    class TqdmProgressBar(object):
-        """Wrapper of tqdm progress bar with same interface as ProgressBar"""
+    class TqdmProgressBar(BaseProgressBar):
+        """Wrapper of tqdm progress bar with same interface as ProgressBar."""
 
         def __init__(self, n_iter, description=None, position=(0, 1)):
-            """
-            Args:
-                n_iter (int): Number of iterations to iterate over.
-                description (None or str): Description of task to prefix
-                    progress bar with.
-                position (Tuple[int, int]): Tuple specifying position of
-                    progress bar within a sequence with first entry
-                    corresponding to zero-indexed position and the second entry
-                    the total number of progress bars.
-        """
-            self._n_iter = n_iter
-            self._description = description
-            self._tqdm_obj = None
+            super().__init__(n_iter, description, position)
             self._stats_dict = {}
-            self._position = position
+            self._tqdm_obj = None
 
-        def __len__(self):
-            return self._n_iter
+        def update(self, iter, iter_dict=None, refresh=True):
+            if self._tqdm_obj is None:
+                raise RuntimeError(
+                    'Must enter object first in context manager.')
+            if iter == 0:
+                self._tqdm_obj.reset()
+            elif not self._tqdm_obj.disable:
+                self._tqdm_obj.update(iter - self._tqdm_obj.n)
+                if iter_dict is not None:
+                    _update_stats_running_means(
+                        iter, self._stats_dict, iter_dict)
+                    self._tqdm_obj.set_postfix(self._stats_dict)
+                if iter == self._n_iter:
+                    self._tqdm_obj.close()
+                if refresh:
+                    self._tqdm_obj.refresh()
 
         def __enter__(self):
             self._tqdm_obj = tqdm.trange(
@@ -418,11 +461,3 @@ if TQDM_AVAILABLE:
 
         def __exit__(self, *args):
             return self._tqdm_obj.__exit__(*args)
-
-        def __iter__(self):
-            for i in range(self._n_iter):
-                iter_dict = {}
-                yield i, iter_dict
-                _update_stats_running_means(i, self._stats_dict, iter_dict)
-                self._tqdm_obj.set_postfix(self._stats_dict)
-                self._tqdm_obj.update()

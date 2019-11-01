@@ -1,6 +1,8 @@
 """Monte Carlo sampler classes for peforming inference."""
 
 import os
+import queue
+from contextlib import ExitStack, contextmanager
 from pickle import PicklingError
 import logging
 import tempfile
@@ -22,9 +24,11 @@ except ImportError:
 # to serialise much wider range of types including autograd functions
 try:
     from multiprocess import Pool
+    from multiprocess.managers import SyncManager
     MULTIPROCESS_AVAILABLE = True
 except ImportError:
     from multiprocessing import Pool
+    from multiprocessing.managers import SyncManager
     MULTIPROCESS_AVAILABLE = False
 
 
@@ -34,6 +38,16 @@ logger = logging.getLogger(__name__)
 def _ignore_sigint_initialiser():
     """Initialiser for multi-process workers to force ignoring SIGINT."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+@contextmanager
+def ignore_sigint_manager():
+    manager = SyncManager()
+    try:
+        manager.start(_ignore_sigint_initialiser)
+        yield manager
+    finally:
+        manager.shutdown()
 
 
 def _generate_memmap_filename(dir_path, prefix, key, index):
@@ -219,11 +233,14 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
         interrupted = True
         if sample_index != n_sample:
             logger.error(
-                f'Sampling manually interrupted at chain {chain_index} '
+                f'Sampling manually interrupted at chain {chain_index + 1} '
                 f'iteration {sample_index}. Arrays containing chain traces and'
                 f' statistics computed before interruption will be returned.')
             # Sampling interrupted therefore truncate returned arrays
-            _truncate_chain_data(sample_index, traces, chain_stats)
+            # No point truncating if using memory mapping with parallel chains
+            # as will only return file paths of arrays
+            if not (parallel_chains and memmap_enabled):
+                _truncate_chain_data(sample_index, traces, chain_stats)
     else:
         interrupted = False
     if memmap_enabled:
@@ -288,55 +305,74 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     return _collate_chain_outputs(chain_outputs)
 
 
+def _sample_chains_worker(chain_queue, iter_queue):
+    chain_outputs = []
+    while not chain_queue.empty():
+        try:
+            chain_index, init_state, rng, n_sample, kwargs = chain_queue.get(
+                block=False)
+            *outputs, interrupted = _sample_chain(
+                init_state=init_state, rng=rng, chain_index=chain_index,
+                chain_iterator=progressbars._ProxyProgressBar(
+                    n_sample, chain_index, iter_queue),
+                parallel_chains=True, **kwargs)
+            chain_outputs.append((chain_index, outputs))
+            if interrupted:
+                break
+        except queue.Empty:
+            pass
+        except KeyboardInterrupt:
+            break
+    return chain_outputs
+
+
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                             **kwargs):
     chain_outputs = []
-    # Child processes made to ignore SIGINT signals to allow handling
-    # of KeyboardInterrupts in parent process
-    pool = Pool(n_process, _ignore_sigint_initialiser)
-    try:
-        results = [
-            pool.apply_async(
-                _sample_chain,
-                kwds={'init_state': init_state, 'rng': rng,
-                      'chain_iterator': chain_iterator, 'chain_index': c,
-                      'parallel_chains': True, **kwargs})
-            for c, (init_state, rng, chain_iterator) in
-            enumerate(zip(init_states, rngs, chain_iterators))]
-        for result in results:
-            final_state, traces, chain_stats, interrupted = result.get()
-            chain_outputs.append((final_state, traces, chain_stats))
-    except KeyboardInterrupt:
-        # Close any still running processes
-        pool.terminate()
-        pool.join()
-        err_message = 'Sampling manually interrupted.'
-        n_completed = len(chain_outputs)
-        if n_completed > 0:
-            err_message += (
-                f' Data for {n_completed} completed chains will be returned.')
-        if kwargs.get('memmap_enabled', False) and 'memmap_path' in kwargs:
-            err_message += (
-                f' All data recorded so far including in progress '
-                f'chains is available in directory {kwargs["memmap_path"]}.')
-        logger.error(err_message)
-    except PicklingError as e:
-        if not MULTIPROCESS_AVAILABLE:
-            raise RuntimeError(
-                'PicklingError encountered while trying to run chains on '
-                'multiple processes in parallel. The inbuilt multiprocessing '
-                'module uses pickle to communicate between processes and '
-                'pickle does support pickling anonymous or nested functions. '
-                'If you use anonymous or nested functions in your model '
-                'functions or are using autograd to automatically compute '
-                'derivatives (autograd uses anonymous and nested functions) '
-                'then installing the Python package multiprocess, which is '
-                'able to serialise anonymous and nested functions and will be '
-                'used in preference to multiprocessing by this package when '
-                'available, may resolve this error.'
-            ) from e
-        else:
-            raise e
+    n_samples = [len(it) for it in chain_iterators]
+    n_chain = len(chain_iterators)
+    with ignore_sigint_manager() as manager, Pool(n_process) as pool:
+        try:
+            iter_queue = manager.Queue()
+            chain_queue = manager.Queue()
+            for c, (init_state, rng, n_sample) in enumerate(
+                    zip(init_states, rngs, n_samples)):
+                chain_queue.put((c, init_state, rng, n_sample, kwargs))
+            results = pool.starmap_async(
+                _sample_chains_worker,
+                [(chain_queue, iter_queue) for p in range(n_process)])
+            with ExitStack() as stack:
+                pbars = [stack.enter_context(it) for it in chain_iterators]
+                chains_completed = 0
+                while not (iter_queue.empty() and chains_completed == n_chain):
+                    chain_index, sample_index, data_dict = iter_queue.get()
+                    pbars[chain_index].update(sample_index, data_dict)
+                    if sample_index == n_samples[chain_index]:
+                        chains_completed += 1
+        except KeyboardInterrupt:
+            # Handled in child processes
+            pass
+        except PicklingError as e:
+            if not MULTIPROCESS_AVAILABLE:
+                raise RuntimeError(
+                    'PicklingError encountered while trying to run chains on '
+                    'multiple processes in parallel. The inbuilt '
+                    'multiprocessing module uses pickle to communicate between'
+                    ' processes and pickle does support pickling anonymous or '
+                    'nested functions. If you use anonymous or nested '
+                    'functions in your model functions or are using autograd '
+                    'to automatically compute derivatives (autograd uses '
+                    'anonymous and nested functions) then installing the '
+                    'Python package multiprocess, which is able to serialise '
+                    'anonymous and nested functions and will be used in '
+                    'preference to multiprocessing by this package when '
+                    'available, may resolve this error.'
+                ) from e
+            else:
+                raise e
+        finally:
+            indexed_chain_outputs = sum((res for res in results.get()), [])
+            chain_outputs = [outp for i, outp in sorted(indexed_chain_outputs)]
     return _collate_chain_outputs(chain_outputs)
 
 
@@ -409,9 +445,9 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar (if `tqdm` is installed).
-            progress_bar_class (Class or Callable): Class or factory function
-                for progress bar to use to show chain progress. Defaults to
-                `mici.progressbars.ProgressBar`.
+            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+                factory function for progress bar to use to show chain
+                progress. Defaults to `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -495,9 +531,9 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar (if `tqdm` is installed).
-            progress_bar_class (Class or Callable): Class or factory function
-                for progress bar to use to show chain progress. Defaults to
-                `mici.progressbars.ProgressBar`.
+            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+                factory function for progress bar to use to show chain
+                progress. Defaults to `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -673,6 +709,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 during sampling by printing as postfix to progress bar (if
                 `tqdm` is installed). Default is to print only the mean
                 `accept_prob` statistic.
+            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+                factory function for progress bar to use to show chain
+                progress. Defaults to `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -749,6 +788,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 during sampling by printing as postfix to progress bar (if
                 `tqdm` is installed). Default is to print only the mean
                 `accept_prob` statistic.
+            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+                factory function for progress bar to use to show chain
+                progress. Defaults to `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
