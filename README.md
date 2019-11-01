@@ -35,26 +35,27 @@ The latest Mici release on PyPI can be installed in the current Python environme
 
 If available in the installed Python environment the following additional packages provide extra functionality and features
 
-  * [Autograd](https://github.com/HIPS/autograd): if available will be used to 
-    automatically compute the required derivatives of the model functions 
-    (providing they are specified using functions from the `autograd.numpy` and 
-    `autograd.scipy` interfaces).
-  * [tqdm](https://github.com/tqdm/tqdm): if available a simple progress bar 
-    will be shown during sampling.
-  * [Arviz](https://arviz-devs.github.io/arviz/index.html#): if available 
-    outputs of a sampling run can be converted to an `arviz.InferenceData` 
-    container object, allowing straightforward use of the extensive Arviz 
-    visualisation and diagnostic functionality.
-  * [multiprocess](https://github.com/uqfoundation/multiprocess) and 
-    [dill](https://github.com/uqfoundation/dill): if available
-    `multiprocess.Pool` will be used in preference to the in-built
-    `mutiprocessing.Pool` for parallelisation as `multiprocess` supports
-    serialisation ( via dill) of a much wider range of types, including of
-    Autograd generated functions.
-  * [RandomGen](https://github.com/bashtage/randomgen): if available the
-    `Xorshift1024` random number generator will be used when running multiple
-    chains in parallel, with the `jump` method of the object used to 
-    reproducibly generate independent substreams.
+  * [Autograd](https://github.com/HIPS/autograd): if available Autograd will 
+    be used to automatically compute the required derivatives of the model
+    functions (providing they are specified using functions from the
+    `autograd.numpy` and `autograd.scipy` interfaces). To sample chains in
+    parallel using `autograd` functions you also need to install
+    [multiprocess](https://github.com/uqfoundation/multiprocess). This will
+    cause `multiprocess.Pool` to be used in preference to the in-built
+    `mutiprocessing.Pool` for parallelisation as multiprocess supports
+    serialisation (via [dill](https://github.com/uqfoundation/dill)) of a much
+    wider range of types, including of Autograd generated functions. Both
+    Autograd and multiprocess can be installed alongside Mici by running `pip
+    install mici[autodiff]`.
+  * [RandomGen](https://github.com/bashtage/randomgen): if RandomGen is 
+    available the `randomgen.Xorshift1024` random number generator will be used 
+    when running multiple chains in parallel, with the `jump` method of the
+    object used to reproducibly generate independent substreams. RandomGen can
+    be installed alongside Mici by running `pip install mici[randomgen]`.
+  * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is 
+    available  outputs of a sampling run can be converted to an
+    `arviz.InferenceData` container object, allowing straightforward use of
+    the extensive Arviz visualisation and diagnostic functionality.
 
 ## Why Mici?
 
