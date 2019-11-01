@@ -11,13 +11,8 @@ import mici
 import mici.transitions as trans
 from mici.states import ChainState
 from mici.utils import get_size, get_valid_filename
+import mici.progressbars as progressbars
 
-try:
-    import tqdm
-    import tqdm.auto as tqdm_auto
-    TQDM_AVAILABLE = True
-except ImportError:
-    TQDM_AVAILABLE = False
 try:
     import randomgen
     RANDOMGEN_AVAILABLE = True
@@ -123,16 +118,14 @@ def _check_chain_data_size(traces, chain_stats):
             f' memory-mapping enabled (`memmap_enabled=True`).')
 
 
-def _chain_iterator(n_sample, chain_index, parallel_chains):
-    if TQDM_AVAILABLE:
-        kwargs = {
-            'desc': f'Chain {chain_index}', 'dynamic_ncols': True}
-        if parallel_chains:
-            return tqdm_auto.trange(n_sample, **kwargs, position=chain_index)
-        else:
-            return tqdm.trange(n_sample, **kwargs)
+def _construct_chain_iterators(n_sample, chain_iterator_class, n_chain=None):
+    if n_chain is None:
+        return chain_iterator_class(n_iter=n_sample, description='Chain 1/1')
     else:
-        return range(n_sample)
+        return [
+            chain_iterator_class(
+                n_iter=n_sample, description=f'Chain {c+1}/{n_chain}',
+                position=(c, n_chain)) for c in range(n_chain)]
 
 
 def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
@@ -147,6 +140,23 @@ def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
                     f'Transition {trans_key} returned {key} statistic but it '
                     f'is not included in its statistic_types attribute.')
             chain_stats[trans_key][key][sample_index] = val
+
+
+def _update_monitor_stats(
+        sample_index, chain_stats, monitor_stats, monitor_dict):
+    if monitor_stats is not None:
+        for (trans_key, stats_key) in monitor_stats:
+            if sample_index == 0 and not (trans_key in chain_stats and
+                                          stats_key in chain_stats[trans_key]):
+                raise KeyError(
+                    f'Statistics key pair {(trans_key, stats_key)} to be '
+                    'monitored is not present in chain statistics returned by '
+                    'transitions.')
+            val = chain_stats[trans_key][stats_key][sample_index]
+            if stats_key not in monitor_dict:
+                monitor_dict[stats_key] = val
+            else:
+                monitor_dict[f'{trans_key}.{stats_key}'] = val
 
 
 def _flush_memmap_chain_data(traces, chain_stats):
@@ -178,10 +188,11 @@ def _truncate_chain_data(sample_index, traces, chain_stats):
                 trans_stats[key], sample_index)
 
 
-def _sample_chain(init_state, n_sample, rng, transitions, trace_funcs,
+def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                   chain_index=0, parallel_chains=False, memmap_enabled=False,
                   memmap_path=None, monitor_stats=None):
     state = _check_and_process_init_state(init_state, transitions)
+    n_sample = len(chain_iterator)
     # Create temporary directory if memory mapping and no path provided
     if memmap_enabled and memmap_path is None:
         memmap_path = tempfile.mkdtemp()
@@ -191,30 +202,19 @@ def _sample_chain(init_state, n_sample, rng, transitions, trace_funcs,
         trace_funcs, state, n_sample, memmap_enabled, memmap_path, chain_index)
     try:
         sample_index = 0
-        if parallel_chains:
+        if parallel_chains and not memmap_enabled:
             _check_chain_data_size(traces, chain_stats)
-        chain_iterator = _chain_iterator(
-            n_sample, chain_index, parallel_chains)
-        for sample_index in chain_iterator:
-            for trans_key, transition in transitions.items():
-                state, trans_stats = transition.sample(state, rng)
-                _update_chain_stats(
-                    sample_index, chain_stats, trans_key, trans_stats)
-            for trace_func in trace_funcs:
-                for key, val in trace_func(state).items():
-                    traces[key][sample_index] = val
-            if TQDM_AVAILABLE and monitor_stats is not None:
-                postfix_stats = {}
-                for (trans_key, stats_key) in monitor_stats:
-                    if (trans_key not in chain_stats or
-                            stats_key not in chain_stats[trans_key]):
-                        logger.warning(
-                            f'Statistics key pair {(trans_key, stats_key)}'
-                            f' to be monitored is not valid.')
-                    print_key = f'mean({stats_key})'
-                    postfix_stats[print_key] = np.mean(
-                        chain_stats[trans_key][stats_key][:sample_index+1])
-                chain_iterator.set_postfix(postfix_stats)
+        with chain_iterator:
+            for sample_index, monitor_dict in chain_iterator:
+                for trans_key, transition in transitions.items():
+                    state, trans_stats = transition.sample(state, rng)
+                    _update_chain_stats(
+                        sample_index, chain_stats, trans_key, trans_stats)
+                for trace_func in trace_funcs:
+                    for key, val in trace_func(state).items():
+                        traces[key][sample_index] = val
+                _update_monitor_stats(
+                    sample_index, chain_stats, monitor_stats, monitor_dict)
     except KeyboardInterrupt:
         interrupted = True
         if sample_index != n_sample:
@@ -275,19 +275,21 @@ def _get_per_chain_rngs(base_rng, n_chain):
         return [np.random.RandomState(seed) for seed in seeds]
 
 
-def _sample_chains_sequential(init_states, rngs, **kwargs):
+def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     chain_outputs = []
-    for chain_index, (init_state, rng) in enumerate(zip(init_states, rngs)):
+    for chain_index, (init_state, rng, chain_iterator) in enumerate(
+            zip(init_states, rngs, chain_iterators)):
         final_state, traces, stats, interrupted = _sample_chain(
-            init_state=init_state, rng=rng, chain_index=chain_index,
-            parallel_chains=False, **kwargs)
+            chain_iterator=chain_iterator, init_state=init_state, rng=rng,
+            chain_index=chain_index, parallel_chains=False, **kwargs)
         chain_outputs.append((final_state, traces, stats))
         if interrupted:
             break
     return _collate_chain_outputs(chain_outputs)
 
 
-def _sample_chains_parallel(init_states, rngs, n_process, **kwargs):
+def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
+                            **kwargs):
     chain_outputs = []
     # Child processes made to ignore SIGINT signals to allow handling
     # of KeyboardInterrupts in parent process
@@ -296,9 +298,11 @@ def _sample_chains_parallel(init_states, rngs, n_process, **kwargs):
         results = [
             pool.apply_async(
                 _sample_chain,
-                kwds={'init_state': init_state, 'rng': rng, 'chain_index': c,
+                kwds={'init_state': init_state, 'rng': rng,
+                      'chain_iterator': chain_iterator, 'chain_index': c,
                       'parallel_chains': True, **kwargs})
-            for c, (init_state, rng) in enumerate(zip(init_states, rngs))]
+            for c, (init_state, rng, chain_iterator) in
+            enumerate(zip(init_states, rngs, chain_iterators))]
         for result in results:
             final_state, traces, chain_stats, interrupted = result.get()
             chain_outputs.append((final_state, traces, chain_stats))
@@ -359,6 +363,8 @@ class MarkovChainMonteCarloMethod(object):
             kwargs['memmap_enabled'] = False
         if kwargs['memmap_enabled'] and kwargs.get('memmap_path') is None:
             kwargs['memmap_path'] = tempfile.mkdtemp()
+        if 'progress_bar_class' not in kwargs:
+            kwargs['progress_bar_class'] = progressbars.ProgressBar
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -403,6 +409,9 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar (if `tqdm` is installed).
+            progress_bar_class (Class or Callable): Class or factory function
+                for progress bar to use to show chain progress. Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -425,8 +434,10 @@ class MarkovChainMonteCarloMethod(object):
                 statistic.
         """
         self.__set_sample_chain_kwargs_defaults(kwargs)
+        chain_iterator = _construct_chain_iterators(
+            n_sample, kwargs.pop('progress_bar_class'))
         final_state, traces, chain_stats, interrupted = _sample_chain(
-            init_state=init_state, n_sample=n_sample,
+            init_state=init_state, chain_iterator=chain_iterator,
             transitions=self.transitions, rng=self.rng,
             trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
         return final_state, traces, chain_stats
@@ -484,6 +495,9 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar (if `tqdm` is installed).
+            progress_bar_class (Class or Callable): Class or factory function
+                for progress bar to use to show chain progress. Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -508,19 +522,22 @@ class MarkovChainMonteCarloMethod(object):
                 integration transition statistic.
         """
         self.__set_sample_chain_kwargs_defaults(kwargs)
-        rngs = _get_per_chain_rngs(self.rng, len(init_states))
+        n_chain = len(init_states)
+        rngs = _get_per_chain_rngs(self.rng, n_chain)
+        chain_iterators = _construct_chain_iterators(
+            n_sample, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
             return _sample_chains_sequential(
-                init_states=init_states, rngs=rngs, n_sample=n_sample,
-                transitions=self.transitions, trace_funcs=trace_funcs,
-                **kwargs)
+                init_states=init_states, rngs=rngs,
+                chain_iterators=chain_iterators, transitions=self.transitions,
+                trace_funcs=trace_funcs, **kwargs)
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
             return _sample_chains_parallel(
-                init_states=init_states, rngs=rngs, n_sample=n_sample,
-                transitions=self.transitions, trace_funcs=trace_funcs,
-                n_process=n_process, **kwargs)
+                init_states=init_states, rngs=rngs,
+                chain_iterators=chain_iterators, transitions=self.transitions,
+                trace_funcs=trace_funcs, n_process=n_process, **kwargs)
 
 
 def _pos_trace_func(state):
