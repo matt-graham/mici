@@ -96,7 +96,7 @@ class BaseProgressBar(abc.ABC):
 
     @abc.abstractmethod
     def __enter__(self):
-        """Set up progress bar and and any associated resource."""
+        """Set up progress bar and any associated resource."""
 
     @abc.abstractmethod
     def __exit__(self, *args):
@@ -359,19 +359,20 @@ class FileDisplay:
     CURSOR_DOWN = '\x1b[B'
     """ANSI escape sequence to move cursor down one line."""
 
-    def __init__(self, position=(0, 1), file=sys.stdout):
+    def __init__(self, position=(0, 1), file=None):
         """
         Args:
             position (Tuple[int, int]): Tuple specifying position of
                 display line within a sequence lines with first entry
                 corresponding to zero-indexed line and the second entry
                 the total number of lines.
-            file (File): File object to write updates to. Must support ANSI
-                escape sequences `\\x1b[A}` (cursor up) and `\\x1b[B` (cursor
-                down) for manipulating write position.
+            file (None or File): File object to write updates to. Must support
+                ANSI escape sequences `\\x1b[A}` (cursor up) and `\\x1b[B`
+                (cursor down) for manipulating write position. Defaults to
+                `sys.stdout` if `None`.
         """
         self._position = position
-        self._file = file
+        self._file = file if file is not None else sys.stdout
         self._last_string_length = 0
         self._file.write('\n')
         self._file.flush()
@@ -429,7 +430,7 @@ class _ProxyProgressBar:
 if TQDM_AVAILABLE:
 
     class TqdmProgressBar(BaseProgressBar):
-        """Wrapper of tqdm progress bar with same interface as ProgressBar."""
+        """Wrapper of `tqdm` with same interface as `ProgressBar`."""
 
         def __init__(self, n_iter, description=None, position=(0, 1)):
             super().__init__(n_iter, description, position)

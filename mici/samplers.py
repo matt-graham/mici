@@ -445,7 +445,7 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar (if `tqdm` is installed).
-            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
 
@@ -531,7 +531,7 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar (if `tqdm` is installed).
-            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
 
@@ -709,7 +709,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 during sampling by printing as postfix to progress bar (if
                 `tqdm` is installed). Default is to print only the mean
                 `accept_prob` statistic.
-            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
 
@@ -788,7 +788,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 during sampling by printing as postfix to progress bar (if
                 `tqdm` is installed). Default is to print only the mean
                 `accept_prob` statistic.
-            progress_bar_class (`mici.progressbars.BaseProgressBar`): Class or
+            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
 
