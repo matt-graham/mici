@@ -72,7 +72,7 @@ Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling
  
 API documentation for the package is available [here](https://matt-graham.github.io/mici/docs). The three main user-facing modules within the `mici` package are the `systems`, `integrators` and `samplers` modules:
  
- [`mici.systems`](mici/systems.py) - Hamiltonian systems encapsulating model functions and their derivatives
+ [`mici.systems`](https://matt-graham.github.io/mici/docs/systems.html) - Hamiltonian systems encapsulating model functions and their derivatives
 
    * `EuclideanMetricSystem` - systems with a metric on the position space with a constant matrix representation,
    * `GaussianEuclideanMetricSystem` - systems in which the target distribution is defined by a density with respect to the standard Gaussian measure on the position space allowing analytically solving for flow corresponding to the quadratic components of Hamiltonian (Shahbaba et al., 2014),
@@ -80,13 +80,13 @@ API documentation for the package is available [here](https://matt-graham.github
    * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* eigenvalue-regularised Hessian of negative log target density as metric matrix representation (Betancourt, 2013),
    * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject to holonomic constraints (Hartmann and Schütte, 2005; Brubaker, Salzmann and Urtasun, 2012; Lelièvre, Rousset and Stoltz, 2018) with a dense constraint function Jacobian matrix,
 
-[`mici.integrators`](mici/integrators.py) - symplectic integrators for Hamiltonian dynamics
+[`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) - symplectic integrators for Hamiltonian dynamics
 
   * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (Leimkulher and Reich, 2004),
   * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (Leimkulher and Reich, 2004),
   * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (Andersen, 1983; Leimkuhler and Reich, 1994)
 
-[`mici.samplers`](mici/samplers.py) - MCMC samplers for peforming inference
+[`mici.samplers`](https://matt-graham.github.io/mici/docs/samplers.html) - MCMC samplers for peforming inference
 
   * `StaticMetropolisHMC` - Static integration time Hamiltonian Monte Carlo with Metropolis accept step (Duane et al., 1987),
   * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (Mackenzie, 1989),
