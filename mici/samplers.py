@@ -1,6 +1,9 @@
 """Monte Carlo sampler classes for peforming inference."""
 
 import os
+import sys
+import types
+import inspect
 import queue
 from contextlib import ExitStack, contextmanager
 from pickle import PicklingError
@@ -9,19 +12,21 @@ import tempfile
 import signal
 from collections import OrderedDict
 import numpy as np
-import mici
-import mici.transitions as trans
+from mici.transitions import (
+    riemannian_no_u_turn_criterion, MetropolisRandomIntegrationTransition,
+    MetropolisStaticIntegrationTransition, IndependentMomentumTransition,
+    MultinomialDynamicIntegrationTransition)
 from mici.states import ChainState
-from mici.utils import get_size, get_valid_filename
-import mici.progressbars as progressbars
+from mici.progressbars import ProgressBar, _ProxyProgressBar
 
 try:
     import randomgen
     RANDOMGEN_AVAILABLE = True
 except ImportError:
     RANDOMGEN_AVAILABLE = False
-# Preferentially import Pool from multiprocess library if available as able
-# to serialise much wider range of types including autograd functions
+
+# Preferentially import from multiprocess library if available as able to
+# serialise much wider range of types including autograd functions
 try:
     from multiprocess import Pool
     from multiprocess.managers import SyncManager
@@ -36,12 +41,13 @@ logger = logging.getLogger(__name__)
 
 
 def _ignore_sigint_initialiser():
-    """Initialiser for multi-process workers to force ignoring SIGINT."""
+    """Initialiser for processes to force ignoring SIGINT interrupt signals."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 @contextmanager
 def ignore_sigint_manager():
+    """Context-managed SyncManager which ignores SIGINT interrupt signals."""
     manager = SyncManager()
     try:
         manager.start(_ignore_sigint_initialiser)
@@ -50,30 +56,74 @@ def ignore_sigint_manager():
         manager.shutdown()
 
 
+def _get_valid_filename(string):
+    """Generate a valid filename from a string.
+
+    Strips all characters which are not alphanumeric or a period (.), dash (-)
+    or underscore (_).
+
+    Based on https://stackoverflow.com/a/295146/4798943
+
+    Args:
+        string (str): String file name to process.
+
+    Returns:
+        str: Generated file name.
+    """
+    return ''.join(c for c in string if (c.isalnum() or c in '._- '))
+
+
 def _generate_memmap_filename(dir_path, prefix, key, index):
-    key_str = get_valid_filename(str(key))
+    """Generate a new memory-map filename."""
+    key_str = _get_valid_filename(str(key))
     return os.path.join(dir_path, f'{prefix}_{index}_{key_str}.npy')
 
 
-def _open_new_memmap(filename, shape, default_val, dtype):
+def _open_new_memmap(file_path, shape, default_val, dtype):
+    """Open a new memory-mapped array object and fill with a default-value.
+
+    Args:
+        file_path (str): Path to write memory-mapped array to.
+        shape (Tuple[int, ...]): Shape of new array.
+        default_val: Value to fill array with. Should be compatible with
+            specified `dtype`.
+        dtype (str or numpy.dtype): NumPy data-type for array.
+
+    Returns
+        memmap (numpy.memmap): Memory-mapped array object.
+    """
     if isinstance(shape, int):
         shape = (shape,)
     memmap = np.lib.format.open_memmap(
-        filename, dtype=dtype, mode='w+', shape=shape)
+        file_path, dtype=dtype, mode='w+', shape=shape)
     memmap[:] = default_val
     return memmap
 
 
-def _memmaps_to_filenames(obj):
+def _memmaps_to_file_paths(obj):
+    """Convert memmap objects to corresponding file paths.
+
+    Acts recursively on arbitrarily 'pytree' of nested dict/tuple/lists with
+    memmap leaves.
+
+    Arg:
+        obj: NumPy memmap object or pytree of memmap objects to convert.
+
+    Returns:
+        File path string or pytree of file path strings.
+    """
     if isinstance(obj, np.memmap):
         return obj.filename
     elif isinstance(obj, dict):
-        return {k: _memmaps_to_filenames(v) for k, v in obj.items()}
+        return {k: _memmaps_to_file_paths(v) for k, v in obj.items()}
     elif isinstance(obj, list):
-        return [_memmaps_to_filenames(v) for v in obj]
+        return [_memmaps_to_file_paths(v) for v in obj]
+    elif isinstance(obj, tuple):
+        return tuple(_memmaps_to_file_paths(v) for v in obj)
 
 
 def _check_and_process_init_state(state, transitions):
+    """Check initial chain state is valid and convert dict to ChainState."""
     for trans_key, transition in transitions.items():
         for var_key in transition.state_variables:
             if var_key not in state:
@@ -88,6 +138,7 @@ def _check_and_process_init_state(state, transitions):
 
 def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
                       chain_index):
+    """Initialise dictionary of per-transition chain statistics array dicts."""
     chain_stats = {}
     for trans_key, trans in transitions.items():
         chain_stats[trans_key] = {}
@@ -106,6 +157,7 @@ def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
 
 def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
                  memmap_path, chain_index):
+    """Initialise dictionary of chain trace arrays."""
     traces = {}
     for trace_func in trace_funcs:
         for key, val in trace_func(init_state).items():
@@ -121,8 +173,57 @@ def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
     return traces
 
 
+def _get_obj_byte_size(obj, seen=None):
+    """Recursively finds size of objects in bytes.
+
+    Original source: https://github.com/bosswissam/pysize
+
+    MIT License
+
+    Copyright (c) [2018] [Wissam Jarjoui]
+
+    Args:
+        obj (object): Object to calculate size of.
+        seen (None or Set): Set of objects seen so far.
+
+    Returns:
+        int: Byte size of `obj`.
+    """
+    size = sys.getsizeof(obj)
+    if seen is None:
+        seen = set()
+    obj_id = id(obj)
+    if obj_id in seen:
+        return 0
+    # Important mark as seen *before* entering recursion to gracefully handle
+    # self-referential objects
+    seen.add(obj_id)
+    if hasattr(obj, '__dict__'):
+        for cls in obj.__class__.__mro__:
+            if '__dict__' in cls.__dict__:
+                d = cls.__dict__['__dict__']
+                if (inspect.isgetsetdescriptor(d) or
+                        inspect.ismemberdescriptor(d)):
+                    size += _get_obj_byte_size(obj.__dict__, seen)
+                break
+    if isinstance(obj, dict):
+        size += sum((_get_obj_byte_size(v, seen) for v in obj.values()))
+        size += sum((_get_obj_byte_size(k, seen) for k in obj.keys()))
+    elif (hasattr(obj, '__iter__') and not
+            isinstance(obj, (str, bytes, bytearray))):
+        size += sum((_get_obj_byte_size(i, seen) for i in obj))
+
+    if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
+        size += sum(_get_obj_byte_size(getattr(obj, s), seen)
+                    for s in obj.__slots__ if hasattr(obj, s))
+
+    return size
+
+
 def _check_chain_data_size(traces, chain_stats):
-    total_return_nbytes = get_size(traces) + get_size(chain_stats)
+    """Check that byte size of sample chain calls below pickle limit."""
+    total_return_nbytes = (
+        _get_obj_byte_size(traces) + _get_obj_byte_size(chain_stats))
     # Check if total number of bytes to be returned exceeds pickle limit
     if total_return_nbytes > 2**31 - 1:
         raise RuntimeError(
@@ -133,6 +234,7 @@ def _check_chain_data_size(traces, chain_stats):
 
 
 def _construct_chain_iterators(n_sample, chain_iterator_class, n_chain=None):
+    """Set up chain iterator progress bar object(s)."""
     if n_chain is None:
         return chain_iterator_class(n_iter=n_sample, description='Chain 1/1')
     else:
@@ -143,6 +245,7 @@ def _construct_chain_iterators(n_sample, chain_iterator_class, n_chain=None):
 
 
 def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
+    """Update chain statistics arrays for current chain iteration."""
     if trans_stats is not None:
         if sample_index == 0 and trans_key not in chain_stats:
             raise KeyError(
@@ -158,22 +261,22 @@ def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
 
 def _update_monitor_stats(
         sample_index, chain_stats, monitor_stats, monitor_dict):
-    if monitor_stats is not None:
-        for (trans_key, stats_key) in monitor_stats:
-            if sample_index == 0 and not (trans_key in chain_stats and
-                                          stats_key in chain_stats[trans_key]):
-                raise KeyError(
-                    f'Statistics key pair {(trans_key, stats_key)} to be '
-                    'monitored is not present in chain statistics returned by '
-                    'transitions.')
-            val = chain_stats[trans_key][stats_key][sample_index]
-            if stats_key not in monitor_dict:
-                monitor_dict[stats_key] = val
-            else:
-                monitor_dict[f'{trans_key}.{stats_key}'] = val
+    """Update dictionary of per-iteration monitored statistics."""
+    for (trans_key, stats_key) in monitor_stats:
+        if sample_index == 0 and not (trans_key in chain_stats and
+                                      stats_key in chain_stats[trans_key]):
+            raise KeyError(
+                f'Statistics key pair {(trans_key, stats_key)} to be monitored'
+                'is not present in chain statistics returned by transitions.')
+        val = chain_stats[trans_key][stats_key][sample_index]
+        if stats_key not in monitor_dict:
+            monitor_dict[stats_key] = val
+        else:
+            monitor_dict[f'{trans_key}.{stats_key}'] = val
 
 
 def _flush_memmap_chain_data(traces, chain_stats):
+    """Flush all pending writes to memory-mapped chain data arrays to disk."""
     for trace in traces.values():
         trace.flush()
     for trans_stats in chain_stats.values():
@@ -182,6 +285,7 @@ def _flush_memmap_chain_data(traces, chain_stats):
 
 
 def _try_resize_dim_0_inplace(array, new_shape_0):
+    """Try to resize 0-axis of array in-place or return a view otherwise."""
     if new_shape_0 >= array.shape[0]:
         return array
     try:
@@ -194,6 +298,7 @@ def _try_resize_dim_0_inplace(array, new_shape_0):
 
 
 def _truncate_chain_data(sample_index, traces, chain_stats):
+    """Truncate first dimension of chain arrays to sample_index < n_sample."""
     for key in traces:
         traces[key] = _try_resize_dim_0_inplace(traces[key], sample_index)
     for trans_stats in chain_stats.values():
@@ -205,6 +310,72 @@ def _truncate_chain_data(sample_index, traces, chain_stats):
 def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                   chain_index=0, parallel_chains=False, memmap_enabled=False,
                   memmap_path=None, monitor_stats=None):
+    """Sample a chain by iteratively appyling a sequence of transition kernels.
+
+    Args:
+        init_state (mici.states.ChainState or Dict[str, object]): Initial chain
+            state. Either a `mici.states.ChainState` object or a dictionary
+            with entries specifying initial values for all state variables used
+            by chain transition `sample` methods.
+        chain_iterator (Iterable[Tuple[int, Dict]]): Iterable object which
+            is iterated over to produce sample indices and (empty) iteration
+            statistic dictionaries to output monitored chain statistics to
+            during sampling.
+        rng (RandomState): Numpy RandomState random number generator.
+        transitions (OrderedDict[str, Transition]): Ordered dictionary of
+            Markov transitions kernels to sequentially sample from on each
+            chain iteration.
+        trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
+            List of functions which compute the variables to be recorded at
+            each chain iteration, with each trace function being passed the
+            current state and returning a dictionary of scalar or array values
+            corresponding to the variable(s) to be stored. The keys in the
+            returned dictionaries are used to index the trace arrays in the
+            returned traces dictionary. If a key appears in multiple
+            dictionaries only the the value corresponding to the last trace
+            function to return that key will be stored.
+        chain_index (int): Identifier for chain when sampling multiple chains.
+        parallel_chains (bool): Whether multiple chains are being sampled in
+            parallel.
+        memmap_enabled (bool): Whether to memory-map arrays used to store chain
+            data to files on disk to avoid excessive system memory usage for
+            long chains and/or large chain states. The chain data is written to
+            `.npy` files in the directory specified by `memmap_path` (or a
+            temporary directory if not provided). These files persist after the
+            termination of the function so should be manually deleted when no
+            longer required. Default is to for memory mapping to be disabled.
+        memmap_path (str): Path to directory to write memory-mapped chain data
+            to. If not provided, a temporary directory will be created and the
+            chain data written to files there.
+        monitor_stats (Iterable[Tuple[str, str]]): List of tuples of string key
+            pairs, with first entry the key of a Markov transition in the
+            `transitions` dict passed to the the `__init__` method and the
+            second entry the key of a chain statistic that will be returned in
+            the `chain_stats` dictionary. The mean over samples computed so far
+            of the chain statistics associated with any valid key-pairs will be
+            monitored during sampling by printing as postfix to progress bar.
+
+    Returns:
+        final_state (mici.states.ChainState): State of chain after final
+            iteration. May be used to resume sampling a chain by passing as the
+            initial state to a new `sample_chain` call.
+        traces (Dict[str, array]): Dictionary of chain trace arrays. Values in
+            dictionary are arrays of variables outputted by trace functions in
+            `trace_funcs` with leading dimension of array corresponding to the
+            sampling (draw) index. The key for each value is the corresponding
+            key in the dictionary returned by the trace function which computed
+            the traced value.
+        chain_stats (Dict[str, Dict[str, array]]): Dictionary of chain
+            transition statistic dictionaries. Values in outer dictionary are
+            dictionaries of statistics for each chain transition, keyed by the
+            string key for the transition. The values in each inner transition
+            dictionary are arrays of chain statistic values with the leading
+            dimension of each array corresponding to the sampling (draw) index.
+            The key for each value is a string description of the corresponding
+            integration transition statistic.
+        interrupted (bool): Whether sampling was manually interrupted before
+            all chain iterations were completed.
+    """
     state = _check_and_process_init_state(init_state, transitions)
     n_sample = len(chain_iterator)
     # Create temporary directory if memory mapping and no path provided
@@ -227,8 +398,9 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 for trace_func in trace_funcs:
                     for key, val in trace_func(state).items():
                         traces[key][sample_index] = val
-                _update_monitor_stats(
-                    sample_index, chain_stats, monitor_stats, monitor_dict)
+                if monitor_stats is not None:
+                    _update_monitor_stats(
+                        sample_index, chain_stats, monitor_stats, monitor_dict)
     except KeyboardInterrupt:
         interrupted = True
         if sample_index != n_sample:
@@ -246,12 +418,18 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
     if memmap_enabled:
         _flush_memmap_chain_data(traces, chain_stats)
     if parallel_chains and memmap_enabled:
-            traces = _memmaps_to_filenames(traces)
-            chain_stats = _memmaps_to_filenames(chain_stats)
+            traces = _memmaps_to_file_paths(traces)
+            chain_stats = _memmaps_to_file_paths(chain_stats)
     return state, traces, chain_stats, interrupted
 
 
 def _collate_chain_outputs(chain_outputs):
+    """Unzip list of tuples of chain outputs in to tuple of lists of outputs.
+
+    As well as collating chain outputs, any string file path values
+    corresponding to memmap file paths are swapped for the corresponding
+    memmap objects.
+    """
     final_states_stack = []
     traces_stack = {}
     chain_stats_stack = {}
@@ -280,6 +458,15 @@ def _collate_chain_outputs(chain_outputs):
 
 
 def _get_per_chain_rngs(base_rng, n_chain):
+    """Construct random number generators (RNGs) for each of a set of chains.
+
+    Preferentially use the `jump` method of base RNGs which support it to
+    produce independent random substreams from the base RNG, otherwise if
+    `randomgen` is available the base RNG is used to seed a new
+    `randomgen.Xorshift1024` RNG and this used to generate independent
+    substreams. As a fallback, a set of `numpy.Randomstate` objects with
+    seeds independently generate from the base RNG is used.
+    """
     if hasattr(base_rng, 'jump'):
         return [base_rng.jump(i).generator for i in range(n_chain)]
     elif RANDOMGEN_AVAILABLE:
@@ -293,6 +480,7 @@ def _get_per_chain_rngs(base_rng, n_chain):
 
 
 def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
+    """Sample multiple chains sequentially in a single process."""
     chain_outputs = []
     for chain_index, (init_state, rng, chain_iterator) in enumerate(
             zip(init_states, rngs, chain_iterators)):
@@ -306,6 +494,11 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
 
 
 def _sample_chains_worker(chain_queue, iter_queue):
+    """Worker process function for parallel sampling of chains.
+
+    Consumes chain arguments from a shared queue and outputs chain progress
+    updates to a second shared queue.
+    """
     chain_outputs = []
     while not chain_queue.empty():
         try:
@@ -313,7 +506,7 @@ def _sample_chains_worker(chain_queue, iter_queue):
                 block=False)
             *outputs, interrupted = _sample_chain(
                 init_state=init_state, rng=rng, chain_index=chain_index,
-                chain_iterator=progressbars._ProxyProgressBar(
+                chain_iterator=_ProxyProgressBar(
                     n_sample, chain_index, iter_queue),
                 parallel_chains=True, **kwargs)
             chain_outputs.append((chain_index, outputs))
@@ -328,21 +521,35 @@ def _sample_chains_worker(chain_queue, iter_queue):
 
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                             **kwargs):
+    """Sample multiple chains in parallel over multiple processes."""
     chain_outputs = []
     n_samples = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
     with ignore_sigint_manager() as manager, Pool(n_process) as pool:
         try:
+            # Shared queue for workers to output chain progress updates to
             iter_queue = manager.Queue()
+            # Shared queue for workers to get arguments for _sample_chain calls
+            # from on initialising each chain
             chain_queue = manager.Queue()
             for c, (init_state, rng, n_sample) in enumerate(
                     zip(init_states, rngs, n_samples)):
                 chain_queue.put((c, init_state, rng, n_sample, kwargs))
+            # Start n_process worker processes which each have access to the
+            # shared queues, returning results asynchronously
             results = pool.starmap_async(
                 _sample_chains_worker,
                 [(chain_queue, iter_queue) for p in range(n_process)])
+            # Start loop to use chain progress updates outputted to iter_queue
+            # by worker processes to update progress bars, using an ExitStack
+            # to ensure all progress bars are context managed so that they
+            # are closed properly on for example manual interrupts
             with ExitStack() as stack:
                 pbars = [stack.enter_context(it) for it in chain_iterators]
+                # Deadlock seems to occur when directly using results.ready()
+                # method to check if all chains completed sampling in
+                # while loop condition therefore manually keep track of
+                # number of completed chains
                 chains_completed = 0
                 while not (iter_queue.empty() and chains_completed == n_chain):
                     chain_index, sample_index, data_dict = iter_queue.get()
@@ -350,7 +557,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                     if sample_index == n_samples[chain_index]:
                         chains_completed += 1
         except KeyboardInterrupt:
-            # Handled in child processes
+            # Interrupts handled in child processes therefore ignore here
             pass
         except PicklingError as e:
             if not MULTIPROCESS_AVAILABLE:
@@ -371,7 +578,10 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
             else:
                 raise e
         finally:
+            # Join all output lists from per-process workers in to single list
             indexed_chain_outputs = sum((res for res in results.get()), [])
+            # Sort list by chain index (first element of tuple entries) and
+            # then create new list with chain index removed
             chain_outputs = [outp for i, outp in sorted(indexed_chain_outputs)]
     return _collate_chain_outputs(chain_outputs)
 
@@ -400,7 +610,7 @@ class MarkovChainMonteCarloMethod(object):
         if kwargs['memmap_enabled'] and kwargs.get('memmap_path') is None:
             kwargs['memmap_path'] = tempfile.mkdtemp()
         if 'progress_bar_class' not in kwargs:
-            kwargs['progress_bar_class'] = progressbars.ProgressBar
+            kwargs['progress_bar_class'] = ProgressBar
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -444,7 +654,7 @@ class MarkovChainMonteCarloMethod(object):
                 returned in the `chain_stats` dictionary. The mean over samples
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
-                as postfix to progress bar (if `tqdm` is installed).
+                as postfix to progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
@@ -530,7 +740,7 @@ class MarkovChainMonteCarloMethod(object):
                 returned in the `chain_stats` dictionary. The mean over samples
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
-                as postfix to progress bar (if `tqdm` is installed).
+                as postfix to progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
@@ -635,7 +845,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         self.system = system
         self.rng = rng
         if momentum_transition is None:
-            momentum_transition = trans.IndependentMomentumTransition(system)
+            momentum_transition = IndependentMomentumTransition(system)
         super().__init__(rng, OrderedDict(
             momentum_transition=momentum_transition,
             integration_transition=integration_transition))
@@ -706,9 +916,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 and the chain data written to files there.
             monitor_stats (Iterable[str]): List of string keys of chain
                 statistics to monitor mean of over samples computed so far
-                during sampling by printing as postfix to progress bar (if
-                `tqdm` is installed). Default is to print only the mean
-                `accept_prob` statistic.
+                during sampling by printing as postfix to progress bar. Default
+                is to print only the mean `accept_prob` statistic.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
@@ -785,9 +994,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 and the chain data written to files there.
             monitor_stats (Iterable[str]): List of string keys of chain
                 statistics to monitor mean of over samples computed so far
-                during sampling by printing as postfix to progress bar (if
-                `tqdm` is installed). Default is to print only the mean
-                `accept_prob` statistic.
+                during sampling by printing as postfix to progress bar. Default
+                is to print only the mean `accept_prob` statistic.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
                 progress. Defaults to `mici.progressbars.ProgressBar`.
@@ -864,7 +1072,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = trans.MetropolisStaticIntegrationTransition(
+        integration_transition = MetropolisStaticIntegrationTransition(
             system, integrator, n_step)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -931,7 +1139,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = trans.MetropolisRandomIntegrationTransition(
+        integration_transition = MetropolisRandomIntegrationTransition(
             system, integrator, n_step_range)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -971,7 +1179,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=trans.riemannian_no_u_turn_criterion,
+                 termination_criterion=riemannian_no_u_turn_criterion,
                  momentum_transition=None):
         """
         Args:
@@ -1003,7 +1211,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = trans.MultinomialDynamicIntegrationTransition(
+        integration_transition = MultinomialDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
             termination_criterion)
         super().__init__(system, rng, integration_transition,

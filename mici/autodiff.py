@@ -39,17 +39,17 @@ def autodiff_fallback(diff_func, func, diff_op_name, name):
     implementation of the derivative function has not been provided.
 
     Args:
-        diff_func (callable or None): Either a callable implementing the
+        diff_func (None or Callable): Either a callable implementing the
             required derivative function or `None` if none was provided.
-        func (callable): Function to differentiate.
-        diff_op_name (string): String specifying name of differential operator
+        func (Callable): Function to differentiate.
+        diff_op_name (str): String specifying name of differential operator
             from automatic differentiation framework wrapper to use to generate
             required derivative function.
-        name (string): Name of derivative function to use in error message.
+        name (str): Name of derivative function to use in error message.
 
     Returns:
-        `diff_func` value if not `None` otherwise generated derivative of
-        `func` by applying named differential operator.
+        Callable: `diff_func` value if not `None` otherwise generated
+            derivative of `func` by applying named differential operator.
     """
     if diff_func is not None:
         return diff_func

@@ -200,6 +200,13 @@ class EuclideanMetricSystem(System):
     \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
     where \(q\) and \(p\) are the position and momentum variables respectively.
+
+    The \(h_1\) Hamiltonian component function is
+
+    \[ h_1(q) = \ell(q) \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of
+    the target distribution with respect to the Lebesgue measure.
     """
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
@@ -278,15 +285,21 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     Gaussian measure on the position space (with identity covariance and zero
     mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
-    Lebesgue measure on the position space. The Hamiltonian component function
-    \(h_2\) is therefore assumed to have the form
+    Lebesgue measure on the position space, i.e.
+
+    \[ h_1(q) = \ell(q) - \frac{1}{2} q^T q \]
+
+    where \(q\) is the position and \(\ell(q)\) is the negative log
+    (unnormalised) density of the target distribution with respect to the
+    Lebesgue measure at \(q\). The Hamiltonian  component function \(h_2\) is
+    then assumed to have the form
 
     \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively.
-    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
-    can be solved for analytically, allowing an integrator to be defined using
-    this alternative splitting of the Hamiltonian [1].
+    where \(p\) is the momentum. In this case the Hamiltonian flow due to the
+    quadratic \(h_2\) component can be solved for analytically, allowing an
+    integrator to be defined using this alternative splitting of the
+    Hamiltonian [1].
 
     References:
 
@@ -499,15 +512,27 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
 
 
 class RiemannianMetricSystem(System):
-    """Riemannian Hamiltonian system with a position dependent metric tensor.
+    r"""Riemannian Hamiltonian system with a position-dependent metric.
 
-    The momentum variables are assumed to have a zero-mean Gaussian conditional
-    distribution given the position variables, with covariance specified by a
-    position dependent positive-definite metric tensor [1]. Due to the coupling
-    between the position and momentum variables in the quadratic form of the
-    negative log density of the Gaussian conditional distribution on the
-    momentum variables, the Hamiltonian system is non-separable, requiring use
-    of a numerical integrator with implicit steps.
+    The position space is assumed to be a Riemannian manifold with a metric
+    with position-dependent positive definite matrix-representation \(M(q)\)
+    where \(q\) is a position vector. The momentum \(p\) is then taken to have
+    a zero-mean Gaussian conditional distribution given the position \(q\),
+    with covariance \(M(q)\), i.e. $\(p \sim \mathcal{N}(0, M(q))\) [1].
+
+    The \(h_1\) Hamiltonian component is then
+
+    \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of the target
+    distribution with respect to the Lebesgue measure at \(q\). The \(h_2\)
+    Hamiltonian component is
+
+    \[ h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. \]
+
+    Due to the coupling between the position and momentum variables in \(h_2\),
+    the Hamiltonian system is non-separable, requiring use of a numerical
+    integrator with implicit steps.
 
     References:
 

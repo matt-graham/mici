@@ -184,7 +184,7 @@ class ProgressBar(BaseProgressBar):
 
     @property
     def iter_rate(self):
-        """Mean iteration rate if >= 1 it/s or reciprocal s/it as string."""
+        """Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string."""
         if self.prop_complete == 0:
             return '?'
         else:
@@ -314,7 +314,7 @@ class ProgressBar(BaseProgressBar):
     def _repr_html_(self):
         return f'''
         <div style="line-height: var(--jp-widgets-inline-height); width: 100%;
-                     display: flex; flex-flow: row wrap; align-items: center;
+                    display: flex; flex-flow: row wrap; align-items: center;
                     position: relative; margin: var(--jp-widgets-margin);">
           <label style="margin-right: calc(var(--jp-widgets-inline-margin)*2);
                         flex-shrink: 0; font-size: var(--jp-code-font-size);
