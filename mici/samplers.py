@@ -142,7 +142,7 @@ def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
     chain_stats = {}
     for trans_key, trans in transitions.items():
         chain_stats[trans_key] = {}
-        if hasattr(trans, 'statistic_types'):
+        if trans.statistic_types is not None:
             for key, (dtype, val) in trans.statistic_types.items():
                 if memmap_enabled:
                     filename = _generate_memmap_filename(

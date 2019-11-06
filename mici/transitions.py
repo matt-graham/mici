@@ -1,6 +1,6 @@
 """Markov transition kernels."""
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from functools import partial
 import logging
 import numpy as np
@@ -11,13 +11,55 @@ from mici.errors import (
 logger = logging.getLogger(__name__)
 
 
-class MomentumTransition(ABC):
+class Transition(ABC):
+    """Base class for Markov transition kernels.
+
+    Defines expected interface for transitions by sampler classes.
+    """
+
+    @abstractproperty
+    def state_variables(self):
+        """A set of names of state variables accessed by this transition."""
+
+    @abstractproperty
+    def statistic_types(self):
+        """A dictionary describing the statistics computed during transition.
+
+        Either `None` if no statistics are returned by `sample` method or
+        a dictionary with string keys and tuple values, with the keys defining
+        the keys of the statistics returned in the `trans_stats` return value
+        of the `sample` method and the first entry of the value tuples an
+        appropriate NumPy `dtype` for the array used to store the corresponding
+        statistic values and second entry the default value to initialise this
+        array with.
+        """
+
+    @abstractmethod
+    def sample(self, state, rng):
+        """Sample a new chain state from the Markov transition kernel.
+
+        Args:
+            state (mici.states.ChainState): Current chain state to condition
+                transition kernel on.
+            rng (RandomState): NumPy RandomState random number generator.
+
+        Returns:
+            state (mici.states.ChainState): Updated state object.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
+        """
+
+
+class MomentumTransition(Transition):
     """Base class for momentum transitions.
 
     Markov transition  kernel which leaves the conditional distribution on the
     momentum under the canonical distribution invariant, updating only the
     momentum component of the chain state.
     """
+
+    state_variables = {'mom'}
+    statistic_types = None
 
     def __init__(self, system):
         """
@@ -26,7 +68,6 @@ class MomentumTransition(ABC):
                 conditional distribution on momentum to leave invariant.
         """
         self.system = system
-        self.state_variables = {'mom'}
 
     @abstractmethod
     def sample(self, state, rng):
@@ -114,7 +155,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
         return state, None
 
 
-class IntegrationTransition(ABC):
+class IntegrationTransition(Transition):
     """Base class for integration transtions.
 
     Markov transition kernel which leaves canonical distribution invariant and
@@ -122,6 +163,15 @@ class IntegrationTransition(ABC):
     integrating the Hamiltonian dynamics of the system to propose new values
     for the state.
     """
+
+    state_variables = {'pos', 'mom', 'dir'}
+    statistic_types = {
+        'hamiltonian': (np.float64, np.nan),
+        'n_step': (np.int64, -1),
+        'accept_prob': (np.float64, np.nan),
+        'non_reversible_step': (np.bool, False),
+        'convergence_error': (np.bool, False)
+    }
 
     def __init__(self, system, integrator):
         """
@@ -132,14 +182,6 @@ class IntegrationTransition(ABC):
         """
         self.system = system
         self.integrator = integrator
-        self.statistic_types = {
-            'hamiltonian': (np.float64, np.nan),
-            'n_step': (np.int64, -1),
-            'accept_prob': (np.float64, np.nan),
-            'non_reversible_step': (np.bool, False),
-            'convergence_error': (np.bool, False)
-        }
-        self.state_variables = {'pos', 'mom', 'dir'}
 
     @abstractmethod
     def sample(self, state, rng):
