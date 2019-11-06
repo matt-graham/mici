@@ -518,7 +518,7 @@ class RiemannianMetricSystem(System):
     with position-dependent positive definite matrix-representation \(M(q)\)
     where \(q\) is a position vector. The momentum \(p\) is then taken to have
     a zero-mean Gaussian conditional distribution given the position \(q\),
-    with covariance \(M(q)\), i.e. $\(p \sim \mathcal{N}(0, M(q))\) [1].
+    with covariance \(M(q)\), i.e. \(p \sim \mathcal{N}(0, M(q))\) [1].
 
     The \(h_1\) Hamiltonian component is then
 

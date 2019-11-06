@@ -103,7 +103,7 @@ def _open_new_memmap(file_path, shape, default_val, dtype):
 def _memmaps_to_file_paths(obj):
     """Convert memmap objects to corresponding file paths.
 
-    Acts recursively on arbitrarily 'pytree' of nested dict/tuple/lists with
+    Acts recursively on arbitrary 'pytrees' of nested dict/tuple/lists with
     memmap leaves.
 
     Arg:

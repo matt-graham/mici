@@ -44,8 +44,8 @@ class MomentumTransition(ABC):
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
         """
 
 
@@ -153,8 +153,8 @@ class IntegrationTransition(ABC):
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric]): A dictionary of statistics
+                computed during the transition to be recorded.
         """
 
 
