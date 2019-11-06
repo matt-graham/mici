@@ -100,6 +100,8 @@ class CorrelatedMomentumTransition(MomentumTransition):
                 momentum resampling coefficient.
         """
         super().__init__(system)
+        assert mom_resample_coeff >= 0 and mom_resample_coeff <= 1, (
+            'mom_resample_coeff should have a value in the interval [0, 1].')
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(self, state, rng):
