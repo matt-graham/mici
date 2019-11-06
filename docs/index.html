@@ -14,7 +14,7 @@
   <style type="text/css">
 a.sourceLine { display: inline-block; line-height: 1.25; }
 a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; position: absolute; }
+a.sourceLine:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
@@ -27,13 +27,11 @@ code.sourceCode { white-space: pre-wrap; }
 a.sourceLine { text-indent: -1em; padding-left: 1em; }
 }
 pre.numberSource a.sourceLine
-  { position: relative; }
-pre.numberSource a.sourceLine:empty
-  { position: absolute; }
+  { position: relative; left: -4em; }
 pre.numberSource a.sourceLine::before
   { content: attr(data-line-number);
-    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all;
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -86,10 +84,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><a href="#features">Features</a></li>
 <li><a href="#installation">Installation</a></li>
-<li><a href="#why-mici">Why Mici?</a></li>
+<li><a href="#why-mici?">Why Mici?</a></li>
 <li><a href="#related-projects">Related projects</a></li>
 <li><a href="#overview-of-package">Overview of package</a></li>
-<li><a href="#example-sampling-on-a-torus">Example: sampling on a torus</a></li>
+<li><a href="#example:-sampling-on-a-torus">Example: sampling on a torus</a></li>
 <li><a href="#references">References</a></li>
 </ul>
 </nav>
@@ -126,7 +124,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="https://github.com/bashtage/randomgen">RandomGen</a>: if RandomGen is available the <code>randomgen.Xorshift1024</code> random number generator will be used when running multiple chains in parallel, with the <code>jump</code> method of the object used to reproducibly generate independent substreams. RandomGen can be installed alongside Mici by running <code>pip install mici[randomgen]</code>.</li>
 <li><a href="https://arviz-devs.github.io/arviz/index.html#">ArviZ</a>: if ArviZ is available outputs of a sampling run can be converted to an <code>arviz.InferenceData</code> container object, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.</li>
 </ul>
-<h2 id="why-mici">Why Mici?</h2>
+<h2 id="why-mici?">Why Mici?</h2>
 <p>Mici is named for <a href="https://en.wikipedia.org/wiki/Augusta_H._Teller">Augusta 'Mici' Teller</a>, who along with <a href="https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth">Arriana Rosenbluth</a> developed the code for the <a href="https://en.wikipedia.org/wiki/MANIAC_I">MANIAC I</a> computer used in the seminal paper <a href="https://doi.org/10.1063%2F1.1699114"><em>Equations of State Calculations by Fast Computing Machines</em></a> which introduced the first example of a Markov chain Monte Carlo method.</p>
 <h2 id="related-projects">Related projects</h2>
 <p>Other Python packages for performing MCMC inference include <a href="https://github.com/pymc-devs/pymc3">PyMC3</a>, <a href="https://github.com/stan-dev/pystan">PyStan</a> (the Python interface to <a href="http://mc-stan.org/">Stan</a>), <a href="https://github.com/pyro-ppl/pyro">Pyro</a> / <a href="https://github.com/pyro-ppl/numpyro">NumPyro</a>, <a href="https://github.com/tensorflow/probability">TensorFlow Probability</a>, <a href="https://github.com/dfm/emcee">emcee</a> and <a href="https://github.com/mcleonard/sampyl">Sampyl</a>.</p>
@@ -154,7 +152,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>RandomMetropolisHMC</code> - Random integration time Hamiltonian Monte Carlo with Metropolis accept step (<a href="#mackenzie1989improved">Mackenzie, 1989</a>),</li>
 <li><code>DynamicMultinomialHMC</code> - Dynamic integration time Hamiltonian Monte Carlo with multinomial sampling from trajectory (<a href="#hoffman2014nouturn">Hoffman and Gelman, 2014</a>; <a href="#betancourt2017conceptual">Betancourt, 2017</a>).</li>
 </ul>
-<h2 id="example-sampling-on-a-torus">Example: sampling on a torus</h2>
+<h2 id="example:-sampling-on-a-torus">Example: sampling on a torus</h2>
 <img src='images/torus-samples.gif' width='360px'/>
 
 <p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using <code>multiprocess</code> and use <code>matplotlib</code> to plot the samples.</p>

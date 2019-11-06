@@ -25,11 +25,11 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L0-L492" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L0-L536" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Markov transition kernels.&#34;&#34;&#34;
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from functools import partial
 import logging
 import numpy as np
@@ -40,13 +40,55 @@ from mici.errors import (
 logger = logging.getLogger(__name__)
 
 
-class MomentumTransition(ABC):
+class Transition(ABC):
+    &#34;&#34;&#34;Base class for Markov transition kernels.
+
+    Defines expected interface for transitions by sampler classes.
+    &#34;&#34;&#34;
+
+    @abstractproperty
+    def state_variables(self):
+        &#34;&#34;&#34;A set of names of state variables accessed by this transition.&#34;&#34;&#34;
+
+    @abstractproperty
+    def statistic_types(self):
+        &#34;&#34;&#34;A dictionary describing the statistics computed during transition.
+
+        Either `None` if no statistics are returned by `sample` method or
+        a dictionary with string keys and tuple values, with the keys defining
+        the keys of the statistics returned in the `trans_stats` return value
+        of the `sample` method and the first entry of the value tuples an
+        appropriate NumPy `dtype` for the array used to store the corresponding
+        statistic values and second entry the default value to initialise this
+        array with.
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def sample(self, state, rng):
+        &#34;&#34;&#34;Sample a new chain state from the Markov transition kernel.
+
+        Args:
+            state (mici.states.ChainState): Current chain state to condition
+                transition kernel on.
+            rng (RandomState): NumPy RandomState random number generator.
+
+        Returns:
+            state (mici.states.ChainState): Updated state object.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
+        &#34;&#34;&#34;
+
+
+class MomentumTransition(Transition):
     &#34;&#34;&#34;Base class for momentum transitions.
 
     Markov transition  kernel which leaves the conditional distribution on the
     momentum under the canonical distribution invariant, updating only the
     momentum component of the chain state.
     &#34;&#34;&#34;
+
+    state_variables = {&#39;mom&#39;}
+    statistic_types = None
 
     def __init__(self, system):
         &#34;&#34;&#34;
@@ -55,7 +97,6 @@ class MomentumTransition(ABC):
                 conditional distribution on momentum to leave invariant.
         &#34;&#34;&#34;
         self.system = system
-        self.state_variables = {&#39;mom&#39;}
 
     @abstractmethod
     def sample(self, state, rng):
@@ -73,8 +114,8 @@ class MomentumTransition(ABC):
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
         &#34;&#34;&#34;
 
 
@@ -129,6 +170,8 @@ class CorrelatedMomentumTransition(MomentumTransition):
                 momentum resampling coefficient.
         &#34;&#34;&#34;
         super().__init__(system)
+        assert mom_resample_coeff &gt;= 0 and mom_resample_coeff &lt;= 1, (
+            &#39;mom_resample_coeff should have a value in the interval [0, 1].&#39;)
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(self, state, rng):
@@ -141,7 +184,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
         return state, None
 
 
-class IntegrationTransition(ABC):
+class IntegrationTransition(Transition):
     &#34;&#34;&#34;Base class for integration transtions.
 
     Markov transition kernel which leaves canonical distribution invariant and
@@ -149,6 +192,15 @@ class IntegrationTransition(ABC):
     integrating the Hamiltonian dynamics of the system to propose new values
     for the state.
     &#34;&#34;&#34;
+
+    state_variables = {&#39;pos&#39;, &#39;mom&#39;, &#39;dir&#39;}
+    statistic_types = {
+        &#39;hamiltonian&#39;: (np.float64, np.nan),
+        &#39;n_step&#39;: (np.int64, -1),
+        &#39;accept_prob&#39;: (np.float64, np.nan),
+        &#39;non_reversible_step&#39;: (np.bool, False),
+        &#39;convergence_error&#39;: (np.bool, False)
+    }
 
     def __init__(self, system, integrator):
         &#34;&#34;&#34;
@@ -159,14 +211,6 @@ class IntegrationTransition(ABC):
         &#34;&#34;&#34;
         self.system = system
         self.integrator = integrator
-        self.statistic_types = {
-            &#39;hamiltonian&#39;: (np.float64, np.nan),
-            &#39;n_step&#39;: (np.int64, -1),
-            &#39;accept_prob&#39;: (np.float64, np.nan),
-            &#39;non_reversible_step&#39;: (np.bool, False),
-            &#39;convergence_error&#39;: (np.bool, False)
-        }
-        self.state_variables = {&#39;pos&#39;, &#39;mom&#39;, &#39;dir&#39;}
 
     @abstractmethod
     def sample(self, state, rng):
@@ -182,8 +226,8 @@ class IntegrationTransition(ABC):
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric]): A dictionary of statistics
+                computed during the transition to be recorded.
         &#34;&#34;&#34;
 
 
@@ -433,7 +477,7 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += state.mom
+                sum_mom += np.asarray(state.mom)
                 sum_weight += LogRepFloat(log_val=-h)
                 stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
                 stats[&#39;n_step&#39;] += 1
@@ -479,7 +523,7 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
 
     def sample(self, state, rng):
         h_init = self.system.h(state)
-        sum_mom = state.mom.copy()
+        sum_mom = np.asarray(state.mom).copy()
         sum_weight = LogRepFloat(log_val=-h_init)
         stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
         state_n, state_l, state_r = state, state.copy(), state.copy()
@@ -564,7 +608,7 @@ Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L277-L303" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L321-L347" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     &#34;&#34;&#34;No-U-turn termination criterion for Euclidean manifolds [1].
@@ -634,7 +678,7 @@ manifolds. arXiv preprint arXiv:1304.1920.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L306-L336" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L350-L380" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     &#34;&#34;&#34;Generalised no-U-turn termination criterion on Riemannian manifolds [2].
@@ -674,6 +718,156 @@ manifolds. arXiv preprint arXiv:1304.1920.</li>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="mici.transitions.Transition"><code class="flex name class">
+<span>class <span class="ident">Transition</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for Markov transition kernels.</p>
+<p>Defines expected interface for transitions by sampler classes.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L14-L50" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class Transition(ABC):
+    &#34;&#34;&#34;Base class for Markov transition kernels.
+
+    Defines expected interface for transitions by sampler classes.
+    &#34;&#34;&#34;
+
+    @abstractproperty
+    def state_variables(self):
+        &#34;&#34;&#34;A set of names of state variables accessed by this transition.&#34;&#34;&#34;
+
+    @abstractproperty
+    def statistic_types(self):
+        &#34;&#34;&#34;A dictionary describing the statistics computed during transition.
+
+        Either `None` if no statistics are returned by `sample` method or
+        a dictionary with string keys and tuple values, with the keys defining
+        the keys of the statistics returned in the `trans_stats` return value
+        of the `sample` method and the first entry of the value tuples an
+        appropriate NumPy `dtype` for the array used to store the corresponding
+        statistic values and second entry the default value to initialise this
+        array with.
+        &#34;&#34;&#34;
+
+    @abstractmethod
+    def sample(self, state, rng):
+        &#34;&#34;&#34;Sample a new chain state from the Markov transition kernel.
+
+        Args:
+            state (mici.states.ChainState): Current chain state to condition
+                transition kernel on.
+            rng (RandomState): NumPy RandomState random number generator.
+
+        Returns:
+            state (mici.states.ChainState): Updated state object.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
+        &#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></li>
+<li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.transitions.Transition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<section class="desc"><p>A set of names of state variables accessed by this transition.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L20-L22" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractproperty
+def state_variables(self):
+    &#34;&#34;&#34;A set of names of state variables accessed by this transition.&#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="mici.transitions.Transition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<section class="desc"><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <code>None</code> if no statistics are returned by <code>sample</code> method or
+a dictionary with string keys and tuple values, with the keys defining
+the keys of the statistics returned in the <code>trans_stats</code> return value
+of the <code>sample</code> method and the first entry of the value tuples an
+appropriate NumPy <code>dtype</code> for the array used to store the corresponding
+statistic values and second entry the default value to initialise this
+array with.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L24-L35" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractproperty
+def statistic_types(self):
+    &#34;&#34;&#34;A dictionary describing the statistics computed during transition.
+
+    Either `None` if no statistics are returned by `sample` method or
+    a dictionary with string keys and tuple values, with the keys defining
+    the keys of the statistics returned in the `trans_stats` return value
+    of the `sample` method and the first entry of the value tuples an
+    appropriate NumPy `dtype` for the array used to store the corresponding
+    statistic values and second entry the default value to initialise this
+    array with.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.Transition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a new chain state from the Markov transition kernel.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Current chain state to condition
+transition kernel on.</dd>
+<dt><strong><code>rng</code></strong> :&ensp;<code>RandomState</code></dt>
+<dd>NumPy RandomState random number generator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Updated state object.</dd>
+<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>numeric</code>] or <code>None</code></dt>
+<dd>Any statistics computed
+during the transition or <code>None</code> if no statistics.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L37-L50" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def sample(self, state, rng):
+    &#34;&#34;&#34;Sample a new chain state from the Markov transition kernel.
+
+    Args:
+        state (mici.states.ChainState): Current chain state to condition
+            transition kernel on.
+        rng (RandomState): NumPy RandomState random number generator.
+
+    Returns:
+        state (mici.states.ChainState): Updated state object.
+        trans_stats (Dict[str, numeric] or None): Any statistics computed
+            during the transition or `None` if no statistics.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="mici.transitions.MomentumTransition"><code class="flex name class">
 <span>class <span class="ident">MomentumTransition</span></span>
 <span>(</span><span>system)</span>
@@ -693,15 +887,18 @@ conditional distribution on momentum to leave invariant.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L14-L49" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L53-L90" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class MomentumTransition(ABC):
+<pre><code class="python">class MomentumTransition(Transition):
     &#34;&#34;&#34;Base class for momentum transitions.
 
     Markov transition  kernel which leaves the conditional distribution on the
     momentum under the canonical distribution invariant, updating only the
     momentum component of the chain state.
     &#34;&#34;&#34;
+
+    state_variables = {&#39;mom&#39;}
+    statistic_types = None
 
     def __init__(self, system):
         &#34;&#34;&#34;
@@ -710,7 +907,6 @@ conditional distribution on momentum to leave invariant.</dd>
                 conditional distribution on momentum to leave invariant.
         &#34;&#34;&#34;
         self.system = system
-        self.state_variables = {&#39;mom&#39;}
 
     @abstractmethod
     def sample(self, state, rng):
@@ -728,12 +924,13 @@ conditional distribution on momentum to leave invariant.</dd>
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric] or None): Any statistics computed
+                during the transition or `None` if no statistics.
         &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
@@ -741,6 +938,23 @@ conditional distribution on momentum to leave invariant.</dd>
 <li><a title="mici.transitions.IndependentMomentumTransition" href="#mici.transitions.IndependentMomentumTransition">IndependentMomentumTransition</a></li>
 <li><a title="mici.transitions.CorrelatedMomentumTransition" href="#mici.transitions.CorrelatedMomentumTransition">CorrelatedMomentumTransition</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.MomentumTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<section class="desc"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object</p>
+<p>Build an unordered collection of unique elements.</p></section>
+</dd>
+<dt id="mici.transitions.MomentumTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></code>.<code><a title="mici.transitions.Transition.statistic_types" href="#mici.transitions.Transition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>A dictionary describing the statistics computed during transition …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.MomentumTransition.sample"><code class="name flex">
@@ -764,14 +978,14 @@ momentum (momentum updated in place).</dd>
 <dl>
 <dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
 <dd>Updated state object.</dd>
-<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code> or <code>None</code></dt>
-<dd>Any statistics computed during the
-transition to be recorded or <code>None</code> if no statistics.</dd>
+<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>numeric</code>] or <code>None</code></dt>
+<dd>Any statistics computed
+during the transition or <code>None</code> if no statistics.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L31-L49" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L72-L90" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample(self, state, rng):
@@ -789,8 +1003,8 @@ def sample(self, state, rng):
 
     Returns:
         state (mici.states.ChainState): Updated state object.
-        trans_stats (Dict or None): Any statistics computed during the
-            transition to be recorded or `None` if no statistics.
+        trans_stats (Dict[str, numeric] or None): Any statistics computed
+            during the transition or `None` if no statistics.
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
@@ -813,7 +1027,7 @@ conditional distribution on momentum to leave invariant.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L52-L61" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L93-L102" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class IndependentMomentumTransition(MomentumTransition):
     &#34;&#34;&#34;Independent momentum transition.
@@ -829,8 +1043,32 @@ conditional distribution on momentum to leave invariant.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.IndependentMomentumTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></code>.<code><a title="mici.transitions.MomentumTransition.state_variables" href="#mici.transitions.MomentumTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.transitions.IndependentMomentumTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></code>.<code><a title="mici.transitions.Transition.statistic_types" href="#mici.transitions.Transition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>A dictionary describing the statistics computed during transition …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.IndependentMomentumTransition.sample"><code class="name flex">
@@ -845,7 +1083,7 @@ conditional distribution on momentum to leave invariant.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L59-L61" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L100-L102" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     state.mom = self.system.sample_momentum(state, rng)
@@ -896,7 +1134,7 @@ momentum resampling coefficient.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L64-L112" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L105-L155" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CorrelatedMomentumTransition(MomentumTransition):
     &#34;&#34;&#34;Correlated (partial) momentum transition.
@@ -937,6 +1175,8 @@ momentum resampling coefficient.</dd>
                 momentum resampling coefficient.
         &#34;&#34;&#34;
         super().__init__(system)
+        assert mom_resample_coeff &gt;= 0 and mom_resample_coeff &lt;= 1, (
+            &#39;mom_resample_coeff should have a value in the interval [0, 1].&#39;)
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(self, state, rng):
@@ -951,8 +1191,32 @@ momentum resampling coefficient.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.CorrelatedMomentumTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></code>.<code><a title="mici.transitions.MomentumTransition.state_variables" href="#mici.transitions.MomentumTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.transitions.CorrelatedMomentumTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></code>.<code><a title="mici.transitions.Transition.statistic_types" href="#mici.transitions.Transition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>A dictionary describing the statistics computed during transition …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.CorrelatedMomentumTransition.sample"><code class="name flex">
@@ -967,7 +1231,7 @@ momentum resampling coefficient.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L105-L112" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L148-L155" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     if self.mom_resample_coeff == 1:
@@ -1002,9 +1266,9 @@ appropriate to the specified Hamiltonian system.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L115-L158" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L158-L202" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class IntegrationTransition(ABC):
+<pre><code class="python">class IntegrationTransition(Transition):
     &#34;&#34;&#34;Base class for integration transtions.
 
     Markov transition kernel which leaves canonical distribution invariant and
@@ -1012,6 +1276,15 @@ appropriate to the specified Hamiltonian system.</dd>
     integrating the Hamiltonian dynamics of the system to propose new values
     for the state.
     &#34;&#34;&#34;
+
+    state_variables = {&#39;pos&#39;, &#39;mom&#39;, &#39;dir&#39;}
+    statistic_types = {
+        &#39;hamiltonian&#39;: (np.float64, np.nan),
+        &#39;n_step&#39;: (np.int64, -1),
+        &#39;accept_prob&#39;: (np.float64, np.nan),
+        &#39;non_reversible_step&#39;: (np.bool, False),
+        &#39;convergence_error&#39;: (np.bool, False)
+    }
 
     def __init__(self, system, integrator):
         &#34;&#34;&#34;
@@ -1022,14 +1295,6 @@ appropriate to the specified Hamiltonian system.</dd>
         &#34;&#34;&#34;
         self.system = system
         self.integrator = integrator
-        self.statistic_types = {
-            &#39;hamiltonian&#39;: (np.float64, np.nan),
-            &#39;n_step&#39;: (np.int64, -1),
-            &#39;accept_prob&#39;: (np.float64, np.nan),
-            &#39;non_reversible_step&#39;: (np.bool, False),
-            &#39;convergence_error&#39;: (np.bool, False)
-        }
-        self.state_variables = {&#39;pos&#39;, &#39;mom&#39;, &#39;dir&#39;}
 
     @abstractmethod
     def sample(self, state, rng):
@@ -1045,12 +1310,13 @@ appropriate to the specified Hamiltonian system.</dd>
 
         Returns:
             state (mici.states.ChainState): Updated state object.
-            trans_stats (Dict or None): Any statistics computed during the
-                transition to be recorded or `None` if no statistics.
+            trans_stats (Dict[str, numeric]): A dictionary of statistics
+                computed during the transition to be recorded.
         &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1058,6 +1324,29 @@ appropriate to the specified Hamiltonian system.</dd>
 <li><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></li>
 <li><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.IntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<section class="desc"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object</p>
+<p>Build an unordered collection of unique elements.</p></section>
+</dd>
+<dt id="mici.transitions.IntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<section class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.IntegrationTransition.sample"><code class="name flex">
@@ -1079,14 +1368,14 @@ corresponding to the Hamiltonian system invariant.</p>
 <dl>
 <dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
 <dd>Updated state object.</dd>
-<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code> or <code>None</code></dt>
-<dd>Any statistics computed during the
-transition to be recorded or <code>None</code> if no statistics.</dd>
+<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>numeric</code>]</dt>
+<dd>A dictionary of statistics
+computed during the transition to be recorded.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L142-L158" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L186-L202" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample(self, state, rng):
@@ -1102,8 +1391,8 @@ def sample(self, state, rng):
 
     Returns:
         state (mici.states.ChainState): Updated state object.
-        trans_stats (Dict or None): Any statistics computed during the
-            transition to be recorded or `None` if no statistics.
+        trans_stats (Dict[str, numeric]): A dictionary of statistics
+            computed during the transition to be recorded.
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
@@ -1136,7 +1425,7 @@ appropriate to the specified Hamiltonian system.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L161-L200" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L205-L244" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisIntegrationTransition(IntegrationTransition):
     &#34;&#34;&#34;Base for HMC methods using a Metropolis accept step to sample new state.
@@ -1182,6 +1471,7 @@ appropriate to the specified Hamiltonian system.</dd>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
@@ -1189,6 +1479,29 @@ appropriate to the specified Hamiltonian system.</dd>
 <li><a title="mici.transitions.MetropolisStaticIntegrationTransition" href="#mici.transitions.MetropolisStaticIntegrationTransition">MetropolisStaticIntegrationTransition</a></li>
 <li><a title="mici.transitions.MetropolisRandomIntegrationTransition" href="#mici.transitions.MetropolisRandomIntegrationTransition">MetropolisRandomIntegrationTransition</a></li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.MetropolisIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></code>.<code><a title="mici.transitions.IntegrationTransition.state_variables" href="#mici.transitions.IntegrationTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+<dt id="mici.transitions.MetropolisIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></code>.<code><a title="mici.transitions.IntegrationTransition.statistic_types" href="#mici.transitions.IntegrationTransition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.MetropolisIntegrationTransition.sample"><code class="name flex">
@@ -1234,7 +1547,7 @@ transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L203-L233" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L247-L277" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
     &#34;&#34;&#34;Static integration transition with Metropolis sampling of new state.
@@ -1272,8 +1585,32 @@ transition.</dd>
 <ul class="hlist">
 <li><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></li>
 <li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.MetropolisStaticIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></code>.<code><a title="mici.transitions.MetropolisIntegrationTransition.state_variables" href="#mici.transitions.MetropolisIntegrationTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+<dt id="mici.transitions.MetropolisStaticIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></code>.<code><a title="mici.transitions.MetropolisIntegrationTransition.statistic_types" href="#mici.transitions.MetropolisIntegrationTransition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.MetropolisStaticIntegrationTransition.sample"><code class="name flex">
@@ -1288,7 +1625,7 @@ transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L232-L233" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L276-L277" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     return self._sample_n_step(state, self.n_step, rng)</code></pre>
@@ -1332,7 +1669,7 @@ number integrator steps to simulate in each transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L236-L274" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L280-L318" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
     &#34;&#34;&#34;Random integration transition with Metropolis sampling of new state.
@@ -1378,8 +1715,32 @@ number integrator steps to simulate in each transition.</dd>
 <ul class="hlist">
 <li><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></li>
 <li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.MetropolisRandomIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></code>.<code><a title="mici.transitions.MetropolisIntegrationTransition.state_variables" href="#mici.transitions.MetropolisIntegrationTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+<dt id="mici.transitions.MetropolisRandomIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></code>.<code><a title="mici.transitions.MetropolisIntegrationTransition.statistic_types" href="#mici.transitions.MetropolisIntegrationTransition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.MetropolisRandomIntegrationTransition.sample"><code class="name flex">
@@ -1394,7 +1755,7 @@ number integrator steps to simulate in each transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L272-L274" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L316-L318" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     n_step = rng.random_integers(*self.n_step_range)
@@ -1453,7 +1814,7 @@ momentums over the trajectory (sub)-tree. Defaults to
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L339-L493" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L383-L537" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MultinomialDynamicIntegrationTransition(IntegrationTransition):
     &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
@@ -1523,7 +1884,7 @@ momentums over the trajectory (sub)-tree. Defaults to
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += state.mom
+                sum_mom += np.asarray(state.mom)
                 sum_weight += LogRepFloat(log_val=-h)
                 stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
                 stats[&#39;n_step&#39;] += 1
@@ -1569,7 +1930,7 @@ momentums over the trajectory (sub)-tree. Defaults to
 
     def sample(self, state, rng):
         h_init = self.system.h(state)
-        sum_mom = state.mom.copy()
+        sum_mom = np.asarray(state.mom).copy()
         sum_weight = LogRepFloat(log_val=-h_init)
         stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
         state_n, state_l, state_r = state, state.copy(), state.copy()
@@ -1614,8 +1975,32 @@ momentums over the trajectory (sub)-tree. Defaults to
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></code>.<code><a title="mici.transitions.IntegrationTransition.state_variables" href="#mici.transitions.IntegrationTransition.state_variables">state_variables</a></code>
+</p>
+<section class="desc inherited"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object …</p></section>
+</dd>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></code>.<code><a title="mici.transitions.IntegrationTransition.statistic_types" href="#mici.transitions.IntegrationTransition.statistic_types">statistic_types</a></code>
+</p>
+<section class="desc inherited"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new …</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.transitions.MultinomialDynamicIntegrationTransition.sample"><code class="name flex">
@@ -1630,11 +2015,11 @@ momentums over the trajectory (sub)-tree. Defaults to
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/transitions.py#L451-L493" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/transitions.py#L495-L537" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     h_init = self.system.h(state)
-    sum_mom = state.mom.copy()
+    sum_mom = np.asarray(state.mom).copy()
     sum_weight = LogRepFloat(log_val=-h_init)
     stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
     state_n, state_l, state_r = state, state.copy(), state.copy()
@@ -1706,51 +2091,75 @@ momentums over the trajectory (sub)-tree. Defaults to
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.Transition.sample" href="#mici.transitions.Transition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.Transition.state_variables" href="#mici.transitions.Transition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.Transition.statistic_types" href="#mici.transitions.Transition.statistic_types">statistic_types</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="mici.transitions.MomentumTransition" href="#mici.transitions.MomentumTransition">MomentumTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MomentumTransition.sample" href="#mici.transitions.MomentumTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.MomentumTransition.state_variables" href="#mici.transitions.MomentumTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.MomentumTransition.statistic_types" href="#mici.transitions.MomentumTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.IndependentMomentumTransition" href="#mici.transitions.IndependentMomentumTransition">IndependentMomentumTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.IndependentMomentumTransition.sample" href="#mici.transitions.IndependentMomentumTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.IndependentMomentumTransition.statistic_types" href="#mici.transitions.IndependentMomentumTransition.statistic_types">statistic_types</a></code></li>
+<li><code><a title="mici.transitions.IndependentMomentumTransition.state_variables" href="#mici.transitions.IndependentMomentumTransition.state_variables">state_variables</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.CorrelatedMomentumTransition" href="#mici.transitions.CorrelatedMomentumTransition">CorrelatedMomentumTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.CorrelatedMomentumTransition.sample" href="#mici.transitions.CorrelatedMomentumTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.CorrelatedMomentumTransition.statistic_types" href="#mici.transitions.CorrelatedMomentumTransition.statistic_types">statistic_types</a></code></li>
+<li><code><a title="mici.transitions.CorrelatedMomentumTransition.state_variables" href="#mici.transitions.CorrelatedMomentumTransition.state_variables">state_variables</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.IntegrationTransition.sample" href="#mici.transitions.IntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.IntegrationTransition.state_variables" href="#mici.transitions.IntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.IntegrationTransition.statistic_types" href="#mici.transitions.IntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MetropolisIntegrationTransition.sample" href="#mici.transitions.MetropolisIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.MetropolisIntegrationTransition.state_variables" href="#mici.transitions.MetropolisIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.MetropolisIntegrationTransition.statistic_types" href="#mici.transitions.MetropolisIntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.MetropolisStaticIntegrationTransition" href="#mici.transitions.MetropolisStaticIntegrationTransition">MetropolisStaticIntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MetropolisStaticIntegrationTransition.sample" href="#mici.transitions.MetropolisStaticIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.MetropolisStaticIntegrationTransition.state_variables" href="#mici.transitions.MetropolisStaticIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.MetropolisStaticIntegrationTransition.statistic_types" href="#mici.transitions.MetropolisStaticIntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.MetropolisRandomIntegrationTransition" href="#mici.transitions.MetropolisRandomIntegrationTransition">MetropolisRandomIntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MetropolisRandomIntegrationTransition.sample" href="#mici.transitions.MetropolisRandomIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.MetropolisRandomIntegrationTransition.state_variables" href="#mici.transitions.MetropolisRandomIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.MetropolisRandomIntegrationTransition.statistic_types" href="#mici.transitions.MetropolisRandomIntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.sample" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.state_variables" href="#mici.transitions.MultinomialDynamicIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types" href="#mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 </ul>

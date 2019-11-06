@@ -27,7 +27,7 @@ frameworks may be available as alternative fallbacks in the future.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/autodiff.py#L0-L62" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autodiff.py#L0-L62" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Automatic differentation fallback for constructing derivative functions.
 
@@ -70,17 +70,17 @@ def autodiff_fallback(diff_func, func, diff_op_name, name):
     implementation of the derivative function has not been provided.
 
     Args:
-        diff_func (callable or None): Either a callable implementing the
+        diff_func (None or Callable): Either a callable implementing the
             required derivative function or `None` if none was provided.
-        func (callable): Function to differentiate.
-        diff_op_name (string): String specifying name of differential operator
+        func (Callable): Function to differentiate.
+        diff_op_name (str): String specifying name of differential operator
             from automatic differentiation framework wrapper to use to generate
             required derivative function.
-        name (string): Name of derivative function to use in error message.
+        name (str): Name of derivative function to use in error message.
 
     Returns:
-        `diff_func` value if not `None` otherwise generated derivative of
-        `func` by applying named differential operator.
+        Callable: `diff_func` value if not `None` otherwise generated
+            derivative of `func` by applying named differential operator.
     &#34;&#34;&#34;
     if diff_func is not None:
         return diff_func
@@ -111,25 +111,28 @@ differential operator applied to a function if an alternative
 implementation of the derivative function has not been provided.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>diff_func</code></strong> :&ensp;<code>callable</code> or <code>None</code></dt>
+<dt><strong><code>diff_func</code></strong> :&ensp;<code>None</code> or <code>Callable</code></dt>
 <dd>Either a callable implementing the
 required derivative function or <code>None</code> if none was provided.</dd>
-<dt><strong><code>func</code></strong> :&ensp;<code>callable</code></dt>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code></dt>
 <dd>Function to differentiate.</dd>
-<dt><strong><code>diff_op_name</code></strong> :&ensp;<code>string</code></dt>
+<dt><strong><code>diff_op_name</code></strong> :&ensp;<code>str</code></dt>
 <dd>String specifying name of differential operator
 from automatic differentiation framework wrapper to use to generate
 required derivative function.</dd>
-<dt><strong><code>name</code></strong> :&ensp;<code>string</code></dt>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
 <dd>Name of derivative function to use in error message.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p><code>diff_func</code> value if not <code>None</code> otherwise generated derivative of
-<code>func</code> by applying named differential operator.</p></section>
+<dl>
+<dt><strong><code>Callable</code></strong></dt>
+<dd><code>diff_func</code> value if not <code>None</code> otherwise generated
+derivative of <code>func</code> by applying named differential operator.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/autodiff.py#L34-L63" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autodiff.py#L34-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def autodiff_fallback(diff_func, func, diff_op_name, name):
     &#34;&#34;&#34;Generate derivative function automatically if not provided.
@@ -139,17 +142,17 @@ required derivative function.</dd>
     implementation of the derivative function has not been provided.
 
     Args:
-        diff_func (callable or None): Either a callable implementing the
+        diff_func (None or Callable): Either a callable implementing the
             required derivative function or `None` if none was provided.
-        func (callable): Function to differentiate.
-        diff_op_name (string): String specifying name of differential operator
+        func (Callable): Function to differentiate.
+        diff_op_name (str): String specifying name of differential operator
             from automatic differentiation framework wrapper to use to generate
             required derivative function.
-        name (string): Name of derivative function to use in error message.
+        name (str): Name of derivative function to use in error message.
 
     Returns:
-        `diff_func` value if not `None` otherwise generated derivative of
-        `func` by applying named differential operator.
+        Callable: `diff_func` value if not `None` otherwise generated
+            derivative of `func` by applying named differential operator.
     &#34;&#34;&#34;
     if diff_func is not None:
         return diff_func

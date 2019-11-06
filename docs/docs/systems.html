@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L0-L653" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L0-L681" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
 
@@ -229,6 +229,13 @@ class EuclideanMetricSystem(System):
     \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
     where \(q\) and \(p\) are the position and momentum variables respectively.
+
+    The \(h_1\) Hamiltonian component function is
+
+    \[ h_1(q) = \ell(q) \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of
+    the target distribution with respect to the Lebesgue measure.
     &#34;&#34;&#34;
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
@@ -278,7 +285,7 @@ class EuclideanMetricSystem(System):
 
     @cache_in_state(&#39;mom&#39;)
     def h2(self, state):
-        return 0.5 * state.mom @ self.metric.inv @ state.mom
+        return 0.5 * state.mom @ (self.metric.inv @ state.mom)
 
     @cache_in_state(&#39;mom&#39;)
     def dh2_dmom(self, state):
@@ -307,15 +314,21 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     Gaussian measure on the position space (with identity covariance and zero
     mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
-    Lebesgue measure on the position space. The Hamiltonian component function
-    \(h_2\) is therefore assumed to have the form
+    Lebesgue measure on the position space, i.e.
+
+    \[ h_1(q) = \ell(q) - \frac{1}{2} q^T q \]
+
+    where \(q\) is the position and \(\ell(q)\) is the negative log
+    (unnormalised) density of the target distribution with respect to the
+    Lebesgue measure at \(q\). The Hamiltonian  component function \(h_2\) is
+    then assumed to have the form
 
     \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively.
-    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
-    can be solved for analytically, allowing an integrator to be defined using
-    this alternative splitting of the Hamiltonian [1].
+    where \(p\) is the momentum. In this case the Hamiltonian flow due to the
+    quadratic \(h_2\) component can be solved for analytically, allowing an
+    integrator to be defined using this alternative splitting of the
+    Hamiltonian [1].
 
     References:
 
@@ -455,16 +468,16 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     self.grad_log_det_sqrt_gram(state))
 
     def project_onto_cotangent_space(self, mom, state):
-        jacob_constr = self.jacob_constr(state)
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
                     self.inv_gram(state) @ (
                         self.jacob_constr(state) @ (self.metric.inv @ mom))))
+        return mom
 
     def sample_momentum(self, state, rng):
         mom = super().sample_momentum(state, rng)
-        self.project_onto_cotangent_space(mom, state)
+        mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
@@ -502,15 +515,18 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DenseDefiniteMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
                 sign=1 if inner_product_matrix.is_posdef else -1)
         else:
             return DenseSquareMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
     @cache_in_state(&#39;pos&#39;)
     def grad_log_det_sqrt_gram(self, state):
-        return self.mhp_constr(state)(
+        # Evaluate MHP of constraint function before Jacobian as Jacobian value
+        # will potentially be computed in &#39;forward&#39; pass and cached
+        mhp_constr = self.mhp_constr(state)
+        return mhp_constr(
             self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)
 
 
@@ -528,15 +544,27 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
 
 
 class RiemannianMetricSystem(System):
-    &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
+    r&#34;&#34;&#34;Riemannian Hamiltonian system with a position-dependent metric.
 
-    The momentum variables are assumed to have a zero-mean Gaussian conditional
-    distribution given the position variables, with covariance specified by a
-    position dependent positive-definite metric tensor [1]. Due to the coupling
-    between the position and momentum variables in the quadratic form of the
-    negative log density of the Gaussian conditional distribution on the
-    momentum variables, the Hamiltonian system is non-separable, requiring use
-    of a numerical integrator with implicit steps.
+    The position space is assumed to be a Riemannian manifold with a metric
+    with position-dependent positive definite matrix-representation \(M(q)\)
+    where \(q\) is a position vector. The momentum \(p\) is then taken to have
+    a zero-mean Gaussian conditional distribution given the position \(q\),
+    with covariance \(M(q)\), i.e. \(p \sim \mathcal{N}(0, M(q))\) [1].
+
+    The \(h_1\) Hamiltonian component is then
+
+    \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of the target
+    distribution with respect to the Lebesgue measure at \(q\). The \(h_2\)
+    Hamiltonian component is
+
+    \[ h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. \]
+
+    Due to the coupling between the position and momentum variables in \(h_2\),
+    the Hamiltonian system is non-separable, requiring use of a numerical
+    integrator with implicit steps.
 
     References:
 
@@ -576,7 +604,7 @@ class RiemannianMetricSystem(System):
 
     def dh1_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return (self.grad_neg_log_dens(state) +
                 vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
@@ -586,7 +614,7 @@ class RiemannianMetricSystem(System):
 
     def dh2_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return 0.5 * vjp_metric(
             self.metric(state).grad_quadratic_form_inv(state.mom))
@@ -736,7 +764,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L15-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L15-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class System(ABC):
     r&#34;&#34;&#34;Base class for Hamiltonian systems.
@@ -942,7 +970,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L61-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L61-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def neg_log_dens(self, state):
@@ -976,7 +1004,7 @@ def neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L73-L84" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L73-L84" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
 def grad_neg_log_dens(self, state):
@@ -1010,7 +1038,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L86-L95" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L86-L95" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     &#34;&#34;&#34;Hamiltonian component depending only on position.
@@ -1042,7 +1070,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L97-L106" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L97-L106" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
@@ -1072,7 +1100,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L108-L117" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L108-L117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1_flow(self, state, dt):
     &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
@@ -1104,7 +1132,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L119-L128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L119-L128" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def h2(self, state):
@@ -1136,7 +1164,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L130-L139" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L130-L139" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def dh2_dmom(self, state):
@@ -1168,7 +1196,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L141-L150" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L141-L150" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     &#34;&#34;&#34;Hamiltonian function for system.
@@ -1200,7 +1228,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L152-L164" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L152-L164" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dpos(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
@@ -1235,7 +1263,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L166-L175" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L166-L175" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dmom(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
@@ -1268,7 +1296,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L177-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L177-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample_momentum(self, state, rng):
@@ -1299,6 +1327,10 @@ marginal distribution with covariance specified by <span><span class="MathJax_Pr
 <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> Hamiltonian component is</p>
 <p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T M^{-1} p </script></span></p>
 <p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component function is</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of
+the target distribution with respect to the Lebesgue measure.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
@@ -1335,7 +1367,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L191-L265" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L191-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EuclideanMetricSystem(System):
     r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
@@ -1349,6 +1381,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
     \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
 
     where \(q\) and \(p\) are the position and momentum variables respectively.
+
+    The \(h_1\) Hamiltonian component function is
+
+    \[ h_1(q) = \ell(q) \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of
+    the target distribution with respect to the Lebesgue measure.
     &#34;&#34;&#34;
 
     def __init__(self, neg_log_dens, metric=None, grad_neg_log_dens=None):
@@ -1398,7 +1437,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 
     @cache_in_state(&#39;mom&#39;)
     def h2(self, state):
-        return 0.5 * state.mom @ self.metric.inv @ state.mom
+        return 0.5 * state.mom @ (self.metric.inv @ state.mom)
 
     @cache_in_state(&#39;mom&#39;)
     def dh2_dmom(self, state):
@@ -1437,11 +1476,11 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L250-L252" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L257-L259" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def h2(self, state):
-    return 0.5 * state.mom @ self.metric.inv @ state.mom</code></pre>
+    return 0.5 * state.mom @ (self.metric.inv @ state.mom)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.EuclideanMetricSystem.dh2_dmom"><code class="name flex">
@@ -1456,7 +1495,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L254-L256" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L261-L263" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1471,7 +1510,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L258-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L265-L266" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     state.pos += dt * self.dh2_dmom(state)</code></pre>
@@ -1485,7 +1524,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L261-L262" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L268-L269" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])</code></pre>
@@ -1503,7 +1542,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L264-L265" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L271-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
@@ -1606,13 +1645,18 @@ to be defined by an unnormalised density with respect to the standard
 Gaussian measure on the position space (with identity covariance and zero
 mean), with the Hamiltonian component <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> corresponding to the negative
 logarithm of this density rather than the density with respect to the
-Lebesgue measure on the position space. The Hamiltonian component function
-<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is therefore assumed to have the form</p>
+Lebesgue measure on the position space, i.e.</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) - \frac{1}{2} q^T q </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) - \frac{1}{2} q^T q </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is the position and <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log
+(unnormalised) density of the target distribution with respect to the
+Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The Hamiltonian
+component function <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is
+then assumed to have the form</p>
 <p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </script></span></p>
-<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.
-In this case the Hamiltonian flow due to the quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component
-can be solved for analytically, allowing an integrator to be defined using
-this alternative splitting of the Hamiltonian [1].</p>
+<p>where <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is the momentum. In this case the Hamiltonian flow due to the
+quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component can be solved for analytically, allowing an
+integrator to be defined using this alternative splitting of the
+Hamiltonian [1].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
@@ -1656,7 +1700,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L268-L362" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L275-L375" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     r&#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
@@ -1671,15 +1715,21 @@ automatically if available.</p>
     Gaussian measure on the position space (with identity covariance and zero
     mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
-    Lebesgue measure on the position space. The Hamiltonian component function
-    \(h_2\) is therefore assumed to have the form
+    Lebesgue measure on the position space, i.e.
+
+    \[ h_1(q) = \ell(q) - \frac{1}{2} q^T q \]
+
+    where \(q\) is the position and \(\ell(q)\) is the negative log
+    (unnormalised) density of the target distribution with respect to the
+    Lebesgue measure at \(q\). The Hamiltonian  component function \(h_2\) is
+    then assumed to have the form
 
     \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively.
-    In this case the Hamiltonian flow due to the quadratic \(h_2\) component
-    can be solved for analytically, allowing an integrator to be defined using
-    this alternative splitting of the Hamiltonian [1].
+    where \(p\) is the momentum. In this case the Hamiltonian flow due to the
+    quadratic \(h_2\) component can be solved for analytically, allowing an
+    integrator to be defined using this alternative splitting of the
+    Hamiltonian [1].
 
     References:
 
@@ -1778,7 +1828,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L331-L333" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L344-L346" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return (0.5 * state.pos @ state.pos +
@@ -1797,7 +1847,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L335-L337" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L348-L350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1812,7 +1862,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L339-L341" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L352-L354" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dpos(self, state):
@@ -1827,7 +1877,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L343-L353" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L356-L366" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1850,7 +1900,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L355-L362" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L368-L375" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -2005,7 +2055,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L442-L485" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L455-L501" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
@@ -2041,15 +2091,18 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DenseDefiniteMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
                 sign=1 if inner_product_matrix.is_posdef else -1)
         else:
             return DenseSquareMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
     @cache_in_state(&#39;pos&#39;)
     def grad_log_det_sqrt_gram(self, state):
-        return self.mhp_constr(state)(
+        # Evaluate MHP of constraint function before Jacobian as Jacobian value
+        # will potentially be computed in &#39;forward&#39; pass and cached
+        mhp_constr = self.mhp_constr(state)
+        return mhp_constr(
             self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -2073,7 +2126,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L467-L470" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L480-L483" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
@@ -2089,17 +2142,17 @@ def mhp_constr(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L472-L480" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L485-L493" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
         self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
     if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
         return DenseDefiniteMatrix(
-            jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
             sign=1 if inner_product_matrix.is_posdef else -1)
     else:
         return DenseSquareMatrix(
-            jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)</code></pre>
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><code class="name flex">
@@ -2110,11 +2163,14 @@ def mhp_constr(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L482-L485" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L495-L501" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def grad_log_det_sqrt_gram(self, state):
-    return self.mhp_constr(state)(
+    # Evaluate MHP of constraint function before Jacobian as Jacobian value
+    # will potentially be computed in &#39;forward&#39; pass and cached
+    mhp_constr = self.mhp_constr(state)
+    return mhp_constr(
         self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
 </details>
 </dd>
@@ -2245,13 +2301,18 @@ to be defined by an unnormalised density with respect to the standard
 Gaussian measure on the position space (with identity covariance and zero
 mean), with the Hamiltonian component <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> corresponding to the negative
 logarithm of this density rather than the density with respect to the
-Lebesgue measure on the position space. The Hamiltonian component function
-<span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is therefore assumed to have the form</p>
+Lebesgue measure on the position space, i.e.</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) - \frac{1}{2} q^T q </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) - \frac{1}{2} q^T q </script></span></p>
+<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is the position and <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log
+(unnormalised) density of the target distribution with respect to the
+Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The Hamiltonian
+component function <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> is
+then assumed to have the form</p>
 <p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p </script></span></p>
-<p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively.
-In this case the Hamiltonian flow due to the quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component
-can be solved for analytically, allowing an integrator to be defined using
-this alternative splitting of the Hamiltonian [1].</p>
+<p>where <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is the momentum. In this case the Hamiltonian flow due to the
+quadratic <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> component can be solved for analytically, allowing an
+integrator to be defined using this alternative splitting of the
+Hamiltonian [1].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split
@@ -2295,7 +2356,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L488-L498" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L504-L514" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
@@ -2437,14 +2498,21 @@ automatically if available.</p>
 <span>(</span><span>neg_log_dens, metric_matrix_class, metric_func, vjp_metric_func=None, grad_neg_log_dens=None, metric_kwargs=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
-<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
-distribution given the position variables, with covariance specified by a
-position dependent positive-definite metric tensor [1]. Due to the coupling
-between the position and momentum variables in the quadratic form of the
-negative log density of the Gaussian conditional distribution on the
-momentum variables, the Hamiltonian system is non-separable, requiring use
-of a numerical integrator with implicit steps.</p>
+<section class="desc"><p>Riemannian Hamiltonian system with a position-dependent metric.</p>
+<p>The position space is assumed to be a Riemannian manifold with a metric
+with position-dependent positive definite matrix-representation <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>
+where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is a position vector. The momentum <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is then taken to have
+a zero-mean Gaussian conditional distribution given the position <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>,
+with covariance <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>, i.e. <span><span class="MathJax_Preview">p \sim \mathcal{N}(0, M(q))</span><script type="math/tex">p \sim \mathcal{N}(0, M(q))</script></span> [1].</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component is then</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of the target
+distribution with respect to the Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>
+Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </script></span></p>
+<p>Due to the coupling between the position and momentum variables in <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>,
+the Hamiltonian system is non-separable, requiring use of a numerical
+integrator with implicit steps.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
@@ -2477,18 +2545,30 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L501-L569" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L517-L597" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RiemannianMetricSystem(System):
-    &#34;&#34;&#34;Riemannian Hamiltonian system with a position dependent metric tensor.
+    r&#34;&#34;&#34;Riemannian Hamiltonian system with a position-dependent metric.
 
-    The momentum variables are assumed to have a zero-mean Gaussian conditional
-    distribution given the position variables, with covariance specified by a
-    position dependent positive-definite metric tensor [1]. Due to the coupling
-    between the position and momentum variables in the quadratic form of the
-    negative log density of the Gaussian conditional distribution on the
-    momentum variables, the Hamiltonian system is non-separable, requiring use
-    of a numerical integrator with implicit steps.
+    The position space is assumed to be a Riemannian manifold with a metric
+    with position-dependent positive definite matrix-representation \(M(q)\)
+    where \(q\) is a position vector. The momentum \(p\) is then taken to have
+    a zero-mean Gaussian conditional distribution given the position \(q\),
+    with covariance \(M(q)\), i.e. \(p \sim \mathcal{N}(0, M(q))\) [1].
+
+    The \(h_1\) Hamiltonian component is then
+
+    \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of the target
+    distribution with respect to the Lebesgue measure at \(q\). The \(h_2\)
+    Hamiltonian component is
+
+    \[ h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. \]
+
+    Due to the coupling between the position and momentum variables in \(h_2\),
+    the Hamiltonian system is non-separable, requiring use of a numerical
+    integrator with implicit steps.
 
     References:
 
@@ -2528,7 +2608,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 
     def dh1_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return (self.grad_neg_log_dens(state) +
                 vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
@@ -2538,7 +2618,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 
     def dh2_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return 0.5 * vjp_metric(
             self.metric(state).grad_quadratic_form_inv(state.mom))
@@ -2572,7 +2652,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L529-L531" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L557-L559" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric_func(self, state):
@@ -2587,7 +2667,7 @@ def metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L533-L535" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L561-L563" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
 def vjp_metric_func(self, state):
@@ -2602,7 +2682,7 @@ def vjp_metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L537-L540" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L565-L568" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric(self, state):
@@ -2622,7 +2702,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L542-L543" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L570-L571" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     return self.h1(state) + self.h2(state)</code></pre>
@@ -2640,7 +2720,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L545-L546" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L573-L574" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt</code></pre>
@@ -2658,11 +2738,11 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L548-L553" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L576-L581" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
-    # be computed in forward pass and cached
+    # potentially be computed in forward pass and cached
     vjp_metric = self.vjp_metric_func(state)
     return (self.grad_neg_log_dens(state) +
             vjp_metric(self.metric(state).grad_log_abs_det_sqrt))</code></pre>
@@ -2680,7 +2760,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L555-L556" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L583-L584" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
@@ -2694,11 +2774,11 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L558-L563" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L586-L591" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
-    # be computed in forward pass and cached
+    # potentially be computed in forward pass and cached
     vjp_metric = self.vjp_metric_func(state)
     return 0.5 * vjp_metric(
         self.metric(state).grad_quadratic_form_inv(state.mom))</code></pre>
@@ -2716,7 +2796,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L565-L566" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L593-L594" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dmom(self, state):
     return self.metric(state).inv @ state.mom</code></pre>
@@ -2734,7 +2814,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L568-L569" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L596-L597" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
@@ -2797,14 +2877,21 @@ def metric(self, state):
 <span>(</span><span>neg_log_dens, metric_scalar_func, vjp_metric_scalar_func=None, grad_neg_log_dens=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
-<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
-distribution given the position variables, with covariance specified by a
-position dependent positive-definite metric tensor [1]. Due to the coupling
-between the position and momentum variables in the quadratic form of the
-negative log density of the Gaussian conditional distribution on the
-momentum variables, the Hamiltonian system is non-separable, requiring use
-of a numerical integrator with implicit steps.</p>
+<section class="desc"><p>Riemannian Hamiltonian system with a position-dependent metric.</p>
+<p>The position space is assumed to be a Riemannian manifold with a metric
+with position-dependent positive definite matrix-representation <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>
+where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is a position vector. The momentum <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is then taken to have
+a zero-mean Gaussian conditional distribution given the position <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>,
+with covariance <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>, i.e. <span><span class="MathJax_Preview">p \sim \mathcal{N}(0, M(q))</span><script type="math/tex">p \sim \mathcal{N}(0, M(q))</script></span> [1].</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component is then</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of the target
+distribution with respect to the Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>
+Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </script></span></p>
+<p>Due to the coupling between the position and momentum variables in <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>,
+the Hamiltonian system is non-separable, requiring use of a numerical
+integrator with implicit steps.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
@@ -2837,7 +2924,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L572-L578" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L600-L606" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -2972,14 +3059,21 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <span>(</span><span>neg_log_dens, metric_diagonal_func, vjp_metric_diagonal_func=None, grad_neg_log_dens=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
-<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
-distribution given the position variables, with covariance specified by a
-position dependent positive-definite metric tensor [1]. Due to the coupling
-between the position and momentum variables in the quadratic form of the
-negative log density of the Gaussian conditional distribution on the
-momentum variables, the Hamiltonian system is non-separable, requiring use
-of a numerical integrator with implicit steps.</p>
+<section class="desc"><p>Riemannian Hamiltonian system with a position-dependent metric.</p>
+<p>The position space is assumed to be a Riemannian manifold with a metric
+with position-dependent positive definite matrix-representation <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>
+where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is a position vector. The momentum <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is then taken to have
+a zero-mean Gaussian conditional distribution given the position <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>,
+with covariance <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>, i.e. <span><span class="MathJax_Preview">p \sim \mathcal{N}(0, M(q))</span><script type="math/tex">p \sim \mathcal{N}(0, M(q))</script></span> [1].</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component is then</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of the target
+distribution with respect to the Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>
+Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </script></span></p>
+<p>Due to the coupling between the position and momentum variables in <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>,
+the Hamiltonian system is non-separable, requiring use of a numerical
+integrator with implicit steps.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
@@ -3012,7 +3106,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L581-L587" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L609-L615" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3147,14 +3241,21 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <span>(</span><span>neg_log_dens, metric_chol_func, vjp_metric_chol_func=None, grad_neg_log_dens=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
-<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
-distribution given the position variables, with covariance specified by a
-position dependent positive-definite metric tensor [1]. Due to the coupling
-between the position and momentum variables in the quadratic form of the
-negative log density of the Gaussian conditional distribution on the
-momentum variables, the Hamiltonian system is non-separable, requiring use
-of a numerical integrator with implicit steps.</p>
+<section class="desc"><p>Riemannian Hamiltonian system with a position-dependent metric.</p>
+<p>The position space is assumed to be a Riemannian manifold with a metric
+with position-dependent positive definite matrix-representation <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>
+where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is a position vector. The momentum <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is then taken to have
+a zero-mean Gaussian conditional distribution given the position <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>,
+with covariance <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>, i.e. <span><span class="MathJax_Preview">p \sim \mathcal{N}(0, M(q))</span><script type="math/tex">p \sim \mathcal{N}(0, M(q))</script></span> [1].</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component is then</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of the target
+distribution with respect to the Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>
+Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </script></span></p>
+<p>Due to the coupling between the position and momentum variables in <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>,
+the Hamiltonian system is non-separable, requiring use of a numerical
+integrator with implicit steps.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
@@ -3187,7 +3288,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L590-L596" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L618-L624" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3322,14 +3423,21 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <span>(</span><span>neg_log_dens, metric_func, vjp_metric_func=None, grad_neg_log_dens=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Riemannian Hamiltonian system with a position dependent metric tensor.</p>
-<p>The momentum variables are assumed to have a zero-mean Gaussian conditional
-distribution given the position variables, with covariance specified by a
-position dependent positive-definite metric tensor [1]. Due to the coupling
-between the position and momentum variables in the quadratic form of the
-negative log density of the Gaussian conditional distribution on the
-momentum variables, the Hamiltonian system is non-separable, requiring use
-of a numerical integrator with implicit steps.</p>
+<section class="desc"><p>Riemannian Hamiltonian system with a position-dependent metric.</p>
+<p>The position space is assumed to be a Riemannian manifold with a metric
+with position-dependent positive definite matrix-representation <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>
+where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> is a position vector. The momentum <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> is then taken to have
+a zero-mean Gaussian conditional distribution given the position <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>,
+with covariance <span><span class="MathJax_Preview">M(q)</span><script type="math/tex">M(q)</script></span>, i.e. <span><span class="MathJax_Preview">p \sim \mathcal{N}(0, M(q))</span><script type="math/tex">p \sim \mathcal{N}(0, M(q))</script></span> [1].</p>
+<p>The <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> Hamiltonian component is then</p>
+<p><span><span class="MathJax_Preview"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </span><script type="math/tex; mode=display"> h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| </script></span></p>
+<p>where <span><span class="MathJax_Preview">\ell(q)</span><script type="math/tex">\ell(q)</script></span> is the negative log (unnormalised) density of the target
+distribution with respect to the Lebesgue measure at <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span>. The <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>
+Hamiltonian component is</p>
+<p><span><span class="MathJax_Preview"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </span><script type="math/tex; mode=display"> h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. </script></span></p>
+<p>Due to the coupling between the position and momentum variables in <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span>,
+the Hamiltonian system is non-separable, requiring use of a numerical
+integrator with implicit steps.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
@@ -3362,7 +3470,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L599-L605" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L627-L633" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3535,7 +3643,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L608-L654" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L636-L682" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
@@ -3601,7 +3709,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L639-L640" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L667-L668" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def metric_func(self, state):
     return self.hess_neg_log_dens(state)</code></pre>
@@ -3615,7 +3723,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L642-L643" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L670-L671" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def vjp_metric_func(self, state):
     return self.mtp_neg_log_dens(state)</code></pre>
@@ -3629,7 +3737,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L645-L648" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L673-L676" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
@@ -3645,7 +3753,7 @@ def hess_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/931c4cd978e705a7d3c162db8658f2f38de64c49/mici/systems.py#L650-L654" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/systems.py#L678-L682" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
