@@ -494,7 +494,10 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_gram(self, state):
-        return self.mhp_constr(state)(
+        # Evaluate MHP of constraint function before Jacobian as Jacobian value
+        # will potentially be computed in 'forward' pass and cached
+        mhp_constr = self.mhp_constr(state)
+        return mhp_constr(
             self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)
 
 
@@ -572,7 +575,7 @@ class RiemannianMetricSystem(System):
 
     def dh1_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return (self.grad_neg_log_dens(state) +
                 vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
@@ -582,7 +585,7 @@ class RiemannianMetricSystem(System):
 
     def dh2_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
-        # be computed in forward pass and cached
+        # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return 0.5 * vjp_metric(
             self.metric(state).grad_quadratic_form_inv(state.mom))
