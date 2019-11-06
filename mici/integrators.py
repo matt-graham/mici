@@ -307,7 +307,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                                **self.retraction_solver_kwargs)
 
     def _project_onto_cotangent_space(self, state):
-        self.system.project_onto_cotangent_space(state.mom, state)
+        state.mom = self.system.project_onto_cotangent_space(state.mom, state)
 
     def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)

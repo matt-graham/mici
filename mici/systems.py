@@ -439,16 +439,16 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     self.grad_log_det_sqrt_gram(state))
 
     def project_onto_cotangent_space(self, mom, state):
-        jacob_constr = self.jacob_constr(state)
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
                     self.inv_gram(state) @ (
                         self.jacob_constr(state) @ (self.metric.inv @ mom))))
+        return mom
 
     def sample_momentum(self, state, rng):
         mom = super().sample_momentum(state, rng)
-        self.project_onto_cotangent_space(mom, state)
+        mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
