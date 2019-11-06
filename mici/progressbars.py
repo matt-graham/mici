@@ -256,7 +256,7 @@ class ProgressBar(BaseProgressBar):
     @property
     def stats(self):
         """Comma-delimited string list of statistic key=value pairs."""
-        return ', '.join(f'{k}={v:.3f}' for k, v in self._stats_dict.items())
+        return ', '.join(f'{k}={v:#.3g}' for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
@@ -319,7 +319,7 @@ class ProgressBar(BaseProgressBar):
           <label style="margin-right: calc(var(--jp-widgets-inline-margin)*2);
                         flex-shrink: 0; font-size: var(--jp-code-font-size);
                         font-family: var(--jp-code-font-family);">
-            {html.escape(self.prefix)}
+            {html.escape(self.prefix).replace(' ', '&nbsp;')}
           </label>
           <div role="progressbar" aria-valuenow="{self.prop_complete}"
                aria-valuemin="0" aria-valuemax="1"
