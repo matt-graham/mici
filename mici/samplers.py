@@ -404,10 +404,12 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
     except KeyboardInterrupt:
         interrupted = True
         if sample_index != n_sample:
-            logger.error(
-                f'Sampling manually interrupted at chain {chain_index + 1} '
-                f'iteration {sample_index}. Arrays containing chain traces and'
-                f' statistics computed before interruption will be returned.')
+            if not parallel_chains:
+                logger.error(
+                    f'Sampling manually interrupted at chain {chain_index + 1}'
+                    f' iteration {sample_index}. Arrays containing chain '
+                    f'traces and statistics computed before interruption will '
+                    f'be returned.')
             # Sampling interrupted therefore truncate returned arrays
             # No point truncating if using memory mapping with parallel chains
             # as will only return file paths of arrays
@@ -515,17 +517,24 @@ def _sample_chains_worker(chain_queue, iter_queue):
         except queue.Empty:
             pass
         except KeyboardInterrupt:
-            break
+            # Put sentinel value on iteration queue to force exit from
+            # iteration update loop
+            iter_queue.put(None)
+        except Exception as e:
+            # Put sentinel value on iteration queue to force exit from
+            # iteration update loop
+            iter_queue.put(None)
+            raise e
     return chain_outputs
 
 
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                             **kwargs):
     """Sample multiple chains in parallel over multiple processes."""
-    chain_outputs = []
     n_samples = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
     with ignore_sigint_manager() as manager, Pool(n_process) as pool:
+        results = None
         try:
             # Shared queue for workers to output chain progress updates to
             iter_queue = manager.Queue()
@@ -552,13 +561,15 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                 # number of completed chains
                 chains_completed = 0
                 while not (iter_queue.empty() and chains_completed == n_chain):
-                    chain_index, sample_index, data_dict = iter_queue.get()
+                    iter_queue_item = iter_queue.get()
+                    # Check if queue item is sentinel value and if so break
+                    if iter_queue_item is None:
+                        break
+                    # Otherwise unpack and update progress bar
+                    chain_index, sample_index, data_dict = iter_queue_item
                     pbars[chain_index].update(sample_index, data_dict)
                     if sample_index == n_samples[chain_index]:
                         chains_completed += 1
-        except KeyboardInterrupt:
-            # Interrupts handled in child processes therefore ignore here
-            pass
         except PicklingError as e:
             if not MULTIPROCESS_AVAILABLE:
                 raise RuntimeError(
@@ -577,12 +588,20 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                 ) from e
             else:
                 raise e
-        finally:
+        except KeyboardInterrupt:
+            # Interrupts handled in child processes therefore ignore here
+            logger.error(
+                'Sampling manually interrupted. Arrays containing chain traces'
+                ' and statistics computed prior to interruption will be '
+                'returned.')
+        if results is not None:
             # Join all output lists from per-process workers in to single list
             indexed_chain_outputs = sum((res for res in results.get()), [])
             # Sort list by chain index (first element of tuple entries) and
             # then create new list with chain index removed
             chain_outputs = [outp for i, outp in sorted(indexed_chain_outputs)]
+        else:
+            chain_outputs = []
     return _collate_chain_outputs(chain_outputs)
 
 
