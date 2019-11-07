@@ -141,11 +141,6 @@ class ProgressBar(BaseProgressBar):
         self._start_time = None
         self._elapsed_time = 0
         self._stats_dict = {}
-        if displays is None:
-            displays = [
-                ipython_display(self, display_id=True)
-                if _in_zmq_interactive_shell()
-                else FileDisplay(position)]
         self._displays = displays
 
     @property
@@ -341,6 +336,11 @@ class ProgressBar(BaseProgressBar):
 
     def __enter__(self):
         self.reset()
+        if self._displays is None:
+            self._displays = [
+                ipython_display(self, display_id=True)
+                if _in_zmq_interactive_shell()
+                else FileDisplay(self._position)]
         return self
 
     def __exit__(self, *args):
