@@ -256,7 +256,7 @@ class EuclideanMetricSystem(System):
 
     @cache_in_state('mom')
     def h2(self, state):
-        return 0.5 * state.mom @ self.metric.inv @ state.mom
+        return 0.5 * state.mom @ (self.metric.inv @ state.mom)
 
     @cache_in_state('mom')
     def dh2_dmom(self, state):
@@ -385,7 +385,7 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     satisfied. The constraint function implicitly defines a manifold embedded
     in the position space of constraint satisfying configurations. There are
     also implicitly a set of constraints on the momentum component of the state
-    due to the requirment that velocity (momentum pre-multiplied by inverse
+    due to the requirement that velocity (momentum pre-multiplied by inverse
     metric) is always tangential to the constraint manifold.
     """
 
@@ -486,11 +486,11 @@ class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DenseDefiniteMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_1.T,
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
                 sign=1 if inner_product_matrix.is_posdef else -1)
         else:
             return DenseSquareMatrix(
-                jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
     @cache_in_state('pos')
     def grad_log_det_sqrt_gram(self, state):
