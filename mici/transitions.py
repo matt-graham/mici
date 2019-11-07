@@ -448,7 +448,7 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += state.mom
+                sum_mom += np.asarray(state.mom)
                 sum_weight += LogRepFloat(log_val=-h)
                 stats['sum_acc_prob'] += min(1, np.exp(h_init - h))
                 stats['n_step'] += 1
@@ -494,7 +494,7 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
 
     def sample(self, state, rng):
         h_init = self.system.h(state)
-        sum_mom = state.mom.copy()
+        sum_mom = np.asarray(state.mom).copy()
         sum_weight = LogRepFloat(log_val=-h_init)
         stats = {'n_step': 0, 'sum_acc_prob': 0.}
         state_n, state_l, state_r = state, state.copy(), state.copy()
