@@ -308,26 +308,25 @@ class ProgressBar(BaseProgressBar):
 
     def _repr_html_(self):
         return f'''
-        <div style="line-height: var(--jp-widgets-inline-height); width: 100%;
-                    display: flex; flex-flow: row wrap; align-items: center;
-                    position: relative; margin: var(--jp-widgets-margin);">
-          <label style="margin-right: calc(var(--jp-widgets-inline-margin)*2);
-                        flex-shrink: 0; font-size: var(--jp-code-font-size);
+        <div style="line-height: 28px; width: 100%; display: flex;
+                    flex-flow: row wrap; align-items: center;
+                    position: relative; margin: 2px;">
+          <label style="margin-right: 8px; flex-shrink: 0;
+                        font-size: var(--jp-code-font-size);
                         font-family: var(--jp-code-font-family);">
             {html.escape(self.prefix).replace(' ', '&nbsp;')}
           </label>
           <div role="progressbar" aria-valuenow="{self.prop_complete}"
                aria-valuemin="0" aria-valuemax="1"
                style="position: relative; flex-grow: 1; align-self: stretch;
-                      margin-top: var(--jp-widgets-input-padding);
-                      margin-bottom: var(--jp-widgets-input-padding);
-                      height: initial; background-color: #eee;">
+                      margin-top: 4px; margin-bottom: 4px;  height: initial;
+                      background-color: #eee;">
             <div style="background-color: {self.bar_color}; position: absolute;
                         bottom: 0; left: 0; width: {self.perc_complete};
                         height: 100%;"></div>
           </div>
-          <div style="margin-left: calc(var(--jp-widgets-inline-margin) * 2);
-                      flex-shrink: 0; font-family: var(--jp-code-font-family);
+          <div style="margin-left: 8px; flex-shrink: 0;
+                      font-family: var(--jp-code-font-family);
                       font-size: var(--jp-code-font-size);">
             {html.escape(self.postfix)}
           </div>
