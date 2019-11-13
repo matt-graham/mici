@@ -317,6 +317,20 @@ class ConstrainedLeapfrogIntegrator(Integrator):
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
             self._retract_onto_manifold(state, state_prev, dt_i)
+            if i == self.n_inner_step - 1:
+                # If at last inner step pre-evaluate dh1_dpos before projecting
+                # state on to cotangent space, with computed value being
+                # cached. During projection the constraint Jacobian at new
+                # position will be calculated however if we are going to make a
+                # h1_flow step immediately after we will evaluate dh1_dpos
+                # which may involve evaluating the gradient of the log
+                # determinant of the Gram matrix, during which we will evaluate
+                # the constraint Jacobian in the forward pass anyway.
+                # Pre-evaluating here therefore saves one extra Jacobian
+                # evaluation when the target density includes a Gram matrix log
+                # determinant term (and will not add any cost if this is not
+                # the case as dh1_dpos will still be cached and reused).
+                self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
