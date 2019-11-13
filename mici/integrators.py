@@ -116,13 +116,12 @@ class ImplicitLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            fixed_point_solver (\
-                    Callable[[Callable[array], array], array]): Function which
-                given a function `func` and initial guess `x0` iteratively
-                solves the fixed point equation `func(x) = x` initialising the
-                iteration with `x0` and returning an array corresponding to the
-                solution if the iteration converges or raising a
-                `mici.errors.ConvergenceError` otherwise. Defaults to
+            fixed_point_solver (Callable[[Callable[array], array], array]):
+                Function which given a function `func` and initial guess `x0`
+                iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or
+                raising a `mici.errors.ConvergenceError` otherwise. Defaults to
                 `mici.solvers.solve_fixed_point_direct`.
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
@@ -271,12 +270,11 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (\
-                    Callable[[ChainState, ChainState, float, System], \
-                              ChainState]): Function which given two
-                states `state` and `state_prev`, floating point time step `dt`
-                and a Hamiltonian system object `system` solves the non-linear
-                system of equations in `lambda`
+            retraction_solver (Callable[
+                    [ChainState, ChainState, float, System], ChainState]):
+                Function which given two states `state` and `state_prev`,
+                floating point time step `dt` and a Hamiltonian system object
+                `system` solves the non-linear system of equations in `lambda`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
