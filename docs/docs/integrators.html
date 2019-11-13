@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L0-L337" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L0-L349" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
@@ -145,13 +145,12 @@ class ImplicitLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            fixed_point_solver (\
-                    Callable[[Callable[array], array], array]): Function which
-                given a function `func` and initial guess `x0` iteratively
-                solves the fixed point equation `func(x) = x` initialising the
-                iteration with `x0` and returning an array corresponding to the
-                solution if the iteration converges or raising a
-                `mici.errors.ConvergenceError` otherwise. Defaults to
+            fixed_point_solver (Callable[[Callable[array], array], array]):
+                Function which given a function `func` and initial guess `x0`
+                iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or
+                raising a `mici.errors.ConvergenceError` otherwise. Defaults to
                 `mici.solvers.solve_fixed_point_direct`.
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
@@ -300,12 +299,11 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (\
-                    Callable[[ChainState, ChainState, float, System], \
-                              ChainState]): Function which given two
-                states `state` and `state_prev`, floating point time step `dt`
-                and a Hamiltonian system object `system` solves the non-linear
-                system of equations in `lambda`
+            retraction_solver (Callable[
+                    [ChainState, ChainState, float, System], ChainState]):
+                Function which given two states `state` and `state_prev`,
+                floating point time step `dt` and a Hamiltonian system object
+                `system` solves the non-linear system of equations in `lambda`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
@@ -348,6 +346,20 @@ class ConstrainedLeapfrogIntegrator(Integrator):
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
             self._retract_onto_manifold(state, state_prev, dt_i)
+            if i == self.n_inner_step - 1:
+                # If at last inner step pre-evaluate dh1_dpos before projecting
+                # state on to cotangent space, with computed value being
+                # cached. During projection the constraint Jacobian at new
+                # position will be calculated however if we are going to make a
+                # h1_flow step immediately after we will evaluate dh1_dpos
+                # which may involve evaluating the gradient of the log
+                # determinant of the Gram matrix, during which we will evaluate
+                # the constraint Jacobian in the forward pass anyway.
+                # Pre-evaluating here therefore saves one extra Jacobian
+                # evaluation when the target density includes a Gram matrix log
+                # determinant term (and will not add any cost if this is not
+                # the case as dh1_dpos will still be cached and reused).
+                self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
@@ -393,7 +405,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
@@ -453,7 +465,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def step(self, state):
@@ -497,7 +509,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -561,7 +573,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size
@@ -613,15 +625,15 @@ accepting a single one-dimensional array input and returning a
 non-negative floating point value defining the distance to use
 in the reversibility check. Defaults to
 <a title="mici.solvers.maximum_norm" href="solvers.html#mici.solvers.maximum_norm"><code>maximum_norm()</code></a>.</dd>
-<dt><strong><code>fixed_point_solver</code></strong> :&ensp;
-<code>Callable</code>[[<code>Callable</code>[<code>array</code>], <code>array</code>], <code>array</code>]</dt>
-<dd>Function which
-given a function <code>func</code> and initial guess <code>x0</code> iteratively
-solves the fixed point equation <code>func(x) = x</code> initialising the
-iteration with <code>x0</code> and returning an array corresponding to the
-solution if the iteration converges or raising a
-<a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> otherwise. Defaults to
-<a title="mici.solvers.solve_fixed_point_direct" href="solvers.html#mici.solvers.solve_fixed_point_direct"><code>solve_fixed_point_direct()</code></a>.</dd>
+<dt><strong><code>fixed_point_solver</code></strong> :&ensp;<code>Callable</code>[[<code>Callable</code>[<code>array</code>], <code>array</code>], <code>array</code>]</dt>
+<dd>
+<p>Function which given a function <code>func</code> and initial guess <code>x0</code>
+iteratively solves the fixed point equation <code>func(x) = x</code>
+initialising the iteration with <code>x0</code> and returning an array
+corresponding to the solution if the iteration converges or
+raising a <a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> otherwise. Defaults to
+<a title="mici.solvers.solve_fixed_point_direct" href="solvers.html#mici.solvers.solve_fixed_point_direct"><code>solve_fixed_point_direct()</code></a>.</p>
+</dd>
 <dt><strong><code>fixed_point_solver_kwargs</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>object</code>]</dt>
 <dd>Dictionary
 of any keyword arguments to <code>fixed_point_solver</code>.</dd>
@@ -629,7 +641,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L78-L189" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L78-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -672,13 +684,12 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            fixed_point_solver (\
-                    Callable[[Callable[array], array], array]): Function which
-                given a function `func` and initial guess `x0` iteratively
-                solves the fixed point equation `func(x) = x` initialising the
-                iteration with `x0` and returning an array corresponding to the
-                solution if the iteration converges or raising a
-                `mici.errors.ConvergenceError` otherwise. Defaults to
+            fixed_point_solver (Callable[[Callable[array], array], array]):
+                Function which given a function `func` and initial guess `x0`
+                iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or
+                raising a `mici.errors.ConvergenceError` otherwise. Defaults to
                 `mici.solvers.solve_fixed_point_direct`.
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
@@ -763,7 +774,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L180-L189" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L179-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = 0.5 * state.dir * self.step_size
@@ -854,14 +865,12 @@ accepting a single one-dimensional array input and returning a
 non-negative floating point value defining the distance to use
 in the reversibility check. Defaults to
 <a title="mici.solvers.maximum_norm" href="solvers.html#mici.solvers.maximum_norm"><code>maximum_norm()</code></a>.</dd>
-<dt><strong><code>retraction_solver</code></strong> :&ensp;
-<code>Callable</code>[[<code>ChainState</code>, <code>ChainState</code>, <code>float</code>, <code>System</code>],
-<code>ChainState</code>]</dt>
+<dt><strong><code>retraction_solver</code></strong> :&ensp;<code>Callable</code>[</dt>
+<dt>[<code>ChainState</code>, <code>ChainState</code>, <code>float</code>, <code>System</code>], <code>ChainState</code>]</dt>
 <dd>
-<p>Function which given two
-states <code>state</code> and <code>state_prev</code>, floating point time step <code>dt</code>
-and a Hamiltonian system object <code>system</code> solves the non-linear
-system of equations in <code>lambda</code></p>
+<p>Function which given two states <code>state</code> and <code>state_prev</code>,
+floating point time step <code>dt</code> and a Hamiltonian system object
+<code>system</code> solves the non-linear system of equations in <code>lambda</code></p>
 <pre><code>system.constr(
     state.pos + dh2_flow_pos_dmom @
         system.jacob_constr(state_prev).T @ lambda) == 0
@@ -881,7 +890,7 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L192-L338" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L191-L350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -965,12 +974,11 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (\
-                    Callable[[ChainState, ChainState, float, System], \
-                              ChainState]): Function which given two
-                states `state` and `state_prev`, floating point time step `dt`
-                and a Hamiltonian system object `system` solves the non-linear
-                system of equations in `lambda`
+            retraction_solver (Callable[
+                    [ChainState, ChainState, float, System], ChainState]):
+                Function which given two states `state` and `state_prev`,
+                floating point time step `dt` and a Hamiltonian system object
+                `system` solves the non-linear system of equations in `lambda`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
@@ -1013,6 +1021,20 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
             state_prev = state.copy()
             self.system.h2_flow(state, dt_i)
             self._retract_onto_manifold(state, state_prev, dt_i)
+            if i == self.n_inner_step - 1:
+                # If at last inner step pre-evaluate dh1_dpos before projecting
+                # state on to cotangent space, with computed value being
+                # cached. During projection the constraint Jacobian at new
+                # position will be calculated however if we are going to make a
+                # h1_flow step immediately after we will evaluate dh1_dpos
+                # which may involve evaluating the gradient of the log
+                # determinant of the Gram matrix, during which we will evaluate
+                # the constraint Jacobian in the forward pass anyway.
+                # Pre-evaluating here therefore saves one extra Jacobian
+                # evaluation when the target density includes a Gram matrix log
+                # determinant term (and will not add any cost if this is not
+                # the case as dh1_dpos will still be cached and reused).
+                self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
             self.system.h2_flow(state_back, -dt_i)
@@ -1050,7 +1072,7 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/integrators.py#L332-L338" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L344-L350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size

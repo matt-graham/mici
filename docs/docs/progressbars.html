@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L0-L463" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L0-L462" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Progress bar classes for tracking progress of chains.&#34;&#34;&#34;
 
@@ -170,11 +170,6 @@ class ProgressBar(BaseProgressBar):
         self._start_time = None
         self._elapsed_time = 0
         self._stats_dict = {}
-        if displays is None:
-            displays = [
-                ipython_display(self, display_id=True)
-                if _in_zmq_interactive_shell()
-                else FileDisplay(position)]
         self._displays = displays
 
     @property
@@ -342,26 +337,25 @@ class ProgressBar(BaseProgressBar):
 
     def _repr_html_(self):
         return f&#39;&#39;&#39;
-        &lt;div style=&#34;line-height: var(--jp-widgets-inline-height); width: 100%;
-                    display: flex; flex-flow: row wrap; align-items: center;
-                    position: relative; margin: var(--jp-widgets-margin);&#34;&gt;
-          &lt;label style=&#34;margin-right: calc(var(--jp-widgets-inline-margin)*2);
-                        flex-shrink: 0; font-size: var(--jp-code-font-size);
+        &lt;div style=&#34;line-height: 28px; width: 100%; display: flex;
+                    flex-flow: row wrap; align-items: center;
+                    position: relative; margin: 2px;&#34;&gt;
+          &lt;label style=&#34;margin-right: 8px; flex-shrink: 0;
+                        font-size: var(--jp-code-font-size);
                         font-family: var(--jp-code-font-family);&#34;&gt;
             {html.escape(self.prefix).replace(&#39; &#39;, &#39;&amp;nbsp;&#39;)}
           &lt;/label&gt;
           &lt;div role=&#34;progressbar&#34; aria-valuenow=&#34;{self.prop_complete}&#34;
                aria-valuemin=&#34;0&#34; aria-valuemax=&#34;1&#34;
                style=&#34;position: relative; flex-grow: 1; align-self: stretch;
-                      margin-top: var(--jp-widgets-input-padding);
-                      margin-bottom: var(--jp-widgets-input-padding);
-                      height: initial; background-color: #eee;&#34;&gt;
+                      margin-top: 4px; margin-bottom: 4px;  height: initial;
+                      background-color: #eee;&#34;&gt;
             &lt;div style=&#34;background-color: {self.bar_color}; position: absolute;
                         bottom: 0; left: 0; width: {self.perc_complete};
                         height: 100%;&#34;&gt;&lt;/div&gt;
           &lt;/div&gt;
-          &lt;div style=&#34;margin-left: calc(var(--jp-widgets-inline-margin) * 2);
-                      flex-shrink: 0; font-family: var(--jp-code-font-family);
+          &lt;div style=&#34;margin-left: 8px; flex-shrink: 0;
+                      font-family: var(--jp-code-font-family);
                       font-size: var(--jp-code-font-size);&#34;&gt;
             {html.escape(self.postfix)}
           &lt;/div&gt;
@@ -370,6 +364,11 @@ class ProgressBar(BaseProgressBar):
 
     def __enter__(self):
         self.reset()
+        if self._displays is None:
+            self._displays = [
+                ipython_display(self, display_id=True)
+                if _in_zmq_interactive_shell()
+                else FileDisplay(self._position)]
         return self
 
     def __exit__(self, *args):
@@ -524,7 +523,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L57-L103" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L57-L103" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BaseProgressBar(abc.ABC):
     &#34;&#34;&#34;Base class defining expected interface for progress bars.&#34;&#34;&#34;
@@ -603,7 +602,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L86-L95" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L86-L95" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def update(self, iter, iter_dict, refresh=True):
@@ -654,7 +653,7 @@ representation of progress bar.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L106-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L106-L349" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of an iterative task.
@@ -694,11 +693,6 @@ representation of progress bar.</dd>
         self._start_time = None
         self._elapsed_time = 0
         self._stats_dict = {}
-        if displays is None:
-            displays = [
-                ipython_display(self, display_id=True)
-                if _in_zmq_interactive_shell()
-                else FileDisplay(position)]
         self._displays = displays
 
     @property
@@ -866,26 +860,25 @@ representation of progress bar.</dd>
 
     def _repr_html_(self):
         return f&#39;&#39;&#39;
-        &lt;div style=&#34;line-height: var(--jp-widgets-inline-height); width: 100%;
-                    display: flex; flex-flow: row wrap; align-items: center;
-                    position: relative; margin: var(--jp-widgets-margin);&#34;&gt;
-          &lt;label style=&#34;margin-right: calc(var(--jp-widgets-inline-margin)*2);
-                        flex-shrink: 0; font-size: var(--jp-code-font-size);
+        &lt;div style=&#34;line-height: 28px; width: 100%; display: flex;
+                    flex-flow: row wrap; align-items: center;
+                    position: relative; margin: 2px;&#34;&gt;
+          &lt;label style=&#34;margin-right: 8px; flex-shrink: 0;
+                        font-size: var(--jp-code-font-size);
                         font-family: var(--jp-code-font-family);&#34;&gt;
             {html.escape(self.prefix).replace(&#39; &#39;, &#39;&amp;nbsp;&#39;)}
           &lt;/label&gt;
           &lt;div role=&#34;progressbar&#34; aria-valuenow=&#34;{self.prop_complete}&#34;
                aria-valuemin=&#34;0&#34; aria-valuemax=&#34;1&#34;
                style=&#34;position: relative; flex-grow: 1; align-self: stretch;
-                      margin-top: var(--jp-widgets-input-padding);
-                      margin-bottom: var(--jp-widgets-input-padding);
-                      height: initial; background-color: #eee;&#34;&gt;
+                      margin-top: 4px; margin-bottom: 4px;  height: initial;
+                      background-color: #eee;&#34;&gt;
             &lt;div style=&#34;background-color: {self.bar_color}; position: absolute;
                         bottom: 0; left: 0; width: {self.perc_complete};
                         height: 100%;&#34;&gt;&lt;/div&gt;
           &lt;/div&gt;
-          &lt;div style=&#34;margin-left: calc(var(--jp-widgets-inline-margin) * 2);
-                      flex-shrink: 0; font-family: var(--jp-code-font-family);
+          &lt;div style=&#34;margin-left: 8px; flex-shrink: 0;
+                      font-family: var(--jp-code-font-family);
                       font-size: var(--jp-code-font-size);&#34;&gt;
             {html.escape(self.postfix)}
           &lt;/div&gt;
@@ -894,6 +887,11 @@ representation of progress bar.</dd>
 
     def __enter__(self):
         self.reset()
+        if self._displays is None:
+            self._displays = [
+                ipython_display(self, display_id=True)
+                if _in_zmq_interactive_shell()
+                else FileDisplay(self._position)]
         return self
 
     def __exit__(self, *args):
@@ -922,7 +920,7 @@ representation of progress bar.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L151-L154" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L146-L149" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_iter(self):
@@ -936,7 +934,7 @@ def n_iter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L156-L159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L151-L154" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def description(self):
@@ -950,7 +948,7 @@ def description(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L161-L164" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L156-L159" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def counter(self):
@@ -964,7 +962,7 @@ def counter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L170-L173" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L165-L168" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_complete(self):
@@ -978,7 +976,7 @@ def prop_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L175-L178" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L170-L173" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def perc_complete(self):
@@ -992,7 +990,7 @@ def perc_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L180-L183" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L175-L178" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def elapsed_time(self):
@@ -1006,7 +1004,7 @@ def elapsed_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L185-L194" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L180-L189" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def iter_rate(self):
@@ -1026,7 +1024,7 @@ def iter_rate(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L196-L203" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L191-L198" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def est_remaining_time(self):
@@ -1044,7 +1042,7 @@ def est_remaining_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L205-L208" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L200-L203" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_filled(self):
@@ -1058,7 +1056,7 @@ def n_block_filled(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L210-L213" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L205-L208" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_empty(self):
@@ -1072,7 +1070,7 @@ def n_block_empty(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L215-L218" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L210-L213" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_partial_block(self):
@@ -1086,7 +1084,7 @@ def prop_partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L220-L223" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L215-L218" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def filled_blocks(self):
@@ -1100,7 +1098,7 @@ def filled_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L225-L231" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L220-L226" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def empty_blocks(self):
@@ -1117,7 +1115,7 @@ def empty_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L233-L239" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L228-L234" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def partial_block(self):
@@ -1134,7 +1132,7 @@ def partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L241-L244" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L236-L239" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def progress_bar(self):
@@ -1148,7 +1146,7 @@ def progress_bar(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L246-L254" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L241-L249" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def bar_color(self):
@@ -1167,7 +1165,7 @@ def bar_color(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L256-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L251-L254" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def stats(self):
@@ -1181,7 +1179,7 @@ def stats(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L261-L266" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L256-L261" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prefix(self):
@@ -1197,7 +1195,7 @@ def prefix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L268-L275" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L263-L270" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def postfix(self):
@@ -1220,7 +1218,7 @@ def postfix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L277-L282" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L272-L277" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def reset(self):
     &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
@@ -1248,7 +1246,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L284-L301" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L279-L296" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter, iter_dict=None, refresh=True):
     &#34;&#34;&#34;Update progress bar state
@@ -1278,7 +1276,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L303-L306" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L298-L301" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def refresh(self):
     &#34;&#34;&#34;Refresh visual display(s) of progress bar.&#34;&#34;&#34;
@@ -1310,7 +1308,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L353-L390" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L352-L389" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FileDisplay:
     &#34;&#34;&#34;Use file which supports ANSI escape sequences as an updatable display&#34;&#34;&#34;
@@ -1372,7 +1370,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L384-L390" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L383-L389" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, obj):
     self._move_line(self._position[0] - self._position[1])
@@ -1407,7 +1405,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L432-L464" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L431-L463" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TqdmProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Wrapper of `tqdm` with same interface as `ProgressBar`.&#34;&#34;&#34;
@@ -1462,7 +1460,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/progressbars.py#L440-L455" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/progressbars.py#L439-L454" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter, iter_dict=None, refresh=True):
     if self._tqdm_obj is None:

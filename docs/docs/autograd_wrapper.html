@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L0-L121" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L0-L124" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Additional autograd differential operators.&#34;&#34;&#34;
 
@@ -44,7 +44,10 @@ except ImportError:
 
 def _wrapped_unary_to_nary(func):
     &#34;&#34;&#34;Use functools.wraps with unary_to_nary decorator.&#34;&#34;&#34;
-    return wraps(func)(unary_to_nary(func))
+    if AUTOGRAD_AVAILABLE:
+        return wraps(func)(unary_to_nary(func))
+    else:
+        return func
 
 
 @_wrapped_unary_to_nary
@@ -166,7 +169,7 @@ def mtp_hessian_grad_and_value(fun, x):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L21-L30" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L24-L33" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@_wrapped_unary_to_nary
 def grad_and_value(fun, x):
@@ -191,7 +194,7 @@ be computed concurrently for a batch of inputs.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L33-L50" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L36-L53" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@_wrapped_unary_to_nary
 def jacobian_and_value(fun, x):
@@ -233,7 +236,7 @@ be computed concurrently for a batch of inputs.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L53-L75" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L56-L78" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@_wrapped_unary_to_nary
 def mhp_jacobian_and_value(fun, x):
@@ -271,7 +274,7 @@ be computed concurrently for a batch of inputs.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L78-L96" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L81-L99" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@_wrapped_unary_to_nary
 def hessian_grad_and_value(fun, x):
@@ -313,7 +316,7 @@ be computed concurrently for a batch of inputs.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/autograd_wrapper.py#L99-L122" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/autograd_wrapper.py#L102-L125" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@_wrapped_unary_to_nary
 def mtp_hessian_grad_and_value(fun, x):

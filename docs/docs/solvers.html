@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L0-L143" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L0-L143" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Solvers for non-linear systems of equations for implicit integrators.&#34;&#34;&#34;
 
@@ -126,7 +126,7 @@ def retract_onto_manifold_quasi_newton(
             error = norm(constr)
             if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    &#39;Quasi-Newton iteration diverged. Last error {err:.1e}.&#39;)
+                    f&#39;Quasi-Newton iteration diverged. Last error {error:.1e}&#39;)
             elif error &lt; convergence_tol:
                 state.mom -= dh2_flow_mom_dmom @ mu
                 return state
@@ -188,7 +188,7 @@ def retract_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_norm(vct):
     &#34;&#34;&#34;Calculate the Euclidean (L-2) norm of a vector.&#34;&#34;&#34;
@@ -203,7 +203,7 @@ def retract_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def maximum_norm(vct):
     &#34;&#34;&#34;Calculate the maximum (L-infinity) norm of a vector.&#34;&#34;&#34;
@@ -235,7 +235,7 @@ def retract_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L17-L44" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L17-L44" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_direct(func, x0, tol=1e-9, max_iters=100,
                              norm=maximum_norm):
@@ -297,7 +297,7 @@ cheaper.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L47-L83" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L47-L83" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_steffensen(func, x0, tol=1e-9, max_iters=100,
                                  norm=maximum_norm):
@@ -346,7 +346,7 @@ cheaper.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L86-L113" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L86-L113" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def retract_onto_manifold_quasi_newton(
         state, state_prev, dt, system, convergence_tol=1e-9,
@@ -362,7 +362,7 @@ cheaper.</p>
             error = norm(constr)
             if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    &#39;Quasi-Newton iteration diverged. Last error {err:.1e}.&#39;)
+                    f&#39;Quasi-Newton iteration diverged. Last error {error:.1e}&#39;)
             elif error &lt; convergence_tol:
                 state.mom -= dh2_flow_mom_dmom @ mu
                 return state
@@ -386,7 +386,7 @@ cheaper.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/13c902e29fb02d2bb4f94ae6bc12eebc1b74d36c/mici/solvers.py#L116-L144" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L116-L144" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def retract_onto_manifold_newton(
         state, state_prev, dt, system, convergence_tol=1e-9,
