@@ -15,7 +15,10 @@ except ImportError:
 
 def _wrapped_unary_to_nary(func):
     """Use functools.wraps with unary_to_nary decorator."""
-    return wraps(func)(unary_to_nary(func))
+    if AUTOGRAD_AVAILABLE:
+        return wraps(func)(unary_to_nary(func))
+    else:
+        return func
 
 
 @_wrapped_unary_to_nary
