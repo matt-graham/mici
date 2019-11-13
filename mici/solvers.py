@@ -97,7 +97,7 @@ def retract_onto_manifold_quasi_newton(
             error = norm(constr)
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    'Quasi-Newton iteration diverged. Last error {err:.1e}.')
+                    f'Quasi-Newton iteration diverged. Last error {error:.1e}')
             elif error < convergence_tol:
                 state.mom -= dh2_flow_mom_dmom @ mu
                 return state
