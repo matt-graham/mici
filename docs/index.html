@@ -98,14 +98,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
   </a>
   <a href="https://matt-graham.github.io/mici/docs">
-    <img src="https://img.shields.io/badge/API_docs-grey.svg" alt="API documentation"/>
+    <img src="https://img.shields.io/badge/API_docs-grey.svg" 
+         alt="API documentation"/>
   </a>
   <a href="https://zenodo.org/badge/latestdoi/52494384">
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
 </p>
 
-<p><strong>Mici</strong> is a Python package providing implementations of Markov chain Monte Carlo (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.</p>
+<p><strong>Mici</strong> is a Python package providing implementations of <em>Markov chain Monte Carlo</em> (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.</p>
 <h2 id="features">Features</h2>
 <p>Key features include</p>
 <ul>
@@ -115,23 +116,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>memory efficient inference for large models by memory-mapping chains to disk, allowing long runs on large models without hitting memory issues.</li>
 </ul>
 <h2 id="installation">Installation</h2>
-<p>To install and use Mici the minimal requirements are a Python 3.6+ environment with <a href="http://www.numpy.org/">NumPy</a> (tested with v1.15.0) and <a href="https://www.scipy.org">SciPy</a> (tested with v1.1.0) installed.</p>
-<p>The latest Mici release on PyPI can be installed in the current Python environment by running</p>
-<p><code>pip install mici</code></p>
+<p>To install and use Mici the minimal requirements are a Python 3.6+ environment with <a href="http://www.numpy.org/">NumPy</a> and <a href="https://www.scipy.org">SciPy</a> installed. The latest Mici release on PyPI (and its dependencies) can be installed in the current Python environment by running</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ex">pip</span> install mici</a></code></pre></div>
+<p>To instead install the latest development version from the <code>master</code> branch on Github run</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ex">pip</span> install git+https://github.com/matt-graham/mici</a></code></pre></div>
 <p>If available in the installed Python environment the following additional packages provide extra functionality and features</p>
 <ul>
 <li><a href="https://github.com/HIPS/autograd">Autograd</a>: if available Autograd will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the <code>autograd.numpy</code> and <code>autograd.scipy</code> interfaces). To sample chains in parallel using <code>autograd</code> functions you also need to install <a href="https://github.com/uqfoundation/multiprocess">multiprocess</a>. This will cause <code>multiprocess.Pool</code> to be used in preference to the in-built <code>mutiprocessing.Pool</code> for parallelisation as multiprocess supports serialisation (via <a href="https://github.com/uqfoundation/dill">dill</a>) of a much wider range of types, including of Autograd generated functions. Both Autograd and multiprocess can be installed alongside Mici by running <code>pip install mici[autodiff]</code>.</li>
 <li><a href="https://github.com/bashtage/randomgen">RandomGen</a>: if RandomGen is available the <code>randomgen.Xorshift1024</code> random number generator will be used when running multiple chains in parallel, with the <code>jump</code> method of the object used to reproducibly generate independent substreams. RandomGen can be installed alongside Mici by running <code>pip install mici[randomgen]</code>.</li>
-<li><a href="https://arviz-devs.github.io/arviz/index.html#">ArviZ</a>: if ArviZ is available outputs of a sampling run can be converted to an <code>arviz.InferenceData</code> container object, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.</li>
+<li><a href="https://arviz-devs.github.io/arviz/index.html#">ArviZ</a>: if ArviZ is available outputs of a sampling run can be converted to an <code>arviz.InferenceData</code> container object using <code>mici.utils.convert_to_arviz_inference_data</code>, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.</li>
 </ul>
 <h2 id="why-mici?">Why Mici?</h2>
-<p>Mici is named for <a href="https://en.wikipedia.org/wiki/Augusta_H._Teller">Augusta 'Mici' Teller</a>, who along with <a href="https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth">Arriana Rosenbluth</a> developed the code for the <a href="https://en.wikipedia.org/wiki/MANIAC_I">MANIAC I</a> computer used in the seminal paper <a href="https://doi.org/10.1063%2F1.1699114"><em>Equations of State Calculations by Fast Computing Machines</em></a> which introduced the first example of a Markov chain Monte Carlo method.</p>
+<p>Mici is named for <a href="https://en.wikipedia.org/wiki/Augusta_H._Teller">Augusta 'Mici' Teller</a>, who along with <a href="https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth">Arianna Rosenbluth</a> developed the code for the <a href="https://en.wikipedia.org/wiki/MANIAC_I">MANIAC I</a> computer used in the seminal paper <a href="https://doi.org/10.1063%2F1.1699114"><em>Equations of State Calculations by Fast Computing Machines</em></a> which introduced the first example of a Markov chain Monte Carlo method.</p>
 <h2 id="related-projects">Related projects</h2>
 <p>Other Python packages for performing MCMC inference include <a href="https://github.com/pymc-devs/pymc3">PyMC3</a>, <a href="https://github.com/stan-dev/pystan">PyStan</a> (the Python interface to <a href="http://mc-stan.org/">Stan</a>), <a href="https://github.com/pyro-ppl/pyro">Pyro</a> / <a href="https://github.com/pyro-ppl/numpyro">NumPyro</a>, <a href="https://github.com/tensorflow/probability">TensorFlow Probability</a>, <a href="https://github.com/dfm/emcee">emcee</a> and <a href="https://github.com/mcleonard/sampyl">Sampyl</a>.</p>
 <p>Unlike PyMC3, PyStan, (Num)Pyro and TensorFlow Probability which are complete probabilistic programming frameworks including functionality for definining a probabilistic model / program, but like emcee and Sampyl, Mici is solely focussed on providing implementations of inference algorithms, with the user expected to be able to define at a minimum a function specifying the negative log (unnormalised) density of the distribution of interest.</p>
 <p>Further while PyStan, (Num)Pyro and TensorFlow Probability all push the sampling loop into external compiled non-Python code, in Mici the sampling loop is run directly within Python. This has the consequence that for small models in which the negative log density of the target distribution and other model functions are cheap to evaluate, the interpreter overhead in iterating over the chains in Python can dominate the computational cost, making sampling much slower than packages which outsource the sampling loop to a efficient compiled implementation.</p>
 <h2 id="overview-of-package">Overview of package</h2>
-<p>API documentation for the package is available <a href="https://matt-graham.github.io/mici/docs">here</a>. The three main user-facing modules within the <code>mici</code> package are the <code>systems</code>, <code>integrators</code> and <code>samplers</code> modules:</p>
+<p>API documentation for the package is available <a href="https://matt-graham.github.io/mici/docs">here</a>. The three main user-facing modules within the <code>mici</code> package are the <code>systems</code>, <code>integrators</code> and <code>samplers</code> modules and you will generally need to create an instance of one class from each module.</p>
 <p><a href="https://matt-graham.github.io/mici/docs/systems.html"><code>mici.systems</code></a> - Hamiltonian systems encapsulating model functions and their derivatives</p>
 <ul>
 <li><code>EuclideanMetricSystem</code> - systems with a metric on the position space with a constant matrix representation,</li>
@@ -144,7 +146,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><code>LeapfrogIntegrator</code> - explicit leapfrog (Störmer-Verlet) integrator for separable Hamiltonian systems (<a href="#leimkuhler2004simulating">Leimkulher and Reich, 2004</a>),</li>
 <li><code>ImplicitLeapfrogIntegrator</code> - implicit (or generalised) leapfrog integrator for non-separable Hamiltonian systems (<a href="#leimkuhler2004simulating">Leimkulher and Reich, 2004</a>),</li>
-<li><code>ConstrainedLeapfrogIntegrator</code> - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (<a href="#andersen1983rattle">Andersen, 1983</a>; <a href="#leimkuhler1994symplectic">Leimkuhler and Reich, 1994</a>)</li>
+<li><code>ConstrainedLeapfrogIntegrator</code> - constrained leapfrog integrator for Hamiltonian systems subject to holonomic constraints (<a href="#andersen1983rattle">Andersen, 1983</a>; <a href="#leimkuhler1994symplectic">Leimkuhler and Reich, 1994</a>).</li>
 </ul>
 <p><a href="https://matt-graham.github.io/mici/docs/samplers.html"><code>mici.samplers</code></a> - MCMC samplers for peforming inference</p>
 <ul>
@@ -156,96 +158,96 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <img src='images/torus-samples.gif' width='360px'/>
 
 <p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualised in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using <code>multiprocess</code> and use <code>matplotlib</code> to plot the samples.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode Python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="im">from</span> mici <span class="im">import</span> systems, integrators, samplers</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="im">import</span> autograd.numpy <span class="im">as</span> np</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="im">from</span> mpl_toolkits.mplot3d <span class="im">import</span> Axes3D</a>
-<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="im">import</span> matplotlib.animation <span class="im">as</span> animation</a>
-<a class="sourceLine" id="cb1-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># Define fixed model parameters</span></a>
-<a class="sourceLine" id="cb1-8" data-line-number="8">R <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># toroidal radius ∈ (0, ∞)</span></a>
-<a class="sourceLine" id="cb1-9" data-line-number="9">r <span class="op">=</span> <span class="fl">0.5</span>  <span class="co"># poloidal radius ∈ (0, R)</span></a>
-<a class="sourceLine" id="cb1-10" data-line-number="10">α <span class="op">=</span> <span class="fl">0.9</span>  <span class="co"># density fluctuation amplitude ∈ [0, 1)</span></a>
-<a class="sourceLine" id="cb1-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co"># Define constraint function such that the set {q : constr(q) == 0} is a torus</span></a>
-<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="kw">def</span> constr(q):</a>
-<a class="sourceLine" id="cb1-14" data-line-number="14">    x, y, z <span class="op">=</span> q.T</a>
-<a class="sourceLine" id="cb1-15" data-line-number="15">    <span class="cf">return</span> np.stack([((x<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> y<span class="op">**</span><span class="dv">2</span>)<span class="op">**</span><span class="fl">0.5</span> <span class="op">-</span> R)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> z<span class="op">**</span><span class="dv">2</span> <span class="op">-</span> r<span class="op">**</span><span class="dv">2</span>], <span class="dv">-1</span>)</a>
-<a class="sourceLine" id="cb1-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="co"># Define negative log density for the target distribution on torus</span></a>
-<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co"># (with respect to 2D &#39;area&#39; measure for torus)</span></a>
-<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="kw">def</span> neg_log_dens(q):</a>
-<a class="sourceLine" id="cb1-20" data-line-number="20">    x, y, z <span class="op">=</span> q.T</a>
-<a class="sourceLine" id="cb1-21" data-line-number="21">    θ <span class="op">=</span> np.arctan2(y, x)</a>
-<a class="sourceLine" id="cb1-22" data-line-number="22">    ϕ <span class="op">=</span> np.arctan2(z, x <span class="op">/</span> np.cos(θ) <span class="op">-</span> R)</a>
-<a class="sourceLine" id="cb1-23" data-line-number="23">    <span class="cf">return</span> np.log1p(r <span class="op">*</span> np.cos(ϕ) <span class="op">/</span> R) <span class="op">-</span> np.log1p(np.sin(<span class="dv">4</span><span class="op">*</span>θ) <span class="op">*</span> np.cos(ϕ) <span class="op">*</span> α)</a>
-<a class="sourceLine" id="cb1-24" data-line-number="24"></a>
-<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="co"># Specify constrained Hamiltonian system with default identity metric</span></a>
-<a class="sourceLine" id="cb1-26" data-line-number="26">system <span class="op">=</span> systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)</a>
-<a class="sourceLine" id="cb1-27" data-line-number="27"></a>
-<a class="sourceLine" id="cb1-28" data-line-number="28"><span class="co"># System is constrained therefore use constrained leapfrog integrator</span></a>
-<a class="sourceLine" id="cb1-29" data-line-number="29">integrator <span class="op">=</span> integrators.ConstrainedLeapfrogIntegrator(system, step_size<span class="op">=</span><span class="fl">0.2</span>)</a>
-<a class="sourceLine" id="cb1-30" data-line-number="30"></a>
-<a class="sourceLine" id="cb1-31" data-line-number="31"><span class="co"># Seed a random number generator</span></a>
-<a class="sourceLine" id="cb1-32" data-line-number="32">rng <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span><span class="dv">1234</span>)</a>
-<a class="sourceLine" id="cb1-33" data-line-number="33"></a>
-<a class="sourceLine" id="cb1-34" data-line-number="34"><span class="co"># Use dynamic integration-time HMC implementation as MCMC sampler</span></a>
-<a class="sourceLine" id="cb1-35" data-line-number="35">sampler <span class="op">=</span> samplers.DynamicMultinomialHMC(system, integrator, rng)</a>
-<a class="sourceLine" id="cb1-36" data-line-number="36"></a>
-<a class="sourceLine" id="cb1-37" data-line-number="37"><span class="co"># Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²</span></a>
-<a class="sourceLine" id="cb1-38" data-line-number="38"><span class="co"># x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)</span></a>
-<a class="sourceLine" id="cb1-39" data-line-number="39">n_chain <span class="op">=</span> <span class="dv">4</span></a>
-<a class="sourceLine" id="cb1-40" data-line-number="40">θ_init, ϕ_init <span class="op">=</span> rng.uniform(<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> np.pi, size<span class="op">=</span>(<span class="dv">2</span>, n_chain))</a>
-<a class="sourceLine" id="cb1-41" data-line-number="41">q_init <span class="op">=</span> np.stack([</a>
-<a class="sourceLine" id="cb1-42" data-line-number="42">    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.cos(θ_init),</a>
-<a class="sourceLine" id="cb1-43" data-line-number="43">    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.sin(θ_init),</a>
-<a class="sourceLine" id="cb1-44" data-line-number="44">    r <span class="op">*</span> np.sin(ϕ_init)], <span class="dv">-1</span>)</a>
-<a class="sourceLine" id="cb1-45" data-line-number="45"></a>
-<a class="sourceLine" id="cb1-46" data-line-number="46"><span class="co"># Define function to extract variables to trace during sampling</span></a>
-<a class="sourceLine" id="cb1-47" data-line-number="47"><span class="kw">def</span> trace_func(state):</a>
-<a class="sourceLine" id="cb1-48" data-line-number="48">    x, y, z <span class="op">=</span> state.pos</a>
-<a class="sourceLine" id="cb1-49" data-line-number="49">    <span class="cf">return</span> {<span class="st">&#39;x&#39;</span>: x, <span class="st">&#39;y&#39;</span>: y, <span class="st">&#39;z&#39;</span>: z}</a>
-<a class="sourceLine" id="cb1-50" data-line-number="50"></a>
-<a class="sourceLine" id="cb1-51" data-line-number="51"><span class="co"># Sample four chains of 2500 samples in parallel</span></a>
-<a class="sourceLine" id="cb1-52" data-line-number="52">final_states, traces, stats <span class="op">=</span> sampler.sample_chains(</a>
-<a class="sourceLine" id="cb1-53" data-line-number="53">    n_sample<span class="op">=</span><span class="dv">2500</span>, init_states<span class="op">=</span>q_init, n_process<span class="op">=</span><span class="dv">4</span>, trace_funcs<span class="op">=</span>[trace_func])</a>
-<a class="sourceLine" id="cb1-54" data-line-number="54"></a>
-<a class="sourceLine" id="cb1-55" data-line-number="55"><span class="co"># Print average accept probability and number of integrator steps per chain</span></a>
-<a class="sourceLine" id="cb1-56" data-line-number="56"><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(n_chain):</a>
-<a class="sourceLine" id="cb1-57" data-line-number="57">    <span class="bu">print</span>(<span class="ss">f&quot;Chain </span><span class="sc">{c}</span><span class="ss">:&quot;</span>)</a>
-<a class="sourceLine" id="cb1-58" data-line-number="58">    <span class="bu">print</span>(<span class="ss">f&quot;  Average accept prob. = </span><span class="sc">{</span>stats[<span class="st">&#39;accept_prob&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">&quot;</span>)</a>
-<a class="sourceLine" id="cb1-59" data-line-number="59">    <span class="bu">print</span>(<span class="ss">f&quot;  Average number steps = </span><span class="sc">{</span>stats[<span class="st">&#39;n_step&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.1f}</span><span class="ss">&quot;</span>)</a>
-<a class="sourceLine" id="cb1-60" data-line-number="60"></a>
-<a class="sourceLine" id="cb1-61" data-line-number="61"><span class="co"># Visualise concatentated chain samples as animated 3D scatter plot   </span></a>
-<a class="sourceLine" id="cb1-62" data-line-number="62">fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</a>
-<a class="sourceLine" id="cb1-63" data-line-number="63">ax <span class="op">=</span> Axes3D(fig, [<span class="fl">0.</span>, <span class="fl">0.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>], proj_type<span class="op">=</span><span class="st">&#39;ortho&#39;</span>)</a>
-<a class="sourceLine" id="cb1-64" data-line-number="64">points_3d, <span class="op">=</span> ax.plot(<span class="op">*</span>(np.concatenate(traces[k]) <span class="cf">for</span> k <span class="kw">in</span> <span class="st">&#39;xyz&#39;</span>), <span class="st">&#39;.&#39;</span>, ms<span class="op">=</span><span class="fl">0.5</span>)</a>
-<a class="sourceLine" id="cb1-65" data-line-number="65">ax.axis(<span class="st">&#39;off&#39;</span>)</a>
-<a class="sourceLine" id="cb1-66" data-line-number="66"><span class="cf">for</span> set_lim <span class="kw">in</span> [ax.set_xlim, ax.set_ylim, ax.set_zlim]:</a>
-<a class="sourceLine" id="cb1-67" data-line-number="67">    set_lim((<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</a>
-<a class="sourceLine" id="cb1-68" data-line-number="68"></a>
-<a class="sourceLine" id="cb1-69" data-line-number="69"><span class="kw">def</span> update(i):</a>
-<a class="sourceLine" id="cb1-70" data-line-number="70">    angle <span class="op">=</span> <span class="dv">45</span> <span class="op">*</span> (np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> i <span class="op">/</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb1-71" data-line-number="71">    ax.view_init(elev<span class="op">=</span>angle, azim<span class="op">=</span>angle)</a>
-<a class="sourceLine" id="cb1-72" data-line-number="72">    <span class="cf">return</span> (points_3d,)</a>
-<a class="sourceLine" id="cb1-73" data-line-number="73"></a>
-<a class="sourceLine" id="cb1-74" data-line-number="74">anim <span class="op">=</span> animation.FuncAnimation(fig, update, frames<span class="op">=</span><span class="dv">60</span>, interval<span class="op">=</span><span class="dv">100</span>, blit<span class="op">=</span><span class="va">True</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode Python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="im">from</span> mici <span class="im">import</span> systems, integrators, samplers</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="im">import</span> autograd.numpy <span class="im">as</span> np</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="im">from</span> mpl_toolkits.mplot3d <span class="im">import</span> Axes3D</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="im">import</span> matplotlib.animation <span class="im">as</span> animation</a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="co"># Define fixed model parameters</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8">R <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># toroidal radius ∈ (0, ∞)</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">r <span class="op">=</span> <span class="fl">0.5</span>  <span class="co"># poloidal radius ∈ (0, R)</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">α <span class="op">=</span> <span class="fl">0.9</span>  <span class="co"># density fluctuation amplitude ∈ [0, 1)</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb3-12" data-line-number="12"><span class="co"># Define constraint function such that the set {q : constr(q) == 0} is a torus</span></a>
+<a class="sourceLine" id="cb3-13" data-line-number="13"><span class="kw">def</span> constr(q):</a>
+<a class="sourceLine" id="cb3-14" data-line-number="14">    x, y, z <span class="op">=</span> q.T</a>
+<a class="sourceLine" id="cb3-15" data-line-number="15">    <span class="cf">return</span> np.stack([((x<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> y<span class="op">**</span><span class="dv">2</span>)<span class="op">**</span><span class="fl">0.5</span> <span class="op">-</span> R)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> z<span class="op">**</span><span class="dv">2</span> <span class="op">-</span> r<span class="op">**</span><span class="dv">2</span>], <span class="dv">-1</span>)</a>
+<a class="sourceLine" id="cb3-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb3-17" data-line-number="17"><span class="co"># Define negative log density for the target distribution on torus</span></a>
+<a class="sourceLine" id="cb3-18" data-line-number="18"><span class="co"># (with respect to 2D &#39;area&#39; measure for torus)</span></a>
+<a class="sourceLine" id="cb3-19" data-line-number="19"><span class="kw">def</span> neg_log_dens(q):</a>
+<a class="sourceLine" id="cb3-20" data-line-number="20">    x, y, z <span class="op">=</span> q.T</a>
+<a class="sourceLine" id="cb3-21" data-line-number="21">    θ <span class="op">=</span> np.arctan2(y, x)</a>
+<a class="sourceLine" id="cb3-22" data-line-number="22">    ϕ <span class="op">=</span> np.arctan2(z, x <span class="op">/</span> np.cos(θ) <span class="op">-</span> R)</a>
+<a class="sourceLine" id="cb3-23" data-line-number="23">    <span class="cf">return</span> np.log1p(r <span class="op">*</span> np.cos(ϕ) <span class="op">/</span> R) <span class="op">-</span> np.log1p(np.sin(<span class="dv">4</span><span class="op">*</span>θ) <span class="op">*</span> np.cos(ϕ) <span class="op">*</span> α)</a>
+<a class="sourceLine" id="cb3-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb3-25" data-line-number="25"><span class="co"># Specify constrained Hamiltonian system with default identity metric</span></a>
+<a class="sourceLine" id="cb3-26" data-line-number="26">system <span class="op">=</span> systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)</a>
+<a class="sourceLine" id="cb3-27" data-line-number="27"></a>
+<a class="sourceLine" id="cb3-28" data-line-number="28"><span class="co"># System is constrained therefore use constrained leapfrog integrator</span></a>
+<a class="sourceLine" id="cb3-29" data-line-number="29">integrator <span class="op">=</span> integrators.ConstrainedLeapfrogIntegrator(system, step_size<span class="op">=</span><span class="fl">0.2</span>)</a>
+<a class="sourceLine" id="cb3-30" data-line-number="30"></a>
+<a class="sourceLine" id="cb3-31" data-line-number="31"><span class="co"># Seed a random number generator</span></a>
+<a class="sourceLine" id="cb3-32" data-line-number="32">rng <span class="op">=</span> np.random.RandomState(seed<span class="op">=</span><span class="dv">1234</span>)</a>
+<a class="sourceLine" id="cb3-33" data-line-number="33"></a>
+<a class="sourceLine" id="cb3-34" data-line-number="34"><span class="co"># Use dynamic integration-time HMC implementation as MCMC sampler</span></a>
+<a class="sourceLine" id="cb3-35" data-line-number="35">sampler <span class="op">=</span> samplers.DynamicMultinomialHMC(system, integrator, rng)</a>
+<a class="sourceLine" id="cb3-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb3-37" data-line-number="37"><span class="co"># Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²</span></a>
+<a class="sourceLine" id="cb3-38" data-line-number="38"><span class="co"># x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)</span></a>
+<a class="sourceLine" id="cb3-39" data-line-number="39">n_chain <span class="op">=</span> <span class="dv">4</span></a>
+<a class="sourceLine" id="cb3-40" data-line-number="40">θ_init, ϕ_init <span class="op">=</span> rng.uniform(<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> np.pi, size<span class="op">=</span>(<span class="dv">2</span>, n_chain))</a>
+<a class="sourceLine" id="cb3-41" data-line-number="41">q_init <span class="op">=</span> np.stack([</a>
+<a class="sourceLine" id="cb3-42" data-line-number="42">    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.cos(θ_init),</a>
+<a class="sourceLine" id="cb3-43" data-line-number="43">    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.sin(θ_init),</a>
+<a class="sourceLine" id="cb3-44" data-line-number="44">    r <span class="op">*</span> np.sin(ϕ_init)], <span class="dv">-1</span>)</a>
+<a class="sourceLine" id="cb3-45" data-line-number="45"></a>
+<a class="sourceLine" id="cb3-46" data-line-number="46"><span class="co"># Define function to extract variables to trace during sampling</span></a>
+<a class="sourceLine" id="cb3-47" data-line-number="47"><span class="kw">def</span> trace_func(state):</a>
+<a class="sourceLine" id="cb3-48" data-line-number="48">    x, y, z <span class="op">=</span> state.pos</a>
+<a class="sourceLine" id="cb3-49" data-line-number="49">    <span class="cf">return</span> {<span class="st">&#39;x&#39;</span>: x, <span class="st">&#39;y&#39;</span>: y, <span class="st">&#39;z&#39;</span>: z}</a>
+<a class="sourceLine" id="cb3-50" data-line-number="50"></a>
+<a class="sourceLine" id="cb3-51" data-line-number="51"><span class="co"># Sample four chains of 2500 samples in parallel</span></a>
+<a class="sourceLine" id="cb3-52" data-line-number="52">final_states, traces, stats <span class="op">=</span> sampler.sample_chains(</a>
+<a class="sourceLine" id="cb3-53" data-line-number="53">    n_sample<span class="op">=</span><span class="dv">2500</span>, init_states<span class="op">=</span>q_init, n_process<span class="op">=</span><span class="dv">4</span>, trace_funcs<span class="op">=</span>[trace_func])</a>
+<a class="sourceLine" id="cb3-54" data-line-number="54"></a>
+<a class="sourceLine" id="cb3-55" data-line-number="55"><span class="co"># Print average accept probability and number of integrator steps per chain</span></a>
+<a class="sourceLine" id="cb3-56" data-line-number="56"><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(n_chain):</a>
+<a class="sourceLine" id="cb3-57" data-line-number="57">    <span class="bu">print</span>(<span class="ss">f&quot;Chain </span><span class="sc">{c}</span><span class="ss">:&quot;</span>)</a>
+<a class="sourceLine" id="cb3-58" data-line-number="58">    <span class="bu">print</span>(<span class="ss">f&quot;  Average accept prob. = </span><span class="sc">{</span>stats[<span class="st">&#39;accept_prob&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">&quot;</span>)</a>
+<a class="sourceLine" id="cb3-59" data-line-number="59">    <span class="bu">print</span>(<span class="ss">f&quot;  Average number steps = </span><span class="sc">{</span>stats[<span class="st">&#39;n_step&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.1f}</span><span class="ss">&quot;</span>)</a>
+<a class="sourceLine" id="cb3-60" data-line-number="60"></a>
+<a class="sourceLine" id="cb3-61" data-line-number="61"><span class="co"># Visualise concatentated chain samples as animated 3D scatter plot   </span></a>
+<a class="sourceLine" id="cb3-62" data-line-number="62">fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</a>
+<a class="sourceLine" id="cb3-63" data-line-number="63">ax <span class="op">=</span> Axes3D(fig, [<span class="fl">0.</span>, <span class="fl">0.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>], proj_type<span class="op">=</span><span class="st">&#39;ortho&#39;</span>)</a>
+<a class="sourceLine" id="cb3-64" data-line-number="64">points_3d, <span class="op">=</span> ax.plot(<span class="op">*</span>(np.concatenate(traces[k]) <span class="cf">for</span> k <span class="kw">in</span> <span class="st">&#39;xyz&#39;</span>), <span class="st">&#39;.&#39;</span>, ms<span class="op">=</span><span class="fl">0.5</span>)</a>
+<a class="sourceLine" id="cb3-65" data-line-number="65">ax.axis(<span class="st">&#39;off&#39;</span>)</a>
+<a class="sourceLine" id="cb3-66" data-line-number="66"><span class="cf">for</span> set_lim <span class="kw">in</span> [ax.set_xlim, ax.set_ylim, ax.set_zlim]:</a>
+<a class="sourceLine" id="cb3-67" data-line-number="67">    set_lim((<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</a>
+<a class="sourceLine" id="cb3-68" data-line-number="68"></a>
+<a class="sourceLine" id="cb3-69" data-line-number="69"><span class="kw">def</span> update(i):</a>
+<a class="sourceLine" id="cb3-70" data-line-number="70">    angle <span class="op">=</span> <span class="dv">45</span> <span class="op">*</span> (np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> i <span class="op">/</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-71" data-line-number="71">    ax.view_init(elev<span class="op">=</span>angle, azim<span class="op">=</span>angle)</a>
+<a class="sourceLine" id="cb3-72" data-line-number="72">    <span class="cf">return</span> (points_3d,)</a>
+<a class="sourceLine" id="cb3-73" data-line-number="73"></a>
+<a class="sourceLine" id="cb3-74" data-line-number="74">anim <span class="op">=</span> animation.FuncAnimation(fig, update, frames<span class="op">=</span><span class="dv">60</span>, interval<span class="op">=</span><span class="dv">100</span>, blit<span class="op">=</span><span class="va">True</span>)</a></code></pre></div>
 <h2 id="references">References</h2>
 <ol>
-<li><a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm for molecular dynamics calculations. <em>Journal of Computational Physics</em>, 52(1), pp.24-34.</li>
-<li><a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte Carlo. <em>Physics letters B</em>, 195(2), pp.216-222.</li>
-<li><a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. <em>Physics Letters B</em>, 226(3-4), pp.369-371.</li>
-<li><a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. <em>Physics Letters B</em>, 268(CERN-TH-6172-91), pp.247-252.</li>
-<li><a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained Hamiltonian systems. <em>Mathematics of Computation</em>, 63(208), pp.589-605.</li>
-<li><a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). <em>Cambridge University Press</em>.</li>
-<li><a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo algorithm and the problem of calculating the free energy in several variables. <em>ZAMM ‐ Journal of Applied Mathematics and Mechanics</em>, 85(10), pp.700-710.</li>
-<li><a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and Hamiltonian Monte Varlo methods. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em>, 73(2), pp.123-214.</li>
-<li><a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods on implicitly defined manifolds. In <em>Artificial intelligence and statistics</em> (pp. 161-172).</li>
-<li><a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian Monte Carlo. In <em>Geometric science of information</em> (pp. 327-334).</li>
-<li><a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning Research</em>, 15(1), pp.1593-1623.</li>
-<li><a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</li>
-<li><a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo. <em>arXiv preprint arXiv:1701.02434</em>.</li>
-<li><a id='lelievre2018hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods for sampling probability measures on submanifolds. <em>arXiv preprint 1807.02356</em>.</li>
+<li><a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm for molecular dynamics calculations. <em>Journal of Computational Physics</em>, 52(1), pp.24-34. <a href="https://doi.org/10.1016/0021-9991(83)90014-1"><img src="https://zenodo.org/badge/DOI/10.1016/0021-9991(83)90014-1.svg" alt="DOI:10.1016/0021-9991(83)90014-1" /></a></li>
+<li><a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte Carlo. <em>Physics letters B</em>, 195(2), pp.216-222. <a href="https://doi.org/10.1016/0370-2693(87)91197-X"><img src="https://zenodo.org/badge/DOI/10.1016/0370-2693(87)91197-X.svg" alt="DOI:10.1016/0370-2693(87)91197-X" /></a></li>
+<li><a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. <em>Physics Letters B</em>, 226(3-4), pp.369-371. <a href="https://doi.org/10.1016/0370-2693(89)91212-4"><img src="https://zenodo.org/badge/DOI/10.1016/0370-2693(89)91212-4.svg" alt="DOI:10.1016/0370-2693(89)91212-4" /></a></li>
+<li><a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. <em>Physics Letters B</em>, 268(CERN-TH-6172-91), pp.247-252. <a href="https://doi.org/10.1016/0370-2693(91)90812-5"><img src="https://zenodo.org/badge/DOI/10.1016/0370-2693(91)90812-5.svg" alt="DOI:10.1016/0370-2693(91)90812-5" /></a></li>
+<li><a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994. Symplectic integration of constrained Hamiltonian systems. <em>Mathematics of Computation</em>, 63(208), pp.589-605. <a href="https://doi.org/10.2307/2153284"><img src="https://zenodo.org/badge/DOI/10.2307/2153284.svg" alt="DOI:10.2307/2153284" /></a></li>
+<li><a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004. Simulating Hamiltonian dynamics (Vol. 14). <em>Cambridge University Press</em>. <a href="https://doi.org/10.1017/CBO9780511614118"><img src="https://zenodo.org/badge/DOI/10.1017/CBO9780511614118.svg" alt="DOI:10.1017/CBO9780511614118" /></a></li>
+<li><a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A constrained hybrid Monte‐Carlo algorithm and the problem of calculating the free energy in several variables. <em>ZAMM ‐ Journal of Applied Mathematics and Mechanics</em>, 85(10), pp.700-710. <a href="https://doi.org/10.1002/zamm.200410218"><img src="https://zenodo.org/badge/DOI/10.1002/zamm.200410218.svg" alt="DOI:10.1002/zamm.200410218" /></a></li>
+<li><a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and Hamiltonian Monte Carlo methods. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em>, 73(2), pp.123-214. <a href="https://doi.org/10.1111/j.1467-9868.2010.00765.x"><img src="https://zenodo.org/badge/DOI/10.1111/j.1467-9868.2010.00765.x.svg" alt="DOI:10.1111/j.1467-9868.2010.00765.x" /></a></li>
+<li><a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and Urtasun, R., 2012. A family of MCMC methods on implicitly defined manifolds. In <em>Artificial intelligence and statistics</em> (pp. 161-172). <a href="https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.417.6111"><img src="http://img.shields.io/badge/CiteSeerX-10.1.1.417.6111-blue.svg" alt="CiteSeerX:10.1.1.417.6111" /></a></li>
+<li><a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian Monte Carlo. In <em>Geometric science of information</em> (pp. 327-334). <a href="https://doi.org/10.1007/978-3-642-40020-9_35"><img src="https://zenodo.org/badge/DOI/10.1007/978-3-642-40020-9_35.svg" alt="DOI:10.1007/978-3-642-40020-9_35" /></a> <a href="https://arxiv.org/abs/1212.4693"><img src="http://img.shields.io/badge/arXiv-1212.4693-B31B1B.svg" alt="arXiv:1212.4693" /></a></li>
+<li><a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning Research</em>, 15(1), pp.1593-1623. <a href="https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.220.8395"><img src="http://img.shields.io/badge/CiteSeerX-10.1.1.220.8395-blue.svg" alt="CiteSeerX:10.1.1.220.8395" /></a> <a href="https://arxiv.org/abs/1111.4246"><img src="http://img.shields.io/badge/arXiv-1111.4246-B31B1B.svg" alt="arXiv:1111.4246" /></a></li>
+<li><a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian Monte Carlo. <em>Statistics and Computing</em>, 24(3), pp.339-349. <a href="https://doi.org/10.1007/s11222-012-9373-1"><img src="https://zenodo.org/badge/DOI/10.1007/s11222-012-9373-1.svg" alt="DOI:10.1007/s11222-012-9373-1" /></a> <a href="https://arxiv.org/abs/1106.5941"><img src="http://img.shields.io/badge/arXiv-1106.5941-B31B1B.svg" alt="arXiv:1106.5941" /></a></li>
+<li><a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo. <a href="https://arxiv.org/abs/1701.02434"><img src="http://img.shields.io/badge/arXiv-1701.02434-B31B1B.svg" alt="arXiv:1701.02434" /></a></li>
+<li><a id='lelievre2018hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 2018. Hybrid Monte Carlo methods for sampling probability measures on submanifolds. <a href="https://arxiv.org/abs/1807.02356"><img src="http://img.shields.io/badge/arXiv-1807.02356-B31B1B.svg" alt="arXiv:1807.02356" /></a></li>
 </ol>
 </body>
 </html>
