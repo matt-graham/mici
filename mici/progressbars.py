@@ -48,10 +48,10 @@ def _format_time(total_seconds):
 def _update_stats_running_means(iter, means, new_vals):
     """Update dictionary of running statistics means with latest values."""
     if iter == 1:
-        means.update(new_vals)
+        means.update({key: float(val) for key, val in new_vals.items()})
     else:
         for key, val in new_vals.items():
-            means[key] += (val - means[key]) / iter
+            means[key] += (float(val) - means[key]) / iter
 
 
 class BaseProgressBar(abc.ABC):
