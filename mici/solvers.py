@@ -20,14 +20,14 @@ def solve_fixed_point_direct(
     """Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
-        func (Callable([array], array)): Function to find fixed point of.
+        func (Callable[[array], array]): Function to find fixed point of.
         x0 (array): Initial state (function argument).
         convergence_tol (float): Convergence tolerance - solver successfully
             terminates when `norm(func(x) - x) < convergence_tol`.
         divergence_tol (float): Divergence tolerance - solver aborts if
             `norm(func(x) - x) > divergence_tol` on any iteration.
         max_iters (int): Maximum number of iterations before raising exception.
-        norm (Callable([array], float)): Norm to use to assess convergence.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
         Solution to fixed point equation with
@@ -70,14 +70,14 @@ def solve_fixed_point_steffensen(
     [1] : https://en.wikipedia.org/wiki/Steffensen%27s_method
 
     Args:
-        func (Callable([array], array)): Function to find fixed point of.
+        func (Callable[[array], array]): Function to find fixed point of.
         x0 (array): Initial state (function argument).
         convergence_tol (float): Convergence tolerance - solver successfully
             terminates when `norm(func(x) - x) < convergence_tol`.
         divergence_tol (float): Divergence tolerance - solver aborts if
             `norm(func(x) - x) > divergence_tol` on any iteration.
         max_iters (int): Maximum number of iterations before raising exception.
-        norm (Callable([array], float)): Norm to use to assess convergence.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
         Solution to fixed point equation with

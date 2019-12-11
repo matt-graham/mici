@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L0-L681" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L0-L712" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
 
@@ -404,7 +404,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 self.metric.eigvec, cos_omega_dt))
 
 
-class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
+class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     &#34;&#34;&#34;Base class for Euclidean Hamiltonian systems subject to constraints.
 
     The system is assumed to be subject to a set of holonomic constraints on
@@ -436,23 +436,52 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     def jacob_constr(self, state):
         return self._jacob_constr(state.pos)
 
+    @abstractmethod
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
-        raise NotImplementedError()
+        &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
+
+        Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
+        potentially exploiting any structure / sparsity in `jacob_constr_1`,
+        `jacob_constr_2` and `inner_product_matrix`.
+
+        Args:
+            jacob_constr_1 (Matrix): First constraint Jacobian in product.
+            inner_product_matrix (Matrix): Positive-definite matrix defining
+                inner-product between rows of two constraint Jacobians.
+            jacob_constr_2 (None or Matrix): Second constraint Jacobian in
+                product. Defaults to `jacob_constr_1` if set to `None`.
+
+        Returns
+            Matrix: Object corresponding to computed inner products of
+               the constraint Jacobian rows.
+        &#34;&#34;&#34;
 
     @cache_in_state(&#39;pos&#39;)
     def gram(self, state):
+        &#34;&#34;&#34;Gram matrix at current position.&#34;&#34;&#34;
         return self.jacob_constr_inner_product(
             self.jacob_constr(state), self.metric.inv)
 
     def inv_gram(self, state):
+        &#34;&#34;&#34;Inverse of Gram matrix at current position.&#34;&#34;&#34;
         return self.gram(state).inv
 
     def log_det_sqrt_gram(self, state):
+        &#34;&#34;&#34;Value of (half of) log-determinant of Gram matrix.&#34;&#34;&#34;
         return self.gram(state).log_abs_det_sqrt
 
+    @abstractmethod
     def grad_log_det_sqrt_gram(self, state):
-        raise NotImplementedError()
+        &#34;&#34;&#34;Derivative of (half of) log-determinant of Gram matrix wrt position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `log_det_sqrt_gram(state)` derivative with respect
+            to `state.pos`.
+        &#34;&#34;&#34;
 
     def h1(self, state):
         if self.dens_wrt_hausdorff:
@@ -468,6 +497,7 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     self.grad_log_det_sqrt_gram(state))
 
     def project_onto_cotangent_space(self, mom, state):
+        &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.&#34;&#34;&#34;
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
@@ -476,12 +506,13 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         return mom
 
     def sample_momentum(self, state, rng):
+        &#34;&#34;&#34;Sample a momentum from its conditional at the current position.&#34;&#34;&#34;
         mom = super().sample_momentum(state, rng)
         mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
-class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
+class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
 
     The system is assumed to be subject to a set of holonomic constraints on
@@ -764,7 +795,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L15-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L15-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class System(ABC):
     r&#34;&#34;&#34;Base class for Hamiltonian systems.
@@ -970,7 +1001,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L61-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L61-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def neg_log_dens(self, state):
@@ -1004,7 +1035,7 @@ def neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L73-L84" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L73-L84" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
 def grad_neg_log_dens(self, state):
@@ -1038,7 +1069,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L86-L95" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L86-L95" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     &#34;&#34;&#34;Hamiltonian component depending only on position.
@@ -1070,7 +1101,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L97-L106" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L97-L106" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
@@ -1100,7 +1131,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L108-L117" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L108-L117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1_flow(self, state, dt):
     &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
@@ -1132,7 +1163,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L119-L128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L119-L128" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def h2(self, state):
@@ -1164,7 +1195,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L130-L139" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L130-L139" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def dh2_dmom(self, state):
@@ -1196,7 +1227,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L141-L150" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L141-L150" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     &#34;&#34;&#34;Hamiltonian function for system.
@@ -1228,7 +1259,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L152-L164" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L152-L164" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dpos(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
@@ -1263,7 +1294,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L166-L175" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L166-L175" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dmom(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
@@ -1296,7 +1327,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L177-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L177-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample_momentum(self, state, rng):
@@ -1367,7 +1398,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L191-L272" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L191-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EuclideanMetricSystem(System):
     r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
@@ -1460,7 +1491,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></li>
-<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+<li><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -1476,7 +1507,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L257-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L257-L259" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def h2(self, state):
@@ -1495,7 +1526,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L261-L263" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L261-L263" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1510,7 +1541,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L265-L266" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L265-L266" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     state.pos += dt * self.dh2_dmom(state)</code></pre>
@@ -1524,7 +1555,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L268-L269" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L268-L269" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])</code></pre>
@@ -1542,7 +1573,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L271-L272" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L271-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
@@ -1700,7 +1731,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L275-L375" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L275-L375" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     r&#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
@@ -1828,7 +1859,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L344-L346" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L344-L346" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return (0.5 * state.pos @ state.pos +
@@ -1847,7 +1878,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L348-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L348-L350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dmom(self, state):
@@ -1862,7 +1893,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L352-L354" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L352-L354" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;mom&#39;)
 def dh2_dpos(self, state):
@@ -1877,7 +1908,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L356-L366" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L356-L366" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -1900,7 +1931,7 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L368-L375" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L368-L375" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     omega = 1. / self.metric.eigval**0.5
@@ -2004,6 +2035,500 @@ def dh2_dpos(self, state):
 </dd>
 </dl>
 </dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem"><code class="flex name class">
+<span>class <span class="ident">ConstrainedEuclideanMetricSystem</span></span>
+<span>(</span><span>neg_log_dens, constr, metric=None, dens_wrt_hausdorff=True, grad_neg_log_dens=None, jacob_constr=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for Euclidean Hamiltonian systems subject to constraints.</p>
+<p>The system is assumed to be subject to a set of holonomic constraints on
+the position component of the state. These constraints are specified by a
+vector constraint function which takes as argument the position component,
+and which is equal to zero in all components when the constraints are
+satisfied. The constraint function implicitly defines a manifold embedded
+in the position space of constraint satisfying configurations. There are
+also implicitly a set of constraints on the momentum component of the state
+due to the requirement that velocity (momentum pre-multiplied by inverse
+metric) is always tangential to the constraint manifold.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>neg_log_dens</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Function which given a
+position array returns the negative logarithm of an
+unnormalised probability density on the position space with
+respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>None</code> or <code>array</code> or <code>Matrix</code></dt>
+<dd>Matrix object corresponding to
+matrix representation of metric on position space and
+covariance of Gaussian marginal distribution on momentum
+vector. If <code>None</code> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to
+specify a metric with diagonal matrix representation and the
+array to the matrix diagonal. If a 2D array is passed then this
+is assumed to specify a metric with a dense positive definite
+matrix representation specified by the array.</dd>
+<dt><strong><code>grad_neg_log_dens</code></strong> :&ensp;</dt>
+<dt><code>None</code> or <code>Callable</code>[[<code>array</code>], <code>array</code> or <code>Tuple</code>[<code>array</code>, <code>float</code>]]</dt>
+<dd>
+<p>Function which given a position array returns the derivative of
+the negative logarithm of the unnormalised density specified by
+<code>neg_log_dens</code> with respect to the position array argument.
+Optionally the function may instead return a pair of values
+with the first being the array corresponding to the derivative
+and the second being the value of the <code>neg_log_dens</code> evaluated
+at the passed position array. If <code>None</code> is passed (the default)
+an automatic differentiation fallback will be used to attempt
+to construct the derivative of <code>neg_log_dens</code> automatically.</p>
+</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L378-L483" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
+    &#34;&#34;&#34;Base class for Euclidean Hamiltonian systems subject to constraints.
+
+    The system is assumed to be subject to a set of holonomic constraints on
+    the position component of the state. These constraints are specified by a
+    vector constraint function which takes as argument the position component,
+    and which is equal to zero in all components when the constraints are
+    satisfied. The constraint function implicitly defines a manifold embedded
+    in the position space of constraint satisfying configurations. There are
+    also implicitly a set of constraints on the momentum component of the state
+    due to the requirement that velocity (momentum pre-multiplied by inverse
+    metric) is always tangential to the constraint manifold.
+    &#34;&#34;&#34;
+
+    def __init__(self, neg_log_dens, constr, metric=None,
+                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
+                 jacob_constr=None):
+        super().__init__(neg_log_dens=neg_log_dens, metric=metric,
+                         grad_neg_log_dens=grad_neg_log_dens)
+        self._constr = constr
+        self.dens_wrt_hausdorff = dens_wrt_hausdorff
+        self._jacob_constr = autodiff_fallback(
+            jacob_constr, constr, &#39;jacobian_and_value&#39;, &#39;jacob_constr&#39;)
+
+    @cache_in_state(&#39;pos&#39;)
+    def constr(self, state):
+        return self._constr(state.pos)
+
+    @multi_cache_in_state([&#39;pos&#39;], [&#39;jacob_constr&#39;, &#39;constr&#39;])
+    def jacob_constr(self, state):
+        return self._jacob_constr(state.pos)
+
+    @abstractmethod
+    def jacob_constr_inner_product(
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
+
+        Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
+        potentially exploiting any structure / sparsity in `jacob_constr_1`,
+        `jacob_constr_2` and `inner_product_matrix`.
+
+        Args:
+            jacob_constr_1 (Matrix): First constraint Jacobian in product.
+            inner_product_matrix (Matrix): Positive-definite matrix defining
+                inner-product between rows of two constraint Jacobians.
+            jacob_constr_2 (None or Matrix): Second constraint Jacobian in
+                product. Defaults to `jacob_constr_1` if set to `None`.
+
+        Returns
+            Matrix: Object corresponding to computed inner products of
+               the constraint Jacobian rows.
+        &#34;&#34;&#34;
+
+    @cache_in_state(&#39;pos&#39;)
+    def gram(self, state):
+        &#34;&#34;&#34;Gram matrix at current position.&#34;&#34;&#34;
+        return self.jacob_constr_inner_product(
+            self.jacob_constr(state), self.metric.inv)
+
+    def inv_gram(self, state):
+        &#34;&#34;&#34;Inverse of Gram matrix at current position.&#34;&#34;&#34;
+        return self.gram(state).inv
+
+    def log_det_sqrt_gram(self, state):
+        &#34;&#34;&#34;Value of (half of) log-determinant of Gram matrix.&#34;&#34;&#34;
+        return self.gram(state).log_abs_det_sqrt
+
+    @abstractmethod
+    def grad_log_det_sqrt_gram(self, state):
+        &#34;&#34;&#34;Derivative of (half of) log-determinant of Gram matrix wrt position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `log_det_sqrt_gram(state)` derivative with respect
+            to `state.pos`.
+        &#34;&#34;&#34;
+
+    def h1(self, state):
+        if self.dens_wrt_hausdorff:
+            return self.neg_log_dens(state)
+        else:
+            return self.neg_log_dens(state) + self.log_det_sqrt_gram(state)
+
+    def dh1_dpos(self, state):
+        if self.dens_wrt_hausdorff:
+            return self.grad_neg_log_dens(state)
+        else:
+            return (self.grad_neg_log_dens(state) +
+                    self.grad_log_det_sqrt_gram(state))
+
+    def project_onto_cotangent_space(self, mom, state):
+        &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.&#34;&#34;&#34;
+        # Use parenthesis to force right-to-left evaluation to avoid
+        # matrix-matrix products
+        mom -= (self.jacob_constr(state).T @ (
+                    self.inv_gram(state) @ (
+                        self.jacob_constr(state) @ (self.metric.inv @ mom))))
+        return mom
+
+    def sample_momentum(self, state, rng):
+        &#34;&#34;&#34;Sample a momentum from its conditional at the current position.&#34;&#34;&#34;
+        mom = super().sample_momentum(state, rng)
+        mom = self.project_onto_cotangent_space(mom, state)
+        return mom</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
+<li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.constr"><code class="name flex">
+<span>def <span class="ident">constr</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L402-L404" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def constr(self, state):
+    return self._constr(state.pos)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr"><code class="name flex">
+<span>def <span class="ident">jacob_constr</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L406-L408" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;jacob_constr&#39;, &#39;constr&#39;])
+def jacob_constr(self, state):
+    return self._jacob_constr(state.pos)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><code class="name flex">
+<span>def <span class="ident">jacob_constr_inner_product</span></span>(<span>self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Compute inner product of rows of constraint Jacobian matrices.</p>
+<p>Computes <code>jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T</code>
+potentially exploiting any structure / sparsity in <code>jacob_constr_1</code>,
+<code>jacob_constr_2</code> and <code>inner_product_matrix</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>jacob_constr_1</code></strong> :&ensp;<code>Matrix</code></dt>
+<dd>First constraint Jacobian in product.</dd>
+<dt><strong><code>inner_product_matrix</code></strong> :&ensp;<code>Matrix</code></dt>
+<dd>Positive-definite matrix defining
+inner-product between rows of two constraint Jacobians.</dd>
+<dt><strong><code>jacob_constr_2</code></strong> :&ensp;<code>None</code> or <code>Matrix</code></dt>
+<dd>Second constraint Jacobian in
+product. Defaults to <code>jacob_constr_1</code> if set to <code>None</code>.</dd>
+<dt><strong><code>Returns</code></strong></dt>
+<dd>Matrix: Object corresponding to computed inner products of
+the constraint Jacobian rows.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L410-L429" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def jacob_constr_inner_product(
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+    &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
+
+    Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
+    potentially exploiting any structure / sparsity in `jacob_constr_1`,
+    `jacob_constr_2` and `inner_product_matrix`.
+
+    Args:
+        jacob_constr_1 (Matrix): First constraint Jacobian in product.
+        inner_product_matrix (Matrix): Positive-definite matrix defining
+            inner-product between rows of two constraint Jacobians.
+        jacob_constr_2 (None or Matrix): Second constraint Jacobian in
+            product. Defaults to `jacob_constr_1` if set to `None`.
+
+    Returns
+        Matrix: Object corresponding to computed inner products of
+           the constraint Jacobian rows.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.gram"><code class="name flex">
+<span>def <span class="ident">gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Gram matrix at current position.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L431-L435" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+def gram(self, state):
+    &#34;&#34;&#34;Gram matrix at current position.&#34;&#34;&#34;
+    return self.jacob_constr_inner_product(
+        self.jacob_constr(state), self.metric.inv)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.inv_gram"><code class="name flex">
+<span>def <span class="ident">inv_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Inverse of Gram matrix at current position.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L437-L439" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def inv_gram(self, state):
+    &#34;&#34;&#34;Inverse of Gram matrix at current position.&#34;&#34;&#34;
+    return self.gram(state).inv</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">log_det_sqrt_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Value of (half of) log-determinant of Gram matrix.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L441-L443" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def log_det_sqrt_gram(self, state):
+    &#34;&#34;&#34;Value of (half of) log-determinant of Gram matrix.&#34;&#34;&#34;
+    return self.gram(state).log_abs_det_sqrt</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">grad_log_det_sqrt_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Derivative of (half of) log-determinant of Gram matrix wrt position.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State to compute value at.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>array</code></strong></dt>
+<dd>Value of <code>log_det_sqrt_gram(state)</code> derivative with respect</dd>
+</dl>
+<p>to <code>state.pos</code>.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L445-L455" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@abstractmethod
+def grad_log_det_sqrt_gram(self, state):
+    &#34;&#34;&#34;Derivative of (half of) log-determinant of Gram matrix wrt position.
+
+    Args:
+        state (mici.states.ChainState): State to compute value at.
+
+    Returns:
+        array: Value of `log_det_sqrt_gram(state)` derivative with respect
+        to `state.pos`.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.h1"><code class="name flex">
+<span>def <span class="ident">h1</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1" href="#mici.systems.EuclideanMetricSystem.h1">h1</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L457-L461" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def h1(self, state):
+    if self.dens_wrt_hausdorff:
+        return self.neg_log_dens(state)
+    else:
+        return self.neg_log_dens(state) + self.log_det_sqrt_gram(state)</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.dh1_dpos"><code class="name flex">
+<span>def <span class="ident">dh1_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh1_dpos" href="#mici.systems.EuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L463-L468" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def dh1_dpos(self, state):
+    if self.dens_wrt_hausdorff:
+        return self.grad_neg_log_dens(state)
+    else:
+        return (self.grad_neg_log_dens(state) +
+                self.grad_log_det_sqrt_gram(state))</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><code class="name flex">
+<span>def <span class="ident">project_onto_cotangent_space</span></span>(<span>self, mom, state)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Project a momentum on to the co-tangent space at a position.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L470-L477" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def project_onto_cotangent_space(self, mom, state):
+    &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.&#34;&#34;&#34;
+    # Use parenthesis to force right-to-left evaluation to avoid
+    # matrix-matrix products
+    mom -= (self.jacob_constr(state).T @ (
+                self.inv_gram(state) @ (
+                    self.jacob_constr(state) @ (self.metric.inv @ mom))))
+    return mom</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a momentum from its conditional at the current position.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L479-L483" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample_momentum(self, state, rng):
+    &#34;&#34;&#34;Sample a momentum from its conditional at the current position.&#34;&#34;&#34;
+    mom = super().sample_momentum(state, rng)
+    mom = self.project_onto_cotangent_space(mom, state)
+    return mom</code></pre>
+</details>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.neg_log_dens" href="#mici.systems.EuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.EuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.h1_flow"><code class="name flex">
+<span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1_flow" href="#mici.systems.EuclideanMetricSystem.h1_flow">h1_flow</a></code>
+</p>
+<section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.h"><code class="name flex">
+<span>def <span class="ident">h</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h" href="#mici.systems.EuclideanMetricSystem.h">h</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian function for system …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.dh_dpos"><code class="name flex">
+<span>def <span class="ident">dh_dpos</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dpos" href="#mici.systems.EuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.dh_dmom"><code class="name flex">
+<span>def <span class="ident">dh_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dmom" href="#mici.systems.EuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.h2"><code class="name flex">
+<span>def <span class="ident">h2</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+</p>
+<section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
+</dd>
+<dt id="mici.systems.ConstrainedEuclideanMetricSystem.dh2_dmom"><code class="name flex">
+<span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+</dl>
+</dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem"><code class="flex name class">
 <span>class <span class="ident">DenseConstrainedEuclideanMetricSystem</span></span>
 <span>(</span><span>neg_log_dens, constr, metric=None, dens_wrt_hausdorff=True, grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None)</span>
@@ -2055,9 +2580,9 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L455-L501" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L486-L532" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
+<pre><code class="python">class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     &#34;&#34;&#34;Euclidean Hamiltonian systems subject to a dense set of constraints.
 
     The system is assumed to be subject to a set of holonomic constraints on
@@ -2107,7 +2632,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+<li><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></li>
 <li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
 <li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
 <li>abc.ABC</li>
@@ -2126,7 +2651,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L480-L483" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L511-L514" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mhp_constr&#39;, &#39;jacob_constr&#39;, &#39;constr&#39;])
@@ -2138,11 +2663,15 @@ def mhp_constr(self, state):
 <span>def <span class="ident">jacob_constr_inner_product</span></span>(<span>self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code>
+</p>
+<section class="desc inherited"><p>Compute inner product of rows of constraint Jacobian matrices …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L485-L493" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L516-L524" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
         self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
@@ -2159,11 +2688,15 @@ def mhp_constr(self, state):
 <span>def <span class="ident">grad_log_det_sqrt_gram</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of (half of) log-determinant of Gram matrix wrt position …</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L495-L501" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L526-L532" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def grad_log_det_sqrt_gram(self, state):
@@ -2174,35 +2707,35 @@ def grad_log_det_sqrt_gram(self, state):
         self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
 </details>
 </dd>
-<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum"><code class="name flex">
-<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.gram"><code class="name flex">
+<span>def <span class="ident">gram</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.sample_momentum" href="#mici.systems.EuclideanMetricSystem.sample_momentum">sample_momentum</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.gram">gram</a></code>
 </p>
-<section class="desc inherited"><p>Sample a momentum from its conditional distribution given a position …</p></section>
+<section class="desc inherited"><p>Gram matrix at current position.</p></section>
 </dd>
-<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens"><code class="name flex">
-<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.inv_gram"><code class="name flex">
+<span>def <span class="ident">inv_gram</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.neg_log_dens" href="#mici.systems.EuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.inv_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.inv_gram">inv_gram</a></code>
 </p>
-<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+<section class="desc inherited"><p>Inverse of Gram matrix at current position.</p></section>
 </dd>
-<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
-<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">log_det_sqrt_gram</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.EuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.log_det_sqrt_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.log_det_sqrt_gram">log_det_sqrt_gram</a></code>
 </p>
-<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
+<section class="desc inherited"><p>Value of (half of) log-determinant of Gram matrix.</p></section>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h1"><code class="name flex">
 <span>def <span class="ident">h1</span></span>(<span>self, state)</span>
@@ -2210,7 +2743,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1" href="#mici.systems.EuclideanMetricSystem.h1">h1</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h1" href="#mici.systems.ConstrainedEuclideanMetricSystem.h1">h1</a></code>
 </p>
 <section class="desc inherited"><p>Hamiltonian component depending only on position …</p></section>
 </dd>
@@ -2220,9 +2753,49 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh1_dpos" href="#mici.systems.EuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code>
 </p>
 <section class="desc inherited"><p>Derivative of <code>h1</code> Hamiltonian component with respect to position …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><code class="name flex">
+<span>def <span class="ident">project_onto_cotangent_space</span></span>(<span>self, mom, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space" href="#mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space">project_onto_cotangent_space</a></code>
+</p>
+<section class="desc inherited"><p>Project a momentum on to the co-tangent space at a position.</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum"><code class="name flex">
+<span>def <span class="ident">sample_momentum</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code>
+</p>
+<section class="desc inherited"><p>Sample a momentum from its conditional at the current position.</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens"><code class="name flex">
+<span>def <span class="ident">neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.ConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Negative logarithm of unnormalised density of target distribution …</p></section>
+</dd>
+<dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens"><code class="name flex">
+<span>def <span class="ident">grad_neg_log_dens</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of negative log density with respect to position …</p></section>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow"><code class="name flex">
 <span>def <span class="ident">h1_flow</span></span>(<span>self, state, dt)</span>
@@ -2230,7 +2803,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h1_flow" href="#mici.systems.EuclideanMetricSystem.h1_flow">h1_flow</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h1_flow" href="#mici.systems.ConstrainedEuclideanMetricSystem.h1_flow">h1_flow</a></code>
 </p>
 <section class="desc inherited"><p>Apply exact flow map corresponding to <code>h1</code> Hamiltonian component …</p></section>
 </dd>
@@ -2240,7 +2813,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.h" href="#mici.systems.EuclideanMetricSystem.h">h</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h" href="#mici.systems.ConstrainedEuclideanMetricSystem.h">h</a></code>
 </p>
 <section class="desc inherited"><p>Hamiltonian function for system …</p></section>
 </dd>
@@ -2250,7 +2823,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dpos" href="#mici.systems.EuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code>
 </p>
 <section class="desc inherited"><p>Derivative of Hamiltonian with respect to position …</p></section>
 </dd>
@@ -2260,7 +2833,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></code>.<code><a title="mici.systems.EuclideanMetricSystem.dh_dmom" href="#mici.systems.EuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh_dmom" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh_dmom">dh_dmom</a></code>
 </p>
 <section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
@@ -2270,7 +2843,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.h2" href="#mici.systems.System.h2">h2</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h2" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2">h2</a></code>
 </p>
 <section class="desc inherited"><p>Hamiltonian component depending on momentum and optionally position …</p></section>
 </dd>
@@ -2280,7 +2853,7 @@ def grad_log_det_sqrt_gram(self, state):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.systems.System" href="#mici.systems.System">System</a></code>.<code><a title="mici.systems.System.dh2_dmom" href="#mici.systems.System.dh2_dmom">dh2_dmom</a></code>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code>
 </p>
 <section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
 </dd>
@@ -2356,7 +2929,7 @@ automatically if available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L504-L514" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L535-L545" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
@@ -2374,7 +2947,7 @@ automatically if available.</p>
 <ul class="hlist">
 <li><a title="mici.systems.GaussianEuclideanMetricSystem" href="#mici.systems.GaussianEuclideanMetricSystem">GaussianEuclideanMetricSystem</a></li>
 <li><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></li>
-<li>mici.systems._ConstrainedEuclideanMetricSystem</li>
+<li><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></li>
 <li><a title="mici.systems.EuclideanMetricSystem" href="#mici.systems.EuclideanMetricSystem">EuclideanMetricSystem</a></li>
 <li><a title="mici.systems.System" href="#mici.systems.System">System</a></li>
 <li>abc.ABC</li>
@@ -2481,6 +3054,56 @@ automatically if available.</p>
 </p>
 <section class="desc inherited"><p>Derivative of Hamiltonian with respect to momentum …</p></section>
 </dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><code class="name flex">
+<span>def <span class="ident">jacob_constr_inner_product</span></span>(<span>self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code>
+</p>
+<section class="desc inherited"><p>Compute inner product of rows of constraint Jacobian matrices …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.gram"><code class="name flex">
+<span>def <span class="ident">gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.gram">gram</a></code>
+</p>
+<section class="desc inherited"><p>Gram matrix at current position.</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.inv_gram"><code class="name flex">
+<span>def <span class="ident">inv_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.inv_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.inv_gram">inv_gram</a></code>
+</p>
+<section class="desc inherited"><p>Inverse of Gram matrix at current position.</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">log_det_sqrt_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram">log_det_sqrt_gram</a></code>
+</p>
+<section class="desc inherited"><p>Value of (half of) log-determinant of Gram matrix.</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><code class="name flex">
+<span>def <span class="ident">project_onto_cotangent_space</span></span>(<span>self, mom, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space">project_onto_cotangent_space</a></code>
+</p>
+<section class="desc inherited"><p>Project a momentum on to the co-tangent space at a position.</p></section>
+</dd>
 <dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom"><code class="name flex">
 <span>def <span class="ident">dh2_dmom</span></span>(<span>self, state)</span>
 </code></dt>
@@ -2490,6 +3113,16 @@ automatically if available.</p>
 <code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code>
 </p>
 <section class="desc inherited"><p>Derivative of <code>h2</code> Hamiltonian component with respect to momentum …</p></section>
+</dd>
+<dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><code class="name flex">
+<span>def <span class="ident">grad_log_det_sqrt_gram</span></span>(<span>self, state)</span>
+</code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code>.<code><a title="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code>
+</p>
+<section class="desc inherited"><p>Derivative of (half of) log-determinant of Gram matrix wrt position …</p></section>
 </dd>
 </dl>
 </dd>
@@ -2545,7 +3178,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L517-L597" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L548-L628" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RiemannianMetricSystem(System):
     r&#34;&#34;&#34;Riemannian Hamiltonian system with a position-dependent metric.
@@ -2652,7 +3285,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L557-L559" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L588-L590" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric_func(self, state):
@@ -2667,7 +3300,7 @@ def metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L561-L563" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L592-L594" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state([&#39;pos&#39;], [&#39;vjp_metric_func&#39;, &#39;metric_func&#39;])
 def vjp_metric_func(self, state):
@@ -2682,7 +3315,7 @@ def vjp_metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L565-L568" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L596-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state(&#39;pos&#39;)
 def metric(self, state):
@@ -2702,7 +3335,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L570-L571" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L601-L602" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     return self.h1(state) + self.h2(state)</code></pre>
@@ -2720,7 +3353,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L573-L574" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L604-L605" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt</code></pre>
@@ -2738,7 +3371,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L576-L581" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L607-L612" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -2760,7 +3393,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L583-L584" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L614-L615" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
@@ -2774,7 +3407,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L586-L591" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L617-L622" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
@@ -2796,7 +3429,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L593-L594" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L624-L625" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dmom(self, state):
     return self.metric(state).inv @ state.mom</code></pre>
@@ -2814,7 +3447,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L596-L597" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L627-L628" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
@@ -2924,7 +3557,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L600-L606" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L631-L637" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3106,7 +3739,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L609-L615" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L640-L646" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3288,7 +3921,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L618-L624" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L649-L655" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3470,7 +4103,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L627-L633" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L658-L664" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
 
@@ -3643,7 +4276,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L636-L682" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L667-L713" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
@@ -3709,7 +4342,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L667-L668" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L698-L699" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def metric_func(self, state):
     return self.hess_neg_log_dens(state)</code></pre>
@@ -3723,7 +4356,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L670-L671" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L701-L702" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def vjp_metric_func(self, state):
     return self.mtp_neg_log_dens(state)</code></pre>
@@ -3737,7 +4370,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L673-L676" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L704-L707" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;])
@@ -3753,7 +4386,7 @@ def hess_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/systems.py#L678-L682" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/systems.py#L709-L713" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@multi_cache_in_state(
     [&#39;pos&#39;], [&#39;mtp_neg_log_dens&#39;, &#39;hess_neg_log_dens&#39;,
@@ -3948,16 +4581,44 @@ def mtp_neg_log_dens(self, state):
 </ul>
 </li>
 <li>
+<h4><code><a title="mici.systems.ConstrainedEuclideanMetricSystem" href="#mici.systems.ConstrainedEuclideanMetricSystem">ConstrainedEuclideanMetricSystem</a></code></h4>
+<ul class="">
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.constr" href="#mici.systems.ConstrainedEuclideanMetricSystem.constr">constr</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr">jacob_constr</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.gram">gram</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.inv_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.inv_gram">inv_gram</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.log_det_sqrt_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.log_det_sqrt_gram">log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h1" href="#mici.systems.ConstrainedEuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space" href="#mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space">project_onto_cotangent_space</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.ConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h1_flow" href="#mici.systems.ConstrainedEuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h" href="#mici.systems.ConstrainedEuclideanMetricSystem.h">h</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh_dmom" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.h2" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2">h2</a></code></li>
+<li><code><a title="mici.systems.ConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem" href="#mici.systems.DenseConstrainedEuclideanMetricSystem">DenseConstrainedEuclideanMetricSystem</a></code></h4>
 <ul class="">
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr">mhp_constr</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.gram">gram</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.inv_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.inv_gram">inv_gram</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram">log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h1" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h1">h1</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
+<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space">project_onto_cotangent_space</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_neg_log_dens">grad_neg_log_dens</a></code></li>
-<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h1" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h1">h1</a></code></li>
-<li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh1_dpos">dh1_dpos</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h1_flow">h1_flow</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.h" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h">h</a></code></li>
 <li><code><a title="mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
@@ -3968,7 +4629,7 @@ def mtp_neg_log_dens(self, state):
 </li>
 <li>
 <h4><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">GaussianDenseConstrainedEuclideanMetricSystem</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2">h2</a></code></li>
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.sample_momentum" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.sample_momentum">sample_momentum</a></code></li>
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.neg_log_dens" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.neg_log_dens">neg_log_dens</a></code></li>
@@ -3979,7 +4640,13 @@ def mtp_neg_log_dens(self, state):
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h">h</a></code></li>
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dpos" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dpos">dh_dpos</a></code></li>
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dmom" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh_dmom">dh_dmom</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">jacob_constr_inner_product</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.gram" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.gram">gram</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.inv_gram" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.inv_gram">inv_gram</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.log_det_sqrt_gram">log_det_sqrt_gram</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.project_onto_cotangent_space">project_onto_cotangent_space</a></code></li>
 <li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_dmom">dh2_dmom</a></code></li>
+<li><code><a title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">grad_log_det_sqrt_gram</a></code></li>
 </ul>
 </li>
 <li>

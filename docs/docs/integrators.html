@@ -25,14 +25,14 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L0-L349" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L0-L348" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
 from abc import ABC, abstractmethod
 from mici.errors import NonReversibleStepError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
-                          retract_onto_manifold_quasi_newton)
+                          solve_projection_onto_manifold_quasi_newton)
 
 __pdoc__ = {}
 
@@ -261,9 +261,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size, n_inner_step=1,
-                 reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
-                 retraction_solver=retract_onto_manifold_quasi_newton,
-                 retraction_solver_kwargs=None):
+                 reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
+                 projection_solver=solve_projection_onto_manifold_quasi_newton,
+                 projection_solver_kwargs=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -299,39 +299,40 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (Callable[
+            projection_solver (Callable[
                     [ChainState, ChainState, float, System], ChainState]):
                 Function which given two states `state` and `state_prev`,
                 floating point time step `dt` and a Hamiltonian system object
-                `system` solves the non-linear system of equations in `lambda`
+                `system` solves the non-linear system of equations in `λ`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
-                            system.jacob_constr(state_prev).T @ lambda) == 0
+                            system.jacob_constr(state_prev).T @ λ) == 0
 
                 where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
                 derivative of the action of the (linear) `system.h2_flow` map
                 on the state momentum component with respect to the position
-                component. This is used to retract the state position
+                component. This is used to project the state position
                 component back on to the manifold after an unconstrained
                 `system.h2_flow` update. Defaults to
-                `mici.solvers.retract_onto_manifold_quasi_newton`.
-            retraction_solver_kwargs (None or Dict[str, object]): Dictionary of
-                any keyword arguments to `retraction_solver`.
+                `mici.solvers.solve_projection_onto_manifold_quasi_newton`.
+            projection_solver_kwargs (None or Dict[str, object]): Dictionary of
+                any keyword arguments to `projection_solver`.
         &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
-        self.retraction_solver = retraction_solver
-        if retraction_solver_kwargs is None:
-            retraction_solver_kwargs = {}
-        self.retraction_solver_kwargs = retraction_solver_kwargs
+        self.projection_solver = projection_solver
+        if projection_solver_kwargs is None:
+            projection_solver_kwargs = {}
+        self.projection_solver_kwargs = projection_solver_kwargs
 
-    def _retract_onto_manifold(self, state, state_prev, dt):
-        self.retraction_solver(state, state_prev, dt, self.system,
-                               **self.retraction_solver_kwargs)
+    def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
+        self.system.h2_flow(state, dt)
+        self.projection_solver(state, state_prev, dt, self.system,
+                               **self.projection_solver_kwargs)
 
     def _project_onto_cotangent_space(self, state):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
@@ -344,8 +345,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
         dt_i = dt / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
-            self.system.h2_flow(state, dt_i)
-            self._retract_onto_manifold(state, state_prev, dt_i)
+            self._h2_flow_retraction_onto_manifold(state, state_prev, dt_i)
             if i == self.n_inner_step - 1:
                 # If at last inner step pre-evaluate dh1_dpos before projecting
                 # state on to cotangent space, with computed value being
@@ -362,8 +362,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
-            self.system.h2_flow(state_back, -dt_i)
-            self._retract_onto_manifold(state_back, state, -dt_i)
+            self._h2_flow_retraction_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -405,7 +404,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
@@ -465,7 +464,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def step(self, state):
@@ -509,7 +508,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -573,7 +572,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size
@@ -641,7 +640,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L78-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L78-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -774,7 +773,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L179-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L179-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = 0.5 * state.dir * self.step_size
@@ -792,7 +791,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 </dd>
 <dt id="mici.integrators.ConstrainedLeapfrogIntegrator"><code class="flex name class">
 <span>class <span class="ident">ConstrainedLeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size, n_inner_step=1, reverse_check_tol=1e-08, reverse_check_norm=&lt;function maximum_norm&gt;, retraction_solver=&lt;function retract_onto_manifold_quasi_newton&gt;, retraction_solver_kwargs=None)</span>
+<span>(</span><span>system, step_size, n_inner_step=1, reverse_check_tol=2e-08, reverse_check_norm=&lt;function maximum_norm&gt;, projection_solver=&lt;function solve_projection_onto_manifold_quasi_newton&gt;, projection_solver_kwargs=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Leapfrog integrator for constrained Hamiltonian systems.</p>
@@ -865,32 +864,32 @@ accepting a single one-dimensional array input and returning a
 non-negative floating point value defining the distance to use
 in the reversibility check. Defaults to
 <a title="mici.solvers.maximum_norm" href="solvers.html#mici.solvers.maximum_norm"><code>maximum_norm()</code></a>.</dd>
-<dt><strong><code>retraction_solver</code></strong> :&ensp;<code>Callable</code>[</dt>
+<dt><strong><code>projection_solver</code></strong> :&ensp;<code>Callable</code>[</dt>
 <dt>[<code>ChainState</code>, <code>ChainState</code>, <code>float</code>, <code>System</code>], <code>ChainState</code>]</dt>
 <dd>
 <p>Function which given two states <code>state</code> and <code>state_prev</code>,
 floating point time step <code>dt</code> and a Hamiltonian system object
-<code>system</code> solves the non-linear system of equations in <code>lambda</code></p>
+<code>system</code> solves the non-linear system of equations in <code>λ</code></p>
 <pre><code>system.constr(
     state.pos + dh2_flow_pos_dmom @
-        system.jacob_constr(state_prev).T @ lambda) == 0
+        system.jacob_constr(state_prev).T @ λ) == 0
 </code></pre>
 <p>where <code>dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]</code> is the
 derivative of the action of the (linear) <code>system.h2_flow</code> map
 on the state momentum component with respect to the position
-component. This is used to retract the state position
+component. This is used to project the state position
 component back on to the manifold after an unconstrained
 <code>system.h2_flow</code> update. Defaults to
-<a title="mici.solvers.retract_onto_manifold_quasi_newton" href="solvers.html#mici.solvers.retract_onto_manifold_quasi_newton"><code>retract_onto_manifold_quasi_newton()</code></a>.</p>
+<a title="mici.solvers.solve_projection_onto_manifold_quasi_newton" href="solvers.html#mici.solvers.solve_projection_onto_manifold_quasi_newton"><code>solve_projection_onto_manifold_quasi_newton()</code></a>.</p>
 </dd>
-<dt><strong><code>retraction_solver_kwargs</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>object</code>]</dt>
+<dt><strong><code>projection_solver_kwargs</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>object</code>]</dt>
 <dd>Dictionary of
-any keyword arguments to <code>retraction_solver</code>.</dd>
+any keyword arguments to <code>projection_solver</code>.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L191-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L191-L349" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -936,9 +935,9 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size, n_inner_step=1,
-                 reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
-                 retraction_solver=retract_onto_manifold_quasi_newton,
-                 retraction_solver_kwargs=None):
+                 reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
+                 projection_solver=solve_projection_onto_manifold_quasi_newton,
+                 projection_solver_kwargs=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -974,39 +973,40 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (Callable[
+            projection_solver (Callable[
                     [ChainState, ChainState, float, System], ChainState]):
                 Function which given two states `state` and `state_prev`,
                 floating point time step `dt` and a Hamiltonian system object
-                `system` solves the non-linear system of equations in `lambda`
+                `system` solves the non-linear system of equations in `λ`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
-                            system.jacob_constr(state_prev).T @ lambda) == 0
+                            system.jacob_constr(state_prev).T @ λ) == 0
 
                 where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
                 derivative of the action of the (linear) `system.h2_flow` map
                 on the state momentum component with respect to the position
-                component. This is used to retract the state position
+                component. This is used to project the state position
                 component back on to the manifold after an unconstrained
                 `system.h2_flow` update. Defaults to
-                `mici.solvers.retract_onto_manifold_quasi_newton`.
-            retraction_solver_kwargs (None or Dict[str, object]): Dictionary of
-                any keyword arguments to `retraction_solver`.
+                `mici.solvers.solve_projection_onto_manifold_quasi_newton`.
+            projection_solver_kwargs (None or Dict[str, object]): Dictionary of
+                any keyword arguments to `projection_solver`.
         &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
-        self.retraction_solver = retraction_solver
-        if retraction_solver_kwargs is None:
-            retraction_solver_kwargs = {}
-        self.retraction_solver_kwargs = retraction_solver_kwargs
+        self.projection_solver = projection_solver
+        if projection_solver_kwargs is None:
+            projection_solver_kwargs = {}
+        self.projection_solver_kwargs = projection_solver_kwargs
 
-    def _retract_onto_manifold(self, state, state_prev, dt):
-        self.retraction_solver(state, state_prev, dt, self.system,
-                               **self.retraction_solver_kwargs)
+    def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
+        self.system.h2_flow(state, dt)
+        self.projection_solver(state, state_prev, dt, self.system,
+                               **self.projection_solver_kwargs)
 
     def _project_onto_cotangent_space(self, state):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
@@ -1019,8 +1019,7 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
         dt_i = dt / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
-            self.system.h2_flow(state, dt_i)
-            self._retract_onto_manifold(state, state_prev, dt_i)
+            self._h2_flow_retraction_onto_manifold(state, state_prev, dt_i)
             if i == self.n_inner_step - 1:
                 # If at last inner step pre-evaluate dh1_dpos before projecting
                 # state on to cotangent space, with computed value being
@@ -1037,8 +1036,7 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
                 self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
-            self.system.h2_flow(state_back, -dt_i)
-            self._retract_onto_manifold(state_back, state, -dt_i)
+            self._h2_flow_retraction_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -1072,7 +1070,7 @@ any keyword arguments to <code>retraction_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/integrators.py#L344-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L343-L349" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size

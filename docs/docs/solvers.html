@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L0-L143" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L0-L285" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Solvers for non-linear systems of equations for implicit integrators.&#34;&#34;&#34;
 
@@ -43,38 +43,52 @@ def maximum_norm(vct):
     return np.max(abs(vct))
 
 
-def solve_fixed_point_direct(func, x0, tol=1e-9, max_iters=100,
-                             norm=maximum_norm):
+def solve_fixed_point_direct(
+        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
+        norm=maximum_norm):
     &#34;&#34;&#34;Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
-        func: Single argument function to find fixed point of.
-        x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when `norm(func(x) - x) &lt; tol`.
-        max_iters: Maximum number of iterations before raising exception.
-        norm: Vector norm to use to assess convergence.
+        func (Callable[[array], array]): Function to find fixed point of.
+        x0 (array): Initial state (function argument).
+        convergence_tol (float): Convergence tolerance - solver successfully
+            terminates when `norm(func(x) - x) &lt; convergence_tol`.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(func(x) - x) &gt; divergence_tol` on any iteration.
+        max_iters (int): Maximum number of iterations before raising exception.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with `norm(func(x) - x) &lt; tol`.
+        Solution to fixed point equation with
+        `norm(func(x) - x) &lt; convergence_tol`.
 
     Raises:
-        ConvergenceError if not converged within `max_iters` iterations.
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
     &#34;&#34;&#34;
     for i in range(max_iters):
-        x = func(x0)
-        if any(np.isnan(x)) or any(np.isinf(x)):
+        try:
+            x = func(x0)
+            if any(np.isnan(x)) or any(np.isinf(x)):
+                raise ConvergenceError(
+                    f&#39;Fixed point iteration diverged on iteration {i}.&#39;
+                    f&#39;Last error={error:.1e}.&#39;)
+            error = norm(x - x0)
+            if error &lt; tol:
+                return x
+            x0 = x
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;Fixed point iteration diverged on iteration {i}.&#39;)
-        error = norm(x - x0)
-        if error &lt; tol:
-            return x
-        x0 = x
+                f&#39;ValueError at iteration {i} of fixed point solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Fixed point iteration did not converge. Last error {error:.1e}.&#39;)
+        f&#39;Fixed point iteration did not converge. Last error={error:.1e}.&#39;)
 
 
-def solve_fixed_point_steffensen(func, x0, tol=1e-9, max_iters=100,
-                                 norm=maximum_norm):
+def solve_fixed_point_steffensen(
+        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
+        norm=maximum_norm):
     &#34;&#34;&#34;Solve fixed point equation `func(x) = x` using Steffensen&#39;s method.
 
     Steffennsen&#39;s method [1] achieves quadratic convergence but at the cost of
@@ -85,36 +99,102 @@ def solve_fixed_point_steffensen(func, x0, tol=1e-9, max_iters=100,
     [1] : https://en.wikipedia.org/wiki/Steffensen%27s_method
 
     Args:
-        func: Single argument function to find fixed point of.
-        x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when `norm(func(x) - x) &lt; tol`.
-        max_iters: Maximum number of iterations before raising exception.
-        norm: Vector norm to use to assess convergence.
+        func (Callable[[array], array]): Function to find fixed point of.
+        x0 (array): Initial state (function argument).
+        convergence_tol (float): Convergence tolerance - solver successfully
+            terminates when `norm(func(x) - x) &lt; convergence_tol`.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(func(x) - x) &gt; divergence_tol` on any iteration.
+        max_iters (int): Maximum number of iterations before raising exception.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with `norm(func(x) - x) &lt; tol`.
+        Solution to fixed point equation with
+        `norm(func(x) - x) &lt; convergence_tol`.
 
     Raises:
-        ConvergenceError if not converged within `max_iters` iterations.
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
     &#34;&#34;&#34;
     for i in range(max_iters):
-        x1 = func(x0)
-        x2 = func(x1)
-        x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
-        if any(np.isnan(x)) or any(np.isinf(x)):
+        try:
+            x1 = func(x0)
+            x2 = func(x1)
+            x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+            error = norm(x - x0)
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Fixed point iteration diverged on iteration {i}.&#39;
+                    f&#39;Last error={error:.1e}.&#39;)
+            if error &lt; convergence_tol:
+                return x
+            x0 = x
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;Fixed point iteration diverged on iteration {i}.&#39;)
-        error = norm(x - x0)
-        if error &lt; tol:
-            return x
-        x0 = x
+                f&#39;ValueError at iteration {i} of fixed point solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Fixed point iteration did not converge. Last error {error:.1e}.&#39;)
+        f&#39;Fixed point iteration did not converge. Last error={error:.1e}.&#39;)
 
 
-def retract_onto_manifold_quasi_newton(
-        state, state_prev, dt, system, convergence_tol=1e-9,
+def solve_projection_onto_manifold_quasi_newton(
+        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
         divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    &#34;&#34;&#34;Solve constraint equation using quasi-Newton method.
+
+    Uses a quasi-Newton iteration to solve the non-linear system of equations
+    in `λ`
+
+        system.constr(
+            state.pos + dh2_flow_pos_dmom @
+                system.jacob_constr(state_prev).T @ λ) == 0
+
+    where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the derivative
+    of the action of the (linear) `system.h2_flow` map on the state momentum
+    component with respect to the position component, `state` is a post
+    (unconstrained) `system.h2_flow` update state with position component
+    outside of the manifold and `state_prev` is the corresponding pre-update
+    state in the co-tangent bundle.
+
+    Only requires re-evaluating the constraint function `system.constr` within
+    the solver loop and no recomputation of matrix decompositions on each
+    iteration.
+
+    Args:
+        state (mici.states.ChainState): Post `h2_flow `update state to project.
+        state_prev (mici.states.ChainState): Previous state in co-tangent
+            bundle manifold before `h2_flow` update which defines the
+            co-tangent space to perform projection in.
+        dt (float): Integrator time step used in `h2_flow` update.
+        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian
+           system defining `h2_flow` and `constr` functions used to define
+           constraint equation to solve.
+        constraint_tol (float): Convergence tolerance in constraint space.
+           Iteration will continue until `norm(constr(pos)) &lt; constraint_tol`
+           where `pos` is the position at the current iteration.
+        position_tol (float): Convergence tolerance in position space.
+           Iteration will continue until `norm(delt_pos) &lt; position_tol`
+           where `delta_pos` is the change in the position in the current
+           iteration.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos`
+            is the position at the current iteration and raises
+            `mici.errors.ConvergenceError`.
+        max_iters (int): Maximum number of iterations to perform before
+            aborting and raising `mici.errors.ConvergenceError`.
+        norm (Callable[[array], float]): Norm to use to test for convergence.
+
+    Returns:
+        Updated `state` object with position component satisfying constraint
+        equation to within `constraint_tol`, i.e.
+        `norm(system.constr(state.pos)) &lt; constraint_tol`.
+
+    Raises:
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
+    &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
@@ -124,27 +204,85 @@ def retract_onto_manifold_quasi_newton(
         try:
             constr = system.constr(state)
             error = norm(constr)
-            if error &gt; divergence_tol or np.isnan(error):
-                raise ConvergenceError(
-                    f&#39;Quasi-Newton iteration diverged. Last error {error:.1e}&#39;)
-            elif error &lt; convergence_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
-                return state
             delta_mu = jacob_constr_prev.T @ (
                 inv_jacob_constr_inner_product @ constr)
+            delta_pos = dh2_flow_pos_dmom @ delta_mu
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Quasi-Newton solver diverged on iteration {i}. &#39;
+                    f&#39;Last |constr|={error:.1e}, &#39;
+                    f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
+            elif error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
             mu += delta_mu
-            state.pos -= dh2_flow_pos_dmom @ delta_mu
+            state.pos -= delta_pos
         except ValueError as e:
             # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;ValueError during Quasi-Newton iteration ({e}).&#39;)
+                f&#39;ValueError at iteration {i} of Quasi-Newton solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Quasi-Newton iteration did not converge. Last error {error:.1e}.&#39;)
+        f&#39;Quasi-Newton solver did not converge with {max_iters} iterations. &#39;
+        f&#39;Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.&#39;)
 
 
-def retract_onto_manifold_newton(
-        state, state_prev, dt, system, convergence_tol=1e-9,
+def solve_projection_onto_manifold_newton(
+        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
         divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    &#34;&#34;&#34;Solve constraint equation using Newton method.
+
+    Uses a Newton iteration to solve the non-linear system of equations in `λ`
+
+        system.constr(
+            state.pos + dh2_flow_pos_dmom @
+                system.jacob_constr(state_prev).T @ λ) == 0
+
+    where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the derivative
+    of the action of the (linear) `system.h2_flow` map on the state momentum
+    component with respect to the position component, `state` is a post
+    (unconstrained) `system.h2_flow` update state with position component
+    outside of the manifold and `state_prev` is the corresponding pre-update
+    state in the co-tangent bundle.
+
+    Requires re-evaluating both the constraint function `system.constr` and
+    constraint Jacobian `system.jacob_constr` within the solver loop and
+    computation of matrix decompositions of a preconditioned matrix on each
+    iteration.
+
+    Args:
+        state (mici.states.ChainState): Post `h2_flow `update state to project.
+        state_prev (mici.states.ChainState): Previous state in co-tangent
+            bundle manifold before `h2_flow` update which defines the
+            co-tangent space to perform projection in.
+        dt (float): Integrator time step used in `h2_flow` update.
+        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian
+           system defining `h2_flow` and `constr` functions used to define
+           constraint equation to solve.
+        constraint_tol (float): Convergence tolerance in constraint space.
+           Iteration will continue until `norm(constr(pos)) &lt; constraint_tol`
+           where `pos` is the position at the current iteration.
+        position_tol (float): Convergence tolerance in position space.
+           Iteration will continue until `norm(delt_pos) &lt; position_tol`
+           where `delta_pos` is the change in the position in the current
+           iteration.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos`
+            is the position at the current iteration and raises
+            `mici.errors.ConvergenceError`.
+        max_iters (int): Maximum number of iterations to perform before
+            aborting and raising `mici.errors.ConvergenceError`.
+        norm (Callable[[array], float]): Norm to use to test for convergence.
+
+    Returns:
+        Updated `state` object with position component satisfying constraint
+        equation to within `constraint_tol`, i.e.
+        `norm(system.constr(state.pos)) &lt; constraint_tol`.
+
+    Raises:
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
+    &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
@@ -153,24 +291,28 @@ def retract_onto_manifold_newton(
             jacob_constr = system.jacob_constr(state)
             constr = system.constr(state)
             error = norm(constr)
-            if error &gt; divergence_tol or np.isnan(error):
-                raise ConvergenceError(
-                    &#39;Newton iteration diverged. Last error {err:.1e}.&#39;)
-            if error &lt; convergence_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
-                return state
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(
                     jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
                 constr)
+            delta_pos = dh2_flow_pos_dmom @ delta_mu
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Newton solver diverged at iteration {i}. &#39;
+                    f&#39;Last |constr|={error:.1e}, &#39;
+                    f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
+            if error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
             mu += delta_mu
-            state.pos -= dh2_flow_pos_dmom @ delta_mu
+            state.pos -= delta_pos
         except ValueError as e:
             # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;ValueError during Newton iteration ({e}).&#39;)
+                f&#39;ValueError at iteration {i} of Newton solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Newton iteration did not converge. Last error {error:.1e}.&#39;)</code></pre>
+        f&#39;Newton solver did not converge in {max_iters} iterations. &#39;
+        f&#39;Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -188,7 +330,7 @@ def retract_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_norm(vct):
     &#34;&#34;&#34;Calculate the Euclidean (L-2) norm of a vector.&#34;&#34;&#34;
@@ -203,7 +345,7 @@ def retract_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def maximum_norm(vct):
     &#34;&#34;&#34;Calculate the maximum (L-infinity) norm of a vector.&#34;&#34;&#34;
@@ -211,64 +353,87 @@ def retract_onto_manifold_newton(
 </details>
 </dd>
 <dt id="mici.solvers.solve_fixed_point_direct"><code class="name flex">
-<span>def <span class="ident">solve_fixed_point_direct</span></span>(<span>func, x0, tol=1e-09, max_iters=100, norm=&lt;function maximum_norm&gt;)</span>
+<span>def <span class="ident">solve_fixed_point_direct</span></span>(<span>func, x0, convergence_tol=1e-09, divergence_tol=10000000000.0, max_iters=100, norm=&lt;function maximum_norm&gt;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Solve fixed point equation <code>func(x) = x</code> using direct iteration.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>func</code></strong></dt>
-<dd>Single argument function to find fixed point of.</dd>
-<dt><strong><code>x0</code></strong></dt>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>array</code>]</dt>
+<dd>Function to find fixed point of.</dd>
+<dt><strong><code>x0</code></strong> :&ensp;<code>array</code></dt>
 <dd>Initial state (function argument).</dd>
-<dt><strong><code>tol</code></strong></dt>
-<dd>Convergence tolerance - terminates when <code>norm(func(x) - x) &lt; tol</code>.</dd>
-<dt><strong><code>max_iters</code></strong></dt>
+<dt><strong><code>convergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance - solver successfully
+terminates when <code>norm(func(x) - x) &lt; convergence_tol</code>.</dd>
+<dt><strong><code>divergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Divergence tolerance - solver aborts if
+<code>norm(func(x) - x) &gt; divergence_tol</code> on any iteration.</dd>
+<dt><strong><code>max_iters</code></strong> :&ensp;<code>int</code></dt>
 <dd>Maximum number of iterations before raising exception.</dd>
-<dt><strong><code>norm</code></strong></dt>
-<dd>Vector norm to use to assess convergence.</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm to use to assess convergence.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>Solution to fixed point equation with <code>norm(func(x) - x) &lt; tol</code>.</p>
+<dl>
+<dt><code>Solution</code> <code>to</code> <code>fixed</code> <code>point</code> <code>equation</code> <code>with</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<p><code>norm(func(x) - x) &lt; convergence_tol</code>.</p>
 <h2 id="raises">Raises</h2>
-<p>ConvergenceError if not converged within <code>max_iters</code> iterations.</p></section>
+<p><a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> if solver does not converge within
+<code>max_iters</code> iterations, diverges or encounters a <code>ValueError</code> during
+the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L17-L44" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def solve_fixed_point_direct(func, x0, tol=1e-9, max_iters=100,
-                             norm=maximum_norm):
+<pre><code class="python">def solve_fixed_point_direct(
+        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
+        norm=maximum_norm):
     &#34;&#34;&#34;Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
-        func: Single argument function to find fixed point of.
-        x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when `norm(func(x) - x) &lt; tol`.
-        max_iters: Maximum number of iterations before raising exception.
-        norm: Vector norm to use to assess convergence.
+        func (Callable[[array], array]): Function to find fixed point of.
+        x0 (array): Initial state (function argument).
+        convergence_tol (float): Convergence tolerance - solver successfully
+            terminates when `norm(func(x) - x) &lt; convergence_tol`.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(func(x) - x) &gt; divergence_tol` on any iteration.
+        max_iters (int): Maximum number of iterations before raising exception.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with `norm(func(x) - x) &lt; tol`.
+        Solution to fixed point equation with
+        `norm(func(x) - x) &lt; convergence_tol`.
 
     Raises:
-        ConvergenceError if not converged within `max_iters` iterations.
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
     &#34;&#34;&#34;
     for i in range(max_iters):
-        x = func(x0)
-        if any(np.isnan(x)) or any(np.isinf(x)):
+        try:
+            x = func(x0)
+            if any(np.isnan(x)) or any(np.isinf(x)):
+                raise ConvergenceError(
+                    f&#39;Fixed point iteration diverged on iteration {i}.&#39;
+                    f&#39;Last error={error:.1e}.&#39;)
+            error = norm(x - x0)
+            if error &lt; tol:
+                return x
+            x0 = x
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;Fixed point iteration diverged on iteration {i}.&#39;)
-        error = norm(x - x0)
-        if error &lt; tol:
-            return x
-        x0 = x
+                f&#39;ValueError at iteration {i} of fixed point solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Fixed point iteration did not converge. Last error {error:.1e}.&#39;)</code></pre>
+        f&#39;Fixed point iteration did not converge. Last error={error:.1e}.&#39;)</code></pre>
 </details>
 </dd>
 <dt id="mici.solvers.solve_fixed_point_steffensen"><code class="name flex">
-<span>def <span class="ident">solve_fixed_point_steffensen</span></span>(<span>func, x0, tol=1e-09, max_iters=100, norm=&lt;function maximum_norm&gt;)</span>
+<span>def <span class="ident">solve_fixed_point_steffensen</span></span>(<span>func, x0, convergence_tol=1e-09, divergence_tol=10000000000.0, max_iters=100, norm=&lt;function maximum_norm&gt;)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Solve fixed point equation <code>func(x) = x</code> using Steffensen's method.</p>
@@ -279,28 +444,39 @@ cheaper.</p>
 <p>[1] : <a href="https://en.wikipedia.org/wiki/Steffensen%27s_method">https://en.wikipedia.org/wiki/Steffensen%27s_method</a></p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>func</code></strong></dt>
-<dd>Single argument function to find fixed point of.</dd>
-<dt><strong><code>x0</code></strong></dt>
+<dt><strong><code>func</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>array</code>]</dt>
+<dd>Function to find fixed point of.</dd>
+<dt><strong><code>x0</code></strong> :&ensp;<code>array</code></dt>
 <dd>Initial state (function argument).</dd>
-<dt><strong><code>tol</code></strong></dt>
-<dd>Convergence tolerance - terminates when <code>norm(func(x) - x) &lt; tol</code>.</dd>
-<dt><strong><code>max_iters</code></strong></dt>
+<dt><strong><code>convergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance - solver successfully
+terminates when <code>norm(func(x) - x) &lt; convergence_tol</code>.</dd>
+<dt><strong><code>divergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Divergence tolerance - solver aborts if
+<code>norm(func(x) - x) &gt; divergence_tol</code> on any iteration.</dd>
+<dt><strong><code>max_iters</code></strong> :&ensp;<code>int</code></dt>
 <dd>Maximum number of iterations before raising exception.</dd>
-<dt><strong><code>norm</code></strong></dt>
-<dd>Vector norm to use to assess convergence.</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm to use to assess convergence.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>Solution to fixed point equation with <code>norm(func(x) - x) &lt; tol</code>.</p>
+<dl>
+<dt><code>Solution</code> <code>to</code> <code>fixed</code> <code>point</code> <code>equation</code> <code>with</code></dt>
+<dd>&nbsp;</dd>
+</dl>
+<p><code>norm(func(x) - x) &lt; convergence_tol</code>.</p>
 <h2 id="raises">Raises</h2>
-<p>ConvergenceError if not converged within <code>max_iters</code> iterations.</p></section>
+<p><a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> if solver does not converge within
+<code>max_iters</code> iterations, diverges or encounters a <code>ValueError</code> during
+the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L47-L83" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def solve_fixed_point_steffensen(func, x0, tol=1e-9, max_iters=100,
-                                 norm=maximum_norm):
+<pre><code class="python">def solve_fixed_point_steffensen(
+        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
+        norm=maximum_norm):
     &#34;&#34;&#34;Solve fixed point equation `func(x) = x` using Steffensen&#39;s method.
 
     Steffennsen&#39;s method [1] achieves quadratic convergence but at the cost of
@@ -311,46 +487,169 @@ cheaper.</p>
     [1] : https://en.wikipedia.org/wiki/Steffensen%27s_method
 
     Args:
-        func: Single argument function to find fixed point of.
-        x0: Initial state (function argument).
-        tol: Convergence tolerance - terminates when `norm(func(x) - x) &lt; tol`.
-        max_iters: Maximum number of iterations before raising exception.
-        norm: Vector norm to use to assess convergence.
+        func (Callable[[array], array]): Function to find fixed point of.
+        x0 (array): Initial state (function argument).
+        convergence_tol (float): Convergence tolerance - solver successfully
+            terminates when `norm(func(x) - x) &lt; convergence_tol`.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(func(x) - x) &gt; divergence_tol` on any iteration.
+        max_iters (int): Maximum number of iterations before raising exception.
+        norm (Callable[[array], float]): Norm to use to assess convergence.
 
     Returns:
-        Solution to fixed point equation with `norm(func(x) - x) &lt; tol`.
+        Solution to fixed point equation with
+        `norm(func(x) - x) &lt; convergence_tol`.
 
     Raises:
-        ConvergenceError if not converged within `max_iters` iterations.
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
     &#34;&#34;&#34;
     for i in range(max_iters):
-        x1 = func(x0)
-        x2 = func(x1)
-        x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
-        if any(np.isnan(x)) or any(np.isinf(x)):
+        try:
+            x1 = func(x0)
+            x2 = func(x1)
+            x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+            error = norm(x - x0)
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Fixed point iteration diverged on iteration {i}.&#39;
+                    f&#39;Last error={error:.1e}.&#39;)
+            if error &lt; convergence_tol:
+                return x
+            x0 = x
+        except ValueError as e:
+            # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;Fixed point iteration diverged on iteration {i}.&#39;)
-        error = norm(x - x0)
-        if error &lt; tol:
-            return x
-        x0 = x
+                f&#39;ValueError at iteration {i} of fixed point solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Fixed point iteration did not converge. Last error {error:.1e}.&#39;)</code></pre>
+        f&#39;Fixed point iteration did not converge. Last error={error:.1e}.&#39;)</code></pre>
 </details>
 </dd>
-<dt id="mici.solvers.retract_onto_manifold_quasi_newton"><code class="name flex">
-<span>def <span class="ident">retract_onto_manifold_quasi_newton</span></span>(<span>state, state_prev, dt, system, convergence_tol=1e-09, divergence_tol=10000000000.0, max_iters=50, norm=&lt;function maximum_norm&gt;)</span>
+<dt id="mici.solvers.solve_projection_onto_manifold_quasi_newton"><code class="name flex">
+<span>def <span class="ident">solve_projection_onto_manifold_quasi_newton</span></span>(<span>state, state_prev, dt, system, constraint_tol=1e-09, position_tol=1e-08, divergence_tol=10000000000.0, max_iters=50, norm=&lt;function maximum_norm&gt;)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Solve constraint equation using quasi-Newton method.</p>
+<p>Uses a quasi-Newton iteration to solve the non-linear system of equations
+in <code>λ</code></p>
+<pre><code>system.constr(
+    state.pos + dh2_flow_pos_dmom @
+        system.jacob_constr(state_prev).T @ λ) == 0
+</code></pre>
+<p>where <code>dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]</code> is the derivative
+of the action of the (linear) <code>system.h2_flow</code> map on the state momentum
+component with respect to the position component, <code>state</code> is a post
+(unconstrained) <code>system.h2_flow</code> update state with position component
+outside of the manifold and <code>state_prev</code> is the corresponding pre-update
+state in the co-tangent bundle.</p>
+<p>Only requires re-evaluating the constraint function <code>system.constr</code> within
+the solver loop and no recomputation of matrix decompositions on each
+iteration.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Post <code>h2_flow</code>update state to project.</dd>
+<dt><strong><code>state_prev</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Previous state in co-tangent
+bundle manifold before <code>h2_flow</code> update which defines the
+co-tangent space to perform projection in.</dd>
+<dt><strong><code>dt</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step used in <code>h2_flow</code> update.</dd>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.ConstrainedEuclideanMetricSystem" href="systems.html#mici.systems.ConstrainedEuclideanMetricSystem"><code>ConstrainedEuclideanMetricSystem</code></a></dt>
+<dd>Hamiltonian
+system defining <code>h2_flow</code> and <code>constr</code> functions used to define
+constraint equation to solve.</dd>
+<dt><strong><code>constraint_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance in constraint space.
+Iteration will continue until <code>norm(constr(pos)) &lt; constraint_tol</code>
+where <code>pos</code> is the position at the current iteration.</dd>
+<dt><strong><code>position_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance in position space.
+Iteration will continue until <code>norm(delt_pos) &lt; position_tol</code>
+where <code>delta_pos</code> is the change in the position in the current
+iteration.</dd>
+<dt><strong><code>divergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Divergence tolerance - solver aborts if
+<code>norm(constr(pos)) &gt; divergence_tol</code> on any iteration where <code>pos</code>
+is the position at the current iteration and raises
+<a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a>.</dd>
+<dt><strong><code>max_iters</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of iterations to perform before
+aborting and raising <a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a>.</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm to use to test for convergence.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Updated <code>state</code> object with position component satisfying constraint
+equation to within <code>constraint_tol</code>, i.e.
+<code>norm(system.constr(state.pos)) &lt; constraint_tol</code>.</p>
+<h2 id="raises">Raises</h2>
+<p><a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> if solver does not converge within
+<code>max_iters</code> iterations, diverges or encounters a <code>ValueError</code> during
+the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L86-L113" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L112-L197" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def retract_onto_manifold_quasi_newton(
-        state, state_prev, dt, system, convergence_tol=1e-9,
+<pre><code class="python">def solve_projection_onto_manifold_quasi_newton(
+        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
         divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    &#34;&#34;&#34;Solve constraint equation using quasi-Newton method.
+
+    Uses a quasi-Newton iteration to solve the non-linear system of equations
+    in `λ`
+
+        system.constr(
+            state.pos + dh2_flow_pos_dmom @
+                system.jacob_constr(state_prev).T @ λ) == 0
+
+    where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the derivative
+    of the action of the (linear) `system.h2_flow` map on the state momentum
+    component with respect to the position component, `state` is a post
+    (unconstrained) `system.h2_flow` update state with position component
+    outside of the manifold and `state_prev` is the corresponding pre-update
+    state in the co-tangent bundle.
+
+    Only requires re-evaluating the constraint function `system.constr` within
+    the solver loop and no recomputation of matrix decompositions on each
+    iteration.
+
+    Args:
+        state (mici.states.ChainState): Post `h2_flow `update state to project.
+        state_prev (mici.states.ChainState): Previous state in co-tangent
+            bundle manifold before `h2_flow` update which defines the
+            co-tangent space to perform projection in.
+        dt (float): Integrator time step used in `h2_flow` update.
+        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian
+           system defining `h2_flow` and `constr` functions used to define
+           constraint equation to solve.
+        constraint_tol (float): Convergence tolerance in constraint space.
+           Iteration will continue until `norm(constr(pos)) &lt; constraint_tol`
+           where `pos` is the position at the current iteration.
+        position_tol (float): Convergence tolerance in position space.
+           Iteration will continue until `norm(delt_pos) &lt; position_tol`
+           where `delta_pos` is the change in the position in the current
+           iteration.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos`
+            is the position at the current iteration and raises
+            `mici.errors.ConvergenceError`.
+        max_iters (int): Maximum number of iterations to perform before
+            aborting and raising `mici.errors.ConvergenceError`.
+        norm (Callable[[array], float]): Norm to use to test for convergence.
+
+    Returns:
+        Updated `state` object with position component satisfying constraint
+        equation to within `constraint_tol`, i.e.
+        `norm(system.constr(state.pos)) &lt; constraint_tol`.
+
+    Raises:
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
+    &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
@@ -360,37 +659,152 @@ cheaper.</p>
         try:
             constr = system.constr(state)
             error = norm(constr)
-            if error &gt; divergence_tol or np.isnan(error):
-                raise ConvergenceError(
-                    f&#39;Quasi-Newton iteration diverged. Last error {error:.1e}&#39;)
-            elif error &lt; convergence_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
-                return state
             delta_mu = jacob_constr_prev.T @ (
                 inv_jacob_constr_inner_product @ constr)
+            delta_pos = dh2_flow_pos_dmom @ delta_mu
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Quasi-Newton solver diverged on iteration {i}. &#39;
+                    f&#39;Last |constr|={error:.1e}, &#39;
+                    f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
+            elif error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
             mu += delta_mu
-            state.pos -= dh2_flow_pos_dmom @ delta_mu
+            state.pos -= delta_pos
         except ValueError as e:
             # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;ValueError during Quasi-Newton iteration ({e}).&#39;)
+                f&#39;ValueError at iteration {i} of Quasi-Newton solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Quasi-Newton iteration did not converge. Last error {error:.1e}.&#39;)</code></pre>
+        f&#39;Quasi-Newton solver did not converge with {max_iters} iterations. &#39;
+        f&#39;Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.&#39;)</code></pre>
 </details>
 </dd>
-<dt id="mici.solvers.retract_onto_manifold_newton"><code class="name flex">
-<span>def <span class="ident">retract_onto_manifold_newton</span></span>(<span>state, state_prev, dt, system, convergence_tol=1e-09, divergence_tol=10000000000.0, max_iters=50, norm=&lt;function maximum_norm&gt;)</span>
+<dt id="mici.solvers.solve_projection_onto_manifold_newton"><code class="name flex">
+<span>def <span class="ident">solve_projection_onto_manifold_newton</span></span>(<span>state, state_prev, dt, system, constraint_tol=1e-09, position_tol=1e-08, divergence_tol=10000000000.0, max_iters=50, norm=&lt;function maximum_norm&gt;)</span>
 </code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Solve constraint equation using Newton method.</p>
+<p>Uses a Newton iteration to solve the non-linear system of equations in <code>λ</code></p>
+<pre><code>system.constr(
+    state.pos + dh2_flow_pos_dmom @
+        system.jacob_constr(state_prev).T @ λ) == 0
+</code></pre>
+<p>where <code>dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]</code> is the derivative
+of the action of the (linear) <code>system.h2_flow</code> map on the state momentum
+component with respect to the position component, <code>state</code> is a post
+(unconstrained) <code>system.h2_flow</code> update state with position component
+outside of the manifold and <code>state_prev</code> is the corresponding pre-update
+state in the co-tangent bundle.</p>
+<p>Requires re-evaluating both the constraint function <code>system.constr</code> and
+constraint Jacobian <code>system.jacob_constr</code> within the solver loop and
+computation of matrix decompositions of a preconditioned matrix on each
+iteration.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Post <code>h2_flow</code>update state to project.</dd>
+<dt><strong><code>state_prev</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Previous state in co-tangent
+bundle manifold before <code>h2_flow</code> update which defines the
+co-tangent space to perform projection in.</dd>
+<dt><strong><code>dt</code></strong> :&ensp;<code>float</code></dt>
+<dd>Integrator time step used in <code>h2_flow</code> update.</dd>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.ConstrainedEuclideanMetricSystem" href="systems.html#mici.systems.ConstrainedEuclideanMetricSystem"><code>ConstrainedEuclideanMetricSystem</code></a></dt>
+<dd>Hamiltonian
+system defining <code>h2_flow</code> and <code>constr</code> functions used to define
+constraint equation to solve.</dd>
+<dt><strong><code>constraint_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance in constraint space.
+Iteration will continue until <code>norm(constr(pos)) &lt; constraint_tol</code>
+where <code>pos</code> is the position at the current iteration.</dd>
+<dt><strong><code>position_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Convergence tolerance in position space.
+Iteration will continue until <code>norm(delt_pos) &lt; position_tol</code>
+where <code>delta_pos</code> is the change in the position in the current
+iteration.</dd>
+<dt><strong><code>divergence_tol</code></strong> :&ensp;<code>float</code></dt>
+<dd>Divergence tolerance - solver aborts if
+<code>norm(constr(pos)) &gt; divergence_tol</code> on any iteration where <code>pos</code>
+is the position at the current iteration and raises
+<a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a>.</dd>
+<dt><strong><code>max_iters</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of iterations to perform before
+aborting and raising <a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a>.</dd>
+<dt><strong><code>norm</code></strong> :&ensp;<code>Callable</code>[[<code>array</code>], <code>float</code>]</dt>
+<dd>Norm to use to test for convergence.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Updated <code>state</code> object with position component satisfying constraint
+equation to within <code>constraint_tol</code>, i.e.
+<code>norm(system.constr(state.pos)) &lt; constraint_tol</code>.</p>
+<h2 id="raises">Raises</h2>
+<p><a title="mici.errors.ConvergenceError" href="errors.html#mici.errors.ConvergenceError"><code>ConvergenceError</code></a> if solver does not converge within
+<code>max_iters</code> iterations, diverges or encounters a <code>ValueError</code> during
+the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/3de08bd1cd6b1be61c6a9979a6f2e5f95328983b/mici/solvers.py#L116-L144" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L200-L286" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def retract_onto_manifold_newton(
-        state, state_prev, dt, system, convergence_tol=1e-9,
+<pre><code class="python">def solve_projection_onto_manifold_newton(
+        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
         divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    &#34;&#34;&#34;Solve constraint equation using Newton method.
+
+    Uses a Newton iteration to solve the non-linear system of equations in `λ`
+
+        system.constr(
+            state.pos + dh2_flow_pos_dmom @
+                system.jacob_constr(state_prev).T @ λ) == 0
+
+    where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the derivative
+    of the action of the (linear) `system.h2_flow` map on the state momentum
+    component with respect to the position component, `state` is a post
+    (unconstrained) `system.h2_flow` update state with position component
+    outside of the manifold and `state_prev` is the corresponding pre-update
+    state in the co-tangent bundle.
+
+    Requires re-evaluating both the constraint function `system.constr` and
+    constraint Jacobian `system.jacob_constr` within the solver loop and
+    computation of matrix decompositions of a preconditioned matrix on each
+    iteration.
+
+    Args:
+        state (mici.states.ChainState): Post `h2_flow `update state to project.
+        state_prev (mici.states.ChainState): Previous state in co-tangent
+            bundle manifold before `h2_flow` update which defines the
+            co-tangent space to perform projection in.
+        dt (float): Integrator time step used in `h2_flow` update.
+        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian
+           system defining `h2_flow` and `constr` functions used to define
+           constraint equation to solve.
+        constraint_tol (float): Convergence tolerance in constraint space.
+           Iteration will continue until `norm(constr(pos)) &lt; constraint_tol`
+           where `pos` is the position at the current iteration.
+        position_tol (float): Convergence tolerance in position space.
+           Iteration will continue until `norm(delt_pos) &lt; position_tol`
+           where `delta_pos` is the change in the position in the current
+           iteration.
+        divergence_tol (float): Divergence tolerance - solver aborts if
+            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos`
+            is the position at the current iteration and raises
+            `mici.errors.ConvergenceError`.
+        max_iters (int): Maximum number of iterations to perform before
+            aborting and raising `mici.errors.ConvergenceError`.
+        norm (Callable[[array], float]): Norm to use to test for convergence.
+
+    Returns:
+        Updated `state` object with position component satisfying constraint
+        equation to within `constraint_tol`, i.e.
+        `norm(system.constr(state.pos)) &lt; constraint_tol`.
+
+    Raises:
+        `mici.errors.ConvergenceError` if solver does not converge within
+        `max_iters` iterations, diverges or encounters a `ValueError` during
+        the iteration.
+    &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
@@ -399,24 +813,28 @@ cheaper.</p>
             jacob_constr = system.jacob_constr(state)
             constr = system.constr(state)
             error = norm(constr)
-            if error &gt; divergence_tol or np.isnan(error):
-                raise ConvergenceError(
-                    &#39;Newton iteration diverged. Last error {err:.1e}.&#39;)
-            if error &lt; convergence_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
-                return state
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(
                     jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
                 constr)
+            delta_pos = dh2_flow_pos_dmom @ delta_mu
+            if error &gt; divergence_tol or np.isnan(error):
+                raise ConvergenceError(
+                    f&#39;Newton solver diverged at iteration {i}. &#39;
+                    f&#39;Last |constr|={error:.1e}, &#39;
+                    f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
+            if error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
+                state.mom -= dh2_flow_mom_dmom @ mu
+                return state
             mu += delta_mu
-            state.pos -= dh2_flow_pos_dmom @ delta_mu
+            state.pos -= delta_pos
         except ValueError as e:
             # Make robust to inf/nan values in intermediate linear algebra ops
             raise ConvergenceError(
-                f&#39;ValueError during Newton iteration ({e}).&#39;)
+                f&#39;ValueError at iteration {i} of Newton solver ({e}).&#39;)
     raise ConvergenceError(
-        f&#39;Newton iteration did not converge. Last error {error:.1e}.&#39;)</code></pre>
+        f&#39;Newton solver did not converge in {max_iters} iterations. &#39;
+        f&#39;Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.&#39;)</code></pre>
 </details>
 </dd>
 </dl>
@@ -445,8 +863,8 @@ cheaper.</p>
 <li><code><a title="mici.solvers.maximum_norm" href="#mici.solvers.maximum_norm">maximum_norm</a></code></li>
 <li><code><a title="mici.solvers.solve_fixed_point_direct" href="#mici.solvers.solve_fixed_point_direct">solve_fixed_point_direct</a></code></li>
 <li><code><a title="mici.solvers.solve_fixed_point_steffensen" href="#mici.solvers.solve_fixed_point_steffensen">solve_fixed_point_steffensen</a></code></li>
-<li><code><a title="mici.solvers.retract_onto_manifold_quasi_newton" href="#mici.solvers.retract_onto_manifold_quasi_newton">retract_onto_manifold_quasi_newton</a></code></li>
-<li><code><a title="mici.solvers.retract_onto_manifold_newton" href="#mici.solvers.retract_onto_manifold_newton">retract_onto_manifold_newton</a></code></li>
+<li><code><a title="mici.solvers.solve_projection_onto_manifold_quasi_newton" href="#mici.solvers.solve_projection_onto_manifold_quasi_newton">solve_projection_onto_manifold_quasi_newton</a></code></li>
+<li><code><a title="mici.solvers.solve_projection_onto_manifold_newton" href="#mici.solvers.solve_projection_onto_manifold_newton">solve_projection_onto_manifold_newton</a></code></li>
 </ul>
 </li>
 </ul>
