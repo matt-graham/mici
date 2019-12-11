@@ -375,7 +375,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 self.metric.eigvec, cos_omega_dt))
 
 
-class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
+class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     """Base class for Euclidean Hamiltonian systems subject to constraints.
 
     The system is assumed to be subject to a set of holonomic constraints on
@@ -407,23 +407,52 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     def jacob_constr(self, state):
         return self._jacob_constr(state.pos)
 
+    @abstractmethod
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
-        raise NotImplementedError()
+        """Compute inner product of rows of constraint Jacobian matrices.
+
+        Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
+        potentially exploiting any structure / sparsity in `jacob_constr_1`,
+        `jacob_constr_2` and `inner_product_matrix`.
+
+        Args:
+            jacob_constr_1 (Matrix): First constraint Jacobian in product.
+            inner_product_matrix (Matrix): Positive-definite matrix defining
+                inner-product between rows of two constraint Jacobians.
+            jacob_constr_2 (None or Matrix): Second constraint Jacobian in
+                product. Defaults to `jacob_constr_1` if set to `None`.
+
+        Returns
+            Matrix: Object corresponding to computed inner products of
+               the constraint Jacobian rows.
+        """
 
     @cache_in_state('pos')
     def gram(self, state):
+        """Gram matrix at current position."""
         return self.jacob_constr_inner_product(
             self.jacob_constr(state), self.metric.inv)
 
     def inv_gram(self, state):
+        """Inverse of Gram matrix at current position."""
         return self.gram(state).inv
 
     def log_det_sqrt_gram(self, state):
+        """Value of (half of) log-determinant of Gram matrix."""
         return self.gram(state).log_abs_det_sqrt
 
+    @abstractmethod
     def grad_log_det_sqrt_gram(self, state):
-        raise NotImplementedError()
+        """Derivative of (half of) log-determinant of Gram matrix wrt position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `log_det_sqrt_gram(state)` derivative with respect
+            to `state.pos`.
+        """
 
     def h1(self, state):
         if self.dens_wrt_hausdorff:
@@ -439,6 +468,7 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     self.grad_log_det_sqrt_gram(state))
 
     def project_onto_cotangent_space(self, mom, state):
+        """Project a momentum on to the co-tangent space at a position."""
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
@@ -447,12 +477,13 @@ class _ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         return mom
 
     def sample_momentum(self, state, rng):
+        """Sample a momentum from its conditional at the current position."""
         mom = super().sample_momentum(state, rng)
         mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
-class DenseConstrainedEuclideanMetricSystem(_ConstrainedEuclideanMetricSystem):
+class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     """Euclidean Hamiltonian systems subject to a dense set of constraints.
 
     The system is assumed to be subject to a set of holonomic constraints on
