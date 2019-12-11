@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from mici.errors import NonReversibleStepError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
-                          retract_onto_manifold_quasi_newton)
+                          solve_projection_onto_manifold_quasi_newton)
 
 __pdoc__ = {}
 
@@ -232,9 +232,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
     """
 
     def __init__(self, system, step_size, n_inner_step=1,
-                 reverse_check_tol=1e-8, reverse_check_norm=maximum_norm,
-                 retraction_solver=retract_onto_manifold_quasi_newton,
-                 retraction_solver_kwargs=None):
+                 reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
+                 projection_solver=solve_projection_onto_manifold_quasi_newton,
+                 projection_solver_kwargs=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -270,39 +270,40 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 non-negative floating point value defining the distance to use
                 in the reversibility check. Defaults to
                 `mici.solvers.maximum_norm`.
-            retraction_solver (Callable[
+            projection_solver (Callable[
                     [ChainState, ChainState, float, System], ChainState]):
                 Function which given two states `state` and `state_prev`,
                 floating point time step `dt` and a Hamiltonian system object
-                `system` solves the non-linear system of equations in `lambda`
+                `system` solves the non-linear system of equations in `λ`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
-                            system.jacob_constr(state_prev).T @ lambda) == 0
+                            system.jacob_constr(state_prev).T @ λ) == 0
 
                 where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
                 derivative of the action of the (linear) `system.h2_flow` map
                 on the state momentum component with respect to the position
-                component. This is used to retract the state position
+                component. This is used to project the state position
                 component back on to the manifold after an unconstrained
                 `system.h2_flow` update. Defaults to
-                `mici.solvers.retract_onto_manifold_quasi_newton`.
-            retraction_solver_kwargs (None or Dict[str, object]): Dictionary of
-                any keyword arguments to `retraction_solver`.
+                `mici.solvers.solve_projection_onto_manifold_quasi_newton`.
+            projection_solver_kwargs (None or Dict[str, object]): Dictionary of
+                any keyword arguments to `projection_solver`.
         """
         self.system = system
         self.step_size = step_size
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
-        self.retraction_solver = retraction_solver
-        if retraction_solver_kwargs is None:
-            retraction_solver_kwargs = {}
-        self.retraction_solver_kwargs = retraction_solver_kwargs
+        self.projection_solver = projection_solver
+        if projection_solver_kwargs is None:
+            projection_solver_kwargs = {}
+        self.projection_solver_kwargs = projection_solver_kwargs
 
-    def _retract_onto_manifold(self, state, state_prev, dt):
-        self.retraction_solver(state, state_prev, dt, self.system,
-                               **self.retraction_solver_kwargs)
+    def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
+        self.system.h2_flow(state, dt)
+        self.projection_solver(state, state_prev, dt, self.system,
+                               **self.projection_solver_kwargs)
 
     def _project_onto_cotangent_space(self, state):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
@@ -315,8 +316,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
         dt_i = dt / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
-            self.system.h2_flow(state, dt_i)
-            self._retract_onto_manifold(state, state_prev, dt_i)
+            self._h2_flow_retraction_onto_manifold(state, state_prev, dt_i)
             if i == self.n_inner_step - 1:
                 # If at last inner step pre-evaluate dh1_dpos before projecting
                 # state on to cotangent space, with computed value being
@@ -333,8 +333,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                 self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
-            self.system.h2_flow(state_back, -dt_i)
-            self._retract_onto_manifold(state_back, state, -dt_i)
+            self._h2_flow_retraction_onto_manifold(state_back, state, -dt_i)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
                 raise NonReversibleStepError(
