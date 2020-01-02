@@ -570,21 +570,22 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                     pbars[chain_index].update(sample_index, data_dict)
                     if sample_index == n_samples[chain_index]:
                         chains_completed += 1
-        except PicklingError as e:
-            if not MULTIPROCESS_AVAILABLE:
+        except (PicklingError, AttributeError) as e:
+            if not MULTIPROCESS_AVAILABLE and (
+                    isinstance(e, PicklingError) or 'pickle' in str(e)):
                 raise RuntimeError(
-                    'PicklingError encountered while trying to run chains on '
-                    'multiple processes in parallel. The inbuilt '
-                    'multiprocessing module uses pickle to communicate between'
-                    ' processes and pickle does support pickling anonymous or '
-                    'nested functions. If you use anonymous or nested '
-                    'functions in your model functions or are using autograd '
-                    'to automatically compute derivatives (autograd uses '
-                    'anonymous and nested functions) then installing the '
-                    'Python package multiprocess, which is able to serialise '
-                    'anonymous and nested functions and will be used in '
-                    'preference to multiprocessing by this package when '
-                    'available, may resolve this error.'
+                    'Error encountered while trying to run chains on multiple'
+                    'processes in parallel. The inbuilt multiprocessing module'
+                    ' uses pickle to communicate between processes and pickle '
+                    'does support pickling anonymous or nested functions. If '
+                    'you use anonymous or nested functions in your model '
+                    'functions or are using autograd to automatically compute '
+                    'derivatives (autograd uses anonymous and nested '
+                    'functions) then installing the Python package '
+                    'multiprocess, which is able to serialise anonymous and '
+                    'nested functions and will be used in preference to '
+                    'multiprocessing by this package when available, may '
+                    'resolve this error.'
                 ) from e
             else:
                 raise e
