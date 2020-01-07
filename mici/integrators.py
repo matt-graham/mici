@@ -131,6 +131,8 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
+        if fixed_point_solver_kwargs is None:
+            fixed_point_solver_kwargs = {}
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
     def _solve_fixed_point(self, fixed_point_func, x_init):
@@ -151,7 +153,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         mom_init = state.mom.copy()
         state.mom -= dt * self.system.dh2_dpos(state)
         state_back = state.copy()
-        self.step_b_fwd(state_back, -dt)
+        self._step_b_fwd(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -162,7 +164,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         pos_init = state.pos.copy()
         state.pos += dt * self.system.dh2_dmom(state)
         state_back = state.copy()
-        self.step_c_adj(state_back, -dt)
+        self._step_c_adj(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
             raise NonReversibleStepError(

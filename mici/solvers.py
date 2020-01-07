@@ -41,12 +41,12 @@ def solve_fixed_point_direct(
     for i in range(max_iters):
         try:
             x = func(x0)
-            if any(np.isnan(x)) or any(np.isinf(x)):
+            error = norm(x - x0)
+            if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
                     f'Fixed point iteration diverged on iteration {i}.'
                     f'Last error={error:.1e}.')
-            error = norm(x - x0)
-            if error < tol:
+            if error < convergence_tol:
                 return x
             x0 = x
         except ValueError as e:
