@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as nla
 import scipy.linalg as sla
 import numpy.testing as npt
-from functools import partial
+from functools import partial, wraps
 
 AUTOGRAD_AVAILABLE = True
 try:
@@ -17,721 +17,796 @@ except ImportError:
 
 SEED = 3046987125
 NUM_SCALAR = 4
+NUM_VECTOR = 4
 SIZES = {1, 2, 5, 10}
 ATOL = 1e-10
 
 
-def generate_premultipliers(rng, size):
-    return (
-        [rng.standard_normal((size,))] +
-        [rng.standard_normal((sz, size)) for sz in [1, 2, size, 2 * size]]
-    )
+def iterate_over_matrix_pairs(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for matrix_pair in self.matrix_pairs.values():
+            yield (test, *matrix_pair)
+
+    return iterated_test
 
 
-def generate_postmultipliers(rng, size):
-    return (
-        [rng.standard_normal((size,))] +
-        [rng.standard_normal((size, sz)) for sz in [1, 2, size, 2 * size]]
-    )
+def iterate_over_matrix_pairs_vectors(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for key, (matrix, np_matrix) in self.matrix_pairs.items():
+            for vector in self.vectors[np_matrix.shape[0]]:
+                yield test, matrix, np_matrix, vector
+
+    return iterated_test
+
+
+def iterate_over_matrix_pairs_premultipliers(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for key, (matrix, np_matrix) in self.matrix_pairs.items():
+            for pre in self.premultipliers[np_matrix.shape[0]]:
+                yield test, matrix, np_matrix, pre
+
+    return iterated_test
+
+
+def iterate_over_matrix_pairs_postmultipliers(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for key, (matrix, np_matrix) in self.matrix_pairs.items():
+            for post in self.postmultipliers[np_matrix.shape[1]]:
+                yield test, matrix, np_matrix, post
+
+    return iterated_test
+
+
+def iterate_over_matrix_pairs_scalars(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for matrix, np_matrix in self.matrix_pairs.values():
+            for scalar in self.scalars:
+                yield test, matrix, np_matrix, scalar
+
+    return iterated_test
+
+
+def iterate_over_matrix_pairs_scalars_postmultipliers(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for matrix, np_matrix in self.matrix_pairs.values():
+            for scalar in self.scalars:
+                for post in self.postmultipliers[np_matrix.shape[1]]:
+                    yield test, matrix, np_matrix, scalar, post
+
+    return iterated_test
+
+
+def iterate_over_matrix_pairs_scalars_premultipliers(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for matrix, np_matrix in self.matrix_pairs.values():
+            for scalar in self.scalars:
+                for pre in self.premultipliers[np_matrix.shape[0]]:
+                    yield test, matrix, np_matrix, scalar, pre
+
+    return iterated_test
 
 
 class MatrixTestCase(object):
 
-    def __init__(self):
-        self.rng = np.random.RandomState(SEED)
+    def __init__(self, matrix_pairs, rng=None):
+        self.matrix_pairs = matrix_pairs
+        self.rng = np.random.RandomState(SEED) if rng is None else rng
         # Ensure a mix of positive and negative scalar multipliers
         self.scalars = np.abs(self.rng.standard_normal(NUM_SCALAR))
         self.scalars[NUM_SCALAR // 2:] = -self.scalars[NUM_SCALAR // 2:]
         self.premultipliers = {
-            sz: generate_premultipliers(self.rng, sz) for sz in SIZES}
+            shape_0: self._generate_premultipliers(shape_0)
+            for shape_0 in set(m.shape[0] for _, m in matrix_pairs.values())}
         self.postmultipliers = {
-            sz: generate_postmultipliers(self.rng, sz) for sz in SIZES}
-        self.matrices = {}
-        self.np_matrices = {}
+            shape_1: self._generate_postmultipliers(shape_1)
+            for shape_1 in set(m.shape[1] for _, m in matrix_pairs.values())}
 
-    def check_shape(self, size):
+    def _generate_premultipliers(self, size):
+        return (
+            [self.rng.standard_normal((size,))] +
+            [self.rng.standard_normal((s, size)) for s in [1, size, 2 * size]]
+        )
+
+    def _generate_postmultipliers(self, size):
+        return (
+            [self.rng.standard_normal((size,))] +
+            [self.rng.standard_normal((size, s)) for s in [1, size, 2 * size]]
+        )
+
+    @iterate_over_matrix_pairs
+    def test_shape(matrix, np_matrix):
         assert (
-            self.matrices[size].shape == (None, None) or
-            self.matrices[size].shape == self.np_matrices[size].shape)
+            matrix.shape == (None, None) or matrix.shape == np_matrix.shape)
 
-    def test_shape(self):
-        for size in SIZES:
-            yield self.check_shape, size
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_lmult(matrix, np_matrix, post):
+        npt.assert_allclose(matrix @ post, np_matrix @ post)
 
-    def check_lmult(self, size, other):
+    @iterate_over_matrix_pairs_premultipliers
+    def test_rmult(matrix, np_matrix, pre):
+        npt.assert_allclose(pre @ matrix, pre @ np_matrix)
+
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_neg_lmult(matrix, np_matrix, post):
+        npt.assert_allclose((-matrix) @ post, -np_matrix @ post)
+
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_lmult_rmult_trans(matrix, np_matrix, post):
+        npt.assert_allclose(matrix @ post, (post.T @ matrix.T).T)
+
+    @iterate_over_matrix_pairs_premultipliers
+    def test_rmult_lmult_trans(matrix, np_matrix, pre):
+        npt.assert_allclose(pre @ matrix, (matrix.T @ pre.T).T)
+
+    @iterate_over_matrix_pairs_scalars_postmultipliers
+    def test_lmult_scalar_lmult(matrix, np_matrix, scalar, post):
         npt.assert_allclose(
-            self.matrices[size] @ other, self.np_matrices[size] @ other)
+            (scalar * matrix) @ post, scalar * np_matrix @ post)
 
-    def test_lmult(self):
-        for size in SIZES:
-            for post in self.postmultipliers[size]:
-                yield self.check_lmult, size, post
-
-    def check_rmult(self, size, other):
+    @iterate_over_matrix_pairs_scalars_postmultipliers
+    def test_rdiv_scalar_lmult(matrix, np_matrix, scalar, post):
         npt.assert_allclose(
-            other @ self.matrices[size], other @ self.np_matrices[size])
+            (matrix / scalar) @ post, (np_matrix / scalar) @ post)
 
-    def test_rmult(self):
-        for size in SIZES:
-            for pre in self.premultipliers[size]:
-                yield self.check_rmult, size, pre
-
-    def check_lmult_scalar_lmult(self, size, scalar, other):
+    @iterate_over_matrix_pairs_scalars_postmultipliers
+    def test_rmult_scalar_lmult(matrix, np_matrix, scalar, post):
         npt.assert_allclose(
-            (scalar * self.matrices[size]) @ other,
-            scalar * self.np_matrices[size] @ other)
+            (matrix * scalar) @ post, (np_matrix * scalar) @ post)
 
-    def test_lmult_scalar_lmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for post in self.postmultipliers[size]:
-                    yield self.check_lmult_scalar_lmult, size, scalar, post
-
-    def check_rmult_scalar_lmult(self, size, scalar, other):
+    @iterate_over_matrix_pairs_scalars_premultipliers
+    def test_lmult_scalar_rmult(matrix, np_matrix, scalar, pre):
         npt.assert_allclose(
-            (self.matrices[size] * scalar) @ other,
-            scalar * self.np_matrices[size] @ other)
+            pre @ (scalar * matrix), pre @ (scalar * np_matrix))
 
-    def test_rmult_scalar_lmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for post in self.postmultipliers[size]:
-                    yield self.check_rmult_scalar_lmult, size, scalar, post
-
-    def check_lmult_scalar_rmult(self, size, scalar, other):
+    @iterate_over_matrix_pairs_scalars_premultipliers
+    def test_rmult_scalar_rmult(matrix, np_matrix, scalar, pre):
         npt.assert_allclose(
-            other @ (scalar * self.matrices[size]),
-            other @ (scalar * self.np_matrices[size]))
+            pre @ (matrix * scalar), pre @ (np_matrix * scalar))
 
-    def test_lmult_scalar_rmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for pre in self.premultipliers[size]:
-                    yield self.check_lmult_scalar_rmult, size, scalar, pre
 
-    def check_rmult_scalar_rmult(self, size, scalar, other):
+class ExplicitShapeMatrixTestCase(MatrixTestCase):
+
+    @iterate_over_matrix_pairs
+    def test_array(matrix, np_matrix):
+        npt.assert_allclose(matrix.array, np_matrix)
+
+    @iterate_over_matrix_pairs
+    def test_array_transpose(matrix, np_matrix):
+        npt.assert_allclose(matrix.T.array, np_matrix.T)
+
+    @iterate_over_matrix_pairs
+    def test_array_transpose_transpose(matrix, np_matrix):
+        npt.assert_allclose(matrix.T.T.array, np_matrix)
+
+    @iterate_over_matrix_pairs
+    def test_array_numpy(matrix, np_matrix):
+        npt.assert_allclose(matrix, np_matrix)
+
+    @iterate_over_matrix_pairs
+    def test_diagonal(matrix, np_matrix):
+        npt.assert_allclose(matrix.diagonal, np_matrix.diagonal())
+
+    @iterate_over_matrix_pairs_scalars
+    def test_lmult_scalar_array(matrix, np_matrix, scalar):
+        npt.assert_allclose((scalar * matrix).array, scalar * np_matrix)
+
+    @iterate_over_matrix_pairs_scalars
+    def test_rmult_scalar_array(matrix, np_matrix, scalar):
+        npt.assert_allclose((matrix * scalar).array, np_matrix * scalar)
+
+    @iterate_over_matrix_pairs_scalars
+    def test_rdiv_scalar_array(matrix, np_matrix, scalar):
+        npt.assert_allclose((matrix / scalar).array, np_matrix / scalar)
+
+    @iterate_over_matrix_pairs
+    def test_neg_array(matrix, np_matrix):
+        npt.assert_allclose((-matrix).array, -np_matrix)
+
+
+class SquareMatrixTestCase(MatrixTestCase):
+
+    def __init__(self, matrix_pairs, rng=None):
+        super().__init__(matrix_pairs, rng)
+        self.vectors = {
+            size: self.rng.standard_normal((NUM_VECTOR, size))
+            for size in set(m.shape[0] for _, m in matrix_pairs.values())}
+
+    @iterate_over_matrix_pairs_vectors
+    def test_quadratic_form(matrix, np_matrix, vector):
         npt.assert_allclose(
-            other @ (self.matrices[size] * scalar),
-            other @ (self.np_matrices[size] * scalar))
-
-    def test_rmult_scalar_rmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for pre in self.premultipliers[size]:
-                    yield self.check_rmult_scalar_rmult, size, scalar, pre
+            vector @ matrix @ vector, vector @ np_matrix @ vector)
 
 
-class ExplicitMatrixTestCase(MatrixTestCase):
+class ExplicitShapeSquareMatrixTestCase(SquareMatrixTestCase):
 
-    def check_array(self, size):
-        npt.assert_allclose(self.matrices[size].array, self.np_matrices[size])
-
-    def test_array(self):
-        for size in SIZES:
-            yield self.check_array, size
-
-    def check_array_transpose(self, size):
+    @iterate_over_matrix_pairs
+    def test_log_abs_det(matrix, np_matrix):
         npt.assert_allclose(
-            self.matrices[size].T.array, self.np_matrices[size].T)
-
-    def test_array_transpose(self):
-        for size in SIZES:
-            yield self.check_array_transpose, size
-
-    def check_array_transpose_transpose(self, size):
-        npt.assert_allclose(
-            self.matrices[size].T.T.array, self.np_matrices[size])
-
-    def test_array_transpose_transpose(self):
-        for size in SIZES:
-            yield self.check_array_transpose_transpose, size
-
-    def check_array_numpy(self, size):
-        npt.assert_allclose(self.matrices[size], self.np_matrices[size])
-
-    def test_array_numpy(self):
-        for size in SIZES:
-            yield self.check_array_numpy, size
-
-    def check_diagonal(self, size):
-        npt.assert_allclose(
-            self.matrices[size].diagonal, self.np_matrices[size].diagonal())
-
-    def test_diagonal(self):
-        for size in SIZES:
-            yield self.check_diagonal, size
-
-    def check_log_abs_det(self, size):
-        npt.assert_allclose(self.matrices[size].log_abs_det,
-                            nla.slogdet(self.np_matrices[size])[1], atol=ATOL)
-
-    def test_log_abs_det(self):
-        for size in SIZES:
-            yield self.check_log_abs_det, size
-
-    def check_log_abs_det_sqrt(self, size):
-        npt.assert_allclose(self.matrices[size].log_abs_det_sqrt,
-                            nla.slogdet(self.np_matrices[size])[1] / 2,
-                            atol=ATOL)
-
-    def test_log_abs_det_sqrt(self):
-        for size in SIZES:
-            yield self.check_log_abs_det_sqrt, size
-
-    def check_lmult_scalar_array(self, size, scalar):
-        npt.assert_allclose(
-            (scalar * self.matrices[size]).array,
-            scalar * self.np_matrices[size])
-
-    def test_lmult_scalar_array(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                yield self.check_lmult_scalar_array, size, scalar
-
-    def check_rmult_scalar_array(self, size, scalar):
-        npt.assert_allclose(
-            (self.matrices[size] * scalar).array,
-            scalar * self.np_matrices[size])
-
-    def test_rmult_scalar_array(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                yield self.check_rmult_scalar_array, size, scalar
-
-    def check_rdiv_scalar_array(self, size, scalar):
-        npt.assert_allclose(
-            (self.matrices[size] / scalar).array,
-            self.np_matrices[size] / scalar)
-
-    def test_rdiv_scalar_array(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                yield self.check_rdiv_scalar_array, size, scalar
+            matrix.log_abs_det, nla.slogdet(np_matrix)[1], atol=ATOL)
 
 
-class SymmetricMatrixTestCase(MatrixTestCase):
+class SymmetricMatrixTestCase(SquareMatrixTestCase):
 
-    def check_symmetry_identity(self, size):
-        assert self.matrices[size] is self.matrices[size].T
+    @iterate_over_matrix_pairs
+    def test_symmetry_identity(matrix, np_matrix):
+        assert matrix is matrix.T
 
-    def test_symmetry_identity(self):
-        for size in SIZES:
-            yield self.check_symmetry_identity, size
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_symmetry_lmult(matrix, np_matrix, post):
+        npt.assert_allclose(matrix @ post, (post.T @ matrix).T)
 
-    def check_symmetry_array(self, size):
-        npt.assert_allclose(
-            self.matrices[size].array, self.matrices[size].T.array)
+    @iterate_over_matrix_pairs_premultipliers
+    def test_symmetry_rmult(matrix, np_matrix, pre):
+        npt.assert_allclose(pre @ matrix, (matrix @ pre.T).T)
 
-    def test_symmetry_array(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_symmetry_array, size
 
-    def check_symmetry_lmult(self, other, size):
-        npt.assert_allclose(
-            self.matrices[size] @ other, (other.T @ self.matrices[size]).T)
+class ExplicitShapeSymmetricMatrixTestCase(
+        SymmetricMatrixTestCase, ExplicitShapeSquareMatrixTestCase):
 
-    def test_symmetry_lmult(self):
-        for size in SIZES:
-            for post in self.postmultipliers[size]:
-                yield self.check_symmetry_lmult, post, size
+    @iterate_over_matrix_pairs
+    def test_symmetry_array(matrix, np_matrix):
+        npt.assert_allclose(matrix.array, matrix.T.array)
 
-    def check_symmetry_rmult(self, other, size):
-        npt.assert_allclose(
-            other @ self.matrices[size], (self.matrices[size] @ other.T).T)
-
-    def test_symmetry_rmult(self):
-        for size in SIZES:
-            for pre in self.premultipliers[size]:
-                yield self.check_symmetry_rmult, pre, size
-
-    def check_eigval(self, size):
+    @iterate_over_matrix_pairs
+    def test_eigval(matrix, np_matrix):
         # Ensure eigenvalues in ascending order
         npt.assert_allclose(
-            np.sort(self.matrices[size].eigval),
-            nla.eigh(self.np_matrices[size])[0])
+            np.sort(matrix.eigval), nla.eigh(np_matrix)[0])
 
-    def test_eigval(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_eigval, size
-
-    def check_eigvec(self, size):
+    @iterate_over_matrix_pairs
+    def test_eigvec(matrix, np_matrix):
         # Ensure eigenvectors correspond to ascending eigenvalue ordering
-        eigval_order = np.argsort(self.matrices[size].eigval)
-        eigvec = self.matrices[size].eigvec.array[:, eigval_order]
-        np_eigvec = nla.eigh(self.np_matrices[size])[1]
+        eigval_order = np.argsort(matrix.eigval)
+        eigvec = matrix.eigvec.array[:, eigval_order]
+        np_eigvec = nla.eigh(np_matrix)[1]
         # Account for eigenvector sign ambiguity when checking for equivalence
         assert np.all(
             np.isclose(eigvec, np_eigvec) | np.isclose(eigvec, -np_eigvec))
 
-    def test_eigvec(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_eigvec, size
-
 
 class InvertibleMatrixTestCase(MatrixTestCase):
 
-    def check_lmult_inv(self, size, other):
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_lmult_inv(matrix, np_matrix, post):
+        npt.assert_allclose(matrix.inv @ post, nla.solve(np_matrix, post))
+
+    @iterate_over_matrix_pairs_premultipliers
+    def test_rmult_inv(matrix, np_matrix, pre):
+        npt.assert_allclose(pre @ matrix.inv, nla.solve(np_matrix.T, pre.T).T)
+
+    @iterate_over_matrix_pairs_scalars_postmultipliers
+    def test_lmult_scalar_inv_lmult(matrix, np_matrix, scalar, post):
         npt.assert_allclose(
-            self.matrices[size].inv @ other,
-            nla.solve(self.np_matrices[size], other))
+            (scalar * matrix.inv) @ post, nla.solve(np_matrix / scalar, post))
 
-    def test_lmult_inv(self):
-        for size in SIZES:
-            for post in self.postmultipliers[size]:
-                yield self.check_lmult_inv, size, post
-
-    def check_rmult_inv(self, size, other):
+    @iterate_over_matrix_pairs_scalars_postmultipliers
+    def test_inv_lmult_scalar_lmult(matrix, np_matrix, scalar, post):
         npt.assert_allclose(
-            other @ self.matrices[size].inv,
-            nla.solve(self.np_matrices[size].T, other.T).T)
+            (scalar * matrix).inv @ post, nla.solve(scalar * np_matrix, post))
 
-    def test_rmult_inv(self):
-        for size in SIZES:
-            for pre in self.premultipliers[size]:
-                yield self.check_rmult_inv, size, pre
-
-    def check_array_inv(self, size):
+    @iterate_over_matrix_pairs_vectors
+    def test_quadratic_form_inv(matrix, np_matrix, vector):
         npt.assert_allclose(
-            self.matrices[size].inv.array,
-            nla.inv(self.np_matrices[size]), atol=ATOL)
+            vector @ matrix.inv @ vector,
+            vector @ nla.solve(np_matrix, vector))
 
-    def test_array_inv(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_array_inv, size
 
-    def check_array_inv_inv(self, size):
+class ExplicitShapeInvertibleMatrixTestCase(
+        ExplicitShapeSquareMatrixTestCase, InvertibleMatrixTestCase):
+
+    @iterate_over_matrix_pairs
+    def test_array_inv(matrix, np_matrix):
+        npt.assert_allclose(matrix.inv.array, nla.inv(np_matrix), atol=ATOL)
+
+    @iterate_over_matrix_pairs
+    def test_array_inv_inv(matrix, np_matrix):
+        npt.assert_allclose(matrix.inv.inv.array, np_matrix, atol=ATOL)
+
+    @iterate_over_matrix_pairs
+    def test_log_abs_det_inv(matrix, np_matrix):
         npt.assert_allclose(
-            self.matrices[size].inv.inv.array,
-            self.np_matrices[size], atol=ATOL)
-
-    def test_array_inv_inv(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_array_inv_inv, size
-
-    def check_log_abs_det_inv(self, size):
-        npt.assert_allclose(self.matrices[size].inv.log_abs_det,
-                            -nla.slogdet(self.np_matrices[size])[1], atol=ATOL)
-
-    def test_log_abs_det_inv(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_log_abs_det_inv, size
-
-    def check_log_abs_det_sqrt_inv(self, size):
-        npt.assert_allclose(self.matrices[size].inv.log_abs_det_sqrt,
-                            -nla.slogdet(self.np_matrices[size])[1] / 2,
-                            atol=ATOL)
-
-    def test_log_abs_det_sqrt_inv(self):
-        if isinstance(self, ExplicitMatrixTestCase):
-            for size in SIZES:
-                yield self.check_log_abs_det_sqrt_inv, size
-
-    def check_lmult_scalar_inv_lmult(self, size, scalar, other):
-        npt.assert_allclose(
-            (scalar * self.matrices[size].inv) @ other,
-            nla.solve(self.np_matrices[size] / scalar, other))
-
-    def test_lmult_scalar_inv_lmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for post in self.postmultipliers[size]:
-                    yield self.check_lmult_scalar_inv_lmult, size, scalar, post
-
-    def check_inv_lmult_scalar_lmult(self, size, scalar, other):
-        npt.assert_allclose(
-            (scalar * self.matrices[size]).inv @ other,
-            nla.solve(scalar * self.np_matrices[size], other))
-
-    def test_inv_lmult_scalar_lmult(self):
-        for size in SIZES:
-            for scalar in self.scalars:
-                for post in self.postmultipliers[size]:
-                    yield self.check_inv_lmult_scalar_lmult, size, scalar, post
+            matrix.inv.log_abs_det, -nla.slogdet(np_matrix)[1], atol=ATOL)
 
 
 class PositiveDefiniteMatrixTestCase(
         SymmetricMatrixTestCase, InvertibleMatrixTestCase):
 
-    def check_lmult_sqrt(self, size, other):
+    @iterate_over_matrix_pairs_vectors
+    def test_pos_def(matrix, np_matrix, vector):
+        assert vector @ matrix @ vector > 0
+
+    @iterate_over_matrix_pairs_postmultipliers
+    def test_lmult_sqrt(matrix, np_matrix, post):
         npt.assert_allclose(
-            self.matrices[size].sqrt @ (self.matrices[size].sqrt.T @ other),
-            self.np_matrices[size] @ other)
+            matrix.sqrt @ (matrix.sqrt.T @ post), np_matrix @ post)
 
-    def test_lmult_sqrt(self):
-        for size in SIZES:
-            for post in self.postmultipliers[size]:
-                yield self.check_lmult_sqrt, size, post
-
-    def check_rmult_sqrt(self, size, other):
+    @iterate_over_matrix_pairs_premultipliers
+    def test_rmult_sqrt(matrix, np_matrix, pre):
         npt.assert_allclose(
-            (other @ self.matrices[size].sqrt) @ self.matrices[size].sqrt.T,
-            other @ self.np_matrices[size])
+            (pre @ matrix.sqrt) @ matrix.sqrt.T, pre @ np_matrix)
 
-    def test_rmult_sqrt(self):
-        for size in SIZES:
-            for pre in self.premultipliers[size]:
-                yield self.check_rmult_sqrt, size, pre
+
+class ExplicitShapePositiveDefiniteMatrixTestCase(
+        PositiveDefiniteMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase):
+
+    @iterate_over_matrix_pairs
+    def test_sqrt_array(matrix, np_matrix):
+        npt.assert_allclose((matrix.sqrt @ matrix.sqrt.T).array, np_matrix)
 
 
 class DifferentiableMatrixTestCase(MatrixTestCase):
 
-    def __init__(self):
-        super().__init__()
-        self.grad_log_abs_det_sqrts = {}
-        self.grad_quadratic_form_invs = {}
-        self.vectors = {
-            sz: self.rng.standard_normal((NUM_SCALAR, sz)) for sz in SIZES}
+    def __init__(self, matrix_pairs, grad_log_abs_dets,
+                 grad_quadratic_form_invs, rng=None):
+        super().__init__(matrix_pairs, rng)
+        self.grad_log_abs_dets = grad_log_abs_dets
+        self.grad_quadratic_form_invs = grad_quadratic_form_invs
 
     if AUTOGRAD_AVAILABLE:
 
-        def check_grad_log_abs_det_sqrt(self, size):
-            npt.assert_allclose(
-                self.matrices[size].grad_log_abs_det_sqrt,
-                self.grad_log_abs_det_sqrts[size])
+        def check_grad_log_abs_det(self, matrix, grad_log_abs_det):
+            npt.assert_allclose(matrix.grad_log_abs_det, grad_log_abs_det)
 
-        def test_grad_log_abs_det_sqrt(self):
-            for size in SIZES:
-                yield self.check_grad_log_abs_det_sqrt, size
+        def test_grad_log_abs_det(self):
+            for key, (matrix, np_matrix) in self.matrix_pairs.items():
+                yield (self.check_grad_log_abs_det, matrix,
+                       self.grad_log_abs_dets[key])
 
-        def check_grad_quadratic_form_inv(self, size, vector):
+        def check_grad_quadratic_form_inv(
+                self, matrix, vector, grad_quadratic_form_inv):
             npt.assert_allclose(
-                self.matrices[size].grad_quadratic_form_inv(vector),
-                self.grad_quadratic_form_invs[size](vector))
+                matrix.grad_quadratic_form_inv(vector),
+                grad_quadratic_form_inv(vector))
 
         def test_grad_quadratic_form_inv(self):
-            for size in SIZES:
-                for vector in self.vectors[size]:
-                    yield self.check_grad_quadratic_form_inv, size, vector
+            for key, (matrix, np_matrix) in self.matrix_pairs.items():
+                for vector in self.vectors[np_matrix.shape[0]]:
+                    yield (self.check_grad_quadratic_form_inv, matrix, vector,
+                           self.grad_quadratic_form_invs[key])
 
 
-class TestImplicitIdentityMatrix(PositiveDefiniteMatrixTestCase):
-
-    def __init__(self):
-        super().__init__()
-        for sz in SIZES:
-            self.matrices[sz] = matrices.IdentityMatrix(None)
-            self.np_matrices[sz] = np.identity(sz)
-
-
-class TestIdentityMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase):
+class TestImplicitIdentityMatrix(
+        SymmetricMatrixTestCase, InvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
-        for sz in SIZES:
-            self.matrices[sz] = matrices.IdentityMatrix(sz)
-            self.np_matrices[sz] = np.identity(sz)
+        super().__init__({sz: (
+            matrices.IdentityMatrix(None), np.identity(sz)) for sz in SIZES})
+
+
+class TestIdentityMatrix(ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        super().__init__({sz: (
+            matrices.IdentityMatrix(sz), np.identity(sz)) for sz in SIZES})
 
 
 class TestPositiveScaledIdentityMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase,
-        DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        rng = np.random.RandomState(SEED)
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
         for sz in SIZES:
-            scalar = abs(self.rng.normal())
-            self.matrices[sz] = matrices.PositiveScaledIdentityMatrix(
-                scalar, sz)
-            self.np_matrices[sz] = scalar * np.identity(sz)
+            scalar = abs(rng.normal())
+            matrix_pairs[sz] = (
+                matrices.PositiveScaledIdentityMatrix(scalar, sz),
+                scalar * np.identity(sz))
             if AUTOGRAD_AVAILABLE:
-                self.grad_log_abs_det_sqrts[sz] = grad(
-                    lambda s: 0.5 * anp.linalg.slogdet(s * anp.eye(sz))[1])(
-                        scalar)
-                self.grad_quadratic_form_invs[sz] = partial(
+                grad_log_abs_dets[sz] = grad(
+                    lambda s: anp.linalg.slogdet(s * anp.eye(sz))[1])(scalar)
+                grad_quadratic_form_invs[sz] = partial(
                     grad(lambda s, v: (v / s) @ v), scalar)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
 class TestScaledIdentityMatrix(
-        InvertibleMatrixTestCase, SymmetricMatrixTestCase,
-        ExplicitMatrixTestCase, DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        rng = np.random.RandomState(SEED)
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
         for sz in SIZES:
-            scalar = self.rng.normal()
-            self.matrices[sz] = matrices.ScaledIdentityMatrix(scalar, sz)
-            self.np_matrices[sz] = scalar * np.identity(sz)
+            scalar = rng.normal()
+            matrix_pairs[sz] = (
+                matrices.ScaledIdentityMatrix(scalar, sz),
+                scalar * np.identity(sz))
             if AUTOGRAD_AVAILABLE:
-                self.grad_log_abs_det_sqrts[sz] = grad(
-                    lambda s: 0.5 * anp.linalg.slogdet(s * anp.eye(sz))[1])(
-                        scalar)
-                self.grad_quadratic_form_invs[sz] = partial(
+                grad_log_abs_dets[sz] = grad(
+                    lambda s: anp.linalg.slogdet(s * anp.eye(sz))[1])(scalar)
+                grad_quadratic_form_invs[sz] = partial(
                     grad(lambda s, v: (v / s) @ v), scalar)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
 class TestImplicitScaledIdentityMatrix(
         InvertibleMatrixTestCase, SymmetricMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            scalar = self.rng.normal()
-            self.matrices[sz] = matrices.ScaledIdentityMatrix(scalar, None)
-            self.np_matrices[sz] = scalar * np.identity(sz)
+            scalar = rng.normal()
+            matrix_pairs[sz] = (
+                matrices.ScaledIdentityMatrix(scalar, None),
+                scalar * np.identity(sz))
+        super().__init__(matrix_pairs, rng)
 
 
 class TestPositiveDiagonalMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase,
-        DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
         if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_sqrt_func = grad(
-                lambda d: 0.5 * anp.linalg.slogdet(anp.diag(d))[1])
+            grad_log_abs_det_func = grad(
+                lambda d: anp.linalg.slogdet(anp.diag(d))[1])
             grad_quadratic_form_inv_func = grad(
                 lambda d, v: v @ anp.diag(1 / d) @ v)
         for sz in SIZES:
-            diagonal = np.abs(self.rng.standard_normal(sz))
-            self.matrices[sz] = matrices.PositiveDiagonalMatrix(diagonal)
-            self.np_matrices[sz] = np.diag(diagonal)
+            diagonal = np.abs(rng.standard_normal(sz))
+            matrix_pairs[sz] = (
+                matrices.PositiveDiagonalMatrix(diagonal), np.diag(diagonal))
             if AUTOGRAD_AVAILABLE:
-                self.grad_log_abs_det_sqrts[sz] = (
-                    grad_log_abs_det_sqrt_func(diagonal))
-                self.grad_quadratic_form_invs[sz] = partial(
+                grad_log_abs_dets[sz] = grad_log_abs_det_func(diagonal)
+                grad_quadratic_form_invs[sz] = partial(
                     grad_quadratic_form_inv_func, diagonal)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
 class TestDiagonalMatrix(
-        InvertibleMatrixTestCase, SymmetricMatrixTestCase,
-        ExplicitMatrixTestCase, DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
         if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_sqrt_func = grad(
-                lambda d: 0.5 * anp.linalg.slogdet(anp.diag(d))[1])
+            grad_log_abs_det_func = grad(
+                lambda d: anp.linalg.slogdet(anp.diag(d))[1])
             grad_quadratic_form_inv_func = grad(
                 lambda d, v: v @ anp.diag(1 / d) @ v)
         for sz in SIZES:
-            diagonal = self.rng.standard_normal(sz)
-            self.matrices[sz] = matrices.DiagonalMatrix(diagonal)
-            self.np_matrices[sz] = np.diag(diagonal)
+            diagonal = rng.standard_normal(sz)
+            matrix_pairs[sz] = (
+                matrices.DiagonalMatrix(diagonal), np.diag(diagonal))
             if AUTOGRAD_AVAILABLE:
-                self.grad_log_abs_det_sqrts[sz] = (
-                    grad_log_abs_det_sqrt_func(diagonal))
-                self.grad_quadratic_form_invs[sz] = partial(
+                grad_log_abs_dets[sz] = grad_log_abs_det_func(diagonal)
+                grad_quadratic_form_invs[sz] = partial(
                     grad_quadratic_form_inv_func, diagonal)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
-class TestTriangularMatrix(
-        InvertibleMatrixTestCase, ExplicitMatrixTestCase):
+class TestTriangularMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
             for lower in [True, False]:
-                array = self.rng.standard_normal((sz, sz))
+                array = rng.standard_normal((sz, sz))
                 tri_array = np.tril(array) if lower else np.triu(array)
-                self.matrices[sz] = matrices.TriangularMatrix(tri_array, lower)
-                self.np_matrices[sz] = tri_array
+                matrix_pairs[(sz, lower)] = (
+                    matrices.TriangularMatrix(tri_array, lower), tri_array)
+        super().__init__(matrix_pairs, rng)
 
 
-class TestInverseTriangularMatrix(
-        InvertibleMatrixTestCase, ExplicitMatrixTestCase):
+class TestInverseTriangularMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
             for lower in [True, False]:
-                array = self.rng.standard_normal((sz, sz))
+                array = rng.standard_normal((sz, sz))
                 inv_tri_array = np.tril(array) if lower else np.triu(array)
-                self.matrices[sz] = matrices.InverseTriangularMatrix(
-                    inv_tri_array, lower)
-                self.np_matrices[sz] = nla.inv(inv_tri_array)
+                matrix_pairs[(sz, lower)] = (
+                    matrices.InverseTriangularMatrix(inv_tri_array, lower),
+                    nla.inv(inv_tri_array))
+        super().__init__(matrix_pairs, rng)
 
 
 class TestTriangularFactoredDefiniteMatrix(
-        InvertibleMatrixTestCase, ExplicitMatrixTestCase):
+        ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
             for lower in [True, False]:
                 for sign in [+1, -1]:
-                    array = self.rng.standard_normal((sz, sz))
-                    tri_array = np.tril(array) if lower else np.triu(array)
-                    self.matrices[sz] = (
+                    array = rng.standard_normal((sz, sz))
+                    chol_array = sla.cholesky(array @ array.T, lower)
+                    matrix_pairs[(sz, lower, sign)] = (
                         matrices.TriangularFactoredDefiniteMatrix(
-                            tri_array, lower, sign))
-                    self.np_matrices[sz] = sign * (tri_array @ tri_array.T)
+                            chol_array, lower, sign),
+                        sign * (chol_array @ chol_array.T))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestTriangularFactoredPositiveDefiniteMatrix(
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            for lower in [True, False]:
+                array = rng.standard_normal((sz, sz))
+                chol_array = sla.cholesky(array @ array.T, lower)
+                matrix_pairs[(sz, lower)] = (
+                    matrices.TriangularFactoredPositiveDefiniteMatrix(
+                        chol_array, lower),
+                    chol_array @ chol_array.T)
+        super().__init__(matrix_pairs, rng)
 
 
 class TestDenseDefiniteMatrix(
-        InvertibleMatrixTestCase, SymmetricMatrixTestCase,
-        ExplicitMatrixTestCase, DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
         if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_sqrt_func = grad(
-                lambda a: 0.5 * anp.linalg.slogdet(a)[1])
+            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
             grad_quadratic_form_inv_func = grad(
                 lambda a, v: v @ anp.linalg.solve(a, v))
         for sz in SIZES:
             for lower in [True, False]:
                 for sign in [+1, -1]:
-                    sqrt = self.rng.standard_normal((sz, sz))
+                    sqrt = rng.standard_normal((sz, sz))
                     array = sign * sqrt @ sqrt.T
-                    self.matrices[sz] = matrices.DenseDefiniteMatrix(
-                        array, sign)
-                    self.np_matrices[sz] = array
+                    matrix_pairs[(sz, lower, sign)] = (
+                        matrices.DenseDefiniteMatrix(array, sign), array)
                     if AUTOGRAD_AVAILABLE:
-                        self.grad_log_abs_det_sqrts[sz] = (
-                            grad_log_abs_det_sqrt_func(array))
-                        self.grad_quadratic_form_invs[sz] = partial(
-                            grad_quadratic_form_inv_func, array)
+                        grad_log_abs_dets[(sz, lower, sign)] = (
+                            grad_log_abs_det_func(array))
+                        grad_quadratic_form_invs[(sz, lower, sign)] = (
+                            partial(grad_quadratic_form_inv_func, array))
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
 class TestDensePositiveDefiniteMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase,
-        DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
         if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_sqrt_func = grad(
-                lambda a: 0.5 * anp.linalg.slogdet(a)[1])
+            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
             grad_quadratic_form_inv_func = grad(
                 lambda a, v: v @ anp.linalg.solve(a, v))
         for sz in SIZES:
-            sqrt = self.rng.standard_normal((sz, sz))
+            sqrt = rng.standard_normal((sz, sz))
             array = sqrt @ sqrt.T
-            self.matrices[sz] = matrices.DensePositiveDefiniteMatrix(array)
-            self.np_matrices[sz] = array
+            matrix_pairs[sz] = (
+                matrices.DensePositiveDefiniteMatrix(array), array)
             if AUTOGRAD_AVAILABLE:
-                self.grad_log_abs_det_sqrts[sz] = (
-                    grad_log_abs_det_sqrt_func(array))
-                self.grad_quadratic_form_invs[sz] = partial(
+                grad_log_abs_dets[sz] = grad_log_abs_det_func(array)
+                grad_quadratic_form_invs[sz] = partial(
                     grad_quadratic_form_inv_func, array)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
 class TestDenseNegativeDefiniteMatrix(
-        InvertibleMatrixTestCase, SymmetricMatrixTestCase,
-        ExplicitMatrixTestCase):
+        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
+        if AUTOGRAD_AVAILABLE:
+            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
+            grad_quadratic_form_inv_func = grad(
+                lambda a, v: v @ anp.linalg.solve(a, v))
         for sz in SIZES:
-            sqrt = self.rng.standard_normal((sz, sz))
+            sqrt = rng.standard_normal((sz, sz))
             array = -sqrt @ sqrt.T
-            self.matrices[sz] = matrices.DenseNegativeDefiniteMatrix(array)
-            self.np_matrices[sz] = array
+            matrix_pairs[sz] = (
+                matrices.DenseNegativeDefiniteMatrix(array), array)
+            if AUTOGRAD_AVAILABLE:
+                grad_log_abs_dets[sz] = grad_log_abs_det_func(array)
+                grad_quadratic_form_invs[sz] = partial(
+                    grad_quadratic_form_inv_func, array)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
 
 
-class TestDenseMatrix(InvertibleMatrixTestCase, ExplicitMatrixTestCase):
-
-    def __init__(self):
-        super().__init__()
-        for sz in SIZES:
-            for transposed in [True, False]:
-                array = self.rng.standard_normal((sz, sz))
-                self.matrices[sz] = matrices.DenseSquareMatrix(
-                    array, transposed)
-                self.np_matrices[sz] = array.T if transposed else array
-
-
-class TestInverseLUFactoredSquareMatrix(
-        InvertibleMatrixTestCase, ExplicitMatrixTestCase):
+class TestDenseSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            array = rng.standard_normal((sz, sz))
+            matrix_pairs[sz] = (
+                matrices.DenseSquareMatrix(array), array)
+        super().__init__(matrix_pairs, rng)
+
+
+class TestInverseLUFactoredSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
             for transposed in [True, False]:
-                inverse_array = self.rng.standard_normal((sz, sz))
-                inverse_lu_and_piv = sla.lu_factor(inverse_array)
+                inverse_array = rng.standard_normal((sz, sz))
+                inverse_lu_and_piv = sla.lu_factor(
+                    inverse_array.T if transposed else inverse_array)
                 array = nla.inv(inverse_array)
-                self.matrices[sz] = matrices.InverseLUFactoredSquareMatrix(
-                    inverse_array, transposed, inverse_lu_and_piv)
-                self.np_matrices[sz] = array.T if transposed else array
+                matrix_pairs[(sz, transposed)] = (
+                    matrices.InverseLUFactoredSquareMatrix(
+                        inverse_array, inverse_lu_and_piv, transposed), array)
+            super().__init__(matrix_pairs, rng)
 
 
-class TestOrthogonalMatrix(InvertibleMatrixTestCase, ExplicitMatrixTestCase):
-
-    def __init__(self):
-        super().__init__()
-        for sz in SIZES:
-            array = nla.qr(self.rng.standard_normal((sz, sz)))[0]
-            self.matrices[sz] = matrices.OrthogonalMatrix(array)
-            self.np_matrices[sz] = array
-
-
-class TestScaledOrthogonalMatrix(
-        InvertibleMatrixTestCase, ExplicitMatrixTestCase):
+class TestOrthogonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            orth_array = nla.qr(self.rng.standard_normal((sz, sz)))[0]
-            scalar = self.rng.standard_normal()
-            self.matrices[sz] = matrices.ScaledOrthogonalMatrix(
-                scalar, orth_array)
-            self.np_matrices[sz] = scalar * orth_array
+            array = nla.qr(rng.standard_normal((sz, sz)))[0]
+            matrix_pairs[sz] = (matrices.OrthogonalMatrix(array), array)
+            super().__init__(matrix_pairs, rng)
 
 
-class TestEigendecomposedSymmetricMatrix(
-        InvertibleMatrixTestCase, SymmetricMatrixTestCase,
-        ExplicitMatrixTestCase):
+class TestScaledOrthogonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            eigvec = nla.qr(self.rng.standard_normal((sz, sz)))[0]
-            eigval = self.rng.standard_normal(sz)
-            self.matrices[sz] = matrices.EigendecomposedSymmetricMatrix(
-                eigvec, eigval)
-            self.np_matrices[sz] = (eigvec * eigval) @ eigvec.T
+            orth_array = nla.qr(rng.standard_normal((sz, sz)))[0]
+            scalar = rng.standard_normal()
+            matrix_pairs[sz] = (
+                matrices.ScaledOrthogonalMatrix(scalar, orth_array),
+                scalar * orth_array)
+            super().__init__(matrix_pairs, rng)
+
+
+class TestEigendecomposedSymmetricMatrix(ExplicitShapeInvertibleMatrixTestCase,
+                                         ExplicitShapeSymmetricMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            eigvec = nla.qr(rng.standard_normal((sz, sz)))[0]
+            eigval = rng.standard_normal(sz)
+            matrix_pairs[sz] = (
+                matrices.EigendecomposedSymmetricMatrix(eigvec, eigval),
+                (eigvec * eigval) @ eigvec.T)
+        super().__init__(matrix_pairs, rng)
 
 
 class TestEigendecomposedPositiveDefiniteMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase):
+        ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            eigvec = nla.qr(self.rng.standard_normal((sz, sz)))[0]
-            eigval = np.abs(self.rng.standard_normal(sz))
-            self.matrices[sz] = matrices.EigendecomposedSymmetricMatrix(
-                eigvec, eigval)
-            self.np_matrices[sz] = (eigvec * eigval) @ eigvec.T
+            eigvec = nla.qr(rng.standard_normal((sz, sz)))[0]
+            eigval = np.abs(rng.standard_normal(sz))
+            matrix_pairs[sz] = (
+                matrices.EigendecomposedPositiveDefiniteMatrix(eigvec, eigval),
+                (eigvec * eigval) @ eigvec.T)
+        super().__init__(matrix_pairs, rng)
 
 
 class TestSoftAbsRegularisedPositiveDefiniteMatrix(
-        PositiveDefiniteMatrixTestCase, ExplicitMatrixTestCase,
-        DifferentiableMatrixTestCase):
+        DifferentiableMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        super().__init__()
+        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+        rng = np.random.RandomState(SEED)
         if AUTOGRAD_AVAILABLE:
             def softabs_reg(sym_array, softabs_coeff):
                 sym_array = (sym_array + sym_array.T) / 2
                 unreg_eigval, eigvec = anp.linalg.eigh(sym_array)
                 eigval = unreg_eigval / anp.tanh(unreg_eigval * softabs_coeff)
                 return (eigvec * eigval) @ eigvec.T
-            grad_log_abs_det_sqrt_func = grad(
-                lambda a, s: 0.5 * anp.linalg.slogdet(softabs_reg(a, s))[1])
+            grad_log_abs_det_func = grad(
+                lambda a, s: anp.linalg.slogdet(softabs_reg(a, s))[1])
             grad_quadratic_form_inv_func = grad(
                 lambda a, s, v: v @ anp.linalg.solve(softabs_reg(a, s), v))
         for sz in SIZES:
             for softabs_coeff in [0.5, 1., 1.5]:
-                sym_array = self.rng.standard_normal((sz, sz))
+                sym_array = rng.standard_normal((sz, sz))
                 sym_array += sym_array.T
                 unreg_eigval, eigvec = np.linalg.eigh(sym_array)
                 eigval = unreg_eigval / np.tanh(unreg_eigval * softabs_coeff)
-                self.matrices[sz] = (
+                matrix_pairs[(sz, softabs_coeff)] = (
                     matrices.SoftAbsRegularisedPositiveDefiniteMatrix(
                         sym_array, softabs_coeff
-                    ))
-                self.np_matrices[sz] = (eigvec * eigval) @ eigvec.T
+                    ), (eigvec * eigval) @ eigvec.T)
                 if AUTOGRAD_AVAILABLE:
-                    self.grad_log_abs_det_sqrts[sz] = (
-                        grad_log_abs_det_sqrt_func(sym_array, softabs_coeff))
-                    self.grad_quadratic_form_invs[sz] = partial(
+                    grad_log_abs_dets[(sz, softabs_coeff)] = (
+                        grad_log_abs_det_func(sym_array, softabs_coeff))
+                    grad_quadratic_form_invs[(sz, softabs_coeff)] = partial(
                         grad_quadratic_form_inv_func, sym_array, softabs_coeff)
+        super().__init__(
+            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+
+
+class TestSquareBlockDiagonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_block in [1, 2, 5]:
+                arrays = [rng.standard_normal((s, s)) for _ in range(n_block)]
+                matrix_pairs[(s, n_block)] = (
+                    matrices.SquareBlockDiagonalMatrix(
+                        matrices.DenseSquareMatrix(arr) for arr in arrays),
+                    sla.block_diag(*arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestSymmetricBlockDiagonalMatrix(
+        ExplicitShapeInvertibleMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_block in [1, 2, 5]:
+                arrays = [rng.standard_normal((s, s)) for _ in range(n_block)]
+                arrays = [arr @ arr.T for arr in arrays]
+                matrix_pairs[(s, n_block)] = (
+                    matrices.SymmetricBlockDiagonalMatrix(
+                        matrices.DensePositiveDefiniteMatrix(arr)
+                        for arr in arrays),
+                    sla.block_diag(*arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestPositiveDefiniteBlockDiagonalMatrix(
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_block in [1, 2, 5]:
+                arrays = [rng.standard_normal((s, s)) for _ in range(n_block)]
+                arrays = [arr @ arr.T for arr in arrays]
+                matrix_pairs[(s, n_block)] = (
+                    matrices.PositiveDefiniteBlockDiagonalMatrix(
+                        matrices.DensePositiveDefiniteMatrix(arr)
+                        for arr in arrays),
+                    sla.block_diag(*arrays))
+        super().__init__(matrix_pairs, rng)

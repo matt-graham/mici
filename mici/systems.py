@@ -6,9 +6,9 @@ import numpy as np
 from mici.states import cache_in_state, multi_cache_in_state
 from mici.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
-    DenseSquareMatrix, TriangularFactoredDefiniteMatrix, DenseDefiniteMatrix,
-    DensePositiveDefiniteMatrix, EigendecomposedSymmetricMatrix,
-    SoftAbsRegularisedPositiveDefiniteMatrix)
+    DenseSquareMatrix, TriangularFactoredPositiveDefiniteMatrix,
+    DenseDefiniteMatrix, DensePositiveDefiniteMatrix, PositiveDefiniteMatrix,
+    EigendecomposedSymmetricMatrix, SoftAbsRegularisedPositiveDefiniteMatrix)
 from mici.autodiff import autodiff_fallback
 
 
@@ -440,7 +440,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     def log_det_sqrt_gram(self, state):
         """Value of (half of) log-determinant of Gram matrix."""
-        return self.gram(state).log_abs_det_sqrt
+        return 0.5 * self.gram(state).log_abs_det
 
     @abstractmethod
     def grad_log_det_sqrt_gram(self, state):
@@ -515,10 +515,11 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
 
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        sign = 2 * isinstance(inner_product_matrix, PositiveDefiniteMatrix) - 1
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DenseDefiniteMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
-                sign=1 if inner_product_matrix.is_posdef else -1)
+                sign=sign)
         else:
             return DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
@@ -602,14 +603,14 @@ class RiemannianMetricSystem(System):
         return self.h1(state) + self.h2(state)
 
     def h1(self, state):
-        return self.neg_log_dens(state) + self.metric(state).log_abs_det_sqrt
+        return self.neg_log_dens(state) + 0.5 * self.metric(state).log_abs_det
 
     def dh1_dpos(self, state):
         # Evaluate VJP of metric function before metric as metric value will
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return (self.grad_neg_log_dens(state) +
-                vjp_metric(self.metric(state).grad_log_abs_det_sqrt))
+                0.5 * vjp_metric(self.metric(state).grad_log_abs_det))
 
     def h2(self, state):
         return 0.5 * state.mom @ self.metric(state).inv @ state.mom
@@ -651,7 +652,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
     def __init__(self, neg_log_dens, metric_chol_func,
                  vjp_metric_chol_func=None, grad_neg_log_dens=None):
         super().__init__(
-            neg_log_dens, TriangularFactoredDefiniteMatrix,
+            neg_log_dens, TriangularFactoredPositiveDefiniteMatrix,
             metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens)
 
 
