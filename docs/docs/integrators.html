@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L0-L348" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L0-L350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
@@ -160,6 +160,8 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
+        if fixed_point_solver_kwargs is None:
+            fixed_point_solver_kwargs = {}
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
     def _solve_fixed_point(self, fixed_point_func, x_init):
@@ -180,7 +182,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         mom_init = state.mom.copy()
         state.mom -= dt * self.system.dh2_dpos(state)
         state_back = state.copy()
-        self.step_b_fwd(state_back, -dt)
+        self._step_b_fwd(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -191,7 +193,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         pos_init = state.pos.copy()
         state.pos += dt * self.system.dh2_dmom(state)
         state_back = state.copy()
-        self.step_c_adj(state_back, -dt)
+        self._step_c_adj(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -404,7 +406,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
@@ -464,7 +466,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def step(self, state):
@@ -508,7 +510,7 @@ dynamics of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -572,7 +574,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size
@@ -640,7 +642,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L78-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L78-L190" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -698,6 +700,8 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
+        if fixed_point_solver_kwargs is None:
+            fixed_point_solver_kwargs = {}
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
     def _solve_fixed_point(self, fixed_point_func, x_init):
@@ -718,7 +722,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         mom_init = state.mom.copy()
         state.mom -= dt * self.system.dh2_dpos(state)
         state_back = state.copy()
-        self.step_b_fwd(state_back, -dt)
+        self._step_b_fwd(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -729,7 +733,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         pos_init = state.pos.copy()
         state.pos += dt * self.system.dh2_dmom(state)
         state_back = state.copy()
-        self.step_c_adj(state_back, -dt)
+        self._step_c_adj(state_back, -dt)
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -773,7 +777,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L179-L188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L181-L190" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = 0.5 * state.dir * self.step_size
@@ -889,7 +893,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L191-L349" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L193-L351" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -1070,7 +1074,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/integrators.py#L343-L349" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/integrators.py#L345-L351" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     dt = state.dir * self.step_size

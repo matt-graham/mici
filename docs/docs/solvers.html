@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L0-L285" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L0-L285" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Solvers for non-linear systems of equations for implicit integrators.&#34;&#34;&#34;
 
@@ -70,12 +70,12 @@ def solve_fixed_point_direct(
     for i in range(max_iters):
         try:
             x = func(x0)
-            if any(np.isnan(x)) or any(np.isinf(x)):
+            error = norm(x - x0)
+            if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
                     f&#39;Fixed point iteration diverged on iteration {i}.&#39;
                     f&#39;Last error={error:.1e}.&#39;)
-            error = norm(x - x0)
-            if error &lt; tol:
+            if error &lt; convergence_tol:
                 return x
             x0 = x
         except ValueError as e:
@@ -330,7 +330,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_norm(vct):
     &#34;&#34;&#34;Calculate the Euclidean (L-2) norm of a vector.&#34;&#34;&#34;
@@ -345,7 +345,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def maximum_norm(vct):
     &#34;&#34;&#34;Calculate the maximum (L-infinity) norm of a vector.&#34;&#34;&#34;
@@ -387,7 +387,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_direct(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -416,12 +416,12 @@ the iteration.</p></section>
     for i in range(max_iters):
         try:
             x = func(x0)
-            if any(np.isnan(x)) or any(np.isinf(x)):
+            error = norm(x - x0)
+            if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
                     f&#39;Fixed point iteration diverged on iteration {i}.&#39;
                     f&#39;Last error={error:.1e}.&#39;)
-            error = norm(x - x0)
-            if error &lt; tol:
+            if error &lt; convergence_tol:
                 return x
             x0 = x
         except ValueError as e:
@@ -472,7 +472,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_steffensen(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -591,7 +591,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L112-L197" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L112-L197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_quasi_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
@@ -746,7 +746,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/2a3d6cae71fd207485990a9650546f423185f9d9/mici/solvers.py#L200-L286" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L200-L286" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
