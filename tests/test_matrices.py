@@ -771,6 +771,21 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
         super().__init__(matrix_pairs, get_param, param_func, rng)
 
 
+class TestSquareMatrixProduct(ExplicitShapeMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_terms in [2, 5]:
+                arrays = [rng.standard_normal((s, s)) for _ in range(n_terms)]
+                matrix_pairs[(s, n_terms)] = (
+                    matrices.MatrixProduct(
+                        matrices.DenseSquareMatrix(arr) for arr in arrays),
+                    nla.multi_dot(arrays))
+        super().__init__(matrix_pairs, rng)
+
+
 class TestSquareBlockDiagonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):

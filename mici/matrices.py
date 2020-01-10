@@ -188,8 +188,9 @@ class MatrixProduct(ImplicitArrayMatrix):
     """Matrix implicitly defined as a product of a sequence of matrices."""
 
     def __init__(self, matrices):
-        super().__init__((matrices[0].shape[0], matrices[-1].shape[1]))
         self._matrices = tuple(matrices)
+        super().__init__((self._matrices[0].shape[0],
+                          self._matrices[-1].shape[1]))
 
     @property
     def matrices(self):
