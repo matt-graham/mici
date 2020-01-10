@@ -312,12 +312,17 @@ class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     """Matrix representing identity operator on a vector space.
 
     Array representation has ones on diagonal elements and zeros elsewhere.
-    May be defined with an implicit shape reprsented by `(None, None)` which
+    May be defined with an implicit shape represented by `(None, None)` which
     will allow use for subset of operations where shape is not required to be
     known.
     """
 
     def __init__(self, size=None):
+        """
+        Args:
+            size (int or None): Number of rows / columns in matrix or `None` if
+                matrix is to be implicitly shaped.
+        """
         super().__init__(size)
 
     def _scalar_multiply(self, scalar):
@@ -680,7 +685,7 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return f'(shape={self.shape}, lower={self.lower})'
 
 
-class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
+class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
     def __init__(self, size, sign=1):
         if not (sign == 1 or sign == -1):
@@ -690,6 +695,7 @@ class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
     @property
     def factor(self):
+        """Triangular matrix with `matrix = matrix.factor @ matrix.factor.T`"""
         return self._factor
 
     @property
@@ -706,12 +712,44 @@ class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
 
 class TriangularFactoredDefiniteMatrix(
-        BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
+        _BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
         ImplicitArrayMatrix):
+    """Matrix specified as a signed self-product of a triangular factor.
 
-    def __init__(self, factor, lower=True, sign=1):
+    The matrix is assumed to have the form
+
+        matrix = sign * factor @ factor.T
+
+    for and upper- or lower-trinagular matrix `factor` and signed binary value
+    `sign` (i.e. `sign == +1 or sign == -1`), with the matrix being positive
+    definite if `sign == +1` and negative definite if `sign == -1` under the
+    assumption that `factor` is non-singular.
+    """
+
+    def __init__(self, factor, sign=1, factor_is_lower=None):
+        """
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            sign (int): +/-1 multiplier of factor product, corresponding
+                respectively to a strictly positive- or negative-definite
+                matrix.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        """
         if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
-            factor = TriangularMatrix(factor, lower)
+            if factor_is_lower not in (True, False):
+                raise ValueError(
+                    'For array `factor` parameter `factor_is_lower` must be '
+                    'specified as a boolean value.')
+            factor = TriangularMatrix(factor, factor_is_lower)
         self._factor = factor
         super().__init__(factor.shape[0], sign=sign)
 
@@ -746,9 +784,33 @@ class TriangularFactoredDefiniteMatrix(
 
 class TriangularFactoredPositiveDefiniteMatrix(
         TriangularFactoredDefiniteMatrix, PositiveDefiniteMatrix):
+    """Positive definite matrix parameterised a triangular matrix product.
 
-    def __init__(self, factor, lower=True):
-        super().__init__(factor, lower=lower, sign=1)
+    The matrix is assumed to have the parameterisation
+
+        matrix = factor @ factor.T
+
+    where `factor` is an upper- or lower-triangular matrix. Note for the case
+    `factor` is lower-triangular this corresponds to the standard Cholesky
+    factorisation of a positive definite matrix.
+    """
+
+    def __init__(self, factor, factor_is_lower=True):
+        """
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        """
+        super().__init__(factor, sign=1, factor_is_lower=factor_is_lower)
 
     def _scalar_multiply(self, scalar):
         if scalar > 0:
@@ -767,11 +829,30 @@ class TriangularFactoredPositiveDefiniteMatrix(
         return self.factor
 
 
-class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
+class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
                           DifferentiableMatrix, ExplicitArrayMatrix):
+    """Definite matrix specified by a dense 2D array."""
 
-    def __init__(self, array, sign=1, factor=None):
-        super().__init__(array.shape[0], sign=sign)
+    def __init__(self, array, factor=None, is_posdef=True):
+        """
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T` if
+                `is_posdef=True` or `matrix = -factor @ factor.T` otherwise.
+                If not pre-computed and specified at initialisation a
+                factorisation will only be computed when first required by
+                an operation which depends on the factor.
+            is_posdef (boolean): Whether matrix (and so corresponding array
+                representation) is positive definite, with the matrix assumed
+                to be negative-definite if not. This is **not** checked on
+                initialisation, and so if `array` is positive (negative)
+                definite and `is_posdef` is `False` (`True`) then a
+                `LinAlgError` exception will be if a later attempt is made to
+                factorise the matrix.
+        """
+        super().__init__(array.shape[0], sign=1 if is_posdef else -1)
         self._array = array
         self._factor = factor
 
@@ -783,15 +864,15 @@ class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
                 abs(scalar)**0.5 * self._factor)
         else:
             return DenseDefiniteMatrix(
-                scalar * self.array, -1,
+                scalar * self.array,
                 None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
+                abs(scalar)**0.5 * self._factor, is_posdef=False)
 
     @property
     def factor(self):
         if self._factor is None:
             self._factor = TriangularMatrix(
-                nla.cholesky(self._sign * self._array), True)
+                nla.cholesky(self._sign * self._array), lower=True)
         return self._factor
 
     @property
@@ -804,9 +885,20 @@ class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
 
 
 class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
+    """Positive-definite matrix specified by a dense 2D array."""
 
     def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=1, factor=factor)
+        """
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T`. If not
+                pre-computed and specified at initialisation a factorisation
+                will only be computed when first required by an operation which
+                depends on the factor.
+        """
+        super().__init__(array=array, factor=factor, is_posdef=True)
 
     @property
     def inv(self):
@@ -961,9 +1053,22 @@ class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
 
 
 class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
-    """Matrix corresponding to orthogonal matrix multiplied by a scalar."""
+    """Matrix corresponding to orthogonal matrix multiplied by a scalar.
+
+    Matrix is assumed to have the paramterisation
+
+        matrix = scalar * orth_array
+
+    where `scalar` is a real-valued scalar and `orth_array` is an orthogonal
+    matrix represented as a square 2D array.
+    """
 
     def __init__(self, scalar, orth_array):
+        """
+        Args:
+            scalar (float): Scalar multiplier as a floating point value.
+            orth_array (array): 2D array representation of orthogonal matrix.
+        """
         self._scalar = scalar
         self._orth_array = orth_array
         super().__init__(orth_array.shape[0])
@@ -999,7 +1104,16 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 
 class EigendecomposedSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ImplicitArrayMatrix):
-    """Symmetric matrix parameterised by its eigendecomposition."""
+    """Symmetric matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    eigenvalues of `matrix`.
+    """
 
     def __init__(self, eigvec, eigval):
         """
@@ -1046,7 +1160,16 @@ class EigendecomposedSymmetricMatrix(
 
 class EigendecomposedPositiveDefiniteMatrix(
         EigendecomposedSymmetricMatrix, PositiveDefiniteMatrix):
-    """Positive definite matrix parameterised by its eigendecomposition."""
+    """Positive definite matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    strictly positive eigenvalues of `matrix`.
+    """
 
     def __init__(self, eigvec, eigval):
         if not np.all(eigval > 0):
@@ -1129,7 +1252,15 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     """Square matrix with non-zero values only in blocks along diagonal."""
 
     def __init__(self, blocks):
+        """
+        Args:
+            blocks (Iterable[SquareMatrix]): Sequence of square matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        """
         self._blocks = tuple(blocks)
+        if not all(isinstance(block, SquareMatrix) for block in self._blocks):
+            raise ValueError('All blocks must be square')
         sizes = tuple(block.shape[0] for block in self._blocks)
         super().__init__(size=sum(sizes))
         self._sizes = sizes
@@ -1201,8 +1332,14 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
     """
 
     def __init__(self, blocks):
+        """
+        Args:
+            blocks (Iterable[SymmetricMatrix]): Sequence of symmetric matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        """
         blocks = tuple(blocks)
-        if not all(block is block.T for block in blocks):
+        if not all(isinstance(block, SymmetricMatrix) for block in blocks):
             raise ValueError('All blocks must be symmetric')
         super().__init__(blocks)
 
@@ -1223,6 +1360,12 @@ class PositiveDefiniteBlockDiagonalMatrix(
     """
 
     def __init__(self, blocks):
+        """
+        Args:
+            blocks (Iterable[PositiveDefinite]): Sequence of positive-definite
+                matrices defining non-zero blocks along diagonal of matrix in
+                order left-to-right.
+        """
         blocks = tuple(blocks)
         if not all(isinstance(block, PositiveDefiniteMatrix)
                    for block in blocks):

@@ -559,12 +559,12 @@ class DifferentiableTriangularFactoredDefiniteMatrixTestCase(
         matrix_pairs = {}
         rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            for lower in [True, False]:
+            for factor_is_lower in [True, False]:
                 for sign in signs:
                     array = rng.standard_normal((sz, sz))
-                    tri_array = sla.cholesky(array @ array.T, lower)
-                    matrix_pairs[(sz, lower, sign)] = (
-                        matrix_class(tri_array, lower, sign),
+                    tri_array = sla.cholesky(array @ array.T, factor_is_lower)
+                    matrix_pairs[(sz, factor_is_lower, sign)] = (
+                        matrix_class(tri_array, sign, factor_is_lower),
                         sign * tri_array @ tri_array.T)
 
         if AUTOGRAD_AVAILABLE:
@@ -599,9 +599,9 @@ class TestTriangularFactoredPositiveDefiniteMatrix(
 
     def __init__(self):
         super().__init__(
-            lambda factor, lower, sign:
+            lambda factor, sign, factor_is_lower:
                 matrices.TriangularFactoredPositiveDefiniteMatrix(
-                    factor, lower),
+                    factor, factor_is_lower),
             (+1,))
 
 
@@ -614,7 +614,8 @@ class DifferentiableDenseDefiniteMatrixTestCase(DifferentiableMatrixTestCase):
             for sign in signs:
                 sqrt_array = rng.standard_normal((sz, sz))
                 array = sign * sqrt_array @ sqrt_array.T
-                matrix_pairs[(sz, sign)] = (matrix_class(array, sign), array)
+                matrix_pairs[(sz, sign)] = (
+                    matrix_class(array, is_posdef=(sign == 1)), array)
 
         if AUTOGRAD_AVAILABLE:
 
@@ -645,8 +646,8 @@ class TestDensePositiveDefiniteMatrix(
 
     def __init__(self):
         super().__init__(
-            lambda array, sign: matrices.DensePositiveDefiniteMatrix(array),
-            (+1,))
+            lambda array, is_posdef:
+                matrices.DensePositiveDefiniteMatrix(array), (+1,))
 
 
 class TestDenseSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):

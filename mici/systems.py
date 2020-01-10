@@ -653,7 +653,8 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                  vjp_metric_chol_func=None, grad_neg_log_dens=None):
         super().__init__(
             neg_log_dens, TriangularFactoredPositiveDefiniteMatrix,
-            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens)
+            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens,
+            metric_kwargs={'factor_is_lower': True})
 
 
 class DenseRiemannianMetricSystem(RiemannianMetricSystem):
