@@ -339,6 +339,14 @@ class PositiveDefiniteMatrixTestCase(
         npt.assert_allclose(
             (pre @ matrix.sqrt) @ matrix.sqrt.T, pre @ np_matrix)
 
+    @iterate_over_matrix_pairs
+    def test_inv_is_posdef(matrix, np_matrix):
+        assert isinstance(matrix.inv, matrices.PositiveDefiniteMatrix)
+
+    @iterate_over_matrix_pairs
+    def test_pos_scalar_multiple_is_posdef(matrix, np_matrix):
+        assert isinstance(matrix * 2, matrices.PositiveDefiniteMatrix)
+
 
 class ExplicitShapePositiveDefiniteMatrixTestCase(
         PositiveDefiniteMatrixTestCase,
@@ -352,33 +360,49 @@ class ExplicitShapePositiveDefiniteMatrixTestCase(
 
 class DifferentiableMatrixTestCase(MatrixTestCase):
 
-    def __init__(self, matrix_pairs, grad_log_abs_dets,
-                 grad_quadratic_form_invs, rng=None):
+    def __init__(self, matrix_pairs, get_param, param_func, rng=None):
         super().__init__(matrix_pairs, rng)
-        self.grad_log_abs_dets = grad_log_abs_dets
-        self.grad_quadratic_form_invs = grad_quadratic_form_invs
+        self.get_param = get_param
+        self.param_func = param_func
 
     if AUTOGRAD_AVAILABLE:
 
+        def grad_log_abs_det(self, matrix):
+            param = self.get_param(matrix)
+            return grad(
+                lambda p: anp.linalg.slogdet(
+                    self.param_func(p, matrix))[1])(param)
+
+        def grad_quadratic_form_inv(self, matrix):
+            param = self.get_param(matrix)
+            return lambda v: grad(
+                lambda p: v @ anp.linalg.solve(
+                    self.param_func(p, matrix), v))(param)
+
         def check_grad_log_abs_det(self, matrix, grad_log_abs_det):
-            npt.assert_allclose(matrix.grad_log_abs_det, grad_log_abs_det)
+            # Use non-zero atol to allow for floating point errors in gradients
+            # analytically equal to zero
+            npt.assert_allclose(
+                matrix.grad_log_abs_det, grad_log_abs_det, atol=1e-10)
 
         def test_grad_log_abs_det(self):
             for key, (matrix, np_matrix) in self.matrix_pairs.items():
                 yield (self.check_grad_log_abs_det, matrix,
-                       self.grad_log_abs_dets[key])
+                       self.grad_log_abs_det(matrix))
 
         def check_grad_quadratic_form_inv(
                 self, matrix, vector, grad_quadratic_form_inv):
+            # Use non-zero atol to allow for floating point errors in gradients
+            # analytically equal to zero
             npt.assert_allclose(
                 matrix.grad_quadratic_form_inv(vector),
-                grad_quadratic_form_inv(vector))
+                grad_quadratic_form_inv(vector), atol=1e-10)
 
         def test_grad_quadratic_form_inv(self):
             for key, (matrix, np_matrix) in self.matrix_pairs.items():
                 for vector in self.vectors[np_matrix.shape[0]]:
                     yield (self.check_grad_quadratic_form_inv, matrix, vector,
-                           self.grad_quadratic_form_invs[key])
+                           self.grad_quadratic_form_inv(matrix))
 
 
 class TestImplicitIdentityMatrix(
@@ -396,48 +420,6 @@ class TestIdentityMatrix(ExplicitShapePositiveDefiniteMatrixTestCase):
             matrices.IdentityMatrix(sz), np.identity(sz)) for sz in SIZES})
 
 
-class TestPositiveScaledIdentityMatrix(
-        DifferentiableMatrixTestCase,
-        ExplicitShapePositiveDefiniteMatrixTestCase):
-
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        for sz in SIZES:
-            scalar = abs(rng.normal())
-            matrix_pairs[sz] = (
-                matrices.PositiveScaledIdentityMatrix(scalar, sz),
-                scalar * np.identity(sz))
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad(
-                    lambda s: anp.linalg.slogdet(s * anp.eye(sz))[1])(scalar)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad(lambda s, v: (v / s) @ v), scalar)
-        super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
-
-
-class TestScaledIdentityMatrix(
-        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
-        ExplicitShapeInvertibleMatrixTestCase):
-
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        for sz in SIZES:
-            scalar = rng.normal()
-            matrix_pairs[sz] = (
-                matrices.ScaledIdentityMatrix(scalar, sz),
-                scalar * np.identity(sz))
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad(
-                    lambda s: anp.linalg.slogdet(s * anp.eye(sz))[1])(scalar)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad(lambda s, v: (v / s) @ v), scalar)
-        super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
-
-
 class TestImplicitScaledIdentityMatrix(
         InvertibleMatrixTestCase, SymmetricMatrixTestCase):
 
@@ -452,52 +434,93 @@ class TestImplicitScaledIdentityMatrix(
         super().__init__(matrix_pairs, rng)
 
 
-class TestPositiveDiagonalMatrix(
-        DifferentiableMatrixTestCase,
-        ExplicitShapePositiveDefiniteMatrixTestCase):
+class DifferentiableScaledIdentityMatrixTestCase(DifferentiableMatrixTestCase):
 
-    def __init__(self):
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
+    def __init__(self, generate_scalar, matrix_class):
         rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_func = grad(
-                lambda d: anp.linalg.slogdet(anp.diag(d))[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda d, v: v @ anp.diag(1 / d) @ v)
+        matrix_pairs = {}
         for sz in SIZES:
-            diagonal = np.abs(rng.standard_normal(sz))
+            scalar = generate_scalar(rng)
             matrix_pairs[sz] = (
-                matrices.PositiveDiagonalMatrix(diagonal), np.diag(diagonal))
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad_log_abs_det_func(diagonal)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad_quadratic_form_inv_func, diagonal)
+                matrix_class(scalar, sz), scalar * np.identity(sz))
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                return param * anp.eye(matrix.shape[0])
+
+            def get_param(matrix):
+                return matrix._scalar
+
+        else:
+            param_func, get_param = None, None
+
         super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+            matrix_pairs, get_param, param_func, rng)
 
 
-class TestDiagonalMatrix(
-        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+class TestScaledIdentityMatrix(
+        DifferentiableScaledIdentityMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase,
         ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_func = grad(
-                lambda d: anp.linalg.slogdet(anp.diag(d))[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda d, v: v @ anp.diag(1 / d) @ v)
-        for sz in SIZES:
-            diagonal = rng.standard_normal(sz)
-            matrix_pairs[sz] = (
-                matrices.DiagonalMatrix(diagonal), np.diag(diagonal))
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad_log_abs_det_func(diagonal)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad_quadratic_form_inv_func, diagonal)
         super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+            lambda rng: rng.normal(), matrices.ScaledIdentityMatrix)
+
+
+class TestPositiveScaledIdentityMatrix(
+        DifferentiableScaledIdentityMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        super().__init__(
+            lambda rng: abs(rng.normal()),
+            matrices.PositiveScaledIdentityMatrix)
+
+
+class DifferentiableDiagonalMatrixTestCase(DifferentiableMatrixTestCase):
+
+    def __init__(self, generate_diagonal, matrix_class):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            diagonal = generate_diagonal(sz, rng)
+            matrix_pairs[sz] = (matrix_class(diagonal), np.diag(diagonal))
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                return anp.diag(param)
+
+            def get_param(matrix):
+                return matrix.diagonal
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
+
+
+class TestDiagonalMatrix(
+        DifferentiableDiagonalMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        super().__init__(
+            lambda sz, rng: rng.standard_normal(sz),
+            matrices.DiagonalMatrix)
+
+
+class TestPositiveDiagonalMatrix(
+        DifferentiableDiagonalMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        super().__init__(
+            lambda sz, rng: abs(rng.standard_normal(sz)),
+            matrices.PositiveDiagonalMatrix)
 
 
 class TestTriangularMatrix(ExplicitShapeInvertibleMatrixTestCase):
@@ -529,115 +552,101 @@ class TestInverseTriangularMatrix(ExplicitShapeInvertibleMatrixTestCase):
         super().__init__(matrix_pairs, rng)
 
 
+class DifferentiableTriangularFactoredDefiniteMatrixTestCase(
+        DifferentiableMatrixTestCase):
+
+    def __init__(self, matrix_class, signs):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            for lower in [True, False]:
+                for sign in signs:
+                    array = rng.standard_normal((sz, sz))
+                    tri_array = sla.cholesky(array @ array.T, lower)
+                    matrix_pairs[(sz, lower, sign)] = (
+                        matrix_class(tri_array, lower, sign),
+                        sign * tri_array @ tri_array.T)
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                param = (
+                    anp.tril(param) if matrix.factor.lower
+                    else anp.triu(param))
+                return param @ param.T
+
+            def get_param(matrix):
+                return matrix.factor.array
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
+
+
 class TestTriangularFactoredDefiniteMatrix(
+        DifferentiableTriangularFactoredDefiniteMatrixTestCase,
         ExplicitShapeSymmetricMatrixTestCase,
         ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        matrix_pairs = {}
-        rng = np.random.RandomState(SEED)
-        for sz in SIZES:
-            for lower in [True, False]:
-                for sign in [+1, -1]:
-                    array = rng.standard_normal((sz, sz))
-                    chol_array = sla.cholesky(array @ array.T, lower)
-                    matrix_pairs[(sz, lower, sign)] = (
-                        matrices.TriangularFactoredDefiniteMatrix(
-                            chol_array, lower, sign),
-                        sign * (chol_array @ chol_array.T))
-        super().__init__(matrix_pairs, rng)
+        super().__init__(matrices.TriangularFactoredDefiniteMatrix, (+1, -1))
 
 
 class TestTriangularFactoredPositiveDefiniteMatrix(
+        DifferentiableTriangularFactoredDefiniteMatrixTestCase,
         ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
+        super().__init__(
+            lambda factor, lower, sign:
+                matrices.TriangularFactoredPositiveDefiniteMatrix(
+                    factor, lower),
+            (+1,))
+
+
+class DifferentiableDenseDefiniteMatrixTestCase(DifferentiableMatrixTestCase):
+
+    def __init__(self, matrix_class, signs):
         matrix_pairs = {}
         rng = np.random.RandomState(SEED)
         for sz in SIZES:
-            for lower in [True, False]:
-                array = rng.standard_normal((sz, sz))
-                chol_array = sla.cholesky(array @ array.T, lower)
-                matrix_pairs[(sz, lower)] = (
-                    matrices.TriangularFactoredPositiveDefiniteMatrix(
-                        chol_array, lower),
-                    chol_array @ chol_array.T)
-        super().__init__(matrix_pairs, rng)
+            for sign in signs:
+                sqrt_array = rng.standard_normal((sz, sz))
+                array = sign * sqrt_array @ sqrt_array.T
+                matrix_pairs[(sz, sign)] = (matrix_class(array, sign), array)
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                return param
+
+            def get_param(matrix):
+                return matrix.array
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
 
 
 class TestDenseDefiniteMatrix(
-        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
+        DifferentiableDenseDefiniteMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase,
         ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda a, v: v @ anp.linalg.solve(a, v))
-        for sz in SIZES:
-            for lower in [True, False]:
-                for sign in [+1, -1]:
-                    sqrt = rng.standard_normal((sz, sz))
-                    array = sign * sqrt @ sqrt.T
-                    matrix_pairs[(sz, lower, sign)] = (
-                        matrices.DenseDefiniteMatrix(array, sign), array)
-                    if AUTOGRAD_AVAILABLE:
-                        grad_log_abs_dets[(sz, lower, sign)] = (
-                            grad_log_abs_det_func(array))
-                        grad_quadratic_form_invs[(sz, lower, sign)] = (
-                            partial(grad_quadratic_form_inv_func, array))
-        super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+        super().__init__(matrices.DenseDefiniteMatrix, (+1, -1))
 
 
 class TestDensePositiveDefiniteMatrix(
-        DifferentiableMatrixTestCase,
+        DifferentiableDenseDefiniteMatrixTestCase,
         ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda a, v: v @ anp.linalg.solve(a, v))
-        for sz in SIZES:
-            sqrt = rng.standard_normal((sz, sz))
-            array = sqrt @ sqrt.T
-            matrix_pairs[sz] = (
-                matrices.DensePositiveDefiniteMatrix(array), array)
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad_log_abs_det_func(array)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad_quadratic_form_inv_func, array)
         super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
-
-
-class TestDenseNegativeDefiniteMatrix(
-        DifferentiableMatrixTestCase, ExplicitShapeSymmetricMatrixTestCase,
-        ExplicitShapeInvertibleMatrixTestCase):
-
-    def __init__(self):
-        matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
-        rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            grad_log_abs_det_func = grad(lambda a: anp.linalg.slogdet(a)[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda a, v: v @ anp.linalg.solve(a, v))
-        for sz in SIZES:
-            sqrt = rng.standard_normal((sz, sz))
-            array = -sqrt @ sqrt.T
-            matrix_pairs[sz] = (
-                matrices.DenseNegativeDefiniteMatrix(array), array)
-            if AUTOGRAD_AVAILABLE:
-                grad_log_abs_dets[sz] = grad_log_abs_det_func(array)
-                grad_quadratic_form_invs[sz] = partial(
-                    grad_quadratic_form_inv_func, array)
-        super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+            lambda array, sign: matrices.DensePositiveDefiniteMatrix(array),
+            (+1,))
 
 
 class TestDenseSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):
@@ -694,8 +703,9 @@ class TestScaledOrthogonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
             super().__init__(matrix_pairs, rng)
 
 
-class TestEigendecomposedSymmetricMatrix(ExplicitShapeInvertibleMatrixTestCase,
-                                         ExplicitShapeSymmetricMatrixTestCase):
+class TestEigendecomposedSymmetricMatrix(
+        ExplicitShapeInvertibleMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase):
 
     def __init__(self):
         matrix_pairs = {}
@@ -731,16 +741,6 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
     def __init__(self):
         matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs = {}, {}, {}
         rng = np.random.RandomState(SEED)
-        if AUTOGRAD_AVAILABLE:
-            def softabs_reg(sym_array, softabs_coeff):
-                sym_array = (sym_array + sym_array.T) / 2
-                unreg_eigval, eigvec = anp.linalg.eigh(sym_array)
-                eigval = unreg_eigval / anp.tanh(unreg_eigval * softabs_coeff)
-                return (eigvec * eigval) @ eigvec.T
-            grad_log_abs_det_func = grad(
-                lambda a, s: anp.linalg.slogdet(softabs_reg(a, s))[1])
-            grad_quadratic_form_inv_func = grad(
-                lambda a, s, v: v @ anp.linalg.solve(softabs_reg(a, s), v))
         for sz in SIZES:
             for softabs_coeff in [0.5, 1., 1.5]:
                 sym_array = rng.standard_normal((sz, sz))
@@ -751,13 +751,24 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
                     matrices.SoftAbsRegularisedPositiveDefiniteMatrix(
                         sym_array, softabs_coeff
                     ), (eigvec * eigval) @ eigvec.T)
-                if AUTOGRAD_AVAILABLE:
-                    grad_log_abs_dets[(sz, softabs_coeff)] = (
-                        grad_log_abs_det_func(sym_array, softabs_coeff))
-                    grad_quadratic_form_invs[(sz, softabs_coeff)] = partial(
-                        grad_quadratic_form_inv_func, sym_array, softabs_coeff)
-        super().__init__(
-            matrix_pairs, grad_log_abs_dets, grad_quadratic_form_invs, rng)
+
+        if AUTOGRAD_AVAILABLE:
+
+            def get_param(matrix):
+                eigvec = matrix.eigvec.array
+                return (eigvec * matrix.unreg_eigval) @ eigvec.T
+
+            def param_func(param, matrix):
+                softabs_coeff = matrix._softabs_coeff
+                sym_array = (param + param.T) / 2
+                unreg_eigval, eigvec = anp.linalg.eigh(sym_array)
+                eigval = unreg_eigval / anp.tanh(unreg_eigval * softabs_coeff)
+                return (eigvec * eigval) @ eigvec.T
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
 
 
 class TestSquareBlockDiagonalMatrix(ExplicitShapeInvertibleMatrixTestCase):

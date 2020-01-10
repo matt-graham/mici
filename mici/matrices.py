@@ -727,12 +727,17 @@ class TriangularFactoredDefiniteMatrix(
 
     @property
     def grad_log_abs_det(self):
-        return 2 * self.factor.inv.T.array
+        return np.diag(2 / self.factor.diagonal)
 
     def grad_quadratic_form_inv(self, vector):
         inv_factor_vector = self.factor.inv @ vector
         inv_vector = self.inv @ vector
-        return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)
+        if self.factor.lower:
+            return -2 * self._sign * np.tril(
+                np.outer(inv_vector, inv_factor_vector))
+        else:
+            return -2 * self._sign * np.triu(
+                np.outer(inv_vector, inv_factor_vector))
 
     def _construct_array(self):
         return self._sign * (self.factor @ self.factor.array.T)
@@ -771,8 +776,8 @@ class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
 
     def _scalar_multiply(self, scalar):
         if (scalar > 0) == (self._sign == 1):
-            return DenseDefiniteMatrix(
-                scalar * self.array, 1,
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
                 None if self._factor is None else
                 abs(scalar)**0.5 * self._factor)
         else:
@@ -802,18 +807,6 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
     def __init__(self, array, factor=None):
         super().__init__(array=array, sign=1, factor=factor)
 
-    def _scalar_multiply(self, scalar):
-        if scalar > 0:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-
     @property
     def inv(self):
         return TriangularFactoredPositiveDefiniteMatrix(
@@ -822,24 +815,6 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
     @property
     def sqrt(self):
         return self.factor
-
-
-class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
-
-    def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=-1, factor=factor)
-
-    def _scalar_multiply(self, scalar):
-        if scalar > 0:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
 
 
 class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
