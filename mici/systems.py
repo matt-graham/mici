@@ -7,7 +7,7 @@ from mici.states import cache_in_state, multi_cache_in_state
 from mici.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
     DenseSquareMatrix, TriangularFactoredPositiveDefiniteMatrix,
-    DenseDefiniteMatrix, DensePositiveDefiniteMatrix, PositiveDefiniteMatrix,
+    DenseDefiniteMatrix, DensePositiveDefiniteMatrix, DenseSymmetricMatrix,
     EigendecomposedSymmetricMatrix, SoftAbsRegularisedPositiveDefiniteMatrix)
 from mici.autodiff import autodiff_fallback
 
@@ -515,11 +515,9 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
 
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
-        is_posdef = isinstance(inner_product_matrix, PositiveDefiniteMatrix)
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
-            return DenseDefiniteMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
-                is_posdef=is_posdef)
+            return DensePositiveDefiniteMatrix(
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
         else:
             return DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
@@ -544,6 +542,15 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
             dens_wrt_hausdorff=dens_wrt_hausdorff,
             grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
             mhp_constr=mhp_constr)
+
+    def jacob_constr_inner_product(
+            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
+            return DenseSymmetricMatrix(
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+        else:
+            return DenseSquareMatrix(
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
 
 class RiemannianMetricSystem(System):

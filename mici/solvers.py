@@ -168,7 +168,8 @@ def solve_projection_onto_manifold_quasi_newton(
     """
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom).inv
     for i in range(max_iters):
@@ -184,7 +185,7 @@ def solve_projection_onto_manifold_quasi_newton(
                     f'Last |constr|={error:.1e}, '
                     f'|delta_pos|={norm(delta_pos):.1e}.')
             elif error < constraint_tol and norm(delta_pos) < position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -256,7 +257,8 @@ def solve_projection_onto_manifold_newton(
     """
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -273,7 +275,7 @@ def solve_projection_onto_manifold_newton(
                     f'Last |constr|={error:.1e}, '
                     f'|delta_pos|={norm(delta_pos):.1e}.')
             if error < constraint_tol and norm(delta_pos) < position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
