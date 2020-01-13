@@ -19,6 +19,14 @@ from mici.transitions import (
 from mici.states import ChainState
 from mici.progressbars import ProgressBar, _ProxyProgressBar
 
+
+try:
+    from numpy.random import default_rng
+    NUMPY_DEFAULT_RNG_AVAILABLE = True
+except ImportError:
+    NUMPY_DEFAULT_RNG_AVAILABLE = False
+
+
 try:
     import randomgen
     RANDOMGEN_AVAILABLE = True
@@ -462,14 +470,31 @@ def _collate_chain_outputs(chain_outputs):
 def _get_per_chain_rngs(base_rng, n_chain):
     """Construct random number generators (RNGs) for each of a set of chains.
 
-    Preferentially use the `jump` method of base RNGs which support it to
-    produce independent random substreams from the base RNG, otherwise if
-    `randomgen` is available the base RNG is used to seed a new
-    `randomgen.Xorshift1024` RNG and this used to generate independent
-    substreams. As a fallback, a set of `numpy.Randomstate` objects with
-    seeds independently generate from the base RNG is used.
+    If NumPy version >= 1.17 is available with updated random generator
+    interface, then if the base RNG bit generator has a `jumped` method this is
+    used to produce a sequence of independent random substreams. Otherwise if
+    the base RNG bit generator has a `_seed_sequence` attribute this is used
+    to spawn a sequence of generators.
+
+    Alternatively if the base RNG supports a `jump` method, as for generator
+    classes from the `randomgen` module, this is used to produce independent
+    random substreams from the base RNG, otherwise if `randomgen` is available
+    the base RNG is used to seed a new `randomgen.Xorshift1024` RNG and this
+    used to generate independent substreams.
+
+    As a final fallback, a set of `numpy.Randomstate` objects with seeds
+    independently generated from the base RNG is used.
     """
-    if hasattr(base_rng, 'jump'):
+    if (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, 'bit_generator') and
+            hasattr(base_rng.bit_generator, 'jumped')):
+        bit_generator = base_rng.bit_generator
+        return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
+    elif (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, 'bit_generator')
+            and hasattr(base_rng.bit_generator, '_seeq_seq')):
+        seed_sequence = base_rng.bit_generator._seeq_seq
+        seeds = seed_sequence.spawn(n_chain)
+        return [default_rng(seed) for seed in seeds]
+    elif hasattr(base_rng, 'jump'):
         return [base_rng.jump(i).generator for i in range(n_chain)]
     elif RANDOMGEN_AVAILABLE:
         seed = base_rng.randint(2**64, dtype='uint64')
