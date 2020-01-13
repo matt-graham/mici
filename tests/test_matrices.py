@@ -679,6 +679,21 @@ class TestInverseLUFactoredSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):
             super().__init__(matrix_pairs, rng)
 
 
+class TestDenseSymmetricMatrix(
+        ExplicitShapeInvertibleMatrixTestCase,
+        ExplicitShapeSymmetricMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for sz in SIZES:
+            array = rng.standard_normal((sz, sz))
+            array = array + array.T
+            matrix_pairs[sz] = (
+                matrices.DenseSymmetricMatrix(array), array)
+        super().__init__(matrix_pairs, rng)
+
+
 class TestOrthogonalMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):
@@ -812,11 +827,10 @@ class TestSymmetricBlockDiagonalMatrix(
         for s in SIZES:
             for n_block in [1, 2, 5]:
                 arrays = [rng.standard_normal((s, s)) for _ in range(n_block)]
-                arrays = [arr @ arr.T for arr in arrays]
+                arrays = [arr + arr.T for arr in arrays]
                 matrix_pairs[(s, n_block)] = (
                     matrices.SymmetricBlockDiagonalMatrix(
-                        matrices.DensePositiveDefiniteMatrix(arr)
-                        for arr in arrays),
+                        matrices.DenseSymmetricMatrix(arr) for arr in arrays),
                     sla.block_diag(*arrays))
         super().__init__(matrix_pairs, rng)
 

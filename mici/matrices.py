@@ -1025,6 +1025,41 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             not self._inv_lu_transposed)
 
 
+class DenseSymmetricMatrix(
+        SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
+    """Dense non-singular symmetric matrix."""
+
+    def __init__(self, array, eigvec=None, eigval=None):
+        """
+        Args:
+            array (array): Explicit 2D array representation of matrix.
+            eigvec (None or array or OrthogonalMatrix): Optional. If specified
+                either a 2D array or an `OrthogonalMatrix` instance, in both
+                cases the columns of the matrix corresponding to the
+                orthonormal set of eigenvectors of the matrix being
+                constructed.
+            eigval (None or array): Optional. If specified a 1D array
+                containing the eigenvalues of the matrix being constructed,
+                with `eigval[i]` the eigenvalue associated with column `i` of
+                `eigvec`.
+        """
+        self._array = array
+        super().__init__(array.shape[0])
+        if isinstance(eigvec, np.ndarray):
+            eigvec = OrthogonalMatrix(eigvec)
+        self._eigvec = eigvec
+        self._eigval = eigval
+
+    def _scalar_multiply(self, scalar):
+        return DenseSymmetricMatrix(
+            self.array * scalar, self._eigvec,
+            None if self._eigval is None else self._eigval * scalar)
+
+    @property
+    def inv(self):
+        return EigendecomposedSymmetricMatrix(self.eigvec, 1 / self.eigval)
+
+
 class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     """Square matrix with columns and rows that are orthogonal unit vectors."""
 
