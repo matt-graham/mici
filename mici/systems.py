@@ -515,11 +515,11 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
 
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
-        sign = 2 * isinstance(inner_product_matrix, PositiveDefiniteMatrix) - 1
+        is_posdef = isinstance(inner_product_matrix, PositiveDefiniteMatrix)
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return DenseDefiniteMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
-                sign=sign)
+                is_posdef=is_posdef)
         else:
             return DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
