@@ -1,8 +1,4 @@
-"""Automatic differentation fallback for constructing derivative functions.
-
-Currently only Autograd is available as a backend but other backend
-frameworks may be available as alternative fallbacks in the future.
-"""
+"""Automatic differentation fallback for constructing derivative functions."""
 
 import mici.autograd_wrapper as autograd_wrapper
 

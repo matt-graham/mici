@@ -44,9 +44,8 @@ class System(ABC):
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
                 Function which given a position array returns the derivative of
-                the negative logarithm of the unnormalised density specified by
                 `neg_log_dens` with respect to the position array argument.
-                Optionally the function may instead return a pair of values
+                Optionally the function may instead return a 2-tuple of values
                 with the first being the array corresponding to the derivative
                 and the second being the value of the `neg_log_dens` evaluated
                 at the passed position array. If `None` is passed (the default)
@@ -218,21 +217,23 @@ class EuclideanMetricSystem(System):
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
-            metric (None or array or Matrix): Matrix object corresponding to
-                matrix representation of metric on position space and
-                covariance of Gaussian marginal distribution on momentum
-                vector. If `None` is passed (the default), the identity matrix
-                will be used. If a 1D array is passed then this is assumed to
-                specify a metric with diagonal matrix representation and the
-                array to the matrix diagonal. If a 2D array is passed then this
-                is assumed to specify a metric with a dense positive definite
-                matrix representation specified by the array.
+            metric (None or array or PositiveDefiniteMatrix): Matrix object
+                corresponding to matrix representation of metric on position
+                space and covariance of Gaussian marginal distribution on
+                momentum vector. If `None` is passed (the default), the
+                identity matrix will be used. If a 1D array is passed then this
+                is assumed to specify a metric with positive diagonal matrix
+                representation and the array the matrix diagonal. If a 2D array
+                is passed then this is assumed to specify a metric with a dense
+                positive definite matrix representation specified by the array.
+                Otherwise if the value is a `PositiveDefiniteMatrix` subclass
+                it is assumed to directly specify the metric matrix
+                representation.
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
                 Function which given a position array returns the derivative of
-                the negative logarithm of the unnormalised density specified by
                 `neg_log_dens` with respect to the position array argument.
-                Optionally the function may instead return a pair of values
+                Optionally the function may instead return a 2-tuple of values
                 with the first being the array corresponding to the derivative
                 and the second being the value of the `neg_log_dens` evaluated
                 at the passed position array. If `None` is passed (the default)
@@ -317,27 +318,28 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 with the corresponding distribution on the position space being
                 the target distribution it is wished to draw approximate
                 samples from.
-            metric (None or array or Matrix): Matrix object corresponding to
-                matrix representation of metric on position space and
-                covariance of Gaussian marginal distribution on momentum
-                vector. If `None` is passed (the default), the identity matrix
-                will be used. If a 1D array is passed then this is assumed to
-                specify a metric with diagonal matrix representation and the
-                array to the matrix diagonal. If a 2D array is passed then this
-                is assumed to specify a metric with a dense positive definite
-                matrix representation specified by the array.
+            metric (None or array or PositiveDefiniteMatrix): Matrix object
+                corresponding to matrix representation of metric on position
+                space and covariance of Gaussian marginal distribution on
+                momentum vector. If `None` is passed (the default), the
+                identity matrix will be used. If a 1D array is passed then this
+                is assumed to specify a metric with positive diagonal matrix
+                representation and the array the matrix diagonal. If a 2D array
+                is passed then this is assumed to specify a metric with a dense
+                positive definite matrix representation specified by the array.
+                Otherwise if the value is a `PositiveDefiniteMatrix` subclass
+                it is assumed to directly specify the metric matrix
+                representation.
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
-                Function which given a position vector returns the derivative
-                of the negative logarithm of the unnormalised density specified
-                by `neg_log_dens` with respect to its position vector argument.
-                Optionally the function may instead return a pair of values
-                with the first being the value of the `neg_log_dens` evaluated
-                at the passed position vector and the second being the value of
-                its derivative with respect to the position argument. If `None`
-                is passed (the default) an automatic differentiation backend
-                will be used to construct the derivative of `neg_log_dens`
-                automatically if available.
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
         """
         super().__init__(neg_log_dens, metric, grad_neg_log_dens)
 
@@ -376,22 +378,149 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
 
 
 class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
-    """Base class for Euclidean Hamiltonian systems subject to constraints.
+    r"""Base class for Euclidean Hamiltonian systems subject to constraints.
 
-    The system is assumed to be subject to a set of holonomic constraints on
-    the position component of the state. These constraints are specified by a
-    vector constraint function which takes as argument the position component,
-    and which is equal to zero in all components when the constraints are
-    satisfied. The constraint function implicitly defines a manifold embedded
-    in the position space of constraint satisfying configurations. There are
-    also implicitly a set of constraints on the momentum component of the state
-    due to the requirement that velocity (momentum pre-multiplied by inverse
-    metric) is always tangential to the constraint manifold.
+    The (constrained) position space is assumed to be a differentiable manifold
+    embedded with a \(Q\)-dimensional ambient Euclidean space. The \(Q-C\)
+    dimensional manifold \(\mathcal{M}\) is implicitly defined by an equation
+    \(\mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace\) with
+    \(c: \mathbb{R}^Q \to \mathbb{R}^C\) the *constraint function*.
+
+    The ambient Euclidean space is assumed to be equipped with a metric with
+    constant positive-definite matrix representation \(M\) which further
+    specifies the covariance of the zero-mean Gaussian distribution
+    \(\mathcal{N}(0, M)\) on the *unconstrained* momentum (co-)vector \(p\)
+    with corresponding \(h_2\) Hamiltonian component defined as
+
+    \[ h_2(q, p) = \frac{1}{2} p^T M(q^{-1} p. \]
+
+    The time-derivative of the constraint equation implies a further set of
+    constraints on the momentum \(q\) with \( \partial c(q) M^{-1} p = 0\)
+    at all time points, corresponding to the momentum (velocity) being in the
+    co-tangent space (tangent space) to the manifold.
+
+    The target distribution is either assumed to be directly specified with
+    respect to the a density \(\exp(-\ell(q))\) with respect to the Hausdorff
+    measure on the manifold (with metric induced from the ambient metric) with
+    in this case the \(h_1\) Hamiltonian component then simply
+
+    \[ h_1(q) = \ell(q), \]
+
+    or alternatively it is assumed a prior distribution on the position \(q\)
+    with density  \(\exp(-\ell(q))\) with respect to the Lebesgue measure on
+    the ambient space is specifed and the target distribution is the posterior
+    distribution on \(q\) when conditioning on the event \(c(q) = 0\) with
+    the negative logarithm of the posterior density (and so \(h_1\) Hamiltonian
+    component) then
+
+    \[ h_1(q) = \ell(q) + \frac{1}{2} \partial c(q) M^{-1} \partial c(q)^T \]
+
+    with an additional second *Gram matrix* determinant term to give the
+    correct density with respect to the Hausdorff measure on the manifold.
+
+    The \(h_1\) Hamiltonian component is then
+
+    \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
+
+    where \(\ell(q)\) is the negative log (unnormalised) density of the target
+    distribution with respect to the Lebesgue measure at \(q\). The \(h_2\)
+    Hamiltonian component is
+
+    \[ h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. \]
+
+    Due to the requirement to enforce the constraints on the position and
+    momentum, a constrained-preserving numerical integrator needs to be used.
     """
 
     def __init__(self, neg_log_dens, constr, metric=None,
                  dens_wrt_hausdorff=True, grad_neg_log_dens=None,
                  jacob_constr=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the constrained position
+                space with respect to the Hausdorff measure on the constraint
+                manifold (if `dens_wrt_hausdorff == True`) or alternatively the
+                negative logarithm of an unnormalised probability density on
+                the unconstrained (ambient) position space with respect to the
+                Lebesgue measure. In the former case the target distribution it
+                is wished to draw approximate samples from is assumed to be
+                directly specified by the density function on the manifold. In
+                the latter case the density function is instead taken to
+                specify a prior distribution on the ambient space with the
+                target distribution then corresponding to the posterior
+                distribution when conditioning on the (zero Lebesgue measure)
+                event `constr(pos) == 0`. This target posterior distribution
+                has support on the differentiable manifold implicitly defined
+                by the constraint equation, with density with respect to the
+                Hausdorff measure on the manifold corresponding to the ratio of
+                the prior density (specified by `neg_log_dens`) and the
+                square-root of the determinant of the Gram matrix defined by
+
+                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
+
+                where `jacob_constr` is the Jacobian of the constraint function
+                `constr` and `metric` is the matrix representation of the
+                metric on the ambient space.
+            constr (Callable[[array], array]): Function which given a position
+                array return as a 1D array the value of the (vector-valued)
+                constraint function, the zero level-set of which implicitly
+                defines the manifold the dynamic is simulated on.
+            metric (None or array or PositiveDefiniteMatrix): Matrix object
+                corresponding to matrix representation of metric on
+                *unconstrained* position space and covariance of Gaussian
+                marginal distribution on *unconstrained* momentum vector. If
+                `None` is passed (the default), the identity matrix will be
+                used. If a 1D array is passed then this is assumed to specify a
+                metric with positive diagonal matrix representation and the
+                array the matrix diagonal. If a 2D array is passed then this is
+                assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array. Otherwise if the
+                value is a `PositiveDefiniteMatrix` subclass it is assumed to
+                directly specify the metric matrix representation.
+            dens_wrt_hausdorff (bool): Whether the `neg_log_dens` function
+                specifies the (negative logarithm) of the density of the target
+                distribution with respect to the Hausdorff measure on the
+                manifold directly (True) or alternatively the negative
+                logarithm of a density of a prior distriubtion on the
+                unconstrained (ambient) position space with respect to the
+                Lebesgue measure, with the target distribution then
+                corresponding to the posterior distribution when conditioning
+                on the event `const(pos) == 0` (False). Note that in the former
+                case the base Hausdorff measure on the manifold depends on the
+                metric defined on the ambient space, with the Hausdorff measure
+                being defined with respect to the metric induced on the
+                manifold from this ambient metric.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct a function to compute the derivative (and value)
+                of `neg_log_dens` automatically.
+            jacob_constr (
+                    None or Callable[[array], array or Tuple(array, array)]):
+                Function which given a position array computes the Jacobian
+                (matrix / 2D array of partial derivatives) of the output of the
+                constraint function `c = constr(q)` with respect to the
+                position array argument `q`, returning the computed Jacobian as
+                a 2D array `jacob` with
+
+                    jacob[i, j] = ∂c[i] / ∂q[j]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the Jacobian
+                and the second being the value of `constr` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct a function to compute the Jacobian (and value) of
+                `constr` automatically.
+        """
         super().__init__(neg_log_dens=neg_log_dens, metric=metric,
                          grad_neg_log_dens=grad_neg_log_dens)
         self._constr = constr
@@ -401,10 +530,26 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     @cache_in_state('pos')
     def constr(self, state):
+        """Constraint function at the current position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `constr(state.pos)` as 1D array.
+        """
         return self._constr(state.pos)
 
     @multi_cache_in_state(['pos'], ['jacob_constr', 'constr'])
     def jacob_constr(self, state):
+        """Jacobian of constraint function at the current position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of Jacobian of `constr(state.pos)` as 2D array.
+        """
         return self._jacob_constr(state.pos)
 
     @abstractmethod
@@ -430,12 +575,34 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     @cache_in_state('pos')
     def gram(self, state):
-        """Gram matrix at current position."""
+        """Gram matrix at current position.
+
+        The Gram matrix as a position `q` is defined as
+
+            gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
+
+        where `jacob_constr` is the Jacobian of the constraint function
+        `constr` and `metric` is the matrix representation of the metric on the
+        ambient space.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            PositiveDefiniteMatrix: Gram matrix as matrix object.
+        """
         return self.jacob_constr_inner_product(
             self.jacob_constr(state), self.metric.inv)
 
     def inv_gram(self, state):
-        """Inverse of Gram matrix at current position."""
+        """Inverse of Gram matrix at current position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            PositiveDefiniteMatrix: Inverse of Gram matrix as matrix object.
+        """
         return self.gram(state).inv
 
     def log_det_sqrt_gram(self, state):
@@ -451,7 +618,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
         Returns:
             array: Value of `log_det_sqrt_gram(state)` derivative with respect
-            to `state.pos`.
+                to `state.pos`.
         """
 
     def h1(self, state):
@@ -468,7 +635,17 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     self.grad_log_det_sqrt_gram(state))
 
     def project_onto_cotangent_space(self, mom, state):
-        """Project a momentum on to the co-tangent space at a position."""
+        """Project a momentum on to the co-tangent space at a position.
+
+        Args:
+            mom (array): Momentum (co-)vector as 1D array to project on to
+                co-tangent space.
+            state (mici.states.ChainState): State definining position on the
+                manifold to project in to the co-tangent space of.
+
+        Returns:
+            array: Projected momentum in the co-tangent space at `state.pos`.
+        """
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= (self.jacob_constr(state).T @ (
@@ -477,29 +654,134 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         return mom
 
     def sample_momentum(self, state, rng):
-        """Sample a momentum from its conditional at the current position."""
         mom = super().sample_momentum(state, rng)
         mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
 class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
-    """Euclidean Hamiltonian systems subject to a dense set of constraints.
+    r"""Euclidean Hamiltonian systems subject to a dense set of constraints.
 
-    The system is assumed to be subject to a set of holonomic constraints on
-    the position component of the state. These constraints are specified by a
-    vector constraint function which takes as argument the position component,
-    and which is equal to zero in all components when the constraints are
-    satisfied. The constraint function implicitly defines a manifold embedded
-    in the position space of constraint satisfying configurations. There are
-    also implicitly a set of constraints on the momentum component of the state
-    due to the requirment that velocity (momentum pre-multiplied by inverse
-    metric) is always tangential to the constraint manifold.
+    See `ConstrainedEuclideanMetricSystem` for more details about constrained
+    systems.
     """
 
     def __init__(self, neg_log_dens, constr, metric=None,
                  dens_wrt_hausdorff=True, grad_neg_log_dens=None,
                  jacob_constr=None, mhp_constr=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the constrained position
+                space with respect to the Hausdorff measure on the constraint
+                manifold (if `dens_wrt_hausdorff == True`) or alternatively the
+                negative logarithm of an unnormalised probability density on
+                the unconstrained (ambient) position space with respect to the
+                Lebesgue measure. In the former case the target distribution it
+                is wished to draw approximate samples from is assumed to be
+                directly specified by the density function on the manifold. In
+                the latter case the density function is instead taken to
+                specify a prior distribution on the ambient space with the
+                target distribution then corresponding to the posterior
+                distribution when conditioning on the (zero Lebesgue measure)
+                event `constr(pos) == 0`. This target posterior distribution
+                has support on the differentiable manifold implicitly defined
+                by the constraint equation, with density with respect to the
+                Hausdorff measure on the manifold corresponding to the ratio of
+                the prior density (specified by `neg_log_dens`) and the
+                square-root of the determinant of the Gram matrix defined by
+
+                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
+
+                where `jacob_constr` is the Jacobian of the constraint function
+                `constr` and `metric` is the matrix representation of the
+                metric on the ambient space.
+            constr (Callable[[array], array]): Function which given a position
+                array return as a 1D array the value of the (vector-valued)
+                constraint function, the zero level-set of which implicitly
+                defines the manifold the dynamic is simulated on.
+            metric (None or array or PositiveDefiniteMatrix): Matrix object
+                corresponding to matrix representation of metric on
+                *unconstrained* position space and covariance of Gaussian
+                marginal distribution on *unconstrained* momentum vector. If
+                `None` is passed (the default), the identity matrix will be
+                used. If a 1D array is passed then this is assumed to specify a
+                metric with positive diagonal matrix representation and the
+                array the matrix diagonal. If a 2D array is passed then this is
+                assumed to specify a metric with a dense positive definite
+                matrix representation specified by the array. Otherwise if the
+                value is a `PositiveDefiniteMatrix` subclass it is assumed to
+                directly specify the metric matrix representation.
+            dens_wrt_hausdorff (bool): Whether the `neg_log_dens` function
+                specifies the (negative logarithm) of the density of the target
+                distribution with respect to the Hausdorff measure on the
+                manifold directly (True) or alternatively the negative
+                logarithm of a density of a prior distriubtion on the
+                unconstrained (ambient) position space with respect to the
+                Lebesgue measure, with the target distribution then
+                corresponding to the posterior distribution when conditioning
+                on the event `const(pos) == 0` (False). Note that in the former
+                case the base Hausdorff measure on the manifold depends on the
+                metric defined on the ambient space, with the Hausdorff measure
+                being defined with respect to the metric induced on the
+                manifold from this ambient metric.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct a function to compute the derivative (and value)
+                of `neg_log_dens` automatically.
+            jacob_constr (
+                    None or Callable[[array], array or Tuple(array, array)]):
+                Function which given a position array computes the Jacobian
+                (matrix / 2D array of partial derivatives) of the output of the
+                constraint function `c = constr(q)` with respect to the
+                position array argument `q`, returning the computed Jacobian as
+                a 2D array `jacob` with
+
+                    jacob[i, j] = ∂c[i] / ∂q[j]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the Jacobian
+                and the second being the value of `constr` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct a function to compute the Jacobian (and value) of
+                `neg_log_dens` automatically.
+            mhp_constr (None or
+                    Callable[[array],
+                             Callable[[array], array]] or
+                             Tuple[Callable[[array], array]], array, array]]):
+                Function which given a position array returns another function
+                which takes a 2D array as an argument and returns the
+                *matrix-Hessian-product* (MHP) of the constraint function
+                `constr` with respect to the position array argument. The MHP
+                is here defined as a function of a `(dim_constr, dim_pos)`
+                shaped 2D array `m`
+
+                    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
+
+                where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped
+                vector-Hessian of `c = constr(q)` with respect to `q` i.e. the
+                array of second-order partial derivatives of such that
+
+                    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
+
+                Optionally the function may instead return a 3-tuple of values
+                with the first a function to compute a MHP of `constr`, the
+                second a 2D array corresponding to the Jacobian of `constr`,
+                and the third the value of `constr`, all evaluated at the
+                passed position array. If `None` is passed (the default) an
+                automatic differentiation fallback will be used to attempt to
+                construct a function which calculates the MHP (and Jacobian and
+                value) of `constr` automatically.
+        """
         super().__init__(neg_log_dens=neg_log_dens, constr=constr,
                          metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
                          grad_neg_log_dens=grad_neg_log_dens,
@@ -535,11 +817,10 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
         GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
 
     def __init__(self, neg_log_dens, constr, metric=None,
-                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
-                 jacob_constr=None, mhp_constr=None):
+                 grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None):
         DenseConstrainedEuclideanMetricSystem.__init__(
             self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
-            dens_wrt_hausdorff=dens_wrt_hausdorff,
+            dens_wrt_hausdorff=False,
             grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
             mhp_constr=mhp_constr)
 
@@ -555,6 +836,13 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
 
 class RiemannianMetricSystem(System):
     r"""Riemannian Hamiltonian system with a position-dependent metric.
+
+    This class allows for metric matrix representations of any generic type.
+    In most cases a specialised subclass such as `DenseRiemannianMetricSystem`,
+    `CholeskyFactoredRiemannianMetricSystem`, `DiagonalRiemannianMetricSystem`,
+    `ScalarRiemannianMetricSystem` or `SoftAbsRiemannianMetricSystem` will
+    provide a simpler method of constructng a system with a metric matrix
+    representation of a specific type.
 
     The position space is assumed to be a Riemannian manifold with a metric
     with position-dependent positive definite matrix-representation \(M(q)\)
@@ -586,6 +874,78 @@ class RiemannianMetricSystem(System):
     def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
                  vjp_metric_func=None, grad_neg_log_dens=None,
                  metric_kwargs=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric_matrix_class (type(PositiveDefiniteMatrix)): Class (or
+                factory function returning an instance of the class) which
+                defines type of matrix representation of metric. The class
+                initializer should take a single positional argument which will
+                be passed the array outputted by `metric_func`, and which is
+                assumed to be a parameter which fully defines the resulting
+                matrix (e.g. the diagonal of a `DiagonalMatrix`). The class
+                initializer may also optionally take one or more keyword
+                arguments, with the `metric_kwargs` argument used to specify
+                the value of these, if any. Together this means the metric
+                matrix representation at a position `pos` is constructed as
+
+                    metric = metric_matrix_class(
+                        metric_func(pos), **metric_kwargs)
+
+                The `PositiveDefiniteMatrix` subclass should as a minimum
+                define `inv`, `log_abs_det`, `grad_log_abs_det`,
+                `grad_quadratic_form_inv`, `__matmul__` and `__rmatmul__`
+                methods / properties (see documentation of
+                `PositiveDefiniteMatrix` and `DifferentiableMatrix` for
+                definitions of the expected behaviour of these methods).
+            metric_func (Callable[[array], array]): Function which given a
+                position array returns an array containing the parameter value
+                of the metric matrix representation passed as the single
+                positional argument to the `metric_matrix_class` initializer.
+            vjp_metric_func (None or
+                    Callable[
+                        [array], Callable[[array], array]]) or
+                                 Tuple[Callable[[array], array], array]]):
+                Function which given a position array returns another function
+                which takes an array as an argument and returns the
+                *vector-Jacobian-product* (VJP) of `metric_func` with respect
+                to the position array argument. The VJP is here defined as a
+                function of an array `v` (of the same shape as the output of
+                `metric_func`) corresponding to
+
+                    vjp(v) = sum(v[..., None] * jacob, tuple(range(v.ndim))
+
+                where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q`
+                i.e. the array of partial derivatives of the function such that
+
+                    jacob[..., i] = ∂m[...] / ∂q[i]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first a function to compute a VJP of `metric_func` and
+                the second an array containing the value of `metric_func`, both
+                evaluated at the passed position array. If `None` is passed
+                (the default) an automatic differentiation fallback will be
+                used to attempt to construct a function which calculates the
+                VJP (and value) of `metric_func` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+            metric_kwargs (None or Dict[str, object]): An optional dictionary
+                of any additional keyword arguments to the initializer of
+                `metric_matrix_class`.
+        """
         self._metric_matrix_class = metric_matrix_class
         self._metric_func = metric_func
         self._vjp_metric_func = autodiff_fallback(
@@ -595,14 +955,54 @@ class RiemannianMetricSystem(System):
 
     @cache_in_state('pos')
     def metric_func(self, state):
+        """
+        Function computing the parameter of the metric matrix representation.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `metric_func(state.pos)`.
+        """
         return self._metric_func(state.pos)
 
     @multi_cache_in_state(['pos'], ['vjp_metric_func', 'metric_func'])
     def vjp_metric_func(self, state):
+        """
+        Function constructing a vector-Jacobian-product for `metric_func`.
+
+        The vector-Jacobian-product is here defined as a function of an array
+        `v` (of the same shape as the output of `metric_func`) corresponding to
+
+            vjp(v) = sum(v[..., None] * jacob, axis=tuple(range(v.ndim))
+
+        where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q` i.e.
+        the array of partial derivatives of the function such that
+
+            jacob[..., i] = ∂m[...] / ∂q[i]
+
+        Args:
+            state (mici.states.ChainState): State to compute VJP at.
+
+        Returns:
+            Callable[[array], array]: Vector-Jacobian-product function.
+        """
         return self._vjp_metric_func(state.pos)
 
     @cache_in_state('pos')
     def metric(self, state):
+        """
+        Function computing the metric matrix representation.
+
+        The returned type of this function is that specified by the
+        `metric_matrix_class` argument to the initializer.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            PositiveDefiniteMatrix: Metric matrix representation.
+        """
         return self._metric_matrix_class(
             self.metric_func(state), **self._metric_kwargs)
 
@@ -637,27 +1037,214 @@ class RiemannianMetricSystem(System):
 
 
 class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
+    """Riemannian-metric system with scaled identity matrix representation.
+
+    Hamiltonian system with a position dependent scaled identity metric matrix
+    representation which is specified by a scalar function
+    `metric_scalar_function` of the position `q` which outputs a strictly
+    positive scalar `s = metric_scalar_func(q)` with the the metric matrix
+    representation then taken to be `s * identity(q.shape[0])`.
+
+    See documentation of `RiemannianMetricSystem` for more general details
+    about Riemannian-metric Hamiltonian systems.
+    """
 
     def __init__(self, neg_log_dens, metric_scalar_func,
                  vjp_metric_scalar_func=None, grad_neg_log_dens=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric_scalar_func (Callable[[array], scalar]): Function which
+                given a position array returns a strictly positive scalar
+                corresponding to the parameter value of the scaled identity
+                metric matrix representation.
+            vjp_metric_scalar_func (None or
+                    Callable[
+                        [array], Callable[[array], scalar]]) or
+                                 Tuple[Callable[[array], scalar], scalar]]):
+                Function which given a position array returns another function
+                which takes a scalar as an argument and returns the
+                *vector-Jacobian-product* (VJP) of `metric_scalar_func` with
+                respect to the position array argument. The VJP is here defined
+                as a function of a scalar `v`
+
+                    vjp(v) = v * grad
+
+                where `grad` is the `(dim_pos,)` shaped Jacobian (gradient) of
+                `s = metric_scalar_func(q)` with respect to `q` i.e. the array
+                of partial derivatives of the function such that
+
+                    grad[i] = ∂s / ∂q[i]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first a function to compute a VJP of
+                `metric_scalar_func` and the second a float containing the
+                value of `metric_scalar_func`, both evaluated at the passed
+                position array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct a
+                function which calculates the VJP (and value) of
+                `metric_scalar_func` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+        """
+
         super().__init__(
             neg_log_dens, PositiveScaledIdentityMatrix, metric_scalar_func,
             vjp_metric_scalar_func, grad_neg_log_dens)
 
+    @cache_in_state('pos')
+    def metric(self, state):
+        return self._metric_matrix_class(
+            self.metric_func(state), size=pos.shape[0])
+
 
 class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
+    """Riemannian-metric system with diagonal matrix representation.
+
+    Hamiltonian system with a position dependent diagonal metric matrix
+    representation which is specified by a vector-valued function
+    `metric_diagonal_func` of the position `q` which outputs a 1D array with
+    strictly positive elements `d = metric_diagonal_func(q)` with the metric
+    matrix representation then taken to be `diag(d)`.
+
+    See documentation of `RiemannianMetricSystem` for more general details
+    about Riemannian-metric Hamiltonian systems.
+    """
 
     def __init__(self, neg_log_dens, metric_diagonal_func,
                  vjp_metric_diagonal_func=None, grad_neg_log_dens=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric_diagonal_func (Callable[[array], array]): Function which
+                given a position array returns a 1D array with strictly
+                positive values corresponding to the diagonal values
+                (left-to-right) of the diagonal metric matrix representation.
+            vjp_metric_diagonal_func (None or
+                    Callable[
+                        [array], Callable[[array], array]]) or
+                                 Tuple[Callable[[array], array], array]]):
+                Function which given a position array returns another function
+                which takes a 1D array as an argument and returns the
+                *vector-Jacobian-product* (VJP) of `metric_diagonal_func` with
+                respect to the position array argument. The VJP is here defined
+                as a function of a 1D array `v`
+
+                    vjp(v) = sum(v[:, None] * jacob[:, :], axis=0)
+
+                where `jacob` is the `(dim_pos, dim_pos)` shaped Jacobian of
+                `d = metric_diagonal_func(q)` with respect to `q` i.e. the
+                array of partial derivatives of the function such that
+
+                    jacob[i, j] = ∂d[i] / ∂q[j]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first a function to compute a VJP of
+                `metric_diagonal_func` and the second a 1D array containing the
+                value of `metric_diagonal_func`, both evaluated at the passed
+                position array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct a
+                function which calculates the VJP (and value) of
+                `metric_diagonal_func` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+        """
         super().__init__(
             neg_log_dens, PositiveDiagonalMatrix, metric_diagonal_func,
             vjp_metric_diagonal_func, grad_neg_log_dens)
 
 
 class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
+    """Riemannian-metric system with Cholesky-factored matrix representation.
+
+    Hamiltonian system with a position dependent metric matrix representation
+    which is specified by its Cholesky factor by a matrix function
+    `metric_chol_func` of the position `q` which outputs a lower-triangular
+    matrix `L = metric_chol_func(q)` with the metric matrix representation then
+    taken to be `L @ L.T`.
+
+    See documentation of `RiemannianMetricSystem` for more general details
+    about Riemannian-metric Hamiltonian systems.
+    """
 
     def __init__(self, neg_log_dens, metric_chol_func,
                  vjp_metric_chol_func=None, grad_neg_log_dens=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric_chol_func (Callable[[array], array]): Function which given
+                a position array returns a 2D array with zeros above the
+                diagonal corresponding to the lower-triangular Cholesky-factor
+                of the positive definite metric matrix representation.
+            vjp_metric_chol_func (None or
+                    Callable[
+                        [array], Callable[[array], array]]) or
+                                 Tuple[Callable[[array], array], array]]):
+                Function which given a position array returns another function
+                which takes a lower-triangular 2D array as an argument (any
+                values in the array above the diagonal are ignored) and returns
+                the *vector-Jacobian-product* (VJP) of `metric_chol_func` with
+                respect to the position array argument. The VJP is here defined
+                as a function of a 2D array `v`
+
+                    vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))
+
+                where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped
+                Jacobian of `L = metric_chol_func(q)` with respect to `q` i.e.
+                the array of partial derivatives of the function such that
+
+                    jacob[i, j, k] = ∂L[i, j] / ∂q[k]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first a function to compute a VJP of
+                `metric_chol_func` and the second a 2D array containing the
+                value of `metric_chol_func`, both evaluated at the passed
+                position array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct a
+                function which calculates the VJP (and value) of
+                `metric_chol_func` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+        """
         super().__init__(
             neg_log_dens, TriangularFactoredPositiveDefiniteMatrix,
             metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens,
@@ -665,9 +1252,69 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
 
 
 class DenseRiemannianMetricSystem(RiemannianMetricSystem):
+    """Riemannian-metric system with dense matrix representation.
+
+    Hamiltonian system with a position dependent metric matrix representation
+    which is specified to be a dense matrix function `metric_func` of the
+    position `q` which is guaranteed to be positive definite almost-everywhere,
+    with `M = metric_func(q)` then the metric matrix representation.
+
+    See documentation of `RiemannianMetricSystem` for more general details
+    about Riemannian-metric Hamiltonian systems.
+    """
 
     def __init__(self, neg_log_dens, metric_func,
                  vjp_metric_func=None, grad_neg_log_dens=None):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            metric_func (Callable[[array], array]): Function which given a
+                position array returns a 2D array corresponding to the positive
+                definite metric matrix representation. The returned matrices
+                (2D arrays) are assumed to be positive-definite for all input
+                positions and a `LinAlgError` exception may be raised if this
+                fails to be the case.
+            vjp_metric_func (None or
+                    Callable[
+                        [array], Callable[[array], array]]) or
+                                 Tuple[Callable[[array], array], array]]):
+                Function which given a position array returns another function
+                which takes a 2D array as an argument and returns the
+                *vector-Jacobian-product* (VJP) of `metric_func` with respect
+                to the position array argument. The VJP is here defined as a
+                function of a 2D array `v`
+
+                    vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))
+
+                where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped
+                Jacobian of `M = metric_func(q)` with respect to `q` i.e. the
+                array of partial derivatives of the function such that
+
+                    jacob[i, j, k] = ∂M[i, j] / ∂q[k]
+
+                Optionally the function may instead return a 2-tuple of values
+                with the first a function to compute a VJP of `metric_func` and
+                the second a 2D array containing the value of `metric_func`,
+                both evaluated at the passed position array. If `None` is
+                passed (the default) an automatic differentiation fallback will
+                be used to attempt to construct a function which calculates the
+                VJP (and value) of `metric_func` automatically.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+        """
         super().__init__(
             neg_log_dens, DensePositiveDefiniteMatrix, metric_func,
             vjp_metric_func, grad_neg_log_dens)
@@ -676,11 +1323,35 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
 class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     """SoftAbs Riemmanian metric Hamiltonian system.
 
-    Hamiltonian system with a position dependent metric tensor which is
-    specified to be an eigenvalue-regularised transformation of the Hessian of
-    the potential energy function (with the 'soft-absolute' regularisation
-    ensuring all the eigenvalues are strictly positive and so the resulting
-    metric tensor is positive definite everywhere).
+    Hamiltonian system with a position dependent metric matrix representation
+    which is specified to be a dense matrix function `metric_func` of the
+    position `q` which is guaranteed to be positive definite almost-everywhere,
+    with `M = metric_func(q)` then the metric matrix representation.
+
+    Hamiltonian system with a position dependent metric matrix representation
+    which is specified to be an eigenvalue-regularised transformation of the
+    Hessian of the negative log density function (the symmetric matrix of
+    second derivatives the negative log density function with respect to the
+    position array components. Specifically if `hess_neg_log_dens` is a
+    symmetric 2D square array valued function of the position `q`, with
+    `H = hess_neg_log_dens(q)` then if an eigenvalue decomposition of `H` is
+    computed, i.e. `eigval, eigvec = eigh(H)`, with `eigval` a 1D array of
+    real eigenvalues, and `eigvec` the corresponding 2D array (orthogonal
+    matrix) with eigenvectors as columns, then the resulting positive-definite
+    metric matrix representation `M` is computed as
+
+        M = eigvec @ diag(softabs(eigval, softabs_coeff)) @ eigvec.T
+
+    with `softabs(x, softabs_coeff) = x / tanh(x * softabs_coeff)` an
+    elementwise function which acts as a smooth approximation to the absolute
+    function (ensuring all the eigenvalues of `M` are strictly positive) with
+    the additional scalar parameter `softabs_coeff` controlling the smoothness
+    of the approximation, with `softabs` tending to the piecewise linear `abs`
+    function as `softabs_coeff` tends to infinity, and becoming increasingly
+    smooth as `softabs_coeff` tends to zero.
+
+    See documentation of `RiemannianMetricSystem` for more general details
+    about Riemannian-metric Hamiltonian systems.
 
     References:
 
@@ -692,6 +1363,71 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     def __init__(self, neg_log_dens, grad_neg_log_dens=None,
                  hess_neg_log_dens=None, mtp_neg_log_dens=None,
                  softabs_coeff=1.):
+        """
+        Args:
+            neg_log_dens (Callable[[array], float]): Function which given a
+                position array returns the negative logarithm of an
+                unnormalised probability density on the position space with
+                respect to the Lebesgue measure, with the corresponding
+                distribution on the position space being the target
+                distribution it is wished to draw approximate samples from.
+            grad_neg_log_dens (
+                    None or Callable[[array], array or Tuple[array, float]]):
+                Function which given a position array returns the derivative of
+                `neg_log_dens` with respect to the position array argument.
+                Optionally the function may instead return a 2-tuple of values
+                with the first being the array corresponding to the derivative
+                and the second being the value of the `neg_log_dens` evaluated
+                at the passed position array. If `None` is passed (the default)
+                an automatic differentiation fallback will be used to attempt
+                to construct the derivative of `neg_log_dens` automatically.
+            hess_neg_log_dens (None or
+                    Callable[[array], array or Tuple[array, array, float]]):
+                Function which given a position array returns the Hessian of
+                `neg_log_dens` with respect to the position array argument as a
+                2D array. Optionally the function may instead return a 3-tuple
+                of values with the first a 2D array containting the Hessian of
+                `neg_log_dens`, the second a 1D array containing the gradient
+                of `neg_log_dens` and the third the value of `neg_log_dens`,
+                all evaluated at the passed position array. If `None` is passed
+                (the default) an automatic differentiation fallback will be
+                used to attempt to construct a function which calculates the
+                Hessian (and gradient and value) of `neg_log_dens`
+                automatically.
+            mtp_neg_log_dens (None or
+                    Callable[
+                        [array],
+                        Callable[[array], array] or
+                        Tuple[Callable[[array], array], array, array, float]]):
+                Function which given a position array returns another function
+                which takes a 2D array (matrix) as an argument and returns the
+                *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect
+                to the position array argument. The MTP is here defined as a
+                function of a matrix `m` corresponding to
+
+                    mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))
+
+                where `tress` is the 'Tressian' of `f = neg_log_dens(q)` wrt
+                `q` i.e. the 3D array of third-order partial derivatives of the
+                scalar-valued function such that
+
+                    tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
+
+                Optionally the function may instead return a 4-tuple of values
+                with the first a function to compute a MTP of `neg_log_dens`,
+                the second a 2D array containing the Hessian of `neg_log_dens`,
+                the third a 1D array containing the gradient of `neg_log_dens`
+                and the fourth the value of `neg_log_dens`, all evaluated at
+                the passed position array. If `None` is passed (the default) an
+                automatic differentiation fallback will be used to attempt to
+                construct a function which calculates the MTP (and Hesisan and
+                gradient and value) of `neg_log_dens` automatically.
+            softabs_coeff (float): Positive regularisation coefficient for
+                smooth approximation to absolute value used to regularise
+                Hessian eigenvalues in metric matrix representation. As the
+                value tends to infinity the approximation becomes increasingly
+                close to the absolute function.
+        """
         self._hess_neg_log_dens = autodiff_fallback(
             hess_neg_log_dens, neg_log_dens, 'hessian_grad_and_value',
             'neg_log_dens')
@@ -713,10 +1449,43 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     @multi_cache_in_state(
         ['pos'], ['hess_neg_log_dens', 'grad_neg_log_dens', 'neg_log_dens'])
     def hess_neg_log_dens(self, state):
+        """Hessian of negative log density with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            hessian (array): 2D array of `neg_log_dens(state)` second
+                derivatives with respect to `state.pos`, with `hessian[i, j]`
+                the second derivative of `neg_log_dens(state)` with respect to
+                `state.pos[i]` and `state.pos[j]`.
+        """
         return self._hess_neg_log_dens(state.pos)
 
     @multi_cache_in_state(
         ['pos'], ['mtp_neg_log_dens', 'hess_neg_log_dens',
                   'grad_neg_log_dens', 'neg_log_dens'])
     def mtp_neg_log_dens(self, state):
+        """Generate MTP of negative log density with respect to position.
+
+        The matrix-Tressian-product (MTP) is here defined as a function of a
+        matrix `m` corresponding to
+
+            mtp(m) = sum(m[:, :, None] * t[:, :, :], axis=(0, 1))
+
+        where `t` is the 'Tressian' of `f = neg_log_dens(q)` with respect to
+        `q = state.pos` i.e. the 3D array of third-order partial derivatives of
+        the scalar-valued function such that
+
+            t[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            mtp (Callable[[array], array]): Function which accepts a 2D array
+                of shape `(state.pos.shape[0], state.pos.shape[0])` as an
+                argument and returns an array of shape `state.pos.shape`
+                containing the computed MTP value.
+        """
         return self._mtp_neg_log_dens(state.pos)

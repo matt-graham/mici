@@ -109,8 +109,8 @@ def mtp_hessian_grad_and_value(fun, x):
 
         mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))
 
-    where `t` is the 'Tressian' of `f = fun(x)` wrt `x` i.e. the rank-3 tensor
-    of third-order partial derivatives of the scalar-valued function such that
+    where `t` is the 'Tressian' of `f = fun(x)` wrt `x` i.e. the 3D array of
+    third-order partial derivatives of the scalar-valued function such that
 
         t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
 
