@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L0-L1239" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L0-L1419" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Structured matrix classes implementing basic linear algebra operations.&#34;&#34;&#34;
 
@@ -217,8 +217,9 @@ class MatrixProduct(ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix implicitly defined as a product of a sequence of matrices.&#34;&#34;&#34;
 
     def __init__(self, matrices):
-        super().__init__((matrices[0].shape[0], matrices[-1].shape[1]))
         self._matrices = tuple(matrices)
+        super().__init__((self._matrices[0].shape[0],
+                          self._matrices[-1].shape[1]))
 
     @property
     def matrices(self):
@@ -335,20 +336,30 @@ class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
         matrix satisfying the above property.
         &#34;&#34;&#34;
 
+
 class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix representing identity operator on a vector space.
 
     Array representation has ones on diagonal elements and zeros elsewhere.
-    May be defined with an implicit shape reprsented by `(None, None)` which
+    May be defined with an implicit shape represented by `(None, None)` which
     will allow use for subset of operations where shape is not required to be
     known.
     &#34;&#34;&#34;
 
     def __init__(self, size=None):
+        &#34;&#34;&#34;
+        Args:
+            size (int or None): Number of rows / columns in matrix or `None` if
+                matrix is to be implicitly shaped.
+        &#34;&#34;&#34;
         super().__init__(size)
 
     def _scalar_multiply(self, scalar):
-        return ScaledIdentityMatrix(scalar, self.shape[0])
+        if scalar &gt; 0:
+            return PositiveScaledIdentityMatrix(
+                scalar, self.shape[0])
+        else:
+            return ScaledIdentityMatrix(scalar, self.shape[0])
 
     def _left_matrix_multiply(self, other):
         return other
@@ -703,15 +714,17 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return f&#39;(shape={self.shape}, lower={self.lower})&#39;
 
 
-class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
+class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
     def __init__(self, size, sign=1):
-        assert sign == 1 or sign == -1, &#39;sign must be equal to +1 or -1&#39;
+        if not (sign == 1 or sign == -1):
+            raise ValueError(&#39;sign must be equal to +1 or -1&#39;)
         self._sign = sign
         super().__init__(size=size)
 
     @property
     def factor(self):
+        &#34;&#34;&#34;Triangular matrix with `matrix = matrix.factor @ matrix.factor.T`&#34;&#34;&#34;
         return self._factor
 
     @property
@@ -728,12 +741,44 @@ class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
 
 class TriangularFactoredDefiniteMatrix(
-        BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
+        _BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
         ImplicitArrayMatrix):
+    &#34;&#34;&#34;Matrix specified as a signed self-product of a triangular factor.
 
-    def __init__(self, factor, lower=True, sign=1):
+    The matrix is assumed to have the form
+
+        matrix = sign * factor @ factor.T
+
+    for and upper- or lower-trinagular matrix `factor` and signed binary value
+    `sign` (i.e. `sign == +1 or sign == -1`), with the matrix being positive
+    definite if `sign == +1` and negative definite if `sign == -1` under the
+    assumption that `factor` is non-singular.
+    &#34;&#34;&#34;
+
+    def __init__(self, factor, sign=1, factor_is_lower=None):
+        &#34;&#34;&#34;
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            sign (int): +/-1 multiplier of factor product, corresponding
+                respectively to a strictly positive- or negative-definite
+                matrix.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        &#34;&#34;&#34;
         if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
-            factor = TriangularMatrix(factor, lower)
+            if factor_is_lower not in (True, False):
+                raise ValueError(
+                    &#39;For array `factor` parameter `factor_is_lower` must be &#39;
+                    &#39;specified as a boolean value.&#39;)
+            factor = TriangularMatrix(factor, factor_is_lower)
         self._factor = factor
         super().__init__(factor.shape[0], sign=sign)
 
@@ -750,12 +795,17 @@ class TriangularFactoredDefiniteMatrix(
 
     @property
     def grad_log_abs_det(self):
-        return 2 * self.factor.inv.T.array
+        return np.diag(2 / self.factor.diagonal)
 
     def grad_quadratic_form_inv(self, vector):
         inv_factor_vector = self.factor.inv @ vector
         inv_vector = self.inv @ vector
-        return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)
+        if self.factor.lower:
+            return -2 * self._sign * np.tril(
+                np.outer(inv_vector, inv_factor_vector))
+        else:
+            return -2 * self._sign * np.triu(
+                np.outer(inv_vector, inv_factor_vector))
 
     def _construct_array(self):
         return self._sign * (self.factor @ self.factor.array.T)
@@ -763,9 +813,33 @@ class TriangularFactoredDefiniteMatrix(
 
 class TriangularFactoredPositiveDefiniteMatrix(
         TriangularFactoredDefiniteMatrix, PositiveDefiniteMatrix):
+    &#34;&#34;&#34;Positive definite matrix parameterised a triangular matrix product.
 
-    def __init__(self, factor, lower=True):
-        super().__init__(factor, lower=lower, sign=1)
+    The matrix is assumed to have the parameterisation
+
+        matrix = factor @ factor.T
+
+    where `factor` is an upper- or lower-triangular matrix. Note for the case
+    `factor` is lower-triangular this corresponds to the standard Cholesky
+    factorisation of a positive definite matrix.
+    &#34;&#34;&#34;
+
+    def __init__(self, factor, factor_is_lower=True):
+        &#34;&#34;&#34;
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        &#34;&#34;&#34;
+        super().__init__(factor, sign=1, factor_is_lower=factor_is_lower)
 
     def _scalar_multiply(self, scalar):
         if scalar &gt; 0:
@@ -784,31 +858,50 @@ class TriangularFactoredPositiveDefiniteMatrix(
         return self.factor
 
 
-class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
+class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
                           DifferentiableMatrix, ExplicitArrayMatrix):
+    &#34;&#34;&#34;Definite matrix specified by a dense 2D array.&#34;&#34;&#34;
 
-    def __init__(self, array, sign=1, factor=None):
-        super().__init__(array.shape[0], sign=sign)
+    def __init__(self, array, factor=None, is_posdef=True):
+        &#34;&#34;&#34;
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T` if
+                `is_posdef=True` or `matrix = -factor @ factor.T` otherwise.
+                If not pre-computed and specified at initialisation a
+                factorisation will only be computed when first required by
+                an operation which depends on the factor.
+            is_posdef (boolean): Whether matrix (and so corresponding array
+                representation) is positive definite, with the matrix assumed
+                to be negative-definite if not. This is **not** checked on
+                initialisation, and so if `array` is positive (negative)
+                definite and `is_posdef` is `False` (`True`) then a
+                `LinAlgError` exception will be if a later attempt is made to
+                factorise the matrix.
+        &#34;&#34;&#34;
+        super().__init__(array.shape[0], sign=1 if is_posdef else -1)
         self._array = array
         self._factor = factor
 
     def _scalar_multiply(self, scalar):
         if (scalar &gt; 0) == (self._sign == 1):
-            return DenseDefiniteMatrix(
-                scalar * self.array, 1,
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
                 None if self._factor is None else
                 abs(scalar)**0.5 * self._factor)
         else:
             return DenseDefiniteMatrix(
-                scalar * self.array, -1,
+                scalar * self.array,
                 None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
+                abs(scalar)**0.5 * self._factor, is_posdef=False)
 
     @property
     def factor(self):
         if self._factor is None:
             self._factor = TriangularMatrix(
-                nla.cholesky(self._sign * self._array), True)
+                nla.cholesky(self._sign * self._array), lower=True)
         return self._factor
 
     @property
@@ -821,43 +914,29 @@ class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
 
 
 class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
+    &#34;&#34;&#34;Positive-definite matrix specified by a dense 2D array.&#34;&#34;&#34;
 
     def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=1, factor=factor)
+        &#34;&#34;&#34;
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T`. If not
+                pre-computed and specified at initialisation a factorisation
+                will only be computed when first required by an operation which
+                depends on the factor.
+        &#34;&#34;&#34;
+        super().__init__(array=array, factor=factor, is_posdef=True)
 
-    def _scalar_multiply(self, scalar):
-        if scalar &gt; 0:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
+    @property
+    def inv(self):
+        return TriangularFactoredPositiveDefiniteMatrix(
+            factor=self.factor.inv.T)
 
     @property
     def sqrt(self):
         return self.factor
-
-
-class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
-
-    def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=-1, factor=factor)
-
-    def _scalar_multiply(self, scalar):
-        if scalar &gt; 0:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
 
 
 class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
@@ -975,6 +1054,41 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             not self._inv_lu_transposed)
 
 
+class DenseSymmetricMatrix(
+        SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
+    &#34;&#34;&#34;Dense non-singular symmetric matrix.&#34;&#34;&#34;
+
+    def __init__(self, array, eigvec=None, eigval=None):
+        &#34;&#34;&#34;
+        Args:
+            array (array): Explicit 2D array representation of matrix.
+            eigvec (None or array or OrthogonalMatrix): Optional. If specified
+                either a 2D array or an `OrthogonalMatrix` instance, in both
+                cases the columns of the matrix corresponding to the
+                orthonormal set of eigenvectors of the matrix being
+                constructed.
+            eigval (None or array): Optional. If specified a 1D array
+                containing the eigenvalues of the matrix being constructed,
+                with `eigval[i]` the eigenvalue associated with column `i` of
+                `eigvec`.
+        &#34;&#34;&#34;
+        self._array = array
+        super().__init__(array.shape[0])
+        if isinstance(eigvec, np.ndarray):
+            eigvec = OrthogonalMatrix(eigvec)
+        self._eigvec = eigvec
+        self._eigval = eigval
+
+    def _scalar_multiply(self, scalar):
+        return DenseSymmetricMatrix(
+            self.array * scalar, self._eigvec,
+            None if self._eigval is None else self._eigval * scalar)
+
+    @property
+    def inv(self):
+        return EigendecomposedSymmetricMatrix(self.eigvec, 1 / self.eigval)
+
+
 class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix with columns and rows that are orthogonal unit vectors.&#34;&#34;&#34;
 
@@ -1003,9 +1117,22 @@ class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
 
 
 class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
-    &#34;&#34;&#34;Matrix corresponding to orthogonal matrix multiplied by a scalar.&#34;&#34;&#34;
+    &#34;&#34;&#34;Matrix corresponding to orthogonal matrix multiplied by a scalar.
+
+    Matrix is assumed to have the paramterisation
+
+        matrix = scalar * orth_array
+
+    where `scalar` is a real-valued scalar and `orth_array` is an orthogonal
+    matrix represented as a square 2D array.
+    &#34;&#34;&#34;
 
     def __init__(self, scalar, orth_array):
+        &#34;&#34;&#34;
+        Args:
+            scalar (float): Scalar multiplier as a floating point value.
+            orth_array (array): 2D array representation of orthogonal matrix.
+        &#34;&#34;&#34;
         self._scalar = scalar
         self._orth_array = orth_array
         super().__init__(orth_array.shape[0])
@@ -1041,7 +1168,16 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 
 class EigendecomposedSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ImplicitArrayMatrix):
-    &#34;&#34;&#34;Symmetric matrix parameterised by its eigendecomposition.&#34;&#34;&#34;
+    &#34;&#34;&#34;Symmetric matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    eigenvalues of `matrix`.
+    &#34;&#34;&#34;
 
     def __init__(self, eigvec, eigval):
         &#34;&#34;&#34;
@@ -1088,7 +1224,16 @@ class EigendecomposedSymmetricMatrix(
 
 class EigendecomposedPositiveDefiniteMatrix(
         EigendecomposedSymmetricMatrix, PositiveDefiniteMatrix):
-    &#34;&#34;&#34;Positive definite matrix parameterised by its eigendecomposition.&#34;&#34;&#34;
+    &#34;&#34;&#34;Positive definite matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    strictly positive eigenvalues of `matrix`.
+    &#34;&#34;&#34;
 
     def __init__(self, eigvec, eigval):
         if not np.all(eigval &gt; 0):
@@ -1154,7 +1299,7 @@ class SoftAbsRegularisedPositiveDefiniteMatrix(
     @property
     def grad_log_abs_det(self):
         grad_eigval = self.grad_softabs(self.unreg_eigval) / self.eigval
-        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval)
+        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval).array
 
     def grad_quadratic_form_inv(self, vector):
         num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
@@ -1171,7 +1316,15 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix with non-zero values only in blocks along diagonal.&#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[SquareMatrix]): Sequence of square matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        &#34;&#34;&#34;
         self._blocks = tuple(blocks)
+        if not all(isinstance(block, SquareMatrix) for block in self._blocks):
+            raise ValueError(&#39;All blocks must be square&#39;)
         sizes = tuple(block.shape[0] for block in self._blocks)
         super().__init__(size=sum(sizes))
         self._sizes = sizes
@@ -1197,7 +1350,8 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
              zip(self._blocks, self._split(other, axis=-1))], axis=-1)
 
     def _scalar_multiply(self, scalar):
-        return type(self)(tuple(scalar * block for block in self._blocks))
+        return SquareBlockDiagonalMatrix(
+            tuple(scalar * block for block in self._blocks))
 
     def _construct_array(self):
         return sla.block_diag(*(block.array for block in self._blocks))
@@ -1242,10 +1396,20 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
     &#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[SymmetricMatrix]): Sequence of symmetric matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        &#34;&#34;&#34;
         blocks = tuple(blocks)
-        if not all(block is block.T for block in blocks):
+        if not all(isinstance(block, SymmetricMatrix) for block in blocks):
             raise ValueError(&#39;All blocks must be symmetric&#39;)
         super().__init__(blocks)
+
+    def _scalar_multiply(self, scalar):
+        return SymmetricBlockDiagonalMatrix(
+            tuple(scalar * block for block in self._blocks))
 
     @property
     def T(self):
@@ -1260,8 +1424,24 @@ class PositiveDefiniteBlockDiagonalMatrix(
     &#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[PositiveDefinite]): Sequence of positive-definite
+                matrices defining non-zero blocks along diagonal of matrix in
+                order left-to-right.
+        &#34;&#34;&#34;
         blocks = tuple(blocks)
+        if not all(isinstance(block, PositiveDefiniteMatrix)
+                   for block in blocks):
+            raise ValueError(&#39;All blocks must be positive definite&#39;)
         super().__init__(blocks)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveDefiniteBlockDiagonalMatrix(
+                tuple(scalar * block for block in self._blocks))
+        else:
+            return super()._scalar_multiply(scalar)
 
     @property
     def sqrt(self):
@@ -1295,7 +1475,7 @@ second argument is a scalar quantity.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L9-L137" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L9-L137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Matrix(abc.ABC):
     &#34;&#34;&#34;Base class for matrix-like objects.
@@ -1445,7 +1625,7 @@ second argument is a scalar quantity.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L77-L80" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L77-L80" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def shape(self):
@@ -1459,7 +1639,7 @@ def shape(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L82-L85" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L82-L85" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -1473,7 +1653,7 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L123-L126" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L123-L126" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -1487,7 +1667,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L128-L131" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L128-L131" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -1511,7 +1691,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L140-L151" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L140-L151" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExplicitArrayMatrix(Matrix):
     &#34;&#34;&#34;Matrix with an explicit array representation.&#34;&#34;&#34;
@@ -1536,6 +1716,7 @@ def diagonal(self):
 <li><a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix">TriangularMatrix</a></li>
 <li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
 <li><a title="mici.matrices.DenseSquareMatrix" href="#mici.matrices.DenseSquareMatrix">DenseSquareMatrix</a></li>
+<li><a title="mici.matrices.DenseSymmetricMatrix" href="#mici.matrices.DenseSymmetricMatrix">DenseSymmetricMatrix</a></li>
 <li><a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix">OrthogonalMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
@@ -1550,7 +1731,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L143-L145" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L143-L145" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def array(self):
@@ -1597,7 +1778,7 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L154-L184" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L154-L184" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitArrayMatrix(Matrix):
     &#34;&#34;&#34;Matrix with an implicit array representation.&#34;&#34;&#34;
@@ -1660,7 +1841,7 @@ with it will not be able to exploit any structure in the matrix.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L165-L175" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L165-L175" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def array(self):
@@ -1715,14 +1896,15 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L187-L218" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L187-L219" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MatrixProduct(ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix implicitly defined as a product of a sequence of matrices.&#34;&#34;&#34;
 
     def __init__(self, matrices):
-        super().__init__((matrices[0].shape[0], matrices[-1].shape[1]))
         self._matrices = tuple(matrices)
+        super().__init__((self._matrices[0].shape[0],
+                          self._matrices[-1].shape[1]))
 
     @property
     def matrices(self):
@@ -1764,7 +1946,7 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L194-L196" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L195-L197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def matrices(self):
@@ -1781,7 +1963,7 @@ def matrices(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L212-L215" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L213-L216" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -1829,7 +2011,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L221-L239" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L222-L240" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareMatrix(Matrix):
     &#34;&#34;&#34;Base class for matrices with equal numbers of rows and columns.&#34;&#34;&#34;
@@ -1872,7 +2054,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L231-L239" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L232-L240" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -1933,7 +2115,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L242-L254" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L243-L255" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InvertibleMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for non-singular square matrices.&#34;&#34;&#34;
@@ -1961,9 +2143,10 @@ def log_abs_det(self):
 <li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
 <li><a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix">TriangularMatrix</a></li>
 <li><a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix">InverseTriangularMatrix</a></li>
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.DenseSquareMatrix" href="#mici.matrices.DenseSquareMatrix">DenseSquareMatrix</a></li>
 <li><a title="mici.matrices.InverseLUFactoredSquareMatrix" href="#mici.matrices.InverseLUFactoredSquareMatrix">InverseLUFactoredSquareMatrix</a></li>
+<li><a title="mici.matrices.DenseSymmetricMatrix" href="#mici.matrices.DenseSymmetricMatrix">DenseSymmetricMatrix</a></li>
 <li><a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix">OrthogonalMatrix</a></li>
 <li><a title="mici.matrices.ScaledOrthogonalMatrix" href="#mici.matrices.ScaledOrthogonalMatrix">ScaledOrthogonalMatrix</a></li>
 <li><a title="mici.matrices.EigendecomposedSymmetricMatrix" href="#mici.matrices.EigendecomposedSymmetricMatrix">EigendecomposedSymmetricMatrix</a></li>
@@ -1981,7 +2164,7 @@ defined by the original matrix object.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L245-L254" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L246-L255" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -2051,7 +2234,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L257-L293" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L258-L294" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SymmetricMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for square matrices which are equal to their transpose.&#34;&#34;&#34;
@@ -2102,7 +2285,8 @@ def inv(self):
 <li><a title="mici.matrices.PositiveDefiniteMatrix" href="#mici.matrices.PositiveDefiniteMatrix">PositiveDefiniteMatrix</a></li>
 <li><a title="mici.matrices.ScaledIdentityMatrix" href="#mici.matrices.ScaledIdentityMatrix">ScaledIdentityMatrix</a></li>
 <li><a title="mici.matrices.DiagonalMatrix" href="#mici.matrices.DiagonalMatrix">DiagonalMatrix</a></li>
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
+<li><a title="mici.matrices.DenseSymmetricMatrix" href="#mici.matrices.DenseSymmetricMatrix">DenseSymmetricMatrix</a></li>
 <li><a title="mici.matrices.EigendecomposedSymmetricMatrix" href="#mici.matrices.EigendecomposedSymmetricMatrix">EigendecomposedSymmetricMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
@@ -2113,7 +2297,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L273-L278" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L274-L279" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -2129,7 +2313,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L280-L285" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L281-L286" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -2149,7 +2333,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L287-L289" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L288-L290" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -2166,7 +2350,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L291-L293" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L292-L294" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -2213,7 +2397,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L296-L307" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L297-L308" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
     &#34;&#34;&#34;Base class for positive definite matrices.&#34;&#34;&#34;
@@ -2257,7 +2441,7 @@ matrix satisfying the above property.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L299-L307" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L300-L308" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -2343,33 +2527,43 @@ def sqrt(self):
 <dd>
 <section class="desc"><p>Matrix representing identity operator on a vector space.</p>
 <p>Array representation has ones on diagonal elements and zeros elsewhere.
-May be defined with an implicit shape reprsented by <code>(None, None)</code> which
+May be defined with an implicit shape represented by <code>(None, None)</code> which
 will allow use for subset of operations where shape is not required to be
 known.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Number of rows / columns in matrix or <code>None</code> if
+matrix is to be implicitly shaped.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L309-L359" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L311-L370" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix representing identity operator on a vector space.
 
     Array representation has ones on diagonal elements and zeros elsewhere.
-    May be defined with an implicit shape reprsented by `(None, None)` which
+    May be defined with an implicit shape represented by `(None, None)` which
     will allow use for subset of operations where shape is not required to be
     known.
     &#34;&#34;&#34;
 
     def __init__(self, size=None):
+        &#34;&#34;&#34;
+        Args:
+            size (int or None): Number of rows / columns in matrix or `None` if
+                matrix is to be implicitly shaped.
+        &#34;&#34;&#34;
         super().__init__(size)
 
     def _scalar_multiply(self, scalar):
-        return ScaledIdentityMatrix(scalar, self.shape[0])
+        if scalar &gt; 0:
+            return PositiveScaledIdentityMatrix(
+                scalar, self.shape[0])
+        else:
+            return ScaledIdentityMatrix(scalar, self.shape[0])
 
     def _left_matrix_multiply(self, other):
         return other
@@ -2430,7 +2624,7 @@ known.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L330-L332" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L341-L343" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -2447,7 +2641,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L334-L336" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L345-L347" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -2464,7 +2658,7 @@ def sqrt(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L338-L340" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L349-L351" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -2481,7 +2675,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L342-L344" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L353-L355" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -2498,7 +2692,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L346-L348" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L357-L359" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -2515,7 +2709,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L357-L359" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L368-L370" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -2578,7 +2772,7 @@ same shapes and with the same indices / keys.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L362-L398" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L373-L409" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DifferentiableMatrix(InvertibleMatrix):
     &#34;&#34;&#34;Parameterically defined matrix defining gradient of scalar operations.
@@ -2640,7 +2834,7 @@ same shapes and with the same indices / keys.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L386-L389" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L397-L400" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -2713,7 +2907,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L391-L398" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L402-L409" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def grad_quadratic_form_inv(self, vector):
@@ -2750,7 +2944,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L401-L473" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L412-L484" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScaledIdentityMatrix(
         SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
@@ -2852,7 +3046,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L434-L436" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L445-L447" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -2869,7 +3063,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L438-L440" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L449-L451" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -2886,7 +3080,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L442-L444" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L453-L455" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -2903,7 +3097,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L446-L448" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L457-L459" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -2920,7 +3114,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L457-L463" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L468-L474" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -2941,7 +3135,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L465-L467" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L476-L478" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -2987,7 +3181,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L469-L470" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L480-L481" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     return -np.sum(vector**2) / self._scalar**2</code></pre>
@@ -3015,7 +3209,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L476-L501" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L487-L512" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveScaledIdentityMatrix(
         ScaledIdentityMatrix, PositiveDefiniteMatrix):
@@ -3068,7 +3262,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L495-L497" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L506-L508" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -3085,7 +3279,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L499-L501" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L510-L512" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -3185,7 +3379,7 @@ def sqrt(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L504-L558" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L515-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalMatrix(
         SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
@@ -3269,7 +3463,7 @@ def sqrt(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L518-L520" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L529-L531" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -3286,7 +3480,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L538-L540" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L549-L551" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -3303,7 +3497,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L542-L544" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L553-L555" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -3320,7 +3514,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L546-L548" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L557-L559" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -3337,7 +3531,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L553-L555" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L564-L566" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -3391,7 +3585,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L557-L558" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L568-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     return -(self.inv @ vector)**2</code></pre>
@@ -3414,7 +3608,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L561-L584" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L572-L595" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDiagonalMatrix(DiagonalMatrix, PositiveDefiniteMatrix):
     &#34;&#34;&#34;Specialisation of `DiagonalMatrix` with positive diagonal parameter.
@@ -3465,7 +3659,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L578-L580" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L589-L591" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -3482,7 +3676,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L582-L584" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L593-L595" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -3588,7 +3782,7 @@ upper-triangular (<code>False</code>).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L587-L620" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L598-L631" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Matrix with non-zero values only in lower or upper triangle elements.&#34;&#34;&#34;
@@ -3645,7 +3839,7 @@ upper-triangular (<code>False</code>).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L607-L609" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L618-L620" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -3662,7 +3856,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L611-L613" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L622-L624" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -3679,7 +3873,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L615-L617" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L626-L628" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -3733,7 +3927,7 @@ upper-triangular (<code>False</code>).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L623-L674" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L634-L685" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Triangular matrix implicitly specified by its inverse.&#34;&#34;&#34;
@@ -3808,7 +4002,7 @@ upper-triangular (<code>False</code>).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L653-L655" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L664-L666" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -3825,7 +4019,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L657-L660" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L668-L671" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -3843,7 +4037,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L665-L667" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L676-L678" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -3860,7 +4054,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L669-L671" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L680-L682" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -3885,181 +4079,83 @@ def log_abs_det(self):
 </dd>
 </dl>
 </dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix"><code class="flex name class">
-<span>class <span class="ident">BaseTriangularFactoredDefiniteMatrix</span></span>
-<span>(</span><span>size, sign=1)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Base class for square matrices which are equal to their transpose.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L677-L698" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
-
-    def __init__(self, size, sign=1):
-        assert sign == 1 or sign == -1, &#39;sign must be equal to +1 or -1&#39;
-        self._sign = sign
-        super().__init__(size=size)
-
-    @property
-    def factor(self):
-        return self._factor
-
-    @property
-    def inv(self):
-        return TriangularFactoredDefiniteMatrix(
-            factor=self.factor.inv.T, sign=self._sign)
-
-    @property
-    def log_abs_det(self):
-        return 2 * self.factor.log_abs_det
-
-    def __str__(self):
-        return f&#39;(shape={self.shape}, sign={self._sign})&#39;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
-<li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
-<li><a title="mici.matrices.SquareMatrix" href="#mici.matrices.SquareMatrix">SquareMatrix</a></li>
-<li><a title="mici.matrices.Matrix" href="#mici.matrices.Matrix">Matrix</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></li>
-<li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.factor"><code class="name">var <span class="ident">factor</span></code></dt>
-<dd>
-<section class="desc"></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L684-L686" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def factor(self):
-    return self._factor</code></pre>
-</details>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></code>.<code><a title="mici.matrices.InvertibleMatrix.inv" href="#mici.matrices.InvertibleMatrix.inv">inv</a></code>
-</p>
-<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L688-L691" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def inv(self):
-    return TriangularFactoredDefiniteMatrix(
-        factor=self.factor.inv.T, sign=self._sign)</code></pre>
-</details>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.log_abs_det" href="#mici.matrices.SymmetricMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L693-L695" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def log_abs_det(self):
-    return 2 * self.factor.log_abs_det</code></pre>
-</details>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigval" href="#mici.matrices.SymmetricMatrix.eigval">eigval</a></code>
-</p>
-<section class="desc inherited"><p>Eigenvalues of matrix as a 1D array.</p></section>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigvec" href="#mici.matrices.SymmetricMatrix.eigvec">eigvec</a></code>
-</p>
-<section class="desc inherited"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.T" href="#mici.matrices.SymmetricMatrix.T">T</a></code>
-</p>
-<section class="desc inherited"><p>Transpose of matrix.</p></section>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.shape" href="#mici.matrices.SymmetricMatrix.shape">shape</a></code>
-</p>
-<section class="desc inherited"><p>Shape of matrix as a tuple <code>(num_rows, num_columns)</code>.</p></section>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.array" href="#mici.matrices.SymmetricMatrix.array">array</a></code>
-</p>
-<section class="desc inherited"><p>Full dense representation of matrix as a 2D array.</p></section>
-</dd>
-<dt id="mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.diagonal" href="#mici.matrices.SymmetricMatrix.diagonal">diagonal</a></code>
-</p>
-<section class="desc inherited"><p>Diagonal of matrix as a 1D array.</p></section>
-</dd>
-</dl>
-</dd>
 <dt id="mici.matrices.TriangularFactoredDefiniteMatrix"><code class="flex name class">
 <span>class <span class="ident">TriangularFactoredDefiniteMatrix</span></span>
-<span>(</span><span>factor, lower=True, sign=1)</span>
+<span>(</span><span>factor, sign=1, factor_is_lower=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class for square matrices which are equal to their transpose.</p>
+<section class="desc"><p>Matrix specified as a signed self-product of a triangular factor.</p>
+<p>The matrix is assumed to have the form</p>
+<pre><code>matrix = sign * factor @ factor.T
+</code></pre>
+<p>for and upper- or lower-trinagular matrix <code>factor</code> and signed binary value
+<code>sign</code> (i.e. <code>sign == +1 or sign == -1</code>), with the matrix being positive
+definite if <code>sign == +1</code> and negative definite if <code>sign == -1</code> under the
+assumption that <code>factor</code> is non-singular.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>factor</code></strong> :&ensp;<code>array</code> or <a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> or <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a></dt>
+<dd>The
+triangular factor parameterising the matrix. Defined either a
+2D array, in which case only the lower- or upper-triangular
+elements are used depending on the value of the
+<code>factor_is_lower</code> boolean keyword argument, or as a
+<a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> / <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a> instance in
+which case <code>factor_is_lower</code> is ignored, with <code>factor.lower</code>
+instead determining if the factor is lower- or
+upper-triangular.</dd>
+<dt><strong><code>sign</code></strong> :&ensp;<code>int</code></dt>
+<dd>+/-1 multiplier of factor product, corresponding
+respectively to a strictly positive- or negative-definite
+matrix.</dd>
+<dt><strong><code>factor_is_lower</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Whether the array <code>factor</code> is lower-
+or upper-triangular.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L701-L732" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L714-L782" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularFactoredDefiniteMatrix(
-        BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
+        _BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
         ImplicitArrayMatrix):
+    &#34;&#34;&#34;Matrix specified as a signed self-product of a triangular factor.
 
-    def __init__(self, factor, lower=True, sign=1):
+    The matrix is assumed to have the form
+
+        matrix = sign * factor @ factor.T
+
+    for and upper- or lower-trinagular matrix `factor` and signed binary value
+    `sign` (i.e. `sign == +1 or sign == -1`), with the matrix being positive
+    definite if `sign == +1` and negative definite if `sign == -1` under the
+    assumption that `factor` is non-singular.
+    &#34;&#34;&#34;
+
+    def __init__(self, factor, sign=1, factor_is_lower=None):
+        &#34;&#34;&#34;
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            sign (int): +/-1 multiplier of factor product, corresponding
+                respectively to a strictly positive- or negative-definite
+                matrix.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        &#34;&#34;&#34;
         if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
-            factor = TriangularMatrix(factor, lower)
+            if factor_is_lower not in (True, False):
+                raise ValueError(
+                    &#39;For array `factor` parameter `factor_is_lower` must be &#39;
+                    &#39;specified as a boolean value.&#39;)
+            factor = TriangularMatrix(factor, factor_is_lower)
         self._factor = factor
         super().__init__(factor.shape[0], sign=sign)
 
@@ -4076,19 +4172,24 @@ def log_abs_det(self):
 
     @property
     def grad_log_abs_det(self):
-        return 2 * self.factor.inv.T.array
+        return np.diag(2 / self.factor.diagonal)
 
     def grad_quadratic_form_inv(self, vector):
         inv_factor_vector = self.factor.inv @ vector
         inv_vector = self.inv @ vector
-        return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)
+        if self.factor.lower:
+            return -2 * self._sign * np.tril(
+                np.outer(inv_vector, inv_factor_vector))
+        else:
+            return -2 * self._sign * np.triu(
+                np.outer(inv_vector, inv_factor_vector))
 
     def _construct_array(self):
         return self._sign * (self.factor @ self.factor.array.T)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
 <li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
 <li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
@@ -4113,34 +4214,18 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L722-L724" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L767-L769" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
-    return 2 * self.factor.inv.T.array</code></pre>
+    return np.diag(2 / self.factor.diagonal)</code></pre>
 </details>
-</dd>
-<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv">inv</a></code>
-</p>
-<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
-</dd>
-<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.TriangularFactoredDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval">eigval</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigval" href="#mici.matrices.SymmetricMatrix.eigval">eigval</a></code>
 </p>
 <section class="desc inherited"><p>Eigenvalues of matrix as a 1D array.</p></section>
 </dd>
@@ -4148,7 +4233,7 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec">eigvec</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigvec" href="#mici.matrices.SymmetricMatrix.eigvec">eigvec</a></code>
 </p>
 <section class="desc inherited"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
 </dd>
@@ -4156,15 +4241,23 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.T" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.T">T</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.T" href="#mici.matrices.SymmetricMatrix.T">T</a></code>
 </p>
 <section class="desc inherited"><p>Transpose of matrix.</p></section>
+</dd>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.log_abs_det" href="#mici.matrices.SymmetricMatrix.log_abs_det">log_abs_det</a></code>
+</p>
+<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.TriangularFactoredDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape">shape</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.shape" href="#mici.matrices.SymmetricMatrix.shape">shape</a></code>
 </p>
 <section class="desc inherited"><p>Shape of matrix as a tuple <code>(num_rows, num_columns)</code>.</p></section>
 </dd>
@@ -4172,7 +4265,7 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.array" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.array">array</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.array" href="#mici.matrices.SymmetricMatrix.array">array</a></code>
 </p>
 <section class="desc inherited"><p>Full dense representation of matrix as a 2D array.</p></section>
 </dd>
@@ -4180,9 +4273,17 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal">diagonal</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.diagonal" href="#mici.matrices.SymmetricMatrix.diagonal">diagonal</a></code>
 </p>
 <section class="desc inherited"><p>Diagonal of matrix as a 1D array.</p></section>
+</dd>
+<dt id="mici.matrices.TriangularFactoredDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></code>.<code><a title="mici.matrices.DifferentiableMatrix.inv" href="#mici.matrices.DifferentiableMatrix.inv">inv</a></code>
+</p>
+<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -4199,37 +4300,83 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L726-L729" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L771-L779" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_factor_vector = self.factor.inv @ vector
     inv_vector = self.inv @ vector
-    return -2 * self._sign * np.outer(inv_vector, inv_factor_vector)</code></pre>
+    if self.factor.lower:
+        return -2 * self._sign * np.tril(
+            np.outer(inv_vector, inv_factor_vector))
+    else:
+        return -2 * self._sign * np.triu(
+            np.outer(inv_vector, inv_factor_vector))</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="mici.matrices.TriangularFactoredPositiveDefiniteMatrix"><code class="flex name class">
 <span>class <span class="ident">TriangularFactoredPositiveDefiniteMatrix</span></span>
-<span>(</span><span>factor, lower=True)</span>
+<span>(</span><span>factor, factor_is_lower=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class for positive definite matrices.</p>
+<section class="desc"><p>Positive definite matrix parameterised a triangular matrix product.</p>
+<p>The matrix is assumed to have the parameterisation</p>
+<pre><code>matrix = factor @ factor.T
+</code></pre>
+<p>where <code>factor</code> is an upper- or lower-triangular matrix. Note for the case
+<code>factor</code> is lower-triangular this corresponds to the standard Cholesky
+factorisation of a positive definite matrix.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>factor</code></strong> :&ensp;<code>array</code> or <a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> or <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a></dt>
+<dd>The
+triangular factor parameterising the matrix. Defined either a
+2D array, in which case only the lower- or upper-triangular
+elements are used depending on the value of the
+<code>factor_is_lower</code> boolean keyword argument, or as a
+<a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> / <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a> instance in
+which case <code>factor_is_lower</code> is ignored, with <code>factor.lower</code>
+instead determining if the factor is lower- or
+upper-triangular.</dd>
+<dt><strong><code>factor_is_lower</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Whether the array <code>factor</code> is lower-
+or upper-triangular.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L735-L755" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L785-L829" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularFactoredPositiveDefiniteMatrix(
         TriangularFactoredDefiniteMatrix, PositiveDefiniteMatrix):
+    &#34;&#34;&#34;Positive definite matrix parameterised a triangular matrix product.
 
-    def __init__(self, factor, lower=True):
-        super().__init__(factor, lower=lower, sign=1)
+    The matrix is assumed to have the parameterisation
+
+        matrix = factor @ factor.T
+
+    where `factor` is an upper- or lower-triangular matrix. Note for the case
+    `factor` is lower-triangular this corresponds to the standard Cholesky
+    factorisation of a positive definite matrix.
+    &#34;&#34;&#34;
+
+    def __init__(self, factor, factor_is_lower=True):
+        &#34;&#34;&#34;
+        Args:
+            factor (array or TriangularMatrix or InverseTriangularMatrix): The
+                triangular factor parameterising the matrix. Defined either a
+                2D array, in which case only the lower- or upper-triangular
+                elements are used depending on the value of the
+                `factor_is_lower` boolean keyword argument, or as a
+                `TriangularMatrix` / `InverseTriangularMatrix` instance in
+                which case `factor_is_lower` is ignored, with `factor.lower`
+                instead determining if the factor is lower- or
+                upper-triangular.
+            factor_is_lower (boolean): Whether the array `factor` is lower-
+                or upper-triangular.
+        &#34;&#34;&#34;
+        super().__init__(factor, sign=1, factor_is_lower=factor_is_lower)
 
     def _scalar_multiply(self, scalar):
         if scalar &gt; 0:
@@ -4250,7 +4397,7 @@ def grad_log_abs_det(self):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></li>
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.PositiveDefiniteMatrix" href="#mici.matrices.PositiveDefiniteMatrix">PositiveDefiniteMatrix</a></li>
 <li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
 <li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
@@ -4272,7 +4419,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L748-L751" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L822-L825" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -4290,7 +4437,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L753-L755" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L827-L829" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -4304,14 +4451,6 @@ def sqrt(self):
 <code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code>
 </p>
 <section class="desc inherited"><p>Gradient of logarithm of absolute value of determinant of matrix.</p></section>
-</dd>
-<dt id="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
 <dd>
@@ -4336,6 +4475,14 @@ def sqrt(self):
 <code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.T" href="#mici.matrices.TriangularFactoredDefiniteMatrix.T">T</a></code>
 </p>
 <section class="desc inherited"><p>Transpose of matrix.</p></section>
+</dd>
+<dt id="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code>
+</p>
+<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
 <dd>
@@ -4378,45 +4525,81 @@ def sqrt(self):
 </dd>
 <dt id="mici.matrices.DenseDefiniteMatrix"><code class="flex name class">
 <span>class <span class="ident">DenseDefiniteMatrix</span></span>
-<span>(</span><span>array, sign=1, factor=None)</span>
+<span>(</span><span>array, factor=None, is_posdef=True)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class for square matrices which are equal to their transpose.</p>
+<section class="desc"><p>Definite matrix specified by a dense 2D array.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>array</code></strong> :&ensp;<code>array</code></dt>
+<dd>2D array specifying matrix entries.</dd>
+<dt><strong><code>factor</code></strong> :&ensp;<code>None</code> or <a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> or <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a></dt>
+<dd>
+<p>Optional argument giving the triangular factorisation of the
+matrix such that <code>matrix = factor @ factor.T</code> if
+<code>is_posdef=True</code> or <code>matrix = -factor @ factor.T</code> otherwise.
+If not pre-computed and specified at initialisation a
+factorisation will only be computed when first required by
+an operation which depends on the factor.</p>
+</dd>
+<dt><strong><code>is_posdef</code></strong> :&ensp;<code>boolean</code></dt>
+<dd>Whether matrix (and so corresponding array
+representation) is positive definite, with the matrix assumed
+to be negative-definite if not. This is <strong>not</strong> checked on
+initialisation, and so if <code>array</code> is positive (negative)
+definite and <code>is_posdef</code> is <code>False</code> (<code>True</code>) then a
+<code>LinAlgError</code> exception will be if a later attempt is made to
+factorise the matrix.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L758-L791" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L832-L884" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class DenseDefiniteMatrix(BaseTriangularFactoredDefiniteMatrix,
+<pre><code class="python">class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
                           DifferentiableMatrix, ExplicitArrayMatrix):
+    &#34;&#34;&#34;Definite matrix specified by a dense 2D array.&#34;&#34;&#34;
 
-    def __init__(self, array, sign=1, factor=None):
-        super().__init__(array.shape[0], sign=sign)
+    def __init__(self, array, factor=None, is_posdef=True):
+        &#34;&#34;&#34;
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T` if
+                `is_posdef=True` or `matrix = -factor @ factor.T` otherwise.
+                If not pre-computed and specified at initialisation a
+                factorisation will only be computed when first required by
+                an operation which depends on the factor.
+            is_posdef (boolean): Whether matrix (and so corresponding array
+                representation) is positive definite, with the matrix assumed
+                to be negative-definite if not. This is **not** checked on
+                initialisation, and so if `array` is positive (negative)
+                definite and `is_posdef` is `False` (`True`) then a
+                `LinAlgError` exception will be if a later attempt is made to
+                factorise the matrix.
+        &#34;&#34;&#34;
+        super().__init__(array.shape[0], sign=1 if is_posdef else -1)
         self._array = array
         self._factor = factor
 
     def _scalar_multiply(self, scalar):
         if (scalar &gt; 0) == (self._sign == 1):
-            return DenseDefiniteMatrix(
-                scalar * self.array, 1,
+            return DensePositiveDefiniteMatrix(
+                scalar * self.array,
                 None if self._factor is None else
                 abs(scalar)**0.5 * self._factor)
         else:
             return DenseDefiniteMatrix(
-                scalar * self.array, -1,
+                scalar * self.array,
                 None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
+                abs(scalar)**0.5 * self._factor, is_posdef=False)
 
     @property
     def factor(self):
         if self._factor is None:
             self._factor = TriangularMatrix(
-                nla.cholesky(self._sign * self._array), True)
+                nla.cholesky(self._sign * self._array), lower=True)
         return self._factor
 
     @property
@@ -4429,7 +4612,7 @@ def sqrt(self):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
 <li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
 <li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
@@ -4441,23 +4624,22 @@ def sqrt(self):
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="mici.matrices.DensePositiveDefiniteMatrix" href="#mici.matrices.DensePositiveDefiniteMatrix">DensePositiveDefiniteMatrix</a></li>
-<li><a title="mici.matrices.DenseNegativeDefiniteMatrix" href="#mici.matrices.DenseNegativeDefiniteMatrix">DenseNegativeDefiniteMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
 <dt id="mici.matrices.DenseDefiniteMatrix.factor"><code class="name">var <span class="ident">factor</span></code></dt>
 <dd>
-<section class="desc"></section>
+<section class="desc"><p>Triangular matrix with <code>matrix = matrix.factor @ matrix.factor.T</code></p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L778-L783" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L871-L876" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def factor(self):
     if self._factor is None:
         self._factor = TriangularMatrix(
-            nla.cholesky(self._sign * self._array), True)
+            nla.cholesky(self._sign * self._array), lower=True)
     return self._factor</code></pre>
 </details>
 </dd>
@@ -4471,34 +4653,18 @@ def factor(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L785-L787" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L878-L880" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
     return self.inv.array</code></pre>
 </details>
 </dd>
-<dt id="mici.matrices.DenseDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv">inv</a></code>
-</p>
-<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
-</dd>
-<dt id="mici.matrices.DenseDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
-</dd>
 <dt id="mici.matrices.DenseDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval">eigval</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigval" href="#mici.matrices.SymmetricMatrix.eigval">eigval</a></code>
 </p>
 <section class="desc inherited"><p>Eigenvalues of matrix as a 1D array.</p></section>
 </dd>
@@ -4506,7 +4672,7 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec">eigvec</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigvec" href="#mici.matrices.SymmetricMatrix.eigvec">eigvec</a></code>
 </p>
 <section class="desc inherited"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
 </dd>
@@ -4514,15 +4680,23 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.T" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.T">T</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.T" href="#mici.matrices.SymmetricMatrix.T">T</a></code>
 </p>
 <section class="desc inherited"><p>Transpose of matrix.</p></section>
+</dd>
+<dt id="mici.matrices.DenseDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.log_abs_det" href="#mici.matrices.SymmetricMatrix.log_abs_det">log_abs_det</a></code>
+</p>
+<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.DenseDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape">shape</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.shape" href="#mici.matrices.SymmetricMatrix.shape">shape</a></code>
 </p>
 <section class="desc inherited"><p>Shape of matrix as a tuple <code>(num_rows, num_columns)</code>.</p></section>
 </dd>
@@ -4530,7 +4704,7 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.array" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.array">array</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.array" href="#mici.matrices.SymmetricMatrix.array">array</a></code>
 </p>
 <section class="desc inherited"><p>Full dense representation of matrix as a 2D array.</p></section>
 </dd>
@@ -4538,9 +4712,17 @@ def grad_log_abs_det(self):
 <dd>
 <p class="inheritance">
 <em>Inherited from:</em>
-<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code>.<code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal">diagonal</a></code>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.diagonal" href="#mici.matrices.SymmetricMatrix.diagonal">diagonal</a></code>
 </p>
 <section class="desc inherited"><p>Diagonal of matrix as a 1D array.</p></section>
+</dd>
+<dt id="mici.matrices.DenseDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></code>.<code><a title="mici.matrices.DifferentiableMatrix.inv" href="#mici.matrices.DifferentiableMatrix.inv">inv</a></code>
+</p>
+<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -4557,7 +4739,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L789-L791" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L882-L884" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_metric_vector = self.inv @ vector
@@ -4571,33 +4753,45 @@ def grad_log_abs_det(self):
 <span>(</span><span>array, factor=None)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Base class for positive definite matrices.</p>
+<section class="desc"><p>Positive-definite matrix specified by a dense 2D array.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>array</code></strong> :&ensp;<code>array</code></dt>
+<dd>2D array specifying matrix entries.</dd>
+<dt><strong><code>factor</code></strong> :&ensp;<code>None</code> or <a title="mici.matrices.TriangularMatrix" href="#mici.matrices.TriangularMatrix"><code>TriangularMatrix</code></a> or <a title="mici.matrices.InverseTriangularMatrix" href="#mici.matrices.InverseTriangularMatrix"><code>InverseTriangularMatrix</code></a></dt>
+<dd>
+<p>Optional argument giving the triangular factorisation of the
+matrix such that <code>matrix = factor @ factor.T</code>. If not
+pre-computed and specified at initialisation a factorisation
+will only be computed when first required by an operation which
+depends on the factor.</p>
+</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L794-L813" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L887-L910" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
+    &#34;&#34;&#34;Positive-definite matrix specified by a dense 2D array.&#34;&#34;&#34;
 
     def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=1, factor=factor)
+        &#34;&#34;&#34;
+        Args:
+            array (array): 2D array specifying matrix entries.
+            factor (None or TriangularMatrix or InverseTriangularMatrix):
+                Optional argument giving the triangular factorisation of the
+                matrix such that `matrix = factor @ factor.T`. If not
+                pre-computed and specified at initialisation a factorisation
+                will only be computed when first required by an operation which
+                depends on the factor.
+        &#34;&#34;&#34;
+        super().__init__(array=array, factor=factor, is_posdef=True)
 
-    def _scalar_multiply(self, scalar):
-        if scalar &gt; 0:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
+    @property
+    def inv(self):
+        return TriangularFactoredPositiveDefiniteMatrix(
+            factor=self.factor.inv.T)
 
     @property
     def sqrt(self):
@@ -4606,7 +4800,7 @@ def grad_log_abs_det(self):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
+<li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.PositiveDefiniteMatrix" href="#mici.matrices.PositiveDefiniteMatrix">PositiveDefiniteMatrix</a></li>
 <li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
 <li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
@@ -4618,6 +4812,24 @@ def grad_log_abs_det(self):
 </ul>
 <h3>Instance variables</h3>
 <dl>
+<dt id="mici.matrices.DensePositiveDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.inv" href="#mici.matrices.DenseDefiniteMatrix.inv">inv</a></code>
+</p>
+<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L903-L906" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return TriangularFactoredPositiveDefiniteMatrix(
+        factor=self.factor.inv.T)</code></pre>
+</details>
+</dd>
 <dt id="mici.matrices.DensePositiveDefiniteMatrix.sqrt"><code class="name">var <span class="ident">sqrt</span></code></dt>
 <dd>
 <p class="inheritance">
@@ -4628,12 +4840,20 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L811-L813" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L908-L910" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
     return self.factor</code></pre>
 </details>
+</dd>
+<dt id="mici.matrices.DensePositiveDefiniteMatrix.factor"><code class="name">var <span class="ident">factor</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.factor" href="#mici.matrices.DenseDefiniteMatrix.factor">factor</a></code>
+</p>
+<section class="desc inherited"><p>Triangular matrix with <code>matrix = matrix.factor @ matrix.factor.T</code></p></section>
 </dd>
 <dt id="mici.matrices.DensePositiveDefiniteMatrix.grad_log_abs_det"><code class="name">var <span class="ident">grad_log_abs_det</span></code></dt>
 <dd>
@@ -4642,22 +4862,6 @@ def sqrt(self):
 <code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code>
 </p>
 <section class="desc inherited"><p>Gradient of logarithm of absolute value of determinant of matrix.</p></section>
-</dd>
-<dt id="mici.matrices.DensePositiveDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.inv" href="#mici.matrices.DenseDefiniteMatrix.inv">inv</a></code>
-</p>
-<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
-</dd>
-<dt id="mici.matrices.DensePositiveDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.DensePositiveDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
 <dd>
@@ -4682,6 +4886,14 @@ def sqrt(self):
 <code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.T" href="#mici.matrices.DenseDefiniteMatrix.T">T</a></code>
 </p>
 <section class="desc inherited"><p>Transpose of matrix.</p></section>
+</dd>
+<dt id="mici.matrices.DensePositiveDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.log_abs_det">log_abs_det</a></code>
+</p>
+<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
 </dd>
 <dt id="mici.matrices.DensePositiveDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
 <dd>
@@ -4722,140 +4934,6 @@ def sqrt(self):
 </dd>
 </dl>
 </dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix"><code class="flex name class">
-<span>class <span class="ident">DenseNegativeDefiniteMatrix</span></span>
-<span>(</span><span>array, factor=None)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Base class for square matrices which are equal to their transpose.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L816-L831" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class DenseNegativeDefiniteMatrix(DenseDefiniteMatrix):
-
-    def __init__(self, array, factor=None):
-        super().__init__(array=array, sign=-1, factor=factor)
-
-    def _scalar_multiply(self, scalar):
-        if scalar &gt; 0:
-            return DenseNegativeDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)
-        else:
-            return DensePositiveDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else
-                abs(scalar)**0.5 * self._factor)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></li>
-<li><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></li>
-<li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
-<li><a title="mici.matrices.DifferentiableMatrix" href="#mici.matrices.DifferentiableMatrix">DifferentiableMatrix</a></li>
-<li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
-<li><a title="mici.matrices.SquareMatrix" href="#mici.matrices.SquareMatrix">SquareMatrix</a></li>
-<li><a title="mici.matrices.ExplicitArrayMatrix" href="#mici.matrices.ExplicitArrayMatrix">ExplicitArrayMatrix</a></li>
-<li><a title="mici.matrices.Matrix" href="#mici.matrices.Matrix">Matrix</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.grad_log_abs_det"><code class="name">var <span class="ident">grad_log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Gradient of logarithm of absolute value of determinant of matrix.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.inv" href="#mici.matrices.DenseDefiniteMatrix.inv">inv</a></code>
-</p>
-<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.log_abs_det">log_abs_det</a></code>
-</p>
-<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.eigval" href="#mici.matrices.DenseDefiniteMatrix.eigval">eigval</a></code>
-</p>
-<section class="desc inherited"><p>Eigenvalues of matrix as a 1D array.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.eigvec" href="#mici.matrices.DenseDefiniteMatrix.eigvec">eigvec</a></code>
-</p>
-<section class="desc inherited"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.T" href="#mici.matrices.DenseDefiniteMatrix.T">T</a></code>
-</p>
-<section class="desc inherited"><p>Transpose of matrix.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.shape" href="#mici.matrices.DenseDefiniteMatrix.shape">shape</a></code>
-</p>
-<section class="desc inherited"><p>Shape of matrix as a tuple <code>(num_rows, num_columns)</code>.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.array" href="#mici.matrices.DenseDefiniteMatrix.array">array</a></code>
-</p>
-<section class="desc inherited"><p>Full dense representation of matrix as a 2D array.</p></section>
-</dd>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.diagonal" href="#mici.matrices.DenseDefiniteMatrix.diagonal">diagonal</a></code>
-</p>
-<section class="desc inherited"><p>Diagonal of matrix as a 1D array.</p></section>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="mici.matrices.DenseNegativeDefiniteMatrix.grad_quadratic_form_inv"><code class="name flex">
-<span>def <span class="ident">grad_quadratic_form_inv</span></span>(<span>self, vector)</span>
-</code></dt>
-<dd>
-<p class="inheritance">
-<em>Inherited from:</em>
-<code><a title="mici.matrices.DenseDefiniteMatrix" href="#mici.matrices.DenseDefiniteMatrix">DenseDefiniteMatrix</a></code>.<code><a title="mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code>
-</p>
-<section class="desc inherited"><p>Gradient of quadratic form <code>vector @ matrix.inv @ vector</code> …</p></section>
-</dd>
-</dl>
-</dd>
 <dt id="mici.matrices.DenseSquareMatrix"><code class="flex name class">
 <span>class <span class="ident">DenseSquareMatrix</span></span>
 <span>(</span><span>array, lu_and_piv=None, lu_transposed=None)</span>
@@ -4881,7 +4959,7 @@ or its transpose.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L834-L889" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L913-L968" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Dense non-singular square matrix.&#34;&#34;&#34;
@@ -4956,7 +5034,7 @@ or its transpose.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L866-L872" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L945-L951" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def lu_and_piv(self):
@@ -4977,7 +5055,7 @@ def lu_and_piv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L874-L877" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L953-L956" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -4995,7 +5073,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L879-L883" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L958-L962" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -5014,7 +5092,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L885-L889" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L964-L968" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5074,7 +5152,7 @@ array or transpose of inverse of array.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L892-L946" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L971-L1025" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix implicitly defined by LU factorisation of inverse.&#34;&#34;&#34;
@@ -5152,7 +5230,7 @@ array or transpose of inverse of array.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L930-L932" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1009-L1011" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -5169,7 +5247,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L937-L940" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1016-L1019" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5187,7 +5265,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L942-L946" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1021-L1025" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -5222,6 +5300,153 @@ def T(self):
 </dd>
 </dl>
 </dd>
+<dt id="mici.matrices.DenseSymmetricMatrix"><code class="flex name class">
+<span>class <span class="ident">DenseSymmetricMatrix</span></span>
+<span>(</span><span>array, eigvec=None, eigval=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Dense non-singular symmetric matrix.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>array</code></strong> :&ensp;<code>array</code></dt>
+<dd>Explicit 2D array representation of matrix.</dd>
+<dt><strong><code>eigvec</code></strong> :&ensp;<code>None</code> or <code>array</code> or <a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix"><code>OrthogonalMatrix</code></a></dt>
+<dd>Optional. If specified
+either a 2D array or an <a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix"><code>OrthogonalMatrix</code></a> instance, in both
+cases the columns of the matrix corresponding to the
+orthonormal set of eigenvectors of the matrix being
+constructed.</dd>
+<dt><strong><code>eigval</code></strong> :&ensp;<code>None</code> or <code>array</code></dt>
+<dd>Optional. If specified a 1D array
+containing the eigenvalues of the matrix being constructed,
+with <code>eigval[i]</code> the eigenvalue associated with column <code>i</code> of
+<code>eigvec</code>.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1028-L1060" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DenseSymmetricMatrix(
+        SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
+    &#34;&#34;&#34;Dense non-singular symmetric matrix.&#34;&#34;&#34;
+
+    def __init__(self, array, eigvec=None, eigval=None):
+        &#34;&#34;&#34;
+        Args:
+            array (array): Explicit 2D array representation of matrix.
+            eigvec (None or array or OrthogonalMatrix): Optional. If specified
+                either a 2D array or an `OrthogonalMatrix` instance, in both
+                cases the columns of the matrix corresponding to the
+                orthonormal set of eigenvectors of the matrix being
+                constructed.
+            eigval (None or array): Optional. If specified a 1D array
+                containing the eigenvalues of the matrix being constructed,
+                with `eigval[i]` the eigenvalue associated with column `i` of
+                `eigvec`.
+        &#34;&#34;&#34;
+        self._array = array
+        super().__init__(array.shape[0])
+        if isinstance(eigvec, np.ndarray):
+            eigvec = OrthogonalMatrix(eigvec)
+        self._eigvec = eigvec
+        self._eigval = eigval
+
+    def _scalar_multiply(self, scalar):
+        return DenseSymmetricMatrix(
+            self.array * scalar, self._eigvec,
+            None if self._eigval is None else self._eigval * scalar)
+
+    @property
+    def inv(self):
+        return EigendecomposedSymmetricMatrix(self.eigvec, 1 / self.eigval)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
+<li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
+<li><a title="mici.matrices.SquareMatrix" href="#mici.matrices.SquareMatrix">SquareMatrix</a></li>
+<li><a title="mici.matrices.ExplicitArrayMatrix" href="#mici.matrices.ExplicitArrayMatrix">ExplicitArrayMatrix</a></li>
+<li><a title="mici.matrices.Matrix" href="#mici.matrices.Matrix">Matrix</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.matrices.DenseSymmetricMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></code>.<code><a title="mici.matrices.InvertibleMatrix.inv" href="#mici.matrices.InvertibleMatrix.inv">inv</a></code>
+</p>
+<section class="desc inherited"><p>Inverse of matrix as a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object …</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1058-L1060" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def inv(self):
+    return EigendecomposedSymmetricMatrix(self.eigvec, 1 / self.eigval)</code></pre>
+</details>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigval" href="#mici.matrices.SymmetricMatrix.eigval">eigval</a></code>
+</p>
+<section class="desc inherited"><p>Eigenvalues of matrix as a 1D array.</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.eigvec" href="#mici.matrices.SymmetricMatrix.eigvec">eigvec</a></code>
+</p>
+<section class="desc inherited"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.T"><code class="name">var <span class="ident">T</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.T" href="#mici.matrices.SymmetricMatrix.T">T</a></code>
+</p>
+<section class="desc inherited"><p>Transpose of matrix.</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.log_abs_det"><code class="name">var <span class="ident">log_abs_det</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.log_abs_det" href="#mici.matrices.SymmetricMatrix.log_abs_det">log_abs_det</a></code>
+</p>
+<section class="desc inherited"><p>Logarithm of absolute value of determinant of matrix …</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.shape"><code class="name">var <span class="ident">shape</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.shape" href="#mici.matrices.SymmetricMatrix.shape">shape</a></code>
+</p>
+<section class="desc inherited"><p>Shape of matrix as a tuple <code>(num_rows, num_columns)</code>.</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.array"><code class="name">var <span class="ident">array</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.array" href="#mici.matrices.SymmetricMatrix.array">array</a></code>
+</p>
+<section class="desc inherited"><p>Full dense representation of matrix as a 2D array.</p></section>
+</dd>
+<dt id="mici.matrices.DenseSymmetricMatrix.diagonal"><code class="name">var <span class="ident">diagonal</span></code></dt>
+<dd>
+<p class="inheritance">
+<em>Inherited from:</em>
+<code><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></code>.<code><a title="mici.matrices.SymmetricMatrix.diagonal" href="#mici.matrices.SymmetricMatrix.diagonal">diagonal</a></code>
+</p>
+<section class="desc inherited"><p>Diagonal of matrix as a 1D array.</p></section>
+</dd>
+</dl>
+</dd>
 <dt id="mici.matrices.OrthogonalMatrix"><code class="flex name class">
 <span>class <span class="ident">OrthogonalMatrix</span></span>
 <span>(</span><span>array)</span>
@@ -5236,7 +5461,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L949-L973" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1063-L1087" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix with columns and rows that are orthogonal unit vectors.&#34;&#34;&#34;
@@ -5284,7 +5509,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L963-L965" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1077-L1079" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -5301,7 +5526,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L967-L969" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1081-L1083" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -5318,7 +5543,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L971-L973" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1085-L1087" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5357,20 +5582,40 @@ def inv(self):
 </code></dt>
 <dd>
 <section class="desc"><p>Matrix corresponding to orthogonal matrix multiplied by a scalar.</p>
+<p>Matrix is assumed to have the paramterisation</p>
+<pre><code>matrix = scalar * orth_array
+</code></pre>
+<p>where <code>scalar</code> is a real-valued scalar and <code>orth_array</code> is an orthogonal
+matrix represented as a square 2D array.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>scalar</code></strong> :&ensp;<code>float</code></dt>
+<dd>Scalar multiplier as a floating point value.</dd>
+<dt><strong><code>orth_array</code></strong> :&ensp;<code>array</code></dt>
+<dd>2D array representation of orthogonal matrix.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L976-L1010" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1090-L1137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
-    &#34;&#34;&#34;Matrix corresponding to orthogonal matrix multiplied by a scalar.&#34;&#34;&#34;
+    &#34;&#34;&#34;Matrix corresponding to orthogonal matrix multiplied by a scalar.
+
+    Matrix is assumed to have the paramterisation
+
+        matrix = scalar * orth_array
+
+    where `scalar` is a real-valued scalar and `orth_array` is an orthogonal
+    matrix represented as a square 2D array.
+    &#34;&#34;&#34;
 
     def __init__(self, scalar, orth_array):
+        &#34;&#34;&#34;
+        Args:
+            scalar (float): Scalar multiplier as a floating point value.
+            orth_array (array): 2D array representation of orthogonal matrix.
+        &#34;&#34;&#34;
         self._scalar = scalar
         self._orth_array = orth_array
         super().__init__(orth_array.shape[0])
@@ -5423,7 +5668,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L996-L998" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1123-L1125" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -5440,7 +5685,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1000-L1002" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1127-L1129" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -5457,7 +5702,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1004-L1006" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1131-L1133" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -5474,7 +5719,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1008-L1010" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1135-L1137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5505,6 +5750,12 @@ def inv(self):
 </code></dt>
 <dd>
 <section class="desc"><p>Symmetric matrix parameterised by its eigendecomposition.</p>
+<p>The matrix is assumed to have the parameterisation</p>
+<pre><code>matrix = eigvec @ diag(eigval) @ eigvec.T
+</code></pre>
+<p>where <code>eigvec</code> is an orthogonal matrix, with columns corresponding to
+the eigenvectors of <code>matrix</code> and <code>eigval</code> is 1D array of the corresponding
+eigenvalues of <code>matrix</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>eigvec</code></strong> :&ensp;<code>array</code> or <a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix"><code>OrthogonalMatrix</code></a></dt>
@@ -5520,11 +5771,20 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1013-L1057" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1140-L1193" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EigendecomposedSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ImplicitArrayMatrix):
-    &#34;&#34;&#34;Symmetric matrix parameterised by its eigendecomposition.&#34;&#34;&#34;
+    &#34;&#34;&#34;Symmetric matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    eigenvalues of `matrix`.
+    &#34;&#34;&#34;
 
     def __init__(self, eigvec, eigval):
         &#34;&#34;&#34;
@@ -5593,7 +5853,7 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1048-L1050" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1184-L1186" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5664,6 +5924,12 @@ def inv(self):
 </code></dt>
 <dd>
 <section class="desc"><p>Positive definite matrix parameterised by its eigendecomposition.</p>
+<p>The matrix is assumed to have the parameterisation</p>
+<pre><code>matrix = eigvec @ diag(eigval) @ eigvec.T
+</code></pre>
+<p>where <code>eigvec</code> is an orthogonal matrix, with columns corresponding to
+the eigenvectors of <code>matrix</code> and <code>eigval</code> is 1D array of the corresponding
+strictly positive eigenvalues of <code>matrix</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>eigvec</code></strong> :&ensp;<code>array</code> or <a title="mici.matrices.OrthogonalMatrix" href="#mici.matrices.OrthogonalMatrix"><code>OrthogonalMatrix</code></a></dt>
@@ -5679,11 +5945,20 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1060-L1083" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1196-L1228" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EigendecomposedPositiveDefiniteMatrix(
         EigendecomposedSymmetricMatrix, PositiveDefiniteMatrix):
-    &#34;&#34;&#34;Positive definite matrix parameterised by its eigendecomposition.&#34;&#34;&#34;
+    &#34;&#34;&#34;Positive definite matrix parameterised by its eigendecomposition.
+
+    The matrix is assumed to have the parameterisation
+
+        matrix = eigvec @ diag(eigval) @ eigvec.T
+
+    where `eigvec` is an orthogonal matrix, with columns corresponding to
+    the eigenvectors of `matrix` and `eigval` is 1D array of the corresponding
+    strictly positive eigenvalues of `matrix`.
+    &#34;&#34;&#34;
 
     def __init__(self, eigvec, eigval):
         if not np.all(eigval &gt; 0):
@@ -5733,7 +6008,7 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1076-L1079" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1221-L1224" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -5751,7 +6026,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1081-L1083" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1226-L1228" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -5842,7 +6117,7 @@ absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1086-L1138" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1231-L1283" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRegularisedPositiveDefiniteMatrix(
         EigendecomposedPositiveDefiniteMatrix):
@@ -5886,7 +6161,7 @@ absolute function.</dd>
     @property
     def grad_log_abs_det(self):
         grad_eigval = self.grad_softabs(self.unreg_eigval) / self.eigval
-        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval)
+        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval).array
 
     def grad_quadratic_form_inv(self, vector):
         num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
@@ -5918,12 +6193,12 @@ absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1125-L1128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1270-L1273" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
     grad_eigval = self.grad_softabs(self.unreg_eigval) / self.eigval
-    return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval)</code></pre>
+    return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval).array</code></pre>
 </details>
 </dd>
 <dt id="mici.matrices.SoftAbsRegularisedPositiveDefiniteMatrix.inv"><code class="name">var <span class="ident">inv</span></code></dt>
@@ -6009,7 +6284,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1115-L1117" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1260-L1262" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def softabs(self, x):
     &#34;&#34;&#34;Smooth approximation to absolute function.&#34;&#34;&#34;
@@ -6024,7 +6299,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1119-L1123" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1264-L1268" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_softabs(self, x):
     &#34;&#34;&#34;Derivative of smooth approximation to absolute function.&#34;&#34;&#34;
@@ -6041,7 +6316,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1130-L1138" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1275-L1283" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
@@ -6064,19 +6339,29 @@ def grad_log_abs_det(self):
 <section class="desc"><p>Square matrix with non-zero values only in blocks along diagonal.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>blocks</code></strong> :&ensp;<code>Iterable</code>[<code>SquareMatrix</code>]</dt>
+<dd>Sequence of square matrices
+defining non-zero blocks along diagonal of matrix in order
+left-to-right.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1141-L1205" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1286-L1359" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareBlockDiagonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix with non-zero values only in blocks along diagonal.&#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[SquareMatrix]): Sequence of square matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        &#34;&#34;&#34;
         self._blocks = tuple(blocks)
+        if not all(isinstance(block, SquareMatrix) for block in self._blocks):
+            raise ValueError(&#39;All blocks must be square&#39;)
         sizes = tuple(block.shape[0] for block in self._blocks)
         super().__init__(size=sum(sizes))
         self._sizes = sizes
@@ -6102,7 +6387,8 @@ def grad_log_abs_det(self):
              zip(self._blocks, self._split(other, axis=-1))], axis=-1)
 
     def _scalar_multiply(self, scalar):
-        return type(self)(tuple(scalar * block for block in self._blocks))
+        return SquareBlockDiagonalMatrix(
+            tuple(scalar * block for block in self._blocks))
 
     def _construct_array(self):
         return sla.block_diag(*(block.array for block in self._blocks))
@@ -6158,7 +6444,7 @@ def grad_log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1151-L1154" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1304-L1307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def blocks(self):
@@ -6176,7 +6462,7 @@ def blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1176-L1179" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1330-L1333" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -6190,7 +6476,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1181-L1184" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1335-L1338" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -6204,7 +6490,7 @@ def sqrt(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1186-L1188" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1340-L1342" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diag(self):
@@ -6221,7 +6507,7 @@ def diag(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1190-L1192" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1344-L1346" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -6234,7 +6520,7 @@ def inv(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1194-L1196" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1348-L1350" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -6247,7 +6533,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1198-L1201" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1352-L1355" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -6265,7 +6551,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1203-L1205" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1357-L1359" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -6308,13 +6594,15 @@ def log_abs_det(self):
 <code>block.T == block</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>blocks</code></strong> :&ensp;<code>Iterable</code>[<code>SymmetricMatrix</code>]</dt>
+<dd>Sequence of symmetric matrices
+defining non-zero blocks along diagonal of matrix in order
+left-to-right.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1208-L1223" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1362-L1387" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
     &#34;&#34;&#34;Symmetric specialisation of `SquareBlockDiagonalMatrix`.
@@ -6324,10 +6612,20 @@ def log_abs_det(self):
     &#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[SymmetricMatrix]): Sequence of symmetric matrices
+                defining non-zero blocks along diagonal of matrix in order
+                left-to-right.
+        &#34;&#34;&#34;
         blocks = tuple(blocks)
-        if not all(block is block.T for block in blocks):
+        if not all(isinstance(block, SymmetricMatrix) for block in blocks):
             raise ValueError(&#39;All blocks must be symmetric&#39;)
         super().__init__(blocks)
+
+    def _scalar_multiply(self, scalar):
+        return SymmetricBlockDiagonalMatrix(
+            tuple(scalar * block for block in self._blocks))
 
     @property
     def T(self):
@@ -6358,7 +6656,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1221-L1223" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1385-L1387" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def T(self):
@@ -6424,13 +6722,15 @@ def T(self):
 <p>All matrix blocks in diagonal are restricted to be positive definite.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
-<dd>Number of rows / columns in matrix.</dd>
+<dt><strong><code>blocks</code></strong> :&ensp;<code>Iterable</code>[<code>PositiveDefinite</code>]</dt>
+<dd>Sequence of positive-definite
+matrices defining non-zero blocks along diagonal of matrix in
+order left-to-right.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1226-L1240" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1390-L1420" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDefiniteBlockDiagonalMatrix(
         SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix):
@@ -6440,8 +6740,24 @@ def T(self):
     &#34;&#34;&#34;
 
     def __init__(self, blocks):
+        &#34;&#34;&#34;
+        Args:
+            blocks (Iterable[PositiveDefinite]): Sequence of positive-definite
+                matrices defining non-zero blocks along diagonal of matrix in
+                order left-to-right.
+        &#34;&#34;&#34;
         blocks = tuple(blocks)
+        if not all(isinstance(block, PositiveDefiniteMatrix)
+                   for block in blocks):
+            raise ValueError(&#39;All blocks must be positive definite&#39;)
         super().__init__(blocks)
+
+    def _scalar_multiply(self, scalar):
+        if scalar &gt; 0:
+            return PositiveDefiniteBlockDiagonalMatrix(
+                tuple(scalar * block for block in self._blocks))
+        else:
+            return super()._scalar_multiply(scalar)
 
     @property
     def sqrt(self):
@@ -6472,7 +6788,7 @@ def T(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/matrices.py#L1237-L1240" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/matrices.py#L1417-L1420" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -6770,32 +7086,18 @@ def sqrt(self):
 </ul>
 </li>
 <li>
-<h4><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix">BaseTriangularFactoredDefiniteMatrix</a></code></h4>
-<ul class="two-column">
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.factor" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.factor">factor</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.inv">inv</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigval">eigval</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.eigvec">eigvec</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.T" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.T">T</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.shape">shape</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.array" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.array">array</a></code></li>
-<li><code><a title="mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal" href="#mici.matrices.BaseTriangularFactoredDefiniteMatrix.diagonal">diagonal</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix" href="#mici.matrices.TriangularFactoredDefiniteMatrix">TriangularFactoredDefiniteMatrix</a></code></h4>
 <ul class="">
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.TriangularFactoredDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.inv" href="#mici.matrices.TriangularFactoredDefiniteMatrix.inv">inv</a></code></li>
-<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.eigval" href="#mici.matrices.TriangularFactoredDefiniteMatrix.eigval">eigval</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.eigvec" href="#mici.matrices.TriangularFactoredDefiniteMatrix.eigvec">eigvec</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.T" href="#mici.matrices.TriangularFactoredDefiniteMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.shape" href="#mici.matrices.TriangularFactoredDefiniteMatrix.shape">shape</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.array" href="#mici.matrices.TriangularFactoredDefiniteMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.diagonal" href="#mici.matrices.TriangularFactoredDefiniteMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.TriangularFactoredDefiniteMatrix.inv" href="#mici.matrices.TriangularFactoredDefiniteMatrix.inv">inv</a></code></li>
 </ul>
 </li>
 <li>
@@ -6805,10 +7107,10 @@ def sqrt(self):
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.inv" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.inv">inv</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.sqrt" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.sqrt">sqrt</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.eigval" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.eigval">eigval</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.eigvec" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.eigvec">eigvec</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.T" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.shape" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.shape">shape</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.array" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.TriangularFactoredPositiveDefiniteMatrix.diagonal" href="#mici.matrices.TriangularFactoredPositiveDefiniteMatrix.diagonal">diagonal</a></code></li>
@@ -6820,45 +7122,31 @@ def sqrt(self):
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.DenseDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.factor" href="#mici.matrices.DenseDefiniteMatrix.factor">factor</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.DenseDefiniteMatrix.inv" href="#mici.matrices.DenseDefiniteMatrix.inv">inv</a></code></li>
-<li><code><a title="mici.matrices.DenseDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.eigval" href="#mici.matrices.DenseDefiniteMatrix.eigval">eigval</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.eigvec" href="#mici.matrices.DenseDefiniteMatrix.eigvec">eigvec</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.T" href="#mici.matrices.DenseDefiniteMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.DenseDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.shape" href="#mici.matrices.DenseDefiniteMatrix.shape">shape</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.array" href="#mici.matrices.DenseDefiniteMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.DenseDefiniteMatrix.diagonal" href="#mici.matrices.DenseDefiniteMatrix.diagonal">diagonal</a></code></li>
+<li><code><a title="mici.matrices.DenseDefiniteMatrix.inv" href="#mici.matrices.DenseDefiniteMatrix.inv">inv</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mici.matrices.DensePositiveDefiniteMatrix" href="#mici.matrices.DensePositiveDefiniteMatrix">DensePositiveDefiniteMatrix</a></code></h4>
 <ul class="">
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.DensePositiveDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
-<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.sqrt" href="#mici.matrices.DensePositiveDefiniteMatrix.sqrt">sqrt</a></code></li>
-<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DensePositiveDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.inv" href="#mici.matrices.DensePositiveDefiniteMatrix.inv">inv</a></code></li>
-<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.log_abs_det" href="#mici.matrices.DensePositiveDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.sqrt" href="#mici.matrices.DensePositiveDefiniteMatrix.sqrt">sqrt</a></code></li>
+<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.factor" href="#mici.matrices.DensePositiveDefiniteMatrix.factor">factor</a></code></li>
+<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DensePositiveDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.eigval" href="#mici.matrices.DensePositiveDefiniteMatrix.eigval">eigval</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.eigvec" href="#mici.matrices.DensePositiveDefiniteMatrix.eigvec">eigvec</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.T" href="#mici.matrices.DensePositiveDefiniteMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.log_abs_det" href="#mici.matrices.DensePositiveDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.shape" href="#mici.matrices.DensePositiveDefiniteMatrix.shape">shape</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.array" href="#mici.matrices.DensePositiveDefiniteMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.DensePositiveDefiniteMatrix.diagonal" href="#mici.matrices.DensePositiveDefiniteMatrix.diagonal">diagonal</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="mici.matrices.DenseNegativeDefiniteMatrix" href="#mici.matrices.DenseNegativeDefiniteMatrix">DenseNegativeDefiniteMatrix</a></code></h4>
-<ul class="">
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.grad_quadratic_form_inv" href="#mici.matrices.DenseNegativeDefiniteMatrix.grad_quadratic_form_inv">grad_quadratic_form_inv</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.grad_log_abs_det" href="#mici.matrices.DenseNegativeDefiniteMatrix.grad_log_abs_det">grad_log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.inv" href="#mici.matrices.DenseNegativeDefiniteMatrix.inv">inv</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.log_abs_det" href="#mici.matrices.DenseNegativeDefiniteMatrix.log_abs_det">log_abs_det</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.eigval" href="#mici.matrices.DenseNegativeDefiniteMatrix.eigval">eigval</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.eigvec" href="#mici.matrices.DenseNegativeDefiniteMatrix.eigvec">eigvec</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.T" href="#mici.matrices.DenseNegativeDefiniteMatrix.T">T</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.shape" href="#mici.matrices.DenseNegativeDefiniteMatrix.shape">shape</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.array" href="#mici.matrices.DenseNegativeDefiniteMatrix.array">array</a></code></li>
-<li><code><a title="mici.matrices.DenseNegativeDefiniteMatrix.diagonal" href="#mici.matrices.DenseNegativeDefiniteMatrix.diagonal">diagonal</a></code></li>
 </ul>
 </li>
 <li>
@@ -6882,6 +7170,19 @@ def sqrt(self):
 <li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.shape" href="#mici.matrices.InverseLUFactoredSquareMatrix.shape">shape</a></code></li>
 <li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.array" href="#mici.matrices.InverseLUFactoredSquareMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.InverseLUFactoredSquareMatrix.diagonal" href="#mici.matrices.InverseLUFactoredSquareMatrix.diagonal">diagonal</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.matrices.DenseSymmetricMatrix" href="#mici.matrices.DenseSymmetricMatrix">DenseSymmetricMatrix</a></code></h4>
+<ul class="two-column">
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.inv" href="#mici.matrices.DenseSymmetricMatrix.inv">inv</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.eigval" href="#mici.matrices.DenseSymmetricMatrix.eigval">eigval</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.eigvec" href="#mici.matrices.DenseSymmetricMatrix.eigvec">eigvec</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.T" href="#mici.matrices.DenseSymmetricMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.log_abs_det" href="#mici.matrices.DenseSymmetricMatrix.log_abs_det">log_abs_det</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.shape" href="#mici.matrices.DenseSymmetricMatrix.shape">shape</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.array" href="#mici.matrices.DenseSymmetricMatrix.array">array</a></code></li>
+<li><code><a title="mici.matrices.DenseSymmetricMatrix.diagonal" href="#mici.matrices.DenseSymmetricMatrix.diagonal">diagonal</a></code></li>
 </ul>
 </li>
 <li>

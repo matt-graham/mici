@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L0-L1256" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L0-L1281" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Monte Carlo sampler classes for peforming inference.&#34;&#34;&#34;
 
@@ -47,6 +47,14 @@ from mici.transitions import (
     MultinomialDynamicIntegrationTransition)
 from mici.states import ChainState
 from mici.progressbars import ProgressBar, _ProxyProgressBar
+
+
+try:
+    from numpy.random import default_rng
+    NUMPY_DEFAULT_RNG_AVAILABLE = True
+except ImportError:
+    NUMPY_DEFAULT_RNG_AVAILABLE = False
+
 
 try:
     import randomgen
@@ -491,14 +499,31 @@ def _collate_chain_outputs(chain_outputs):
 def _get_per_chain_rngs(base_rng, n_chain):
     &#34;&#34;&#34;Construct random number generators (RNGs) for each of a set of chains.
 
-    Preferentially use the `jump` method of base RNGs which support it to
-    produce independent random substreams from the base RNG, otherwise if
-    `randomgen` is available the base RNG is used to seed a new
-    `randomgen.Xorshift1024` RNG and this used to generate independent
-    substreams. As a fallback, a set of `numpy.Randomstate` objects with
-    seeds independently generate from the base RNG is used.
+    If NumPy version &gt;= 1.17 is available with updated random generator
+    interface, then if the base RNG bit generator has a `jumped` method this is
+    used to produce a sequence of independent random substreams. Otherwise if
+    the base RNG bit generator has a `_seed_sequence` attribute this is used
+    to spawn a sequence of generators.
+
+    Alternatively if the base RNG supports a `jump` method, as for generator
+    classes from the `randomgen` module, this is used to produce independent
+    random substreams from the base RNG, otherwise if `randomgen` is available
+    the base RNG is used to seed a new `randomgen.Xorshift1024` RNG and this
+    used to generate independent substreams.
+
+    As a final fallback, a set of `numpy.Randomstate` objects with seeds
+    independently generated from the base RNG is used.
     &#34;&#34;&#34;
-    if hasattr(base_rng, &#39;jump&#39;):
+    if (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, &#39;bit_generator&#39;) and
+            hasattr(base_rng.bit_generator, &#39;jumped&#39;)):
+        bit_generator = base_rng.bit_generator
+        return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
+    elif (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, &#39;bit_generator&#39;)
+            and hasattr(base_rng.bit_generator, &#39;_seeq_seq&#39;)):
+        seed_sequence = base_rng.bit_generator._seeq_seq
+        seeds = seed_sequence.spawn(n_chain)
+        return [default_rng(seed) for seed in seeds]
+    elif hasattr(base_rng, &#39;jump&#39;):
         return [base_rng.jump(i).generator for i in range(n_chain)]
     elif RANDOMGEN_AVAILABLE:
         seed = base_rng.randint(2**64, dtype=&#39;uint64&#39;)
@@ -1301,7 +1326,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L48-L56" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L56-L64" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@contextmanager
 def ignore_sigint_manager():
@@ -1339,7 +1364,7 @@ chain iteration.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L609-L806" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L634-L831" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MarkovChainMonteCarloMethod(object):
     &#34;&#34;&#34;Generic Markov chain Monte Carlo (MCMC) sampler.
@@ -1631,7 +1656,7 @@ statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L635-L709" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L660-L734" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
     &#34;&#34;&#34;Sample a Markov chain from a given initial state.
@@ -1809,7 +1834,7 @@ integration transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L711-L806" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L736-L831" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
                   **kwargs):
@@ -1969,7 +1994,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L814-L1047" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L839-L1072" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     &#34;&#34;&#34;Wrapper class for Hamiltonian Markov chain Monte Carlo (H-MCMC) methods.
@@ -2298,7 +2323,7 @@ transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L900-L967" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L925-L992" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chain(self, n_sample, init_state, **kwargs):
     &#34;&#34;&#34;Sample a Markov chain from a given initial state.
@@ -2462,7 +2487,7 @@ corresponding integration transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L969-L1047" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L994-L1072" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chains(self, n_sample, init_states, **kwargs):
     &#34;&#34;&#34;Sample one or more Markov chains from given initial states.
@@ -2598,7 +2623,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1050-L1108" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1075-L1133" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class StaticMetropolisHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Static integration time H-MCMC implementation with Metropolis sampling.
@@ -2673,7 +2698,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1100-L1103" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1125-L1128" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_step(self):
@@ -2763,7 +2788,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1111-L1177" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1136-L1202" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RandomMetropolisHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Random integration time H-MCMC with Metropolis sampling of new state.
@@ -2846,7 +2871,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1167-L1170" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1192-L1195" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_step_range(self):
@@ -2942,7 +2967,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1180-L1257" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1205-L1282" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DynamicMultinomialHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Dynamic integration time H-MCMC with multinomial sampling of new state.
@@ -3036,7 +3061,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1240-L1243" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1265-L1268" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def max_tree_depth(self):
@@ -3050,7 +3075,7 @@ def max_tree_depth(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/samplers.py#L1250-L1253" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/samplers.py#L1275-L1278" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def max_delta_h(self):

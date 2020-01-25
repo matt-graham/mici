@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L0-L285" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L0-L287" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Solvers for non-linear systems of equations for implicit integrators.&#34;&#34;&#34;
 
@@ -197,7 +197,8 @@ def solve_projection_onto_manifold_quasi_newton(
     &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom).inv
     for i in range(max_iters):
@@ -213,7 +214,7 @@ def solve_projection_onto_manifold_quasi_newton(
                     f&#39;Last |constr|={error:.1e}, &#39;
                     f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
             elif error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -285,7 +286,8 @@ def solve_projection_onto_manifold_newton(
     &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -302,7 +304,7 @@ def solve_projection_onto_manifold_newton(
                     f&#39;Last |constr|={error:.1e}, &#39;
                     f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
             if error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -330,7 +332,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_norm(vct):
     &#34;&#34;&#34;Calculate the Euclidean (L-2) norm of a vector.&#34;&#34;&#34;
@@ -345,7 +347,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def maximum_norm(vct):
     &#34;&#34;&#34;Calculate the maximum (L-infinity) norm of a vector.&#34;&#34;&#34;
@@ -387,7 +389,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_direct(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -472,7 +474,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_steffensen(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -591,7 +593,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L112-L197" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L112-L198" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_quasi_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
@@ -652,7 +654,8 @@ the iteration.</p></section>
     &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom).inv
     for i in range(max_iters):
@@ -668,7 +671,7 @@ the iteration.</p></section>
                     f&#39;Last |constr|={error:.1e}, &#39;
                     f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
             elif error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -746,7 +749,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/6382e9888f02d9a2cdd4968652247c5bf837184f/mici/solvers.py#L200-L286" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/de1b553830fc42453e1751d4befaf26b87546fdb/mici/solvers.py#L201-L288" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
@@ -807,7 +810,8 @@ the iteration.</p></section>
     &#34;&#34;&#34;
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(dt)
+    # Use absolute value of dt and adjust for sign of dt in mom update below
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -824,7 +828,7 @@ the iteration.</p></section>
                     f&#39;Last |constr|={error:.1e}, &#39;
                     f&#39;|delta_pos|={norm(delta_pos):.1e}.&#39;)
             if error &lt; constraint_tol and norm(delta_pos) &lt; position_tol:
-                state.mom -= dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
