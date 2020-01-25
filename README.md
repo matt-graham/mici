@@ -28,8 +28,8 @@ Key features include
   * a modular design allowing use of a wide range of inference algorithms by 
     mixing and matching different components, making it easy for users to 
     extend the package and use within their own code,  
-  * computational efficient inference via transparent caching of the results of 
-    expensive operations and intermediate results calculated in derivative 
+  * computationally efficient inference via transparent caching of the results
+    of expensive operations and intermediate results calculated in derivative 
     computations allowing later reuse without recalculation,  
   * memory efficient inference for large models by memory-mapping chains to 
     disk, allowing long runs on large models without hitting memory issues.
