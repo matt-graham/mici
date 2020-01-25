@@ -1270,7 +1270,7 @@ class SoftAbsRegularisedPositiveDefiniteMatrix(
     @property
     def grad_log_abs_det(self):
         grad_eigval = self.grad_softabs(self.unreg_eigval) / self.eigval
-        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval)
+        return EigendecomposedSymmetricMatrix(self.eigvec, grad_eigval).array
 
     def grad_quadratic_form_inv(self, vector):
         num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
