@@ -41,10 +41,10 @@
 
 <%def name="show_desc(d, short=False)">
   <%
-  inherits = ' inherited' if d.inherits else ''
-  docstring = glimpse(d.docstring) if short or inherits else d.docstring
+  inherits = ' inherited' if False else ''
+  docstring = glimpse(d.docstring) if short else d.docstring
   %>
-  % if d.inherits:
+  % if False:
       <p class="inheritance">
           <em>Inherited from:</em>
           % if hasattr(d.inherits, 'cls'):
@@ -389,10 +389,10 @@
       ${show_module_list(modules)}
     </article>
   % else:
+    ${module_index(module)}
     <article id="content">
       ${show_module(module)}
     </article>
-    ${module_index(module)}
   % endif
 </main>
 
@@ -403,7 +403,7 @@
 
 % if syntax_highlighting:
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad()</script>
+    <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>
 % endif
 
 % if http_server and module:  ## Auto-reload on file change in dev mode

@@ -4,7 +4,7 @@
 
 <%def name="mobile()" filter="minify_css">
   .flex {
-    display: flex !important;
+    /* display: flex !important; */
   }
 
   body {
@@ -161,7 +161,12 @@
       background: #eee;
       font-weight: bold;
       font-size: .85em;
-      padding: 5px 10px;
+      /* padding: 5px 10px; */
+      padding-top: 5px;
+      padding-bottom: 5px;
+      padding-right: 10px;
+      padding-left: 35px;
+      text-indent: -25px;
       display: inline-block;
       min-width: 40%;
     }
@@ -273,15 +278,24 @@
 </%def>
 
 <%def name="desktop()" filter="minify_css">
-  @media screen and (min-width: 700px) {
+  @media screen and (min-width: 1000px) {
     #sidebar {
-      width: 30%;
+      width: 600px;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      bottom: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     #content {
-      width: 70%;
+      margin-left: 600px;
       max-width: 100ch;
       padding: 3em 4em;
       border-left: 1px solid #ddd;
+    }
+    #footer {
+      margin-left: 600px;
     }
     pre code {
       font-size: 1em;

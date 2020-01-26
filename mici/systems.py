@@ -226,9 +226,9 @@ class EuclideanMetricSystem(System):
                 representation and the array the matrix diagonal. If a 2D array
                 is passed then this is assumed to specify a metric with a dense
                 positive definite matrix representation specified by the array.
-                Otherwise if the value is a `PositiveDefiniteMatrix` subclass
-                it is assumed to directly specify the metric matrix
-                representation.
+                Otherwise if the value is a subclass of
+                `mici.matrices.PositiveDefiniteMatrix` it is assumed to
+                directly specify the metric matrix representation.
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
                 Function which given a position array returns the derivative of
@@ -264,9 +264,30 @@ class EuclideanMetricSystem(System):
         return self.metric.inv @ state.mom
 
     def h2_flow(self, state, dt):
+        """Apply exact flow map corresponding to `h2` Hamiltonian component.
+
+        `state` argument is modified in place.
+
+        Args:
+            state (mici.states.ChainState): State to start flow at.
+            dt (float): Time interval to simulate flow for.
+        """
         state.pos += dt * self.dh2_dmom(state)
 
     def dh2_flow_dmom(self, dt):
+        """Derivatives of `h2_flow` flow map with respect to input momentum.
+
+        Args:
+            dt (float): Time interval flow simulated for.
+
+        Returns:
+            dpos_dmom (mici.matrices.Matrix): Matrix representing derivative
+                (Jacobian) of position output of `h2_flow` with respect to the
+                value of the momentum component of the initial input state.
+            dmom_dmom (mici.matrices.Matrix): Matrix representing derivative
+                (Jacobian) of momentum output of `h2_flow` with respect to the
+                value of the momentum component of the initial input state.
+        """
         return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])
 
     def sample_momentum(self, state, rng):
@@ -327,9 +348,9 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 representation and the array the matrix diagonal. If a 2D array
                 is passed then this is assumed to specify a metric with a dense
                 positive definite matrix representation specified by the array.
-                Otherwise if the value is a `PositiveDefiniteMatrix` subclass
-                it is assumed to directly specify the metric matrix
-                representation.
+                Otherwise if the value is a subclass of
+                `mici.matrices.PositiveDefiniteMatrix` it is assumed to
+                directly specify the metric matrix representation.
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
                 Function which given a position array returns the derivative of
@@ -400,18 +421,18 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     co-tangent space (tangent space) to the manifold.
 
     The target distribution is either assumed to be directly specified with
-    respect to the a density \(\exp(-\ell(q))\) with respect to the Hausdorff
-    measure on the manifold (with metric induced from the ambient metric) with
-    in this case the \(h_1\) Hamiltonian component then simply
+    unnormalised density \(\exp(-\ell(q))\) with respect to the Hausdorff
+    measure on the manifold (under the metric induced from the ambient metric)
+    with in this case the \(h_1\) Hamiltonian component then simply
 
     \[ h_1(q) = \ell(q), \]
 
     or alternatively it is assumed a prior distribution on the position \(q\)
-    with density  \(\exp(-\ell(q))\) with respect to the Lebesgue measure on
+    with density \(\exp(-\ell(q))\) with respect to the Lebesgue measure on
     the ambient space is specifed and the target distribution is the posterior
-    distribution on \(q\) when conditioning on the event \(c(q) = 0\) with
-    the negative logarithm of the posterior density (and so \(h_1\) Hamiltonian
-    component) then
+    distribution on \(q\) when conditioning on the event \(c(q) = 0\). The
+    negative logarithm of the posterior distribution density with respect to
+    the Hausdorff measure (and so \(h_1\) Hamiltonian component) is then
 
     \[
       h_1(q) =
@@ -422,16 +443,18 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     correct density with respect to the Hausdorff measure on the manifold.
 
     Due to the requirement to enforce the constraints on the position and
-    momentum, a constrained-preserving numerical integrator needs to be used.
+    momentum, a constraint-preserving numerical integrator needs to be used
+    when simulating the Hamiltonian dynamic associated with the system, e.g.
+    `mici.integrators.ConstrainedLeapfrogIntegrator`.
 
     References:
 
-    1. Lelièvre, T., Rousset, M. and Stoltz, G., 2019. Hybrid Monte Carlo
-       methods for sampling probability measures on submanifolds. Numerische
-       Mathematik, 143(2), pp.379-421.
-    2. Graham, M.M. and Storkey, A.J., 2017. Asymptotically exact inference
-       in differentiable generative models. Electronic Journal of Statistics,
-       11(2), pp.5105-5164.
+      1. Lelièvre, T., Rousset, M. and Stoltz, G., 2019. Hybrid Monte Carlo
+         methods for sampling probability measures on submanifolds. Numerische
+         Mathematik, 143(2), pp.379-421.
+      2. Graham, M.M. and Storkey, A.J., 2017. Asymptotically exact inference
+         in differentiable generative models. Electronic Journal of Statistics,
+         11(2), pp.5105-5164.
     """
 
     def __init__(self, neg_log_dens, constr, metric=None,
@@ -479,8 +502,9 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                 array the matrix diagonal. If a 2D array is passed then this is
                 assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array. Otherwise if the
-                value is a `PositiveDefiniteMatrix` subclass it is assumed to
-                directly specify the metric matrix representation.
+                value is a `mici.matrices.PositiveDefiniteMatrix` subclass it
+                is assumed to directly specify the metric matrix
+                representation.
             dens_wrt_hausdorff (bool): Whether the `neg_log_dens` function
                 specifies the (negative logarithm) of the density of the target
                 distribution with respect to the Hausdorff measure on the
@@ -591,7 +615,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
             state (mici.states.ChainState): State to compute value at.
 
         Returns:
-            PositiveDefiniteMatrix: Gram matrix as matrix object.
+            mici.matrice.PositiveDefiniteMatrix: Gram matrix as matrix object.
         """
         return self.jacob_constr_inner_product(
             self.jacob_constr(state), self.metric.inv)
@@ -603,7 +627,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
             state (mici.states.ChainState): State to compute value at.
 
         Returns:
-            PositiveDefiniteMatrix: Inverse of Gram matrix as matrix object.
+            mici.matrices.PositiveDefiniteMatrix: Inverse of Gram matrix as
+                matrix object.
         """
         return self.gram(state).inv
 
@@ -713,8 +738,9 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 array the matrix diagonal. If a 2D array is passed then this is
                 assumed to specify a metric with a dense positive definite
                 matrix representation specified by the array. Otherwise if the
-                value is a `PositiveDefiniteMatrix` subclass it is assumed to
-                directly specify the metric matrix representation.
+                value is a `mici.matrices.PositiveDefiniteMatrix` subclass it
+                is assumed to directly specify the metric matrix
+                representation.
             dens_wrt_hausdorff (bool): Whether the `neg_log_dens` function
                 specifies the (negative logarithm) of the density of the target
                 distribution with respect to the Hausdorff measure on the
@@ -860,9 +886,9 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 metric with positive diagonal matrix representation and the
                 array the matrix diagonal. If a 2D array is passed then this is
                 assumed to specify a metric with a dense positive definite
-                matrix representation specified by the array. Otherwise if the
-                value is a `PositiveDefiniteMatrix` subclass it is assumed to
-                directly specify the metric matrix representation..
+                matrix representation specified by the array. Otherwise if
+                a subclass of `mici.matrices.PositiveDefiniteMatrix` it is
+                assumed to directly specify the metric matrix representation.
             grad_neg_log_dens (
                     None or Callable[[array], array or Tuple[array, float]]):
                 Function which given a position array returns the derivative of
@@ -962,7 +988,9 @@ class RiemannianMetricSystem(System):
 
     Due to the coupling between the position and momentum variables in \(h_2\),
     the Hamiltonian system is non-separable, requiring use of a numerical
-    integrator with implicit steps.
+    integrator with implicit steps when simulating the Hamiltonian dynamic
+    associated with the system, e.g.
+    `mici.integrators.ImplicitLeapfrogIntegrator`.
 
     References:
 
@@ -982,27 +1010,29 @@ class RiemannianMetricSystem(System):
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
-            metric_matrix_class (type(PositiveDefiniteMatrix)): Class (or
+            metric_matrix_class (type[PositiveDefiniteMatrix]): Class (or
                 factory function returning an instance of the class) which
                 defines type of matrix representation of metric. The class
                 initializer should take a single positional argument which will
                 be passed the array outputted by `metric_func`, and which is
                 assumed to be a parameter which fully defines the resulting
-                matrix (e.g. the diagonal of a `DiagonalMatrix`). The class
-                initializer may also optionally take one or more keyword
-                arguments, with the `metric_kwargs` argument used to specify
-                the value of these, if any. Together this means the metric
-                matrix representation at a position `pos` is constructed as
+                matrix (e.g. the diagonal of a `mici.matrices.DiagonalMatrix`).
+                The class initializer may also optionally take one or more
+                keyword arguments, with the `metric_kwargs` argument used to
+                specify the value of these, if any. Together this means the
+                metric matrix representation at a position `pos` is constructed
+                as
 
                     metric = metric_matrix_class(
                         metric_func(pos), **metric_kwargs)
 
-                The `PositiveDefiniteMatrix` subclass should as a minimum
-                define `inv`, `log_abs_det`, `grad_log_abs_det`,
+                The `mici.matrices.PositiveDefiniteMatrix` subclass should as a
+                minimum define `inv`, `log_abs_det`, `grad_log_abs_det`,
                 `grad_quadratic_form_inv`, `__matmul__` and `__rmatmul__`
                 methods / properties (see documentation of
-                `PositiveDefiniteMatrix` and `DifferentiableMatrix` for
-                definitions of the expected behaviour of these methods).
+                `mici.matrices.PositiveDefiniteMatrix` and
+                `mici.matrices.DifferentiableMatrix` for definitions of the
+                expected behaviour of these methods).
             metric_func (Callable[[array], array]): Function which given a
                 position array returns an array containing the parameter value
                 of the metric matrix representation passed as the single
@@ -1100,7 +1130,7 @@ class RiemannianMetricSystem(System):
             state (mici.states.ChainState): State to compute value at.
 
         Returns:
-            PositiveDefiniteMatrix: Metric matrix representation.
+            mici.matrices.PositiveDefiniteMatrix: Metric matrix representation.
         """
         return self._metric_matrix_class(
             self.metric_func(state), **self._metric_kwargs)
@@ -1450,9 +1480,9 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
 
     References:
 
-    1. Betancourt, M., 2013. A general metric for Riemannian manifold
-       Hamiltonian Monte Carlo. In Geometric science of information
-       (pp. 327-334).
+      1. Betancourt, M., 2013. A general metric for Riemannian manifold
+         Hamiltonian Monte Carlo. In Geometric science of information
+         (pp. 327-334).
     """
 
     def __init__(self, neg_log_dens, grad_neg_log_dens=None,
