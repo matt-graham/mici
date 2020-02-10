@@ -760,7 +760,7 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
         for sz in SIZES:
             for softabs_coeff in [0.5, 1., 1.5]:
                 sym_array = rng.standard_normal((sz, sz))
-                sym_array += sym_array.T
+                sym_array = sym_array + sym_array.T
                 unreg_eigval, eigvec = np.linalg.eigh(sym_array)
                 eigval = unreg_eigval / np.tanh(unreg_eigval * softabs_coeff)
                 matrix_pairs[(sz, softabs_coeff)] = (
@@ -850,4 +850,167 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
                         matrices.DensePositiveDefiniteMatrix(arr)
                         for arr in arrays),
                     sla.block_diag(*arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestPositiveDefiniteBlockDiagonalMatrix(
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_block in [1, 2, 5]:
+                arrays = [rng.standard_normal((s, s)) for _ in range(n_block)]
+                arrays = [arr @ arr.T for arr in arrays]
+                matrix_pairs[(s, n_block)] = (
+                    matrices.PositiveDefiniteBlockDiagonalMatrix(
+                        matrices.DensePositiveDefiniteMatrix(arr)
+                        for arr in arrays),
+                    sla.block_diag(*arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestDenseRectangularMatrix(ExplicitShapeMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s0 in SIZES:
+            for s1 in SIZES:
+                if s0 != s1:
+                    array = rng.standard_normal((s0, s1))
+                    matrix_pairs[(s0, s1)] = (
+                        matrices.DenseRectangularMatrix(array), array)
+        super().__init__(matrix_pairs, rng)
+
+
+class TestBlockRowMatrix(ExplicitShapeMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_blocks in [2, 5]:
+                blocks = [rng.standard_normal((s, s)) for _ in range(n_blocks)]
+                matrix_pairs[(s, n_blocks)] = (
+                    matrices.BlockRowMatrix(
+                        matrices.DenseSquareMatrix(block) for block in blocks),
+                    np.hstack(blocks))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestBlockColumnMatrix(ExplicitShapeMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_blocks in [2, 5]:
+                blocks = [rng.standard_normal((s, s)) for _ in range(n_blocks)]
+                matrix_pairs[(s, n_blocks)] = (
+                    matrices.BlockColumnMatrix(
+                        matrices.DenseSquareMatrix(block) for block in blocks),
+                    np.vstack(blocks))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestSquareLowRankUpdateMatrix(ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for outer_dim in SIZES:
+            for inner_dim in [max(1, outer_dim // 2), max(1, outer_dim - 1)]:
+                left_factor_matrix = rng.standard_normal(
+                    (outer_dim, inner_dim))
+                right_factor_matrix = rng.standard_normal(
+                    (inner_dim, outer_dim))
+                inner_square_matrix = rng.standard_normal(
+                    (inner_dim, inner_dim))
+                square_matrix = rng.standard_normal((outer_dim, outer_dim))
+                matrix_pairs[(inner_dim, outer_dim)] = (
+                    matrices.SquareLowRankUpdateMatrix(
+                        matrices.DenseRectangularMatrix(left_factor_matrix),
+                        matrices.DenseRectangularMatrix(right_factor_matrix),
+                        matrices.DenseSquareMatrix(square_matrix),
+                        matrices.DenseSquareMatrix(inner_square_matrix)),
+                    square_matrix + left_factor_matrix @ (
+                        inner_square_matrix @ right_factor_matrix))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestNoInnerMatrixSquareLowRankUpdateMatrix(
+        ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for outer_dim in SIZES:
+            inner_dim = max(1, outer_dim // 2)
+            left_factor_matrix = rng.standard_normal(
+                (outer_dim, inner_dim))
+            right_factor_matrix = rng.standard_normal(
+                (inner_dim, outer_dim))
+            square_matrix = rng.standard_normal((outer_dim, outer_dim))
+            matrix_pairs[(inner_dim, outer_dim)] = (
+                matrices.SquareLowRankUpdateMatrix(
+                    matrices.DenseRectangularMatrix(left_factor_matrix),
+                    matrices.DenseRectangularMatrix(right_factor_matrix),
+                    matrices.DenseSquareMatrix(square_matrix)),
+                square_matrix + left_factor_matrix @ right_factor_matrix)
+        super().__init__(matrix_pairs, rng)
+
+
+class TestSymmetricLowRankUpdateMatrix(
+        ExplicitShapeSymmetricMatrixTestCase,
+        ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for outer_dim in SIZES:
+            for inner_dim in [max(1, outer_dim // 2), max(1, outer_dim - 1)]:
+                factor_matrix = rng.standard_normal(
+                    (outer_dim, inner_dim))
+                inner_symmetric_matrix = rng.standard_normal(
+                    (inner_dim, inner_dim))
+                inner_symmetric_matrix = (
+                    inner_symmetric_matrix + inner_symmetric_matrix.T)
+                symmetric_matrix = rng.standard_normal((outer_dim, outer_dim))
+                symmetric_matrix = symmetric_matrix + symmetric_matrix.T
+                matrix_pairs[(inner_dim, outer_dim)] = (
+                    matrices.SymmetricLowRankUpdateMatrix(
+                        matrices.DenseRectangularMatrix(factor_matrix),
+                        matrices.DenseSymmetricMatrix(symmetric_matrix),
+                        matrices.DenseSymmetricMatrix(inner_symmetric_matrix)),
+                    symmetric_matrix + factor_matrix @ (
+                        inner_symmetric_matrix @ factor_matrix.T))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestPositiveDefiniteLowRankUpdateMatrix(
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for outer_dim in SIZES:
+            for inner_dim in [max(1, outer_dim // 2), max(1, outer_dim - 1)]:
+                factor_matrix = rng.standard_normal(
+                    (outer_dim, inner_dim))
+                inner_pos_def_matrix = rng.standard_normal(
+                    (inner_dim, inner_dim))
+                inner_pos_def_matrix = (
+                    inner_pos_def_matrix @ inner_pos_def_matrix.T)
+                pos_def_matrix = rng.standard_normal((outer_dim, outer_dim))
+                pos_def_matrix = pos_def_matrix @ pos_def_matrix.T
+                matrix_pairs[(inner_dim, outer_dim)] = (
+                    matrices.PositiveDefiniteLowRankUpdateMatrix(
+                        matrices.DenseRectangularMatrix(factor_matrix),
+                        matrices.DensePositiveDefiniteMatrix(pos_def_matrix),
+                        matrices.DensePositiveDefiniteMatrix(
+                            inner_pos_def_matrix)),
+                    pos_def_matrix + factor_matrix @ (
+                        inner_pos_def_matrix @ factor_matrix.T))
         super().__init__(matrix_pairs, rng)

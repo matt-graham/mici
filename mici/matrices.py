@@ -294,7 +294,11 @@ class SymmetricMatrix(SquareMatrix):
         return np.log(np.abs(self.eigval)).sum()
 
 
-class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
+class SymmetricInvertibleMatrix(SymmetricMatrix, InvertibleMatrix):
+    """Base class for positive definite matrices."""
+
+
+class PositiveDefiniteMatrix(SymmetricInvertibleMatrix):
     """Base class for positive definite matrices."""
 
     @property
@@ -1418,3 +1422,444 @@ class PositiveDefiniteBlockDiagonalMatrix(
     def sqrt(self):
         return SquareBlockDiagonalMatrix(
             tuple(block.sqrt for block in self._blocks))
+
+
+class DenseRectangularMatrix(ExplicitArrayMatrix):
+    """Dense rectangular matrix."""
+
+    def __init__(self, array):
+        """
+        Args:
+            array (array): 2D array specifying matrix entries.
+        """
+        self._array = array
+        super().__init__(array.shape)
+
+    def _scalar_multiply(self, scalar):
+        return DenseRectangularMatrix(scalar * self.array)
+
+    @property
+    def T(self):
+        return DenseRectangularMatrix(self.array.T)
+
+
+class BlockRowMatrix(ImplicitArrayMatrix):
+    """Matrix composed of horizontal concatenation of a series of blocks."""
+
+    def __init__(self, blocks):
+        """
+        Args:
+            blocks (Iterable[Matrix]): Sequence of matrices defining a row of
+                blocks in order left-to-right which when horizontally
+                concatenated give the overall matrix.
+        """
+        self._blocks = tuple(blocks)
+        if not all(isinstance(block, Matrix) for block in self._blocks):
+            raise ValueError('All blocks must be matrices')
+        if len(set([block.shape[0] for block in self._blocks])) > 1:
+            raise ValueError('All blocks must have same row-dimension.')
+        col_dims = tuple(block.shape[1] for block in self._blocks)
+        super().__init__(shape=(self._blocks[0].shape[0], sum(col_dims)))
+        self._splits = np.cumsum(col_dims[:-1])
+
+    @property
+    def blocks(self):
+        """Blocks of matrix in left-to-right order."""
+        return self._blocks
+
+    def _left_matrix_multiply(self, other):
+        assert other.shape[0] == self.shape[1]
+        return sum(
+            [block @ part for block, part in
+             zip(self._blocks, np.split(other, self._splits, axis=0))])
+
+    def _right_matrix_multiply(self, other):
+        return np.concatenate(
+            [other @ block for block in self._blocks], axis=-1)
+
+    def _scalar_multiply(self, scalar):
+        return BlockRowMatrix(
+            tuple(scalar * block for block in self._blocks))
+
+    def _construct_array(self):
+        return np.concatenate([block.array for block in self._blocks], axis=1)
+
+    @property
+    def T(self):
+        return BlockColumnMatrix(
+            tuple(block.T for block in self._blocks))
+
+
+class BlockColumnMatrix(ImplicitArrayMatrix):
+    """Matrix composed of vertical concatenation of a series of blocks."""
+
+    def __init__(self, blocks):
+        """
+        Args:
+            blocks (Iterable[Matrix]): Sequence of matrices defining a column
+                of blocks in order top-to-bottom which when vertically
+                concatenated give the overall matrix.
+        """
+        self._blocks = tuple(blocks)
+        if not all(isinstance(block, Matrix) for block in self._blocks):
+            raise ValueError('All blocks must be matrices')
+        if len(set([block.shape[1] for block in self._blocks])) > 1:
+            raise ValueError('All blocks must have same column-dimension.')
+        row_dims = tuple(block.shape[0] for block in self._blocks)
+        super().__init__(shape=(sum(row_dims), self._blocks[0].shape[1]))
+        self._splits = np.cumsum(row_dims[:-1])
+
+    @property
+    def blocks(self):
+        """Blocks of matrix in top-to-bottom order."""
+        return self._blocks
+
+    def _left_matrix_multiply(self, other):
+        return np.concatenate(
+            [block @ other for block in self._blocks], axis=0)
+
+    def _right_matrix_multiply(self, other):
+        assert other.shape[-1] == self.shape[0]
+        return sum(
+            [part @ block for block, part in
+             zip(self._blocks, np.split(other, self._splits, axis=-1))])
+
+    def _scalar_multiply(self, scalar):
+        return BlockColumnMatrix(
+            tuple(scalar * block for block in self._blocks))
+
+    def _construct_array(self):
+        return np.concatenate([block.array for block in self._blocks], axis=0)
+
+    @property
+    def T(self):
+        return BlockRowMatrix(
+            tuple(block.T for block in self._blocks))
+
+
+class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
+    """Square matrix equal to a low-rank update to a square matrix.
+
+    The matrix is assumed to have the parametrisation
+
+        matrix = (
+            square_matrix + sign *
+            left_factor_matrix @ inner_square_matrix @ right_factor_matrix)
+
+    where `left_factor_matrix` and `right_factor_matrix` are rectangular
+    with shapes `(dim_outer, dim_inner)` and `(dim_inner, dim_outer)`
+    resp., `square_matrix` is square with shape `(dim_outer, dim_outer)`,
+    `inner_square_matrix` is square with shape `(dim_inner, dim_inner)` and
+    `sign` is one of {-1, +1} and determines whether a low-rank update
+    (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
+
+    By exploiting the Woodbury matrix identity and matrix determinant lemma the
+    inverse and determinant of the matrix can be computed at a cost of
+    `O(dim_inner**3 + dim_inner**2 * dim_outer)` plus the cost of inverting /
+    evaluating the determinant of `square_matrix`, which for `square_matrix`
+    instances with special structure such as diagonality or with an existing
+    factorisation, will typically be cheaper than the `O(dim_outer**3)` cost
+    of evaluating the inverse or determinant directly.
+    """
+
+    def __init__(self, left_factor_matrix, right_factor_matrix, square_matrix,
+                 inner_square_matrix=None, capacitance_matrix=None, sign=1):
+        """
+        Args:
+            left_factor_matrix (Matrix): Rectangular matrix with shape
+                `(dim_outer, dim_inner)` forming leftmost term in matrix
+                product defining low-rank update.
+            right_factor_matrix (Matrix): Rectangular matrix with shape
+                `(dim_inner, dim_outer)` forming rightmost term in matrix
+                product defining low-rank update.
+            square_matrix (SquareMatrix): Square matrix to perform low-rank
+                update (or downdate) to.
+            inner_square_matrix (None or SquareMatrix): Optional square matrix
+                with shape `(dim_inner, dim_inner)` specifying inner term in
+                matrix product defining low-rank update. If `None` an identity
+                matrix is used.
+            capacitance_matrix (None or SquareMatrix): Square matrix equal to
+                `inner_square_matrix.inv + right_factor_matrix @
+                square_matrix.inv @ left_factor_matrix` and with shape
+                `(dim_inner, dim_inner)` which is used in constructing inverse
+                and computation of determinant of the low-rank updated matrix,
+                with this argument optional and typically only passed when
+                this matrix has already been computed in a previous
+                computation.
+            sign (int): One of {-1, +1}, determining whether a low-rank update
+                (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
+        """
+        dim_outer, dim_inner = left_factor_matrix.shape
+        if square_matrix.shape[0] != dim_outer:
+            raise ValueError(f'Inconsistent factor and square matrix shapes: '
+                             f'outer dimensions {dim_outer} and '
+                             f'{square_matrix.shape[0]}.')
+        if square_matrix.shape[0] != square_matrix.shape[1]:
+            raise ValueError('square_matrix argument must be square')
+        if right_factor_matrix.shape != (dim_inner, dim_outer):
+            raise ValueError(f'Inconsistent factor matrix shapes: '
+                             f'{left_factor_matrix.shape} and '
+                             f'{right_factor_matrix.shape}.')
+        if inner_square_matrix is None:
+            inner_square_matrix = IdentityMatrix(dim_inner)
+        elif inner_square_matrix.shape != (dim_inner, dim_inner):
+            raise ValueError(f'inner_square matrix must be square and of shape'
+                             f' {(dim_inner, dim_inner)}.')
+        self.left_factor_matrix = left_factor_matrix
+        self.right_factor_matrix = right_factor_matrix
+        self.square_matrix = square_matrix
+        self.inner_square_matrix = inner_square_matrix
+        self._capacitance_matrix = capacitance_matrix
+        self._sign = sign
+        super().__init__(dim_outer)
+
+    def _left_matrix_multiply(self, other):
+        return self.square_matrix @ other + (
+            self._sign * self.left_factor_matrix @ (
+                self.inner_square_matrix @ (self.right_factor_matrix @ other)))
+
+    def _right_matrix_multiply(self, other):
+        return other @ self.square_matrix + (
+            self._sign * (
+                other @ self.left_factor_matrix) @ self.inner_square_matrix
+            ) @ self.right_factor_matrix
+
+    def _scalar_multiply(self, scalar):
+        return type(self)(
+            self.left_factor_matrix, self.right_factor_matrix,
+            scalar * self.square_matrix, scalar * self.inner_square_matrix,
+            self._capacitance_matrix / scalar
+            if self._capacitance_matrix is not None else None, self._sign)
+
+    def _construct_array(self):
+        return self.square_matrix.array + (
+            self._sign * self.left_factor_matrix @ (
+                self.inner_square_matrix @ self.right_factor_matrix.array))
+
+    @property
+    def capacitance_matrix(self):
+        if self._capacitance_matrix is None:
+            self._capacitance_matrix = DenseSquareMatrix(
+                self.inner_square_matrix.inv.array +
+                self.right_factor_matrix @ (
+                    self.square_matrix.inv @ self.left_factor_matrix.array))
+        return self._capacitance_matrix
+
+    @property
+    def diagonal(self):
+        return self.square_matrix.diagonal + self._sign * (
+            (self.left_factor_matrix.array @ self.inner_square_matrix) *
+            self.right_factor_matrix.T.array).sum(1)
+
+    @property
+    def T(self):
+        return type(self)(
+            self.right_factor_matrix.T, self.left_factor_matrix.T,
+            self.square_matrix.T, self.inner_square_matrix.T,
+            self._capacitance_matrix.T
+            if self._capacitance_matrix is not None else None,
+            self._sign)
+
+    @property
+    def inv(self):
+        return type(self)(
+            self.square_matrix.inv @ self.left_factor_matrix,
+            self.right_factor_matrix @ self.square_matrix.inv,
+            self.square_matrix.inv, self.capacitance_matrix.inv,
+            self.inner_square_matrix.inv, -self._sign)
+
+    @property
+    def log_abs_det(self):
+        return (
+            self.square_matrix.log_abs_det +
+            self.inner_square_matrix.log_abs_det +
+            self.capacitance_matrix.log_abs_det)
+
+
+class SymmetricLowRankUpdateMatrix(
+        SquareLowRankUpdateMatrix, SymmetricInvertibleMatrix):
+    """Symmetric matrix equal to a low-rank update to a symmetric matrix.
+
+    The matrix is assumed to have the parametrisation
+
+        matrix = (
+            symmetric_matrix +
+            sign * factor_matrix @ inner_symmetric_matrix @ factor_matrix.T)
+
+    where `factor_matrix` is rectangular with shape `(dim_outer, dim_inner)`,
+    `symmetric_matrix` is symmetric with shape `(dim_outer, dim_outer)`,
+    `inner_symmetric_matrix` is symmetric with shape `(dim_inner, dim_inner)`
+    and `sign` is one of {-1, +1} and determines whether a low-rank update
+    (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
+
+    By exploiting the Woodbury matrix identity and matrix determinant lemma the
+    inverse and determinant of the matrix can be computed at a cost of
+    `O(dim_inner**3 + dim_inner**2 * dim_outer)` plus the cost of inverting /
+    evaluating the determinant of `square_matrix`, which for `square_matrix`
+    instances with special structure such as diagonality or with an existing
+    factorisation, will typically be cheaper than the `O(dim_outer**3)` cost
+    of evaluating the inverse or determinant directly.
+    """
+
+    def __init__(self, factor_matrix, symmetric_matrix,
+                 inner_symmetric_matrix=None, capacitance_matrix=None, sign=1):
+        """
+        Args:
+            factor_matrix (Matrix): Rectangular matrix with shape
+                `(dim_outer, dim_inner)` with it and its transpose forming the
+                leftmost and righmost term respectively in the matrix product
+                defining the low-rank update.
+            symmetric_matrix (SymmetricMatrix): Symmetric matrix to perform
+                low-rank update (or downdate) to.
+            inner_symmetric_matrix (None or SymmetricMatrix): Optional
+                symmetric matrix with shape `(dim_inner, dim_inner)` specifying
+                inner term in matrix product defining low-rank update. If
+                `None` an identity matrix is used.
+            capacitance_matrix (None or SymmetricMatrix): Symmetric matrix
+                equal to `inner_symmetric_matrix.inv + factor_matrix.T @
+                symmetric_matrix.inv @ factor_matrix` and with shape
+                `(dim_inner, dim_inner)` which is used in constructing inverse
+                and computation of determinant of the low-rank updated matrix,
+                with this argument optional and typically only passed when
+                this matrix has already been computed in a previous
+                computation.
+            sign (int): One of {-1, +1}, determining whether a low-rank update
+                (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
+        """
+        if symmetric_matrix.T is not symmetric_matrix:
+            raise ValueError('symmetric_matrix must be symmetric')
+        if inner_symmetric_matrix.T is not inner_symmetric_matrix:
+            raise ValueError('inner_symmetric_matrix must be symmetric')
+        self.factor_matrix = factor_matrix
+        self.symmetric_matrix = symmetric_matrix
+        self.inner_symmetric_matrix = inner_symmetric_matrix
+        super().__init__(
+            factor_matrix, factor_matrix.T, symmetric_matrix,
+            inner_symmetric_matrix, capacitance_matrix, sign)
+
+    def _scalar_multiply(self, scalar):
+        return type(self)(
+            self.factor_matrix, scalar * self.symmetric_matrix,
+            scalar * self.inner_symmetric_matrix,
+            self._capacitance_matrix / scalar
+            if self._capacitance_matrix is not None else None, self._sign)
+
+    @property
+    def capacitance_matrix(self):
+        if self._capacitance_matrix is None:
+            self._capacitance_matrix = DenseSymmetricMatrix(
+                self.inner_symmetric_matrix.inv.array +
+                self.factor_matrix.T @ (
+                    self.symmetric_matrix.inv @ self.factor_matrix.array))
+        return self._capacitance_matrix
+
+    @property
+    def inv(self):
+        return type(self)(
+            self.symmetric_matrix.inv @ self.factor_matrix,
+            self.symmetric_matrix.inv, self.capacitance_matrix.inv,
+            self.inner_symmetric_matrix.inv, -self._sign)
+
+    @property
+    def T(self):
+        return self
+
+
+class PositiveDefiniteLowRankUpdateMatrix(
+        PositiveDefiniteMatrix, SymmetricLowRankUpdateMatrix):
+    """Positive-definite matrix equal to low-rank update to a square matrix.
+
+    The matrix is assumed to have the parametrisation
+
+        matrix = (
+            pos_def_matrix +
+            sign * factor_matrix @ inner_pos_def_matrix @ factor_matrix.T)
+
+    where `factor_matrix` is rectangular with shape `(dim_outer, dim_inner)`,
+    `pos_def_matrix` is positive-definite with shape `(dim_outer, dim_outer)`,
+    `inner_pos_def_matrix` is positive-definite with shape
+    `(dim_inner, dim_inner)` and `sign` is one of {-1, +1} and determines
+    whether a low-rank update (`sign = 1`) or 'downdate' (`sign = -1`) is
+    peformed.
+
+    By exploiting the Woodbury matrix identity and matrix determinant lemma the
+    inverse, determinant and square-root of the matrix can all be computed at a
+    cost of `O(dim_inner**3 + dim_inner**2 * dim_outer)` plus the cost of
+    inverting / evaluating the determinant / square_root of `pos_def_matrix`,
+    which for `pos_def_matrix` instances with special structure such as
+    diagonality or with an existing factorisation, will typically be cheaper
+    than the `O(dim_outer**3)` cost of evaluating the inverse, determinant or
+    square-root directly.
+    """
+
+    def __init__(self, factor_matrix, pos_def_matrix,
+                 inner_pos_def_matrix=None, capacitance_matrix=None, sign=1):
+        """
+        Args:
+            factor_matrix (Matrix): Rectangular matrix with shape
+                `(dim_outer, dim_inner)` with it and its transpose forming the
+                leftmost and righmost term respectively in the matrix product
+                defining the low-rank update.
+            pos_def_matrix (PositiveDefiniteMatrix): Positive-definite matrix
+                to perform low-rank update (or downdate) to.
+            inner_pos_def_matrix (None or PositiveDefiniteMatrix): Optional
+                positive definite matrix with shape `(dim_inner, dim_inner)`
+                specifying inner term in matrix product defining low-rank
+                update. If `None` an identity matrix is used.
+            capacitance_matrix (None or PositiveDefiniteMatrix): Positive-
+                definite matrix equal to `inner_pos_def_matrix.inv +
+                factor_matrix.T @ pos_def_matrix.inv @ factor_matrix` and with
+                shape `(dim_inner, dim_inner)` which is used in constructing
+                inverse and computation of determinant of the low-rank updated
+                matrix, with this argument optional and typically only passed
+                when this matrix has already been computed in a previous
+                computation.
+            sign (int): One of {-1, +1}, determining whether a low-rank update
+                (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
+        """
+        self.factor_matrix = factor_matrix
+        self.pos_def_matrix = pos_def_matrix
+        self.inner_pos_def_matrix = inner_pos_def_matrix
+        super().__init__(
+            factor_matrix, pos_def_matrix, inner_pos_def_matrix,
+            capacitance_matrix, sign)
+
+    def _scalar_multiply(self, scalar):
+        if scalar > 0:
+            return PositiveDefiniteLowRankUpdateMatrix(
+                self.factor_matrix, scalar * self.pos_def_matrix,
+                scalar * self.inner_pos_def_matrix,
+                self._capacitance_matrix / scalar
+                if self._capacitance_matrix is not None else None, self._sign)
+        else:
+            return SymmetricLowRankUpdateMatrix(
+                self.factor_matrix, scalar * self.pos_def_matrix,
+                scalar * self.inner_pos_def_matrix,
+                self._capacitance_matrix / scalar
+                if self._capacitance_matrix is not None else None, self._sign)
+
+    @property
+    def capacitance_matrix(self):
+        if self._capacitance_matrix is None:
+            self._capacitance_matrix = DensePositiveDefiniteMatrix(
+                self.inner_pos_def_matrix.inv.array +
+                self.factor_matrix.T @ (
+                    self.pos_def_matrix.inv @
+                    self.factor_matrix.array))
+        return self._capacitance_matrix
+
+    @property
+    def sqrt(self):
+        # Uses O(dim_inner**3 + dim_inner**2 * dim_outer) cost implementation
+        # proposed in
+        #   Ambikasaran, O'Neill & Singh (2016). Fast symmetric factorization
+        #   of hierarchical matrices with applications. arxiv:1405.0223.
+        # Variable naming below follows notation in Algorithm 1 in paper
+        W = self.pos_def_matrix.sqrt
+        K = self.inner_pos_def_matrix
+        U = W.inv @ self.factor_matrix
+        L = TriangularMatrix(nla.cholesky(U.T @ U.array))
+        I_outer, I_inner = IdentityMatrix(U.shape[0]), np.identity(U.shape[1])
+        M = sla.sqrtm(I_inner + L.T @ (K @ L.array))
+        X = DenseSymmetricMatrix(L.inv.T @ ((M - I_inner) @ L.inv))
+        return W @ SymmetricLowRankUpdateMatrix(U, I_outer, X)
