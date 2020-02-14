@@ -650,6 +650,37 @@ class TestDensePositiveDefiniteMatrix(
                 matrices.DensePositiveDefiniteMatrix(array), (+1,))
 
 
+class TestDensePositiveDefiniteProductMatrix(
+        DifferentiableMatrixTestCase,
+        ExplicitShapePositiveDefiniteMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for dim_0 in SIZES:
+            for dim_1 in [dim_0 + 1, dim_0 * 2]:
+                rect_matrix = rng.standard_normal((dim_0, dim_1))
+                pos_def_matrix = rng.standard_normal((dim_1, dim_1))
+                pos_def_matrix = pos_def_matrix @ pos_def_matrix.T
+                array = rect_matrix @ pos_def_matrix @ rect_matrix.T
+                matrix_pairs[(dim_0, dim_1)] = (
+                    matrices.DensePositiveDefiniteProductMatrix(
+                        rect_matrix, pos_def_matrix), array)
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                return param @ matrix._pos_def_matrix @ param.T
+
+            def get_param(matrix):
+                return matrix._rect_matrix.array
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
+
+
 class TestDenseSquareMatrix(ExplicitShapeInvertibleMatrixTestCase):
 
     def __init__(self):

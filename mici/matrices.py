@@ -884,8 +884,8 @@ class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
         return self.inv.array
 
     def grad_quadratic_form_inv(self, vector):
-        inv_metric_vector = self.inv @ vector
-        return -np.outer(inv_metric_vector, inv_metric_vector)
+        inv_matrix_vector = self.inv @ vector
+        return -np.outer(inv_matrix_vector, inv_matrix_vector)
 
 
 class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
@@ -912,6 +912,54 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
     @property
     def sqrt(self):
         return self.factor
+
+
+class DensePositiveDefiniteProductMatrix(DensePositiveDefiniteMatrix):
+    """Positive-definite matrix specified as a signed symmetric product.
+
+    The matrix is assumed to have the form
+
+        matrix = rect_matrix @ pos_def_matrix @ rect_matrix.T
+
+    for a dense rectangular matrix `rect_matrix` with shape `(dim_0, dim_1)`
+    (`dim_1 > dim_0`) positive definite matrix `pos_def_matrix` with shape
+    `(dim_1, dim_1)`, with the resulting matrix being positive definite under
+    the assumption that `rect_matrix` has full row rank.
+    """
+
+    def __init__(self, rect_matrix, pos_def_matrix=None):
+        """
+        Args:
+            rect_matrix (array or Matrix): Rectangular matrix of shape
+                `(dim_0, dim_1)` with it and its transpose forming the leftmost
+                and righmost term respectively in the symmetric matrix product
+                defining the matrix.
+            pos_def_matrix (None or PositiveDefiniteMatrix): Optional positive
+                positive definite matrix with shape `(dim_inner, dim_inner)`
+                specifying inner term in symmetric matrix product defining
+                matrix. If `None` an identity matrix is used.
+        """
+        if not rect_matrix.shape[0] < rect_matrix.shape[1]:
+            raise ValueError('rect_matrix must have more columns than rows')
+        if not isinstance(rect_matrix, Matrix):
+            rect_matrix = DenseRectangularMatrix(rect_matrix)
+        self._rect_matrix = rect_matrix
+        if pos_def_matrix is None:
+            pos_def_matrix = IdentityMatrix(rect_matrix.shape[1])
+        self._pos_def_matrix = pos_def_matrix
+        _array = rect_matrix @ (pos_def_matrix @ rect_matrix.T.array)
+        super().__init__(_array)
+
+    @property
+    def grad_log_abs_det(self):
+        return 2 * (self.inv @ (
+            self._rect_matrix.array @ self._pos_def_matrix))
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_matrix_vector = self.inv @ vector
+        return -2 * np.outer(
+            inv_matrix_vector,
+            self._pos_def_matrix @ (self._rect_matrix.T @ inv_matrix_vector))
 
 
 class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
