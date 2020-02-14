@@ -1281,7 +1281,7 @@ class EigendecomposedPositiveDefiniteMatrix(
 
 
 class SoftAbsRegularisedPositiveDefiniteMatrix(
-        EigendecomposedPositiveDefiniteMatrix):
+        EigendecomposedPositiveDefiniteMatrix, DifferentiableMatrix):
     """Matrix transformed to be positive definite by regularising eigenvalues.
 
     Matrix is parameterised by a symmetric array `symmetric_array`, of which an
