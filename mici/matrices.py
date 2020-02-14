@@ -1814,7 +1814,8 @@ class SymmetricLowRankUpdateMatrix(
 
 
 class PositiveDefiniteLowRankUpdateMatrix(
-        PositiveDefiniteMatrix, SymmetricLowRankUpdateMatrix):
+        PositiveDefiniteMatrix, DifferentiableMatrix,
+        SymmetricLowRankUpdateMatrix):
     """Positive-definite matrix equal to low-rank update to a square matrix.
 
     The matrix is assumed to have the parametrisation
@@ -1911,3 +1912,15 @@ class PositiveDefiniteLowRankUpdateMatrix(
         M = sla.sqrtm(I_inner + L.T @ (K @ L.array))
         X = DenseSymmetricMatrix(L.inv.T @ ((M - I_inner) @ L.inv))
         return W @ SymmetricLowRankUpdateMatrix(U, I_outer, X)
+
+    @property
+    def grad_log_abs_det(self):
+        return 2 * (self.inv @ (
+            self.factor_matrix.array @ self.inner_pos_def_matrix))
+
+    def grad_quadratic_form_inv(self, vector):
+        inv_matrix_vector = self.inv @ vector
+        return -2 * np.outer(
+            inv_matrix_vector,
+            self.inner_pos_def_matrix @ (
+                self.factor_matrix.T @ inv_matrix_vector))

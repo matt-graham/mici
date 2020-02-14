@@ -1021,6 +1021,7 @@ class TestSymmetricLowRankUpdateMatrix(
 
 
 class TestPositiveDefiniteLowRankUpdateMatrix(
+        DifferentiableMatrixTestCase,
         ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
@@ -1044,4 +1045,18 @@ class TestPositiveDefiniteLowRankUpdateMatrix(
                             inner_pos_def_matrix)),
                     pos_def_matrix + factor_matrix @ (
                         inner_pos_def_matrix @ factor_matrix.T))
-        super().__init__(matrix_pairs, rng)
+
+        if AUTOGRAD_AVAILABLE:
+
+            def param_func(param, matrix):
+                return (
+                    matrix.pos_def_matrix.array +
+                    param @ matrix.inner_pos_def_matrix @ param.T)
+
+            def get_param(matrix):
+                return matrix.factor_matrix.array
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
