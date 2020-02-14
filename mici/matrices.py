@@ -1440,7 +1440,8 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
 
 
 class PositiveDefiniteBlockDiagonalMatrix(
-        SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix):
+        SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix,
+        DifferentiableMatrix):
     """Positive definite specialisation of `SymmetricBlockDiagonalMatrix`.
 
     All matrix blocks in diagonal are restricted to be positive definite.
@@ -1457,6 +1458,8 @@ class PositiveDefiniteBlockDiagonalMatrix(
         if not all(isinstance(block, PositiveDefiniteMatrix)
                    for block in blocks):
             raise ValueError('All blocks must be positive definite')
+        self.is_differentiable = all(
+            [isinstance(block, DifferentiableMatrix) for block in blocks])
         super().__init__(blocks)
 
     def _scalar_multiply(self, scalar):
@@ -1470,6 +1473,23 @@ class PositiveDefiniteBlockDiagonalMatrix(
     def sqrt(self):
         return SquareBlockDiagonalMatrix(
             tuple(block.sqrt for block in self._blocks))
+
+    @property
+    def grad_log_abs_det(self):
+        if self.is_differentiable:
+            return tuple(
+                block.grad_log_abs_det for block in self._blocks)
+        else:
+            raise RuntimeError('Not all blocks are differentiable')
+
+    def grad_quadratic_form_inv(self, vector):
+        if self.is_differentiable:
+            return tuple(
+                block.grad_quadratic_form_inv(vector_part)
+                for block, vector_part in
+                zip(self._blocks, self._split(vector, axis=0)))
+        else:
+            raise RuntimeError('Not all blocks are differentiable')
 
 
 class DenseRectangularMatrix(ExplicitArrayMatrix):

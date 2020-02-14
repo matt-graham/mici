@@ -9,6 +9,7 @@ AUTOGRAD_AVAILABLE = True
 try:
     import autograd.numpy as anp
     from autograd import grad
+    from autograd.core import primitive, defvjp
 except ImportError:
     AUTOGRAD_AVAILABLE = False
     import warnings
@@ -885,6 +886,7 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
 
 
 class TestPositiveDefiniteBlockDiagonalMatrix(
+        DifferentiableMatrixTestCase,
         ExplicitShapePositiveDefiniteMatrixTestCase):
 
     def __init__(self):
@@ -899,7 +901,41 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
                         matrices.DensePositiveDefiniteMatrix(arr)
                         for arr in arrays),
                     sla.block_diag(*arrays))
-        super().__init__(matrix_pairs, rng)
+
+        if AUTOGRAD_AVAILABLE:
+
+            @primitive
+            def block_diag(blocks):
+                return sla.block_diag(*blocks)
+
+            def vjp_block_diag(ans, blocks):
+
+                blocks = tuple(blocks)
+
+                def vjp(g):
+                    i, j = 0, 0
+                    vjp_blocks = []
+                    for block in blocks:
+                        j += block.shape[0]
+                        vjp_blocks.append(g[i:j, i:j])
+                        i = j
+                    return tuple(vjp_blocks)
+
+                return vjp
+
+            defvjp(block_diag, vjp_block_diag)
+
+            def get_param(matrix):
+                return tuple(
+                    block.array for block in matrix._blocks)
+
+            def param_func(param, matrix):
+                return block_diag(param)
+
+        else:
+            param_func, get_param = None, None
+
+        super().__init__(matrix_pairs, get_param, param_func, rng)
 
 
 class TestDenseRectangularMatrix(ExplicitShapeMatrixTestCase):
