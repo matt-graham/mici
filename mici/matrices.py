@@ -6,6 +6,18 @@ import scipy.linalg as sla
 import abc
 
 
+def _choose_matrix_product_class(matrix_l, matrix_r):
+    if (matrix_l.shape[0] == matrix_l.shape[1] and
+            matrix_r.shape == matrix_l.shape):
+        if (isinstance(matrix_l, InvertibleMatrix) and
+                isinstance(matrix_r, InvertibleMatrix)):
+            return InvertibleMatrixProduct
+        else:
+            return SquareMatrixProduct
+    else:
+        return MatrixProduct
+
+
 class Matrix(abc.ABC):
     """Base class for matrix-like objects.
 
@@ -55,10 +67,9 @@ class Matrix(abc.ABC):
             raise ValueError(
                 f'Inconsistent dimensions for matrix multiplication: '
                 f'{self.shape} and {other.shape}.')
-        if isinstance(other, MatrixProduct):
-            return MatrixProduct((self, *other.matrices))
-        elif isinstance(other, Matrix):
-            return MatrixProduct((self, other))
+        if isinstance(other, Matrix):
+            matrix_product_class = _choose_matrix_product_class(self, other)
+            return matrix_product_class((self, other), check_shapes=False)
         else:
             return self._left_matrix_multiply(other)
 
@@ -67,10 +78,9 @@ class Matrix(abc.ABC):
             raise ValueError(
                 f'Inconsistent dimensions for matrix multiplication: '
                 f'{other.shape} and {self.shape}.')
-        if isinstance(other, MatrixProduct):
-            return MatrixProduct((*other.matrices, self))
-        elif isinstance(other, Matrix):
-            return MatrixProduct((other, self))
+        if isinstance(other, Matrix):
+            matrix_product_class = _choose_matrix_product_class(self, other)
+            return matrix_product_class((other, self), check_shapes=False)
         else:
             return self._right_matrix_multiply(other)
 
@@ -185,10 +195,27 @@ class ImplicitArrayMatrix(Matrix):
 
 
 class MatrixProduct(ImplicitArrayMatrix):
-    """Matrix implicitly defined as a product of a sequence of matrices."""
+    """Matrix implicitly defined as a product of a sequence of matrices.
 
-    def __init__(self, matrices):
+    Each adjacent pair of matrices in the sequence must have compatible shapes.
+    """
+
+    def __init__(self, matrices, check_shapes=True):
+        """
+        Args:
+            matrices(Iterable[Matrix]): Sequence of matrices forming product in
+                left-to-right order.
+            check_shapes (boolean): Whether to check if all successive pairs of
+                the matrix sequence have compatible shapes, i.e. equal inner
+                dimensions.
+        """
         self._matrices = tuple(matrices)
+        if check_shapes:
+            for matrix_l, matrix_r in zip(matrices[:-1], matrices[1:]):
+                if matrix_l.shape[1] != matrix_r.shape[0]:
+                    raise ValueError(
+                        f'Matrices {matrix_l} and {matrix_r} have inconsistent'
+                        f' inner dimensions for forming a matrix product.')
         super().__init__((self._matrices[0].shape[0],
                           self._matrices[-1].shape[1]))
 
@@ -197,23 +224,23 @@ class MatrixProduct(ImplicitArrayMatrix):
         return self._matrices
 
     def _scalar_multiply(self, scalar):
-        return MatrixProduct((
-            ScaledIdentityMatrix(scalar, self.shape[0]), *self._matrices))
+        return type(self)((
+            ScaledIdentityMatrix(scalar, self.shape[0]), *self.matrices))
 
     def _left_matrix_multiply(self, other):
-        for matrix in reversed(self._matrices):
+        for matrix in reversed(self.matrices):
             other = matrix @ other
         return other
 
     def _right_matrix_multiply(self, other):
-        for matrix in self._matrices:
+        for matrix in self.matrices:
             other = other @ matrix
         return other
 
     @property
     def T(self):
-        return MatrixProduct(
-            tuple(matrix.T for matrix in reversed(self._matrices)))
+        return type(self)(
+            tuple(matrix.T for matrix in reversed(self.matrices)))
 
     def _construct_array(self):
         return self.matrices[0].array @ MatrixProduct(self.matrices[1:])
@@ -222,12 +249,11 @@ class MatrixProduct(ImplicitArrayMatrix):
 class SquareMatrix(Matrix):
     """Base class for matrices with equal numbers of rows and columns."""
 
-    def __init__(self, size):
-        """
-        Args:
-            size (int): Number of rows / columns in matrix.
-        """
-        super().__init__((size, size))
+    def __init__(self, shape):
+        if shape[0] != shape[1]:
+            raise ValueError(
+                f'{shape} is not a valid shape for a square matrix.')
+        super().__init__(shape)
 
     @property
     @abc.abstractmethod
@@ -238,6 +264,28 @@ class SquareMatrix(Matrix):
         logarithm of the density of then Riemannian measure associated with
         metric with respect to the Lebesgue measure.
         """
+
+
+class SquareMatrixProduct(MatrixProduct, SquareMatrix):
+    """Matrix implicitly defined as a product of a sequence of square matrices.
+
+    All the matrices must have the same shape.
+    """
+
+    def __init__(self, matrices, check_shapes=True):
+        matrices = tuple(matrices)
+        if check_shapes:
+            if matrices[0].shape[0] != matrices[0].shape[1]:
+                raise ValueError(f'{matrix} is not square.')
+            for matrix in matrices[1:]:
+                if matrix.shape != matrices[0].shape:
+                    raise ValueError(
+                        f'{matrices[0]} and {matrix} have different shapes.')
+        super().__init__(matrices, check_shapes=False)
+
+    @property
+    def log_abs_det(self):
+        return sum(matrix.log_abs_det for matrix in self.matrices)
 
 
 class InvertibleMatrix(SquareMatrix):
@@ -255,17 +303,32 @@ class InvertibleMatrix(SquareMatrix):
         """
 
 
+class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
+    """Matrix defined as a product of a sequence of invertible matrices.
+
+    All the matrices must have the same shape.
+    """
+
+    def __init__(self, matrices, check_shapes=True):
+        matrices = tuple(matrices)
+        for matrix in matrices:
+            if not isinstance(matrix, InvertibleMatrix):
+                raise ValueError(f'matrix {matrix} is not invertible.')
+        super().__init__(matrices, check_shapes)
+
+    @property
+    def inv(self):
+        return InvertibleMatrixProduct(
+            tuple(matrix.inv for matrix in reversed(self.matrices)))
+
+
 class SymmetricMatrix(SquareMatrix):
     """Base class for square matrices which are equal to their transpose."""
 
-    def __init__(self, size):
-        """
-        Args:
-            size (int): Number of rows / columns in matrix.
-        """
+    def __init__(self, shape):
         self._eigval = None
         self._eigvec = None
-        super().__init__(size)
+        super().__init__(shape)
 
     def _compute_eigendecomposition(self):
         self._eigval, eigvec = nla.eigh(self.array)
@@ -327,7 +390,7 @@ class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
             size (int or None): Number of rows / columns in matrix or `None` if
                 matrix is to be implicitly shaped.
         """
-        super().__init__(size)
+        super().__init__((size, size))
 
     def _scalar_multiply(self, scalar):
         if scalar > 0:
@@ -435,7 +498,7 @@ class ScaledIdentityMatrix(
         if scalar == 0:
             raise ValueError('scalar must be non-zero')
         self._scalar = scalar
-        super().__init__(size)
+        super().__init__((size, size))
 
     def _scalar_multiply(self, scalar):
         return ScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
@@ -528,7 +591,7 @@ class DiagonalMatrix(
         if diagonal.ndim != 1:
             raise ValueError('Specified diagonal must be a 1D array.')
         self._diagonal = diagonal
-        super().__init__(diagonal.size)
+        super().__init__((diagonal.size, diagonal.size))
 
     @property
     def diagonal(self):
@@ -612,7 +675,7 @@ class TriangularMatrix(InvertibleMatrix, ExplicitArrayMatrix):
             lower (bool): Whether the matrix is lower-triangular (`True`) or
                 upper-triangular (`False`).
         """
-        super().__init__(array.shape[0])
+        super().__init__(array.shape)
         self._array = np.tril(array) if lower else np.triu(array)
         self.lower = lower
 
@@ -649,9 +712,9 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             lower (bool): Whether the matrix is lower-triangular (`True`) or
                 upper-triangular (`False`).
         """
+        super().__init__(inverse_array.shape)
         self._inverse_array = inverse_array
         self.lower = lower
-        super().__init__(inverse_array.shape[0])
 
     def _scalar_multiply(self, scalar):
         return InverseTriangularMatrix(
@@ -692,10 +755,10 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
 
     def __init__(self, size, sign=1):
+        super().__init__((size, size))
         if not (sign == 1 or sign == -1):
             raise ValueError('sign must be equal to +1 or -1')
         self._sign = sign
-        super().__init__(size=size)
 
     @property
     def factor(self):
@@ -979,7 +1042,7 @@ class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
             lu_transposed (bool): Whether LU factorisation is of original array
                 or its transpose.
         """
-        super().__init__(array.shape[0])
+        super().__init__(array.shape)
         self._array = array
         self._lu_and_piv = lu_and_piv
         self._lu_transposed = lu_transposed
@@ -1037,10 +1100,10 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             inv_lu_transposed (bool): Whether LU factorisation is of inverse of
                 array or transpose of inverse of array.
         """
+        super().__init__(inv_array.shape)
         self._inv_array = inv_array
         self._inv_lu_and_piv = inv_lu_and_piv
         self._inv_lu_transposed = inv_lu_transposed
-        super().__init__(inv_array.shape[0])
 
     def _scalar_multiply(self, scalar):
         old_inv_lu, piv = self._inv_lu_and_piv
@@ -1095,8 +1158,8 @@ class DenseSymmetricMatrix(
                 with `eigval[i]` the eigenvalue associated with column `i` of
                 `eigvec`.
         """
+        super().__init__(array.shape)
         self._array = array
-        super().__init__(array.shape[0])
         if isinstance(eigvec, np.ndarray):
             eigvec = OrthogonalMatrix(eigvec)
         self._eigvec = eigvec
@@ -1120,7 +1183,7 @@ class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
         Args:
             array (array): Explicit 2D array representation of matrix.
         """
-        super().__init__(array.shape[0])
+        super().__init__(array.shape)
         self._array = array
 
     def _scalar_multiply(self, scalar):
@@ -1156,9 +1219,9 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             scalar (float): Scalar multiplier as a floating point value.
             orth_array (array): 2D array representation of orthogonal matrix.
         """
+        super().__init__(orth_array.shape)
         self._scalar = scalar
         self._orth_array = orth_array
-        super().__init__(orth_array.shape[0])
 
     def _left_matrix_multiply(self, other):
         return self._scalar * (self._orth_array @ other)
@@ -1215,7 +1278,7 @@ class EigendecomposedSymmetricMatrix(
         """
         if isinstance(eigvec, np.ndarray):
             eigvec = OrthogonalMatrix(eigvec)
-        super().__init__(eigvec.shape[0])
+        super().__init__(eigvec.shape)
         self._eigvec = eigvec
         self._eigval = eigval
         if not isinstance(eigval, np.ndarray) or eigval.size == 1:
@@ -1349,7 +1412,8 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         if not all(isinstance(block, SquareMatrix) for block in self._blocks):
             raise ValueError('All blocks must be square')
         sizes = tuple(block.shape[0] for block in self._blocks)
-        super().__init__(size=sum(sizes))
+        total_size = sum(sizes)
+        super().__init__((total_size, total_size))
         self._sizes = sizes
         self._splits = np.cumsum(sizes[:-1])
 
@@ -1679,7 +1743,7 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         self.inner_square_matrix = inner_square_matrix
         self._capacitance_matrix = capacitance_matrix
         self._sign = sign
-        super().__init__(dim_outer)
+        super().__init__((dim_outer, dim_outer))
 
     def _left_matrix_multiply(self, other):
         return self.square_matrix @ other + (

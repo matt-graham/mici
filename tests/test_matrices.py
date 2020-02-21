@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as nla
 import scipy.linalg as sla
 import numpy.testing as npt
-from functools import partial, wraps
+from functools import partial, wraps, reduce
 
 AUTOGRAD_AVAILABLE = True
 try:
@@ -819,18 +819,62 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
         super().__init__(matrix_pairs, get_param, param_func, rng)
 
 
-class TestSquareMatrixProduct(ExplicitShapeMatrixTestCase):
+class TestMatrixProduct(ExplicitShapeMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_terms in [2, 4]:
+                for explicit in [True, False]:
+                    arrays = [
+                        rng.standard_normal((s if t % 2 == 0 else 2 * s,
+                                             2 * s if t % 2 == 0 else s))
+                        for t in range(n_terms)]
+                    matrices_ = [
+                        matrices.DenseRectangularMatrix(a) for a in arrays]
+                    if explicit:
+                        matrix = matrices.MatrixProduct(matrices_)
+                    else:
+                        matrix = reduce(lambda a, b: a @ b, matrices_)
+                    matrix_pairs[(s, n_terms, explicit)] = (
+                        matrix, nla.multi_dot(arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestSquareMatrixProduct(ExplicitShapeSquareMatrixTestCase):
 
     def __init__(self):
         matrix_pairs = {}
         rng = np.random.RandomState(SEED)
         for s in SIZES:
             for n_terms in [2, 5]:
-                arrays = [rng.standard_normal((s, s)) for _ in range(n_terms)]
-                matrix_pairs[(s, n_terms)] = (
-                    matrices.MatrixProduct(
-                        matrices.DenseSquareMatrix(arr) for arr in arrays),
-                    nla.multi_dot(arrays))
+                arrays = [
+                    rng.standard_normal((s, s)) for _ in range(n_terms)]
+                matrix = matrices.SquareMatrixProduct([
+                    matrices.DenseSquareMatrix(a) for a in arrays])
+                matrix_pairs[(s, n_terms)] = (matrix, nla.multi_dot(arrays))
+        super().__init__(matrix_pairs, rng)
+
+
+class TestInvertibleMatrixProduct(ExplicitShapeInvertibleMatrixTestCase):
+
+    def __init__(self):
+        matrix_pairs = {}
+        rng = np.random.RandomState(SEED)
+        for s in SIZES:
+            for n_terms in [2, 5]:
+                for explicit in [True, False]:
+                    arrays = [
+                        rng.standard_normal((s, s)) for _ in range(n_terms)]
+                    matrices_ = [
+                        matrices.DenseSquareMatrix(a) for a in arrays]
+                    if explicit:
+                        matrix = matrices.InvertibleMatrixProduct(matrices_)
+                    else:
+                        matrix = reduce(lambda a, b: a @ b, matrices_)
+                    matrix_pairs[(s, n_terms, explicit)] = (
+                        matrix, nla.multi_dot(arrays))
         super().__init__(matrix_pairs, rng)
 
 
