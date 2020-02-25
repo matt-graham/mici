@@ -1,9 +1,10 @@
-import mici.matrices as matrices
+from functools import partial, wraps, reduce
+from copy import copy, deepcopy
 import numpy as np
 import numpy.linalg as nla
 import scipy.linalg as sla
 import numpy.testing as npt
-from functools import partial, wraps, reduce
+import mici.matrices as matrices
 
 AUTOGRAD_AVAILABLE = True
 try:
@@ -21,6 +22,16 @@ NUM_SCALAR = 4
 NUM_VECTOR = 4
 SIZES = {1, 2, 5, 10}
 ATOL = 1e-10
+
+
+def iterate_over_matrices(test):
+
+    @wraps(test)
+    def iterated_test(self):
+        for (matrix, np_matrix) in self.matrix_pairs.values():
+            yield (test, matrix)
+
+    return iterated_test
 
 
 def iterate_over_matrix_pairs(test):
@@ -128,6 +139,26 @@ class MatrixTestCase(object):
             [self.rng.standard_normal((size, s)) for s in [1, size, 2 * size]]
         )
 
+    @iterate_over_matrices
+    def test_self_equality(matrix):
+        assert matrix == matrix
+
+    @iterate_over_matrices
+    def test_hashable(matrix):
+        assert hash(matrix) == hash(matrix)
+
+    @iterate_over_matrices
+    def test_copy_equality(matrix):
+        matrix_copy = copy(matrix)
+        assert matrix == matrix_copy
+        assert hash(matrix) == hash(matrix_copy)
+
+    @iterate_over_matrices
+    def test_deepcopy_equality(matrix):
+        matrix_copy = deepcopy(matrix)
+        assert matrix == matrix_copy
+        assert hash(matrix) == hash(matrix_copy)
+
     @iterate_over_matrix_pairs
     def test_shape(matrix, np_matrix):
         assert (
@@ -180,6 +211,16 @@ class MatrixTestCase(object):
 
 
 class ExplicitShapeMatrixTestCase(MatrixTestCase):
+
+    def test_matrix_inequality_different_shapes(self):
+        matrices_ = [matrix for matrix, _ in self.matrix_pairs.values()]
+        for matrix_1, matrix_2 in zip(matrices_[:-1], matrices_[1:]):
+            assert matrix_1 != matrix_2
+            # Technically hashes could collide, but assume sufficiently low
+            # probability for this to happen on small set of comparisons that
+            # equal hashes for different matrices is indicative of issue with
+            # hash implementation
+            assert hash(matrix_1) != hash(matrix_2)
 
     @iterate_over_matrix_pairs
     def test_array(matrix, np_matrix):
