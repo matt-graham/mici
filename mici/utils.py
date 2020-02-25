@@ -3,7 +3,11 @@
 import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
 import mici
-
+try:
+    import xxhash
+    XXHASH_AVAILABLE = True
+except ImportError:
+    XXHASH_AVAILABLE = False
 
 try:
 
@@ -98,6 +102,30 @@ try:
 
 except ImportError:
     pass
+
+
+def hash_array(array):
+    """Compute hash of a NumPy array by hashing data as a byte sequence.
+
+    Args:
+        array (array): NumPy array to compute hash of.
+
+    Returns:
+        hash (int): Computed hash as an integer.
+    """
+    if XXHASH_AVAILABLE:
+        # If fast Python wrapper of fast xxhash implementation is available use
+        # in preference to built in hash function
+        h = xxhash.xxh64()
+        # Update hash by viewing array as byte sequence - no copy required
+        h.update(array.view(np.byte).data)
+        # Also update hash by array dtype, shape and strides to avoid clashes
+        # between different views of same array
+        h.update(bytes(f'{array.dtype}{array.shape}{array.strides}', 'utf-8'))
+        return h.intdigest()
+    else:
+        # Evaluate built-in hash function on *copy* of data as a byte sequence
+        return hash(array.tobytes())
 
 
 LOG_2 = log(2.)
