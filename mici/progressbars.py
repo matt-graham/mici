@@ -103,6 +103,19 @@ class BaseProgressBar(abc.ABC):
         """Close down progress bar and any associated resources."""
 
 
+class DummyProgressBar(BaseProgressBar):
+    """Placeholder progress bar which does not display progress updates."""
+
+    def update(self, iter, iter_dict, refresh=True):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
 class ProgressBar(BaseProgressBar):
     """Iterable object for tracking progress of an iterative task.
 

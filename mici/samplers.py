@@ -17,7 +17,7 @@ from mici.transitions import (
     MetropolisStaticIntegrationTransition, IndependentMomentumTransition,
     MultinomialDynamicIntegrationTransition)
 from mici.states import ChainState
-from mici.progressbars import ProgressBar, _ProxyProgressBar
+from mici.progressbars import ProgressBar, DummyProgressBar, _ProxyProgressBar
 
 
 try:
@@ -654,7 +654,10 @@ class MarkovChainMonteCarloMethod(object):
             kwargs['memmap_enabled'] = False
         if kwargs['memmap_enabled'] and kwargs.get('memmap_path') is None:
             kwargs['memmap_path'] = tempfile.mkdtemp()
-        if 'progress_bar_class' not in kwargs:
+        display_progress = kwargs.pop('display_progress', True)
+        if not display_progress:
+            kwargs['progress_bar_class'] = DummyProgressBar
+        elif 'progress_bar_class' not in kwargs:
             kwargs['progress_bar_class'] = ProgressBar
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
@@ -700,9 +703,13 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -786,9 +793,13 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -963,9 +974,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -1041,9 +1056,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
