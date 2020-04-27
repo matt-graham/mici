@@ -1,7 +1,11 @@
 """Exception types."""
 
 
-class IntegratorError(RuntimeError):
+class Error(RuntimeError):
+    """Base class for errors."""
+
+
+class IntegratorError(Error):
     """Error raised when integrator step fails."""
 
 
@@ -11,3 +15,7 @@ class NonReversibleStepError(IntegratorError):
 
 class ConvergenceError(IntegratorError):
     """Error raised when solver fails to converge within allowed iterations."""
+
+
+class LinAlgError(Error):
+    """Error raised when a matrix operation raises a linear algebra error."""

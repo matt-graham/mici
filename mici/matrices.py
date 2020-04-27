@@ -1,6 +1,7 @@
 """Structured matrix classes implementing basic linear algebra operations."""
 
 import numpy as np
+from mici.errors import LinAlgError
 import numpy.linalg as nla
 import scipy.linalg as sla
 import abc
@@ -1064,8 +1065,11 @@ class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
     @property
     def factor(self):
         if self._factor is None:
-            self._factor = TriangularMatrix(
-                nla.cholesky(self._sign * self._array), lower=True)
+            try:
+                self._factor = TriangularMatrix(
+                    nla.cholesky(self._sign * self._array), lower=True)
+            except nla.LinAlgError as e:
+                raise LinAlgError('Cholesky factorisation failed.') from e
         return self._factor
 
     @property

@@ -5,8 +5,7 @@ from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
-from mici.errors import (
-    IntegratorError, NonReversibleStepError, ConvergenceError)
+from mici.errors import Error, NonReversibleStepError, ConvergenceError
 
 logger = logging.getLogger(__name__)
 
@@ -224,9 +223,9 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
-        except IntegratorError as e:
+        except Error as e:
             logger.info(
-                f'Terminating trajectory due to integrator error:\n{e!s}')
+                f'Terminating trajectory due to error:\n{e!s}')
             return state, {
                 'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s,
                 'non_reversible_step': isinstance(e, NonReversibleStepError),
