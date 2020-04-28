@@ -457,9 +457,9 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
                     logger.info(
                         f'Terminating build_tree due to integrator divergence '
                         f'(delta_h = {h - h_init:.1e}).')
-            except IntegratorError as e:
+            except Error as e:
                 logger.info(
-                    f'Terminating build_tree due to integrator error:\n{e!s}')
+                    f'Terminating build_tree due to error:\n{e!s}')
                 stats['non_reversible_step'] = isinstance(
                     e, NonReversibleStepError)
                 stats['convergence_error'] = isinstance(e, ConvergenceError)
