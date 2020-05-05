@@ -92,7 +92,11 @@ def solve_fixed_point_steffensen(
         try:
             x1 = func(x0)
             x2 = func(x1)
-            x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+            denom = x2 - 2 * x1 + x0
+            # Set any zero values in denominator of update term to smalllest
+            # floating point value to prevent divide-by-zero errors
+            denom[abs(denom) == 0.] = np.finfo(x0.dtype).eps
+            x = x0 - (x1 - x0)**2 / denom
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
