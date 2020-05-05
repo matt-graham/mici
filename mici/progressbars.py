@@ -128,7 +128,7 @@ class ProgressBar(BaseProgressBar):
     """Characters used to create string representation of progress bar."""
 
     def __init__(self, n_iter, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit='it'):
+                 displays=None, n_col=10, unit='it', min_refresh_time=0.25):
         """
         Args:
             n_iter (int): Number of iterations to iterate over.
@@ -145,6 +145,8 @@ class ProgressBar(BaseProgressBar):
             n_col (int): Number of columns (characters) to use in string
                 representation of progress bar.
             unit (str): String describing unit of per-iteration tasks.
+            min_referesh_time (float): Minimum time in seconds between each
+                refresh of progress bar visual representation.
         """
         super().__init__(n_iter, description, position)
         self._n_col = n_col
@@ -155,6 +157,7 @@ class ProgressBar(BaseProgressBar):
         self._elapsed_time = 0
         self._stats_dict = {}
         self._displays = displays
+        self._min_refresh_time = min_refresh_time
 
     @property
     def n_iter(self):
@@ -287,6 +290,7 @@ class ProgressBar(BaseProgressBar):
         self._counter = 0
         self._active = True
         self._start_time = timer()
+        self._last_refresh_time = -float('inf')
         self._stats_dict = {}
 
     def update(self, iter, iter_dict=None, refresh=True):
@@ -304,9 +308,12 @@ class ProgressBar(BaseProgressBar):
             self.counter = iter
             if iter_dict is not None:
                 _update_stats_running_means(iter, self._stats_dict, iter_dict)
+            prev_elased_time = self._elapsed_time
             self._elapsed_time = timer() - self._start_time
-        if refresh:
+        if refresh and iter == self.n_iter or (
+                timer() - self._last_refresh_time > self._min_refresh_time):
             self.refresh()
+            self._last_refresh_time = timer()
 
     def refresh(self):
         """Refresh visual display(s) of progress bar."""
