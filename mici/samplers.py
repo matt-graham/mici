@@ -1229,6 +1229,11 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
     relative probability densities of the different candidate states, with the
     resampling biased towards states further from the current state.
 
+    When used with the default settings of `riemannian_no_u_turn_criterion`
+    termination criterion and extra subtree checks enabled, this sampler is
+    equivalent to the default 'NUTS' MCMC algorithm (minus adaptation) used in
+    Stan as of version v2.23.
+
     References:
 
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
@@ -1241,7 +1246,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
                  termination_criterion=trans.riemannian_no_u_turn_criterion,
-                 momentum_transition=None):
+                 do_extra_subtree_checks=True, momentum_transition=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1263,6 +1268,23 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `mici.transitions.riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a 'resonant'
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has 'U-turned' resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
             momentum_transition (None or mici.transitions.MomentumTransition):
                 Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution
@@ -1274,7 +1296,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
         """
         integration_transition = trans.MultinomialDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion)
+            termination_criterion, do_extra_subtree_checks)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
 
@@ -1309,6 +1331,11 @@ class DynamicSliceHMC(HamiltonianMCMC):
     probability densities of the different candidate states, with the sampling
     biased towards states further from the current state.
 
+    When used with the default setting of `euclidean_no_u_turn_criterion`
+    termination criterion and extra subtree checks disabled, this sampler is
+    equivalent to 'Algorithm 3: Efficient No-U-Turn Sampler' in [1], i.e. the
+    'classic NUTS' algorithm.
+
     References:
 
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
@@ -1319,7 +1346,7 @@ class DynamicSliceHMC(HamiltonianMCMC):
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
                  termination_criterion=trans.euclidean_no_u_turn_criterion,
-                 momentum_transition=None):
+                 do_extra_subtree_checks=False, momentum_transition=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1341,6 +1368,23 @@ class DynamicSliceHMC(HamiltonianMCMC):
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `mici.transitions.euclidean_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a 'resonant'
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has 'U-turned' resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
             momentum_transition (None or mici.transitions.MomentumTransition):
                 Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution
@@ -1352,7 +1396,7 @@ class DynamicSliceHMC(HamiltonianMCMC):
         """
         integration_transition = trans.SliceDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion)
+            termination_criterion, do_extra_subtree_checks)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
 

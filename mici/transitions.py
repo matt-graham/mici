@@ -391,7 +391,8 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
         np.sum(system.dh_dmom(state_2) * sum_mom) < 0)
 
 
-SubTree = namedtuple('SubTree', ['negative', 'positive', 'sum_mom', 'weight'])
+SubTree = namedtuple('SubTree', [
+    'negative', 'positive', 'sum_mom', 'weight', 'depth'])
 
 
 class DynamicIntegrationTransition(IntegrationTransition):
@@ -415,7 +416,8 @@ class DynamicIntegrationTransition(IntegrationTransition):
     """
     def __init__(self, system, integrator,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion):
+                 termination_criterion=riemannian_no_u_turn_criterion,
+                 do_extra_subtree_checks=True):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -435,30 +437,65 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a 'resonant'
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has 'U-turned' resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
         """
         super().__init__(system, integrator)
         assert max_tree_depth > 0, 'max_tree_depth must be non-negative'
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
         self.termination_criterion = termination_criterion
+        self.do_extra_subtree_checks = do_extra_subtree_checks
         self.statistic_types['tree_depth'] = (np.int64, -1)
         self.statistic_types['diverging'] = (np.bool, False)
 
-    def _termination_criterion(self, tree):
-        return self.termination_criterion(
-            self.system, tree.negative, tree.positive, tree.sum_mom)
+    def _termination_criterion(self, tree, neg_subtree, pos_subtree):
+        # If performing extra subtree checks evaluate lazily i.e. only evaluate
+        # if initial whole tree check fails. Extra subtree checks also only
+        # performed for trees of depth 2 and above (i.e. containing at least
+        # 4 states) as for trees of depth 1 they are redundant.
+        if self.termination_criterion(
+                self.system, tree.negative, tree.positive, tree.sum_mom):
+            return True
+        elif tree.depth > 1 and self.do_extra_subtree_checks:
+            if self.termination_criterion(
+                    self.system, neg_subtree.negative, pos_subtree.negative,
+                    neg_subtree.sum_mom + pos_subtree.negative.mom):
+                return True
+            elif self.termination_criterion(
+                    self.system, neg_subtree.positive, pos_subtree.positive,
+                    pos_subtree.sum_mom + neg_subtree.positive.mom):
+                return True
+        return False
 
     def _new_leave(self, state, h, aux_info):
         return SubTree(
-            negative=state, positive=state,
-            sum_mom=np.asarray(state.mom),
-            weight=self._weight_function(h, aux_info))
+            negative=state, positive=state, sum_mom=np.asarray(state.mom),
+            weight=self._weight_function(h, aux_info), depth=0)
 
-    def _merge_subtrees(self, negative_tree, positive_tree):
+    def _merge_subtrees(self, neg_subtree, pos_subtree):
+        assert neg_subtree.depth == pos_subtree.depth, (
+            'Cannot merg subtrees of different depths')
         return SubTree(
-            negative=negative_tree.negative, positive=positive_tree.positive,
-            weight=negative_tree.weight + positive_tree.weight,
-            sum_mom=negative_tree.sum_mom + positive_tree.sum_mom)
+            negative=neg_subtree.negative, positive=pos_subtree.positive,
+            weight=neg_subtree.weight + pos_subtree.weight,
+            sum_mom=neg_subtree.sum_mom + pos_subtree.sum_mom,
+            depth=neg_subtree.depth + 1)
 
     def _init_aux_vars(self, state, rng):
         return {'h_init': self.system.h(state)}
@@ -511,15 +548,16 @@ class DynamicIntegrationTransition(IntegrationTransition):
         if terminate:
             return terminate, None, None
         # merge two subtrees accounting for integration direction
-        tree = (self._merge_subtrees(inner_tree, outer_tree) if state.dir == 1
-                else self._merge_subtrees(outer_tree, inner_tree))
+        neg_subtree = inner_tree if state.dir == 1 else outer_tree
+        pos_subtree = outer_tree if state.dir == 1 else inner_tree
+        tree = self._merge_subtrees(neg_subtree, pos_subtree)
         # sample new proposal from two subtree proposals according to weights
         accept_outer_prob = self._weight_ratio(outer_tree.weight, tree.weight)
         proposal = (
             outer_proposal if rng.uniform() < accept_outer_prob else
             inner_proposal)
-        # check termination criterion on new tree
-        terminate = self._termination_criterion(tree)
+        # check termination criterion on tree and subtrees
+        terminate = self._termination_criterion(tree, neg_subtree, pos_subtree)
         return terminate, tree, proposal
 
     def sample(self, state, rng):
@@ -543,10 +581,11 @@ class DynamicIntegrationTransition(IntegrationTransition):
             if rng.uniform() < self._weight_ratio(new_tree.weight, tree.weight):
                 next_state = new_proposal
             # merge new subtree into current tree accounting for direction
-            tree = (self._merge_subtrees(tree, new_tree) if direction == 1 else
-                    self._merge_subtrees(new_tree, tree))
-            # check termination criterion on new tree
-            if self._termination_criterion(tree):
+            neg_subtree = tree if direction == 1 else new_tree
+            pos_subtree = new_tree if direction == 1 else tree
+            tree = self._merge_subtrees(neg_subtree, pos_subtree)
+            # check termination criterion on new tree and subtrees
+            if self._termination_criterion(tree, neg_subtree, pos_subtree):
                 break
         sum_acc_prob = stats.pop('sum_acc_prob')
         if stats['n_step'] > 0:
