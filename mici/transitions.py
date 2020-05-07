@@ -1,13 +1,28 @@
 """Markov transition kernels."""
 
 from abc import ABC, abstractmethod, abstractproperty
+from collections import namedtuple
 from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
-from mici.errors import Error, NonReversibleStepError, ConvergenceError
+from mici.errors import (
+    Error, NonReversibleStepError, ConvergenceError, HamiltonianDivergenceError)
 
 logger = logging.getLogger(__name__)
+
+
+def _process_integrator_error(exception, stats):
+    logger.info(f'Terminating trajectory due to error:\n{exception!s}')
+    # Only set stats fields to True if exception is of matching type.
+    # Corresponding fields should be set to False by default for transitions
+    # which potentially raise these errors.
+    if isinstance(exception, HamiltonianDivergenceError):
+        stats['diverging'] = True
+    elif isinstance(exception, NonReversibleStepError):
+        stats['non_reversible_step'] = True
+    elif isinstance(exception, ConvergenceError):
+        stats['convergence_error'] = True
 
 
 class Transition(ABC):
@@ -224,12 +239,9 @@ class MetropolisIntegrationTransition(IntegrationTransition):
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
         except Error as e:
-            logger.info(
-                f'Terminating trajectory due to error:\n{e!s}')
-            return state, {
-                'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s,
-                'non_reversible_step': isinstance(e, NonReversibleStepError),
-                'convergence_error': isinstance(e, ConvergenceError)}
+            stats = {'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
+            _process_integrator_error(e, stats)
+            return state, stats
         state_p.dir *= -1
         h_final = self.system.h(state_p)
         metrop_ratio = np.exp(h_init - h_final)
@@ -379,16 +391,19 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
         np.sum(system.dh_dmom(state_2) * sum_mom) < 0)
 
 
-class MultinomialDynamicIntegrationTransition(IntegrationTransition):
-    """Dynamic integration transition with multinomial sampling of new state.
+SubTree = namedtuple('SubTree', ['negative', 'positive', 'sum_mom', 'weight'])
+
+
+class DynamicIntegrationTransition(IntegrationTransition):
+    """Base class for dynamic integration transitions.
 
     In each transition a binary tree of states is recursively computed by
-    integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
-    tree leaves is met. The next chain state is chosen from the candidate
-    states using a progressive multinomial sampling scheme [2] based on the
-    relative probability densities of the different candidate states, with the
-    resampling biased towards states further from the current state.
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree's
+    subtrees is met. The next chain state is chosen from the candidate states
+    using a progressive sampling scheme based on relative weights of the
+    different candidate states, with the sampling biased towards states further
+    from the current state [1, 2].
 
     References:
 
@@ -398,7 +413,6 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
       2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
          Carlo. arXiv preprint arXiv:1701.02434.
     """
-
     def __init__(self, system, integrator,
                  max_tree_depth=10, max_delta_h=1000,
                  termination_criterion=riemannian_no_u_turn_criterion):
@@ -426,111 +440,192 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
         assert max_tree_depth > 0, 'max_tree_depth must be non-negative'
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
-        self._termination_criterion = partial(termination_criterion, system)
+        self.termination_criterion = termination_criterion
         self.statistic_types['tree_depth'] = (np.int64, -1)
         self.statistic_types['diverging'] = (np.bool, False)
 
-    # Key to subscripts used in build_tree and sample_dynamics_transition
-    # _p : proposal
-    # _n : next
-    # _l : left (negative direction)
-    # _r : right (positive direction)
-    # _s : subtree
-    # _i : inner subsubtree
-    # _o : outer subsubtree
+    def _termination_criterion(self, tree):
+        return self.termination_criterion(
+            self.system, tree.negative, tree.positive, tree.sum_mom)
 
-    def _build_tree(
-            self, depth, state, sum_mom, sum_weight, stats, h_init, rng):
+    def _new_leave(self, state, h, aux_info):
+        return SubTree(
+            negative=state, positive=state,
+            sum_mom=np.asarray(state.mom),
+            weight=self._weight_function(h, aux_info))
+
+    def _merge_subtrees(self, negative_tree, positive_tree):
+        return SubTree(
+            negative=negative_tree.negative, positive=positive_tree.positive,
+            weight=negative_tree.weight + positive_tree.weight,
+            sum_mom=negative_tree.sum_mom + positive_tree.sum_mom)
+
+    def _init_aux_vars(self, state, rng):
+        return {'h_init': self.system.h(state)}
+
+    def _accept_stat(self, h, aux_vars):
+        return min(1, np.exp(aux_vars['h_init'] - h))
+
+    @abstractmethod
+    def _weight_function(self, h, aux_vars):
+        pass
+
+    @abstractmethod
+    def _weight_ratio(self, numerator, denominator):
+        pass
+
+    @abstractmethod
+    def _check_divergence(self, h, aux_vars):
+        pass
+
+    def _build_tree(self, depth, state, stats, rng, aux_vars):
         if depth == 0:
             # recursion base case
             try:
+                # integrate forward/backward one step depending on state.dir
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += np.asarray(state.mom)
-                sum_weight += LogRepFloat(log_val=-h)
-                stats['sum_acc_prob'] += min(1, np.exp(h_init - h))
+                # create new tree leave
+                tree = self._new_leave(state, h, aux_vars)
+                proposal = state
+                # accumulate stats to calculate proxy acceptance probability
+                stats['sum_acc_prob'] += self._accept_stat(h, aux_vars)
                 stats['n_step'] += 1
-                terminate = h - h_init > self.max_delta_h
-                if terminate:
-                    stats['diverging'] = True
-                    logger.info(
-                        f'Terminating build_tree due to integrator divergence '
-                        f'(delta_h = {h - h_init:.1e}).')
+                # default to assuming valid and then check for divergence
+                terminate = False
+                self._check_divergence(h, aux_vars)
             except Error as e:
-                logger.info(
-                    f'Terminating build_tree due to error:\n{e!s}')
-                stats['non_reversible_step'] = isinstance(
-                    e, NonReversibleStepError)
-                stats['convergence_error'] = isinstance(e, ConvergenceError)
-                state = None
-                terminate = True
-            return terminate, state, state, state
-        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
-        sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
-        # build inner subsubtree
-        terminate_i, state_i, state, state_pi = self._build_tree(
-            depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init, rng)
-        if terminate_i:
-            return True, None, None, None
-        # build outer subsubtree
-        terminate_o, _, state_o, state_po = self._build_tree(
-            depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init, rng)
-        if terminate_o:
-            return True, None, None, None
-        # independently sample proposal from 2 subsubtrees by relative weights
-        sum_weight_s = sum_weight_i + sum_weight_o
-        accept_o_prob = sum_weight_o / sum_weight_s
-        state_p = state_po if rng.uniform() < accept_o_prob else state_pi
-        # update overall tree weight
-        sum_weight += sum_weight_s
-        # calculate termination criteria for subtree
-        sum_mom_s = sum_mom_i + sum_mom_o
-        terminate_s = self._termination_criterion(state_i, state_o, sum_mom_s)
-        # update overall tree summed momentum
-        sum_mom += sum_mom_s
-        return terminate_s, state_i, state_o, state_p
+                _process_integrator_error(e, stats)
+                terminate, tree, proposal = True, None, None
+            return terminate, tree, proposal
+        # build 'inner' subtree, i.e. starting from current state
+        terminate, inner_tree, inner_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # build 'outer' subtree, i.e. starting from terminus of inner subtree
+        state = inner_tree.positive if state.dir == 1 else inner_tree.negative
+        terminate, outer_tree, outer_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # merge two subtrees accounting for integration direction
+        tree = (self._merge_subtrees(inner_tree, outer_tree) if state.dir == 1
+                else self._merge_subtrees(outer_tree, inner_tree))
+        # sample new proposal from two subtree proposals according to weights
+        accept_outer_prob = self._weight_ratio(outer_tree.weight, tree.weight)
+        proposal = (
+            outer_proposal if rng.uniform() < accept_outer_prob else
+            inner_proposal)
+        # check termination criterion on new tree
+        terminate = self._termination_criterion(tree)
+        return terminate, tree, proposal
 
     def sample(self, state, rng):
-        h_init = self.system.h(state)
-        sum_mom = np.asarray(state.mom).copy()
-        sum_weight = LogRepFloat(log_val=-h_init)
         stats = {'n_step': 0, 'sum_acc_prob': 0.}
-        state_n, state_l, state_r = state, state.copy(), state.copy()
-        # set integration directions of initial left and right tree leaves
-        state_l.dir = -1
-        state_r.dir = +1
+        aux_vars = self._init_aux_vars(state, rng)
+        tree = self._new_leave(state, aux_vars['h_init'], aux_vars)
+        next_state = state
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
             direction = 2 * (rng.uniform() < 0.5) - 1
-            sum_mom_s = np.zeros(state.mom.shape)
-            sum_weight_s = LogRepFloat(0.)
-            if direction == 1:
-                # expand tree by adding subtree to right edge
-                terminate_s, _, state_r, state_p = self._build_tree(
-                    depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            else:
-                # expand tree by adding subtree to left edge
-                terminate_s, _, state_l, state_p = self._build_tree(
-                    depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            if terminate_s:
+            state = tree.positive if direction == 1 else tree.negative
+            state.dir = direction
+            # expand tree by building new subtree of current depth
+            terminate, new_tree, new_proposal = self._build_tree(
+                depth, state, stats, rng, aux_vars)
+            if terminate:
                 break
             # progressively sample new state by choosing between
             # current new state and proposal from new subtree, biasing
             # towards the new subtree proposal
-            if rng.uniform() < sum_weight_s / sum_weight:
-                state_n = state_p
-            sum_weight += sum_weight_s
-            sum_mom += sum_mom_s
-            if self._termination_criterion(state_l, state_r, sum_mom):
+            if rng.uniform() < self._weight_ratio(new_tree.weight, tree.weight):
+                next_state = new_proposal
+            # merge new subtree into current tree accounting for direction
+            tree = (self._merge_subtrees(tree, new_tree) if direction == 1 else
+                    self._merge_subtrees(new_tree, tree))
+            # check termination criterion on new tree
+            if self._termination_criterion(tree):
                 break
         sum_acc_prob = stats.pop('sum_acc_prob')
         if stats['n_step'] > 0:
             stats['accept_prob'] = sum_acc_prob / stats['n_step']
         else:
             stats['accept_prob'] = 0.
-        stats['hamiltonian'] = self.system.h(state_n)
+        stats['hamiltonian'] = self.system.h(next_state)
         stats['tree_depth'] = depth
-        return state_n, stats
+        return next_state, stats
+
+
+class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
+    """Dynamic integration transition with multinomial sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps
+    equal to the previous tree size [1,2] until a termination criteria on the
+    tree leaves is met. The next chain state is chosen from the candidate
+    states using a progressive multinomial sampling scheme [2] based on the
+    relative probability densities of the different candidate states, with the
+    sampling biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+         Carlo. arXiv preprint arXiv:1701.02434.
+    """
+
+    def _weight_function(self, h, aux_vars):
+        return LogRepFloat(log_val=-h)
+
+    def _weight_ratio(self, numerator, denominator):
+        return min(numerator / denominator, 1)
+
+    def _check_divergence(self, h, aux_vars):
+        if h - aux_vars['h_init'] > self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f'delta_h = {h - aux_vars["h_init"]}')
+
+
+class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
+    """Dynamic integration transition with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree leaves is
+    met. The next chain state is chosen from the candidate states using a
+    progressive slice sampling scheme based on the relative probability
+    densities of the different candidate states, with the slice sampler biased
+    towards states further from the current state.
+
+    When used with the `euclidean_no_u_turn_criterion` this transition is
+    equivalent to the transitions in 'Algorithm 3: Efficient No-U-Turn Sampler'
+    in [1].
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    """
+
+    def _init_aux_vars(self, state, rng):
+        aux_vars = super()._init_aux_vars(state, rng)
+        aux_vars['log_u'] = np.log(rng.uniform()) - aux_vars['h_init']
+        return aux_vars
+
+    def _weight_function(self, h, aux_vars):
+        return (aux_vars['log_u'] <= -h) * 1
+
+    def _weight_ratio(self, numerator, denominator):
+        return (
+            min(numerator / denominator, 1) if denominator > 0 else
+            min(numerator, 1))
+
+    def _check_divergence(self, h, aux_vars):
+        if h + aux_vars['log_u'] > self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f'delta_h = {h + aux_vars["log_u"]}')

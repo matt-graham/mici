@@ -12,10 +12,7 @@ import tempfile
 import signal
 from collections import OrderedDict
 import numpy as np
-from mici.transitions import (
-    riemannian_no_u_turn_criterion, MetropolisRandomIntegrationTransition,
-    MetropolisStaticIntegrationTransition, IndependentMomentumTransition,
-    MultinomialDynamicIntegrationTransition)
+import mici.transitions as trans
 from mici.states import ChainState
 from mici.progressbars import ProgressBar, DummyProgressBar, _ProxyProgressBar
 
@@ -901,7 +898,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         self.system = system
         self.rng = rng
         if momentum_transition is None:
-            momentum_transition = IndependentMomentumTransition(system)
+            momentum_transition = trans.IndependentMomentumTransition(system)
         super().__init__(rng, OrderedDict(
             momentum_transition=momentum_transition,
             integration_transition=integration_transition))
@@ -1107,7 +1104,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
     the negation of its initial value.
 
     This is original proposed Hybrid Monte Carlo (often now instead termed
-    Hamiltonian Monte Carlo) algorithm [1,2].
+    Hamiltonian Monte Carlo) algorithm [1, 2].
 
     References:
 
@@ -1136,7 +1133,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = MetropolisStaticIntegrationTransition(
+        integration_transition = trans.MetropolisStaticIntegrationTransition(
             system, integrator, n_step)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -1170,7 +1167,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
 
     The randomisation of the number of integration steps avoids the potential
     of the chain mixing poorly due to using an integration time close to the
-    period of (near) periodic systems [1,2].
+    period of (near) periodic systems [1, 2].
 
     References:
 
@@ -1203,7 +1200,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = MetropolisRandomIntegrationTransition(
+        integration_transition = trans.MetropolisRandomIntegrationTransition(
             system, integrator, n_step_range)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -1226,7 +1223,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 
     In each transition a binary tree of states is recursively computed by
     integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
+    equal to the previous tree size [1, 2] until a termination criteria on the
     tree leaves is met. The next chain state is chosen from the candidate
     states using a progressive multinomial sampling scheme [2] based on the
     relative probability densities of the different candidate states, with the
@@ -1243,7 +1240,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion,
+                 termination_criterion=trans.riemannian_no_u_turn_criterion,
                  momentum_transition=None):
         """
         Args:
@@ -1275,7 +1272,85 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         """
-        integration_transition = MultinomialDynamicIntegrationTransition(
+        integration_transition = trans.MultinomialDynamicIntegrationTransition(
+            system, integrator, max_tree_depth, max_delta_h,
+            termination_criterion)
+        super().__init__(system, rng, integration_transition,
+                         momentum_transition)
+
+    @property
+    def max_tree_depth(self):
+        """Maximum depth to expand trajectory binary tree to."""
+        return self.transitions['integration_transition'].max_tree_depth
+
+    @max_tree_depth.setter
+    def max_tree_depth(self, value):
+        assert value > 0, 'max_tree_depth must be non-negative'
+        self.transitions['integration_transition'].max_tree_depth = value
+
+    @property
+    def max_delta_h(self):
+        """Change in Hamiltonian over trajectory to trigger divergence."""
+        return self.transitions['integration_transition'].max_delta_h
+
+    @max_delta_h.setter
+    def max_delta_h(self, value):
+        self.transitions['integration_transition'].max_delta_h = value
+
+
+class DynamicSliceHMC(HamiltonianMCMC):
+    """Dynamic integration time H-MCMC with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size [1] until a termination criteria on the tree
+    leaves is met. The next chain state is chosen from the candidate states
+    using a progressive slice sampling scheme [1] based on the relative
+    probability densities of the different candidate states, with the sampling
+    biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    """
+
+    def __init__(self, system, integrator, rng,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=trans.euclidean_no_u_turn_criterion,
+                 momentum_transition=None):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            rng (RandomState): Numpy RandomState random number generator.
+            integrator (mici.integrators.Integrator): Symplectic integrator to
+                use to simulate dynamics in integration transition.
+            max_tree_depth (int): Maximum depth to expand trajectory binary
+                tree to in integrator transition. The maximum number of
+                integrator steps corresponds to `2**max_tree_depth`.
+            max_delta_h (float): Maximum change to tolerate in the Hamiltonian
+                function over a trajectory in integrator transition before
+                signalling a divergence.
+            termination_criterion (
+                    Callable[[System, ChainState, ChainState, array], bool]):
+                Function computing criterion to use to determine when to
+                terminate trajectory tree expansion. The function should take a
+                Hamiltonian system as its first argument, a pair of states
+                corresponding to the two edge nodes in the trajectory
+                (sub-)tree being checked and an array containing the sum of the
+                momentums over the trajectory (sub)-tree. Defaults to
+                `mici.transitions.euclidean_no_u_turn_criterion`.
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
+                `mici.transitions.IndependentMomentumTransition` will be used,
+                which independently samples the momentum from its conditional
+                distribution.
+        """
+        integration_transition = trans.SliceDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
             termination_criterion)
         super().__init__(system, rng, integration_transition,

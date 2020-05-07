@@ -19,3 +19,7 @@ class ConvergenceError(IntegratorError):
 
 class LinAlgError(Error):
     """Error raised when a matrix operation raises a linear algebra error."""
+
+
+class HamiltonianDivergenceError(Error):
+    """Error raised when integration of Hamiltonian dynamics diverges."""
