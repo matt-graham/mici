@@ -66,11 +66,6 @@ packages provide extra functionality and features
     wider range of types, including of Autograd generated functions. Both
     Autograd and multiprocess can be installed alongside Mici by running `pip
     install mici[autodiff]`.
-  * [RandomGen](https://github.com/bashtage/randomgen): if RandomGen is 
-    available the `randomgen.Xorshift1024` random number generator will be used 
-    when running multiple chains in parallel, with the `jump` method of the
-    object used to reproducibly generate independent substreams. RandomGen can
-    be installed alongside Mici by running `pip install mici[randomgen]`.
   * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is 
     available  outputs of a sampling run can be converted to an
     `arviz.InferenceData` container object using
@@ -162,12 +157,16 @@ symplectic integrators for Hamiltonian dynamics
 [`mici.samplers`](https://matt-graham.github.io/mici/docs/samplers.html) - MCMC
 samplers for peforming inference
 
-  * `StaticMetropolisHMC` - Static integration time Hamiltonian Monte Carlo 
+  * `StaticMetropolisHMC` - static integration time Hamiltonian Monte Carlo 
      with Metropolis accept step ([Duane et al., 1987](duane1987hybrid)),
-  * `RandomMetropolisHMC` - Random integration time Hamiltonian Monte Carlo
+  * `RandomMetropolisHMC` - random integration time Hamiltonian Monte Carlo
     with Metropolis accept step ([Mackenzie, 1989](#mackenzie1989improved)),
-  * `DynamicMultinomialHMC` - Dynamic integration time Hamiltonian Monte Carlo
-    with multinomial sampling from trajectory 
+  * `DynamicSliceHMC` - dynamic integration time Hamiltonian Monte Carlo
+    with slice sampling from trajectory, equivalent to the original 'NUTS' algorithm
+    ([Hoffman and Gelman, 2014](#hoffman2014nouturn)).
+  * `DynamicMultinomialHMC` - dynamic integration time Hamiltonian Monte Carlo
+    with multinomial sampling from trajectory, equivalent to the current default 
+    MCMC algorithm in [Stan](https://mc-stan.org/)
     ([Hoffman and Gelman, 2014](#hoffman2014nouturn); 
     [Betancourt, 2017](#betancourt2017conceptual)).
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.1" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
 <title>mici.samplers API documentation</title>
 <meta name="description" content="Monte Carlo sampler classes for peforming inference." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -77,6 +77,15 @@
 <li><code><a title="mici.samplers.DynamicMultinomialHMC.max_delta_h" href="#mici.samplers.DynamicMultinomialHMC.max_delta_h">max_delta_h</a></code></li>
 </ul>
 </li>
+<li>
+<h4><code><a title="mici.samplers.DynamicSliceHMC" href="#mici.samplers.DynamicSliceHMC">DynamicSliceHMC</a></code></h4>
+<ul class="">
+<li><code><a title="mici.samplers.DynamicSliceHMC.sample_chain" href="#mici.samplers.DynamicSliceHMC.sample_chain">sample_chain</a></code></li>
+<li><code><a title="mici.samplers.DynamicSliceHMC.sample_chains" href="#mici.samplers.DynamicSliceHMC.sample_chains">sample_chains</a></code></li>
+<li><code><a title="mici.samplers.DynamicSliceHMC.max_tree_depth" href="#mici.samplers.DynamicSliceHMC.max_tree_depth">max_tree_depth</a></code></li>
+<li><code><a title="mici.samplers.DynamicSliceHMC.max_delta_h" href="#mici.samplers.DynamicSliceHMC.max_delta_h">max_delta_h</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -90,7 +99,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L0-L1281" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L0-L1419" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Monte Carlo sampler classes for peforming inference.&#34;&#34;&#34;
 
@@ -106,12 +115,9 @@ import tempfile
 import signal
 from collections import OrderedDict
 import numpy as np
-from mici.transitions import (
-    riemannian_no_u_turn_criterion, MetropolisRandomIntegrationTransition,
-    MetropolisStaticIntegrationTransition, IndependentMomentumTransition,
-    MultinomialDynamicIntegrationTransition)
+import mici.transitions as trans
 from mici.states import ChainState
-from mici.progressbars import ProgressBar, _ProxyProgressBar
+from mici.progressbars import ProgressBar, DummyProgressBar, _ProxyProgressBar
 
 
 try:
@@ -748,7 +754,10 @@ class MarkovChainMonteCarloMethod(object):
             kwargs[&#39;memmap_enabled&#39;] = False
         if kwargs[&#39;memmap_enabled&#39;] and kwargs.get(&#39;memmap_path&#39;) is None:
             kwargs[&#39;memmap_path&#39;] = tempfile.mkdtemp()
-        if &#39;progress_bar_class&#39; not in kwargs:
+        display_progress = kwargs.pop(&#39;display_progress&#39;, True)
+        if not display_progress:
+            kwargs[&#39;progress_bar_class&#39;] = DummyProgressBar
+        elif &#39;progress_bar_class&#39; not in kwargs:
             kwargs[&#39;progress_bar_class&#39;] = ProgressBar
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
@@ -794,9 +803,13 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -880,9 +893,13 @@ class MarkovChainMonteCarloMethod(object):
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -984,7 +1001,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         self.system = system
         self.rng = rng
         if momentum_transition is None:
-            momentum_transition = IndependentMomentumTransition(system)
+            momentum_transition = trans.IndependentMomentumTransition(system)
         super().__init__(rng, OrderedDict(
             momentum_transition=momentum_transition,
             integration_transition=integration_transition))
@@ -1057,9 +1074,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -1135,9 +1156,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -1182,7 +1207,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
     the negation of its initial value.
 
     This is original proposed Hybrid Monte Carlo (often now instead termed
-    Hamiltonian Monte Carlo) algorithm [1,2].
+    Hamiltonian Monte Carlo) algorithm [1, 2].
 
     References:
 
@@ -1211,7 +1236,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MetropolisStaticIntegrationTransition(
+        integration_transition = trans.MetropolisStaticIntegrationTransition(
             system, integrator, n_step)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -1245,7 +1270,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
 
     The randomisation of the number of integration steps avoids the potential
     of the chain mixing poorly due to using an integration time close to the
-    period of (near) periodic systems [1,2].
+    period of (near) periodic systems [1, 2].
 
     References:
 
@@ -1278,7 +1303,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MetropolisRandomIntegrationTransition(
+        integration_transition = trans.MetropolisRandomIntegrationTransition(
             system, integrator, n_step_range)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -1301,11 +1326,16 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 
     In each transition a binary tree of states is recursively computed by
     integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
+    equal to the previous tree size [1, 2] until a termination criteria on the
     tree leaves is met. The next chain state is chosen from the candidate
     states using a progressive multinomial sampling scheme [2] based on the
     relative probability densities of the different candidate states, with the
     resampling biased towards states further from the current state.
+
+    When used with the default settings of `riemannian_no_u_turn_criterion`
+    termination criterion and extra subtree checks enabled, this sampler is
+    equivalent to the default &#39;NUTS&#39; MCMC algorithm (minus adaptation) used in
+    Stan as of version v2.23.
 
     References:
 
@@ -1318,8 +1348,8 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion,
-                 momentum_transition=None):
+                 termination_criterion=trans.riemannian_no_u_turn_criterion,
+                 do_extra_subtree_checks=True, momentum_transition=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1341,6 +1371,23 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `mici.transitions.riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
             momentum_transition (None or mici.transitions.MomentumTransition):
                 Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution
@@ -1350,9 +1397,109 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MultinomialDynamicIntegrationTransition(
+        integration_transition = trans.MultinomialDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion)
+            termination_criterion, do_extra_subtree_checks)
+        super().__init__(system, rng, integration_transition,
+                         momentum_transition)
+
+    @property
+    def max_tree_depth(self):
+        &#34;&#34;&#34;Maximum depth to expand trajectory binary tree to.&#34;&#34;&#34;
+        return self.transitions[&#39;integration_transition&#39;].max_tree_depth
+
+    @max_tree_depth.setter
+    def max_tree_depth(self, value):
+        assert value &gt; 0, &#39;max_tree_depth must be non-negative&#39;
+        self.transitions[&#39;integration_transition&#39;].max_tree_depth = value
+
+    @property
+    def max_delta_h(self):
+        &#34;&#34;&#34;Change in Hamiltonian over trajectory to trigger divergence.&#34;&#34;&#34;
+        return self.transitions[&#39;integration_transition&#39;].max_delta_h
+
+    @max_delta_h.setter
+    def max_delta_h(self, value):
+        self.transitions[&#39;integration_transition&#39;].max_delta_h = value
+
+
+class DynamicSliceHMC(HamiltonianMCMC):
+    &#34;&#34;&#34;Dynamic integration time H-MCMC with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size [1] until a termination criteria on the tree
+    leaves is met. The next chain state is chosen from the candidate states
+    using a progressive slice sampling scheme [1] based on the relative
+    probability densities of the different candidate states, with the sampling
+    biased towards states further from the current state.
+
+    When used with the default setting of `euclidean_no_u_turn_criterion`
+    termination criterion and extra subtree checks disabled, this sampler is
+    equivalent to &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in [1], i.e. the
+    &#39;classic NUTS&#39; algorithm.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, rng,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=trans.euclidean_no_u_turn_criterion,
+                 do_extra_subtree_checks=False, momentum_transition=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            rng (RandomState): Numpy RandomState random number generator.
+            integrator (mici.integrators.Integrator): Symplectic integrator to
+                use to simulate dynamics in integration transition.
+            max_tree_depth (int): Maximum depth to expand trajectory binary
+                tree to in integrator transition. The maximum number of
+                integrator steps corresponds to `2**max_tree_depth`.
+            max_delta_h (float): Maximum change to tolerate in the Hamiltonian
+                function over a trajectory in integrator transition before
+                signalling a divergence.
+            termination_criterion (
+                    Callable[[System, ChainState, ChainState, array], bool]):
+                Function computing criterion to use to determine when to
+                terminate trajectory tree expansion. The function should take a
+                Hamiltonian system as its first argument, a pair of states
+                corresponding to the two edge nodes in the trajectory
+                (sub-)tree being checked and an array containing the sum of the
+                momentums over the trajectory (sub)-tree. Defaults to
+                `mici.transitions.euclidean_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
+                `mici.transitions.IndependentMomentumTransition` will be used,
+                which independently samples the momentum from its conditional
+                distribution.
+        &#34;&#34;&#34;
+        integration_transition = trans.SliceDynamicIntegrationTransition(
+            system, integrator, max_tree_depth, max_delta_h,
+            termination_criterion, do_extra_subtree_checks)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
 
@@ -1391,7 +1538,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L56-L64" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L53-L61" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@contextmanager
 def ignore_sigint_manager():
@@ -1429,7 +1576,7 @@ chain iteration.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L634-L831" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L631-L839" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MarkovChainMonteCarloMethod(object):
     &#34;&#34;&#34;Generic Markov chain Monte Carlo (MCMC) sampler.
@@ -1454,7 +1601,10 @@ chain iteration.</dd>
             kwargs[&#39;memmap_enabled&#39;] = False
         if kwargs[&#39;memmap_enabled&#39;] and kwargs.get(&#39;memmap_path&#39;) is None:
             kwargs[&#39;memmap_path&#39;] = tempfile.mkdtemp()
-        if &#39;progress_bar_class&#39; not in kwargs:
+        display_progress = kwargs.pop(&#39;display_progress&#39;, True)
+        if not display_progress:
+            kwargs[&#39;progress_bar_class&#39;] = DummyProgressBar
+        elif &#39;progress_bar_class&#39; not in kwargs:
             kwargs[&#39;progress_bar_class&#39;] = ProgressBar
 
     def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
@@ -1500,9 +1650,13 @@ chain iteration.</dd>
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -1586,9 +1740,13 @@ chain iteration.</dd>
                 computed so far of the chain statistics associated with any
                 valid key-pairs will be monitored during sampling  by printing
                 as postfix to progress bar.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -1689,10 +1847,15 @@ returned in the <code>chain_stats</code> dictionary. The mean over samples
 computed so far of the chain statistics associated with any
 valid key-pairs will be monitored during sampling by printing
 as postfix to progress bar.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1721,7 +1884,7 @@ statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L660-L734" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L660-L738" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
     &#34;&#34;&#34;Sample a Markov chain from a given initial state.
@@ -1766,9 +1929,13 @@ statistic.</dd>
             computed so far of the chain statistics associated with any
             valid key-pairs will be monitored during sampling by printing
             as postfix to progress bar.
+        display_progress (bool): Whether to display a progress bar to
+            track the completed chain sampling iterations. Default value
+            is `True`, i.e. to display progress bar.
         progress_bar_class (mici.progressbars.BaseProgressBar): Class or
             factory function for progress bar to use to show chain
-            progress. Defaults to `mici.progressbars.ProgressBar`.
+            progress if enabled (`display_progress=True`). Defaults to
+            `mici.progressbars.ProgressBar`.
 
     Returns:
         final_state (mici.states.ChainState): State of chain after final
@@ -1865,10 +2032,15 @@ computed so far of the chain statistics associated with any
 valid key-pairs will be monitored during sampling
 by printing
 as postfix to progress bar.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1899,7 +2071,7 @@ integration transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L736-L831" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L740-L839" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
                   **kwargs):
@@ -1954,9 +2126,13 @@ integration transition statistic.</dd>
             computed so far of the chain statistics associated with any
             valid key-pairs will be monitored during sampling  by printing
             as postfix to progress bar.
+        display_progress (bool): Whether to display a progress bar to
+            track the completed chain sampling iterations. Default value
+            is `True`, i.e. to display progress bar.
         progress_bar_class (mici.progressbars.BaseProgressBar): Class or
             factory function for progress bar to use to show chain
-            progress. Defaults to `mici.progressbars.ProgressBar`.
+            progress if enabled (`display_progress=True`). Defaults to
+            `mici.progressbars.ProgressBar`.
 
     Returns:
         final_states (List[ChainState]): States of chains after final
@@ -2059,7 +2235,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L839-L1072" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L847-L1088" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     &#34;&#34;&#34;Wrapper class for Hamiltonian Markov chain Monte Carlo (H-MCMC) methods.
@@ -2115,7 +2291,7 @@ distribution.</p>
         self.system = system
         self.rng = rng
         if momentum_transition is None:
-            momentum_transition = IndependentMomentumTransition(system)
+            momentum_transition = trans.IndependentMomentumTransition(system)
         super().__init__(rng, OrderedDict(
             momentum_transition=momentum_transition,
             integration_transition=integration_transition))
@@ -2188,9 +2364,13 @@ distribution.</p>
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -2266,9 +2446,13 @@ distribution.</p>
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
                 is to print only the mean `accept_prob` statistic.
+            display_progress (bool): Whether to display a progress bar to
+                track the completed chain sampling iterations. Default value
+                is `True`, i.e. to display progress bar.
             progress_bar_class (mici.progressbars.BaseProgressBar): Class or
                 factory function for progress bar to use to show chain
-                progress. Defaults to `mici.progressbars.ProgressBar`.
+                progress if enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -2305,6 +2489,7 @@ distribution.</p>
 <li><a title="mici.samplers.StaticMetropolisHMC" href="#mici.samplers.StaticMetropolisHMC">StaticMetropolisHMC</a></li>
 <li><a title="mici.samplers.RandomMetropolisHMC" href="#mici.samplers.RandomMetropolisHMC">RandomMetropolisHMC</a></li>
 <li><a title="mici.samplers.DynamicMultinomialHMC" href="#mici.samplers.DynamicMultinomialHMC">DynamicMultinomialHMC</a></li>
+<li><a title="mici.samplers.DynamicSliceHMC" href="#mici.samplers.DynamicSliceHMC">DynamicSliceHMC</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
@@ -2359,10 +2544,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2388,7 +2578,7 @@ transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L925-L992" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L933-L1004" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chain(self, n_sample, init_state, **kwargs):
     &#34;&#34;&#34;Sample a Markov chain from a given initial state.
@@ -2431,9 +2621,13 @@ transition statistic.</dd>
             statistics to monitor mean of over samples computed so far
             during sampling by printing as postfix to progress bar. Default
             is to print only the mean `accept_prob` statistic.
+        display_progress (bool): Whether to display a progress bar to
+            track the completed chain sampling iterations. Default value
+            is `True`, i.e. to display progress bar.
         progress_bar_class (mici.progressbars.BaseProgressBar): Class or
             factory function for progress bar to use to show chain
-            progress. Defaults to `mici.progressbars.ProgressBar`.
+            progress if enabled (`display_progress=True`). Defaults to
+            `mici.progressbars.ProgressBar`.
 
     Returns:
         final_state (mici.states.ChainState): State of chain after final
@@ -2521,10 +2715,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2552,7 +2751,7 @@ corresponding integration transition statistic.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L994-L1072" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1006-L1088" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_chains(self, n_sample, init_states, **kwargs):
     &#34;&#34;&#34;Sample one or more Markov chains from given initial states.
@@ -2604,9 +2803,13 @@ corresponding integration transition statistic.</dd>
             statistics to monitor mean of over samples computed so far
             during sampling by printing as postfix to progress bar. Default
             is to print only the mean `accept_prob` statistic.
+        display_progress (bool): Whether to display a progress bar to
+            track the completed chain sampling iterations. Default value
+            is `True`, i.e. to display progress bar.
         progress_bar_class (mici.progressbars.BaseProgressBar): Class or
             factory function for progress bar to use to show chain
-            progress. Defaults to `mici.progressbars.ProgressBar`.
+            progress if enabled (`display_progress=True`). Defaults to
+            `mici.progressbars.ProgressBar`.
 
     Returns:
         final_states (List[ChainState]): States of chains after final
@@ -2654,7 +2857,7 @@ the effect being that on acceptance the integration direction will be equal
 to its initial value and on rejection the integration direction will be
 the negation of its initial value.</p>
 <p>This is original proposed Hybrid Monte Carlo (often now instead termed
-Hamiltonian Monte Carlo) algorithm [1,2].</p>
+Hamiltonian Monte Carlo) algorithm [1, 2].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
@@ -2688,7 +2891,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1075-L1133" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1091-L1149" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class StaticMetropolisHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Static integration time H-MCMC implementation with Metropolis sampling.
@@ -2706,7 +2909,7 @@ distribution.</p>
     the negation of its initial value.
 
     This is original proposed Hybrid Monte Carlo (often now instead termed
-    Hamiltonian Monte Carlo) algorithm [1,2].
+    Hamiltonian Monte Carlo) algorithm [1, 2].
 
     References:
 
@@ -2735,7 +2938,7 @@ distribution.</p>
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MetropolisStaticIntegrationTransition(
+        integration_transition = trans.MetropolisStaticIntegrationTransition(
             system, integrator, n_step)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -2763,7 +2966,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1125-L1128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1141-L1144" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_step(self):
@@ -2825,10 +3028,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2913,10 +3121,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -2963,7 +3176,7 @@ to its initial value and on rejection the integration direction will be
 the negation of its initial value.</p>
 <p>The randomisation of the number of integration steps avoids the potential
 of the chain mixing poorly due to using an integration time close to the
-period of (near) periodic systems [1,2].</p>
+period of (near) periodic systems [1, 2].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
@@ -3001,7 +3214,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1136-L1202" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1152-L1218" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RandomMetropolisHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Random integration time H-MCMC with Metropolis sampling of new state.
@@ -3021,7 +3234,7 @@ distribution.</p>
 
     The randomisation of the number of integration steps avoids the potential
     of the chain mixing poorly due to using an integration time close to the
-    period of (near) periodic systems [1,2].
+    period of (near) periodic systems [1, 2].
 
     References:
 
@@ -3054,7 +3267,7 @@ distribution.</p>
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MetropolisRandomIntegrationTransition(
+        integration_transition = trans.MetropolisRandomIntegrationTransition(
             system, integrator, n_step_range)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
@@ -3084,7 +3297,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1192-L1195" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1208-L1211" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_step_range(self):
@@ -3146,10 +3359,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3234,10 +3452,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3267,17 +3490,21 @@ corresponding integration transition statistic.</dd>
 </dd>
 <dt id="mici.samplers.DynamicMultinomialHMC"><code class="flex name class">
 <span>class <span class="ident">DynamicMultinomialHMC</span></span>
-<span>(</span><span>system, integrator, rng, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;, momentum_transition=None)</span>
+<span>(</span><span>system, integrator, rng, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;, do_extra_subtree_checks=True, momentum_transition=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Dynamic integration time H-MCMC with multinomial sampling of new state.</p>
 <p>In each transition a binary tree of states is recursively computed by
 integrating randomly forward and backward in time by a number of steps
-equal to the previous tree size [1,2] until a termination criteria on the
+equal to the previous tree size [1, 2] until a termination criteria on the
 tree leaves is met. The next chain state is chosen from the candidate
 states using a progressive multinomial sampling scheme [2] based on the
 relative probability densities of the different candidate states, with the
 resampling biased towards states further from the current state.</p>
+<p>When used with the default settings of <code>riemannian_no_u_turn_criterion</code>
+termination criterion and extra subtree checks enabled, this sampler is
+equivalent to the default 'NUTS' MCMC algorithm (minus adaptation) used in
+Stan as of version v2.23.</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
@@ -3314,6 +3541,24 @@ corresponding to the two edge nodes in the trajectory
 momentums over the trajectory (sub)-tree. Defaults to
 <a title="mici.transitions.riemannian_no_u_turn_criterion" href="transitions.html#mici.transitions.riemannian_no_u_turn_criterion"><code>riemannian_no_u_turn_criterion()</code></a>.</p>
 </dd>
+<dt><strong><code>do_extra_subtree_checks</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform additional
+termination criterion checks on overlapping subtrees of the
+current tree to improve robustness in systems with dynamics
+which are well approximated by independent system of simple
+harmonic oscillators. In such systems (corresponding to e.g.
+a standard normal target distribution and identity metric
+matrix representation) at certain step sizes a 'resonant'
+behaviour is seen by which the termination criterion fails to
+detect that the trajectory has expanded past a half-period i.e.
+has 'U-turned' resulting in trajectories continuing to expand,
+potentially up until the <code>max_tree_depth</code> limit is hit. For
+more details see the Stan Discourse discussion at kutt.it/yAkIES
+If <code>do_extra_subtree_checks</code> is set to <code>True</code> additional
+termination criterion checks are performed on overlapping
+subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some
+correlated models and some overhead from additional checks.</dd>
 <dt><strong><code>momentum_transition</code></strong> :&ensp;<code>None</code> or <a title="mici.transitions.MomentumTransition" href="transitions.html#mici.transitions.MomentumTransition"><code>MomentumTransition</code></a></dt>
 <dd>
 <p>Markov transition kernel which leaves the conditional
@@ -3328,18 +3573,23 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1205-L1282" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1221-L1320" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DynamicMultinomialHMC(HamiltonianMCMC):
     &#34;&#34;&#34;Dynamic integration time H-MCMC with multinomial sampling of new state.
 
     In each transition a binary tree of states is recursively computed by
     integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
+    equal to the previous tree size [1, 2] until a termination criteria on the
     tree leaves is met. The next chain state is chosen from the candidate
     states using a progressive multinomial sampling scheme [2] based on the
     relative probability densities of the different candidate states, with the
     resampling biased towards states further from the current state.
+
+    When used with the default settings of `riemannian_no_u_turn_criterion`
+    termination criterion and extra subtree checks enabled, this sampler is
+    equivalent to the default &#39;NUTS&#39; MCMC algorithm (minus adaptation) used in
+    Stan as of version v2.23.
 
     References:
 
@@ -3352,8 +3602,8 @@ distribution.</p>
 
     def __init__(self, system, integrator, rng,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion,
-                 momentum_transition=None):
+                 termination_criterion=trans.riemannian_no_u_turn_criterion,
+                 do_extra_subtree_checks=True, momentum_transition=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -3375,6 +3625,23 @@ distribution.</p>
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `mici.transitions.riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
             momentum_transition (None or mici.transitions.MomentumTransition):
                 Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution
@@ -3384,9 +3651,9 @@ distribution.</p>
                 which independently samples the momentum from its conditional
                 distribution.
         &#34;&#34;&#34;
-        integration_transition = MultinomialDynamicIntegrationTransition(
+        integration_transition = trans.MultinomialDynamicIntegrationTransition(
             system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion)
+            termination_criterion, do_extra_subtree_checks)
         super().__init__(system, rng, integration_transition,
                          momentum_transition)
 
@@ -3422,7 +3689,7 @@ distribution.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1265-L1268" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1303-L1306" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def max_tree_depth(self):
@@ -3436,7 +3703,7 @@ def max_tree_depth(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/samplers.py#L1275-L1278" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1313-L1316" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def max_delta_h(self):
@@ -3498,10 +3765,15 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3586,10 +3858,417 @@ and the chain data written to files there.</dd>
 statistics to monitor mean of over samples computed so far
 during sampling by printing as postfix to progress bar. Default
 is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
 <dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
 <dd>Class or
 factory function for progress bar to use to show chain
-progress. Defaults to <a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>final_states</code></strong> :&ensp;<code>List</code>[<code>ChainState</code>]</dt>
+<dd>States of chains after final
+iteration. May be used to resume sampling a chain by passing as
+the initial states to a new <code>sample_chains</code> call.</dd>
+<dt><strong><code>traces</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
+<dd>Dictionary of chain trace arrays.
+Values in dictionary are list of arrays of variables outputted
+by trace functions in <code>trace_funcs</code> with each array in the list
+corresponding to a single chain and the leading dimension of
+each array corresponding to the sampling (draw) index. The key
+for each value is the corresponding key in the dictionary
+returned by the trace function which computed the traced value.</dd>
+<dt><strong><code>chain_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
+<dd>Dictionary of chain
+integration transition statistics. Values in dictionary are
+lists of arrays of chain statistic values with each array in
+the list corresponding to a single chain and the leading
+dimension of each array corresponding to the sampling (draw)
+index. The key for each value is a string description of the
+corresponding integration transition statistic.</dd>
+</dl></section>
+</dd>
+</dl>
+</dd>
+<dt id="mici.samplers.DynamicSliceHMC"><code class="flex name class">
+<span>class <span class="ident">DynamicSliceHMC</span></span>
+<span>(</span><span>system, integrator, rng, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function euclidean_no_u_turn_criterion&gt;, do_extra_subtree_checks=False, momentum_transition=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Dynamic integration time H-MCMC with slice sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by
+integrating randomly forward and backward in time by a number of steps equal
+to the previous tree size [1] until a termination criteria on the tree
+leaves is met. The next chain state is chosen from the candidate states
+using a progressive slice sampling scheme [1] based on the relative
+probability densities of the different candidate states, with the sampling
+biased towards states further from the current state.</p>
+<p>When used with the default setting of <code>euclidean_no_u_turn_criterion</code>
+termination criterion and extra subtree checks disabled, this sampler is
+equivalent to 'Algorithm 3: Efficient No-U-Turn Sampler' in [1], i.e. the
+'classic NUTS' algorithm.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>rng</code></strong> :&ensp;<code>RandomState</code></dt>
+<dd>Numpy RandomState random number generator.</dd>
+<dt><strong><code>integrator</code></strong> :&ensp;<a title="mici.integrators.Integrator" href="integrators.html#mici.integrators.Integrator"><code>Integrator</code></a></dt>
+<dd>Symplectic integrator to
+use to simulate dynamics in integration transition.</dd>
+<dt><strong><code>max_tree_depth</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum depth to expand trajectory binary
+tree to in integrator transition. The maximum number of
+integrator steps corresponds to <code>2**max_tree_depth</code>.</dd>
+<dt><strong><code>max_delta_h</code></strong> :&ensp;<code>float</code></dt>
+<dd>Maximum change to tolerate in the Hamiltonian
+function over a trajectory in integrator transition before
+signalling a divergence.</dd>
+<dt><strong><code>termination_criterion</code></strong> :&ensp;</dt>
+<dt><code>Callable</code>[[<code>System</code>, <code>ChainState</code>, <code>ChainState</code>, <code>array</code>], <code>bool</code>]</dt>
+<dd>
+<p>Function computing criterion to use to determine when to
+terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states
+corresponding to the two edge nodes in the trajectory
+(sub-)tree being checked and an array containing the sum of the
+momentums over the trajectory (sub)-tree. Defaults to
+<a title="mici.transitions.euclidean_no_u_turn_criterion" href="transitions.html#mici.transitions.euclidean_no_u_turn_criterion"><code>euclidean_no_u_turn_criterion()</code></a>.</p>
+</dd>
+<dt><strong><code>do_extra_subtree_checks</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform additional
+termination criterion checks on overlapping subtrees of the
+current tree to improve robustness in systems with dynamics
+which are well approximated by independent system of simple
+harmonic oscillators. In such systems (corresponding to e.g.
+a standard normal target distribution and identity metric
+matrix representation) at certain step sizes a 'resonant'
+behaviour is seen by which the termination criterion fails to
+detect that the trajectory has expanded past a half-period i.e.
+has 'U-turned' resulting in trajectories continuing to expand,
+potentially up until the <code>max_tree_depth</code> limit is hit. For
+more details see the Stan Discourse discussion at kutt.it/yAkIES
+If <code>do_extra_subtree_checks</code> is set to <code>True</code> additional
+termination criterion checks are performed on overlapping
+subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some
+correlated models and some overhead from additional checks.</dd>
+<dt><strong><code>momentum_transition</code></strong> :&ensp;<code>None</code> or <a title="mici.transitions.MomentumTransition" href="transitions.html#mici.transitions.MomentumTransition"><code>MomentumTransition</code></a></dt>
+<dd>
+<p>Markov transition kernel which leaves the conditional
+distribution on the momentum under the canonical distribution
+invariant, updating only the momentum component of the chain
+state. If set to <code>None</code> the momentum transition operator
+<a title="mici.transitions.IndependentMomentumTransition" href="transitions.html#mici.transitions.IndependentMomentumTransition"><code>IndependentMomentumTransition</code></a> will be used,
+which independently samples the momentum from its conditional
+distribution.</p>
+</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1323-L1420" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DynamicSliceHMC(HamiltonianMCMC):
+    &#34;&#34;&#34;Dynamic integration time H-MCMC with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size [1] until a termination criteria on the tree
+    leaves is met. The next chain state is chosen from the candidate states
+    using a progressive slice sampling scheme [1] based on the relative
+    probability densities of the different candidate states, with the sampling
+    biased towards states further from the current state.
+
+    When used with the default setting of `euclidean_no_u_turn_criterion`
+    termination criterion and extra subtree checks disabled, this sampler is
+    equivalent to &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in [1], i.e. the
+    &#39;classic NUTS&#39; algorithm.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+
+    def __init__(self, system, integrator, rng,
+                 max_tree_depth=10, max_delta_h=1000,
+                 termination_criterion=trans.euclidean_no_u_turn_criterion,
+                 do_extra_subtree_checks=False, momentum_transition=None):
+        &#34;&#34;&#34;
+        Args:
+            system (mici.systems.System): Hamiltonian system to be simulated.
+            rng (RandomState): Numpy RandomState random number generator.
+            integrator (mici.integrators.Integrator): Symplectic integrator to
+                use to simulate dynamics in integration transition.
+            max_tree_depth (int): Maximum depth to expand trajectory binary
+                tree to in integrator transition. The maximum number of
+                integrator steps corresponds to `2**max_tree_depth`.
+            max_delta_h (float): Maximum change to tolerate in the Hamiltonian
+                function over a trajectory in integrator transition before
+                signalling a divergence.
+            termination_criterion (
+                    Callable[[System, ChainState, ChainState, array], bool]):
+                Function computing criterion to use to determine when to
+                terminate trajectory tree expansion. The function should take a
+                Hamiltonian system as its first argument, a pair of states
+                corresponding to the two edge nodes in the trajectory
+                (sub-)tree being checked and an array containing the sum of the
+                momentums over the trajectory (sub)-tree. Defaults to
+                `mici.transitions.euclidean_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
+            momentum_transition (None or mici.transitions.MomentumTransition):
+                Markov transition kernel which leaves the conditional
+                distribution on the momentum under the canonical distribution
+                invariant, updating only the momentum component of the chain
+                state. If set to `None` the momentum transition operator
+                `mici.transitions.IndependentMomentumTransition` will be used,
+                which independently samples the momentum from its conditional
+                distribution.
+        &#34;&#34;&#34;
+        integration_transition = trans.SliceDynamicIntegrationTransition(
+            system, integrator, max_tree_depth, max_delta_h,
+            termination_criterion, do_extra_subtree_checks)
+        super().__init__(system, rng, integration_transition,
+                         momentum_transition)
+
+    @property
+    def max_tree_depth(self):
+        &#34;&#34;&#34;Maximum depth to expand trajectory binary tree to.&#34;&#34;&#34;
+        return self.transitions[&#39;integration_transition&#39;].max_tree_depth
+
+    @max_tree_depth.setter
+    def max_tree_depth(self, value):
+        assert value &gt; 0, &#39;max_tree_depth must be non-negative&#39;
+        self.transitions[&#39;integration_transition&#39;].max_tree_depth = value
+
+    @property
+    def max_delta_h(self):
+        &#34;&#34;&#34;Change in Hamiltonian over trajectory to trigger divergence.&#34;&#34;&#34;
+        return self.transitions[&#39;integration_transition&#39;].max_delta_h
+
+    @max_delta_h.setter
+    def max_delta_h(self, value):
+        self.transitions[&#39;integration_transition&#39;].max_delta_h = value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.samplers.HamiltonianMCMC" href="#mici.samplers.HamiltonianMCMC">HamiltonianMCMC</a></li>
+<li><a title="mici.samplers.MarkovChainMonteCarloMethod" href="#mici.samplers.MarkovChainMonteCarloMethod">MarkovChainMonteCarloMethod</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.samplers.DynamicSliceHMC.max_tree_depth"><code class="name">var <span class="ident">max_tree_depth</span></code></dt>
+<dd>
+<section class="desc"><p>Maximum depth to expand trajectory binary tree to.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1403-L1406" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def max_tree_depth(self):
+    &#34;&#34;&#34;Maximum depth to expand trajectory binary tree to.&#34;&#34;&#34;
+    return self.transitions[&#39;integration_transition&#39;].max_tree_depth</code></pre>
+</details>
+</dd>
+<dt id="mici.samplers.DynamicSliceHMC.max_delta_h"><code class="name">var <span class="ident">max_delta_h</span></code></dt>
+<dd>
+<section class="desc"><p>Change in Hamiltonian over trajectory to trigger divergence.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/samplers.py#L1413-L1416" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def max_delta_h(self):
+    &#34;&#34;&#34;Change in Hamiltonian over trajectory to trigger divergence.&#34;&#34;&#34;
+    return self.transitions[&#39;integration_transition&#39;].max_delta_h</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.samplers.DynamicSliceHMC.sample_chain"><code class="name flex">
+<span>def <span class="ident">sample_chain</span></span>(<span>self, n_sample, init_state, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a Markov chain from a given initial state.</p>
+<p>Performs a specified number of chain iterations (each of which may be
+composed of multiple individual Markov transitions), recording the
+outputs of functions of the sampled chain state after each iteration.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n_sample</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of samples (iterations) to draw per chain.</dd>
+<dt><strong><code>init_state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a> or <code>array</code></dt>
+<dd>Initial chain state.
+The state can be either an array specifying the state position
+component or a <a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a> instance. If an array
+is passed or the <code>mom</code> attribute of the state is not set, a
+momentum component will be independently sampled from its
+conditional distribution.</dd>
+</dl>
+<h2 id="kwargs">Kwargs</h2>
+<dl>
+<dt><strong><code>trace_funcs</code></strong> :&ensp;<code>Iterable</code>[<code>Callable</code>[[<code>ChainState</code>], <code>Dict</code>[<code>str</code>, <code>array</code> ]]]</dt>
+<dd>
+<p>List of functions which compute the variables to be recorded at
+each chain iteration, with each trace function being passed the
+current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys
+in the returned dictionaries are used to index the trace arrays
+in the returned traces dictionary. If a key appears in multiple
+dictionaries only the the value corresponding to the last trace
+function to return that key will be stored.</p>
+</dd>
+<dt><strong><code>memmap_enabled</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to memory-map arrays used to store
+chain data to files on disk to avoid excessive system memory
+usage for long chains and/or large chain states. The chain data
+is written to <code>.npy</code> files in the directory specified by
+<code>memmap_path</code> (or a temporary directory if not provided). These
+files persist after the termination of the function so should
+be manually deleted when no longer required. Default is to
+for memory mapping to be disabled.</dd>
+<dt><strong><code>memmap_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to directory to write memory-mapped chain
+data to. If not provided, a temporary directory will be created
+and the chain data written to files there.</dd>
+<dt><strong><code>monitor_stats</code></strong> :&ensp;<code>Iterable</code>[<code>str</code>]</dt>
+<dd>List of string keys of chain
+statistics to monitor mean of over samples computed so far
+during sampling by printing as postfix to progress bar. Default
+is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
+<dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
+<dd>Class or
+factory function for progress bar to use to show chain
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>final_state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>State of chain after final
+iteration. May be used to resume sampling a chain by passing as
+the initial state to a new <code>sample_chain</code> call.</dd>
+<dt><strong><code>traces</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>array</code>]</dt>
+<dd>Dictionary of chain trace arrays. Values
+in dictionary are arrays of variables outputted by trace
+functions in <code>trace_funcs</code> with leading dimension of array
+corresponding to the sampling (draw) index. The key for each
+value is the corresponding key in the dictionary returned by
+the trace function which computed the traced value.</dd>
+<dt><strong><code>chain_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>array</code>]</dt>
+<dd>Dictionary of chain integration
+transition statistics. Values in dictionary are arrays of chain
+statistic values with the leading dimension of each array
+corresponding to the sampling (draw) index. The key for each
+value is a string description of the corresponding integration
+transition statistic.</dd>
+</dl></section>
+</dd>
+<dt id="mici.samplers.DynamicSliceHMC.sample_chains"><code class="name flex">
+<span>def <span class="ident">sample_chains</span></span>(<span>self, n_sample, init_states, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample one or more Markov chains from given initial states.</p>
+<p>Performs a specified number of chain iterations (each of consists of a
+momentum transition and integration transition), recording the outputs
+of functions of the sampled chain state after each iteration. The
+chains may be run in parallel across multiple independent processes or
+sequentially. In all cases all chains use independent random draws.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n_sample</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of samples (iterations) to draw per chain.</dd>
+<dt><strong><code>init_states</code></strong> :&ensp;<code>Iterable</code>[<code>ChainState</code>] or <code>Iterable</code>[<code>array</code>]</dt>
+<dd>Initial
+chain states. Each state can be either an array specifying the
+state position component or a <a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a>
+instance. If an array is passed or the <code>mom</code> attribute of the
+state is not set, a momentum component will be independently
+sampled from its conditional distribution. One chain will be
+run for each state in the iterable sequence.</dd>
+</dl>
+<h2 id="kwargs">Kwargs</h2>
+<dl>
+<dt><strong><code>n_process</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Number of parallel processes to run chains
+over. If set to one then chains will be run sequentially in
+otherwise a <code>multiprocessing.Pool</code> object will be used to
+dynamically assign the chains across multiple processes. If set
+to <code>None</code> then the number of processes will be set to the
+output of <code>os.cpu_count()</code>. Default is <code>n_process=1</code>.</dd>
+<dt><strong><code>trace_funcs</code></strong> :&ensp;<code>Iterable</code>[<code>Callable</code>[[<code>ChainState</code>], <code>Dict</code>[<code>str</code>, <code>array</code>]]]</dt>
+<dd>
+<p>List of functions which compute the variables to be recorded at
+each chain iteration, with each trace function being passed the
+current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys
+in the returned dictionaries are used to index the trace arrays
+in the returned traces dictionary. If a key appears in multiple
+dictionaries only the the value corresponding to the last trace
+function to return that key will be stored.</p>
+</dd>
+<dt><strong><code>memmap_enabled</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to memory-map arrays used to store
+chain data to files on disk to avoid excessive system memory
+usage for long chains and/or large chain states. The chain data
+is written to <code>.npy</code> files in the directory specified by
+<code>memmap_path</code> (or a temporary directory if not provided). These
+files persist after the termination of the function so should
+be manually deleted when no longer required. Default is to
+for memory mapping to be disabled.</dd>
+<dt><strong><code>memmap_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to directory to write memory-mapped chain
+data to. If not provided, a temporary directory will be created
+and the chain data written to files there.</dd>
+<dt><strong><code>monitor_stats</code></strong> :&ensp;<code>Iterable</code>[<code>str</code>]</dt>
+<dd>List of string keys of chain
+statistics to monitor mean of over samples computed so far
+during sampling by printing as postfix to progress bar. Default
+is to print only the mean <code>accept_prob</code> statistic.</dd>
+<dt><strong><code>display_progress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to display a progress bar to
+track the completed chain sampling iterations. Default value
+is <code>True</code>, i.e. to display progress bar.</dd>
+<dt><strong><code>progress_bar_class</code></strong> :&ensp;<a title="mici.progressbars.BaseProgressBar" href="progressbars.html#mici.progressbars.BaseProgressBar"><code>BaseProgressBar</code></a></dt>
+<dd>Class or
+factory function for progress bar to use to show chain
+progress if enabled (<code>display_progress=True</code>). Defaults to
+<a title="mici.progressbars.ProgressBar" href="progressbars.html#mici.progressbars.ProgressBar"><code>ProgressBar</code></a>.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -3623,7 +4302,7 @@ corresponding integration transition statistic.</dd>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.1" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
 <title>mici.progressbars API documentation</title>
 <meta name="description" content="Progress bar classes for tracking progress of chains." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -37,6 +37,12 @@
 <h4><code><a title="mici.progressbars.BaseProgressBar" href="#mici.progressbars.BaseProgressBar">BaseProgressBar</a></code></h4>
 <ul class="">
 <li><code><a title="mici.progressbars.BaseProgressBar.update" href="#mici.progressbars.BaseProgressBar.update">update</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.progressbars.DummyProgressBar" href="#mici.progressbars.DummyProgressBar">DummyProgressBar</a></code></h4>
+<ul class="">
+<li><code><a title="mici.progressbars.DummyProgressBar.update" href="#mici.progressbars.DummyProgressBar.update">update</a></code></li>
 </ul>
 </li>
 <li>
@@ -94,7 +100,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L0-L462" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L0-L482" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Progress bar classes for tracking progress of chains.&#34;&#34;&#34;
 
@@ -201,6 +207,19 @@ class BaseProgressBar(abc.ABC):
         &#34;&#34;&#34;Close down progress bar and any associated resources.&#34;&#34;&#34;
 
 
+class DummyProgressBar(BaseProgressBar):
+    &#34;&#34;&#34;Placeholder progress bar which does not display progress updates.&#34;&#34;&#34;
+
+    def update(self, iter, iter_dict, refresh=True):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
 class ProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of an iterative task.
 
@@ -213,7 +232,7 @@ class ProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Characters used to create string representation of progress bar.&#34;&#34;&#34;
 
     def __init__(self, n_iter, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit=&#39;it&#39;):
+                 displays=None, n_col=10, unit=&#39;it&#39;, min_refresh_time=0.25):
         &#34;&#34;&#34;
         Args:
             n_iter (int): Number of iterations to iterate over.
@@ -230,6 +249,8 @@ class ProgressBar(BaseProgressBar):
             n_col (int): Number of columns (characters) to use in string
                 representation of progress bar.
             unit (str): String describing unit of per-iteration tasks.
+            min_referesh_time (float): Minimum time in seconds between each
+                refresh of progress bar visual representation.
         &#34;&#34;&#34;
         super().__init__(n_iter, description, position)
         self._n_col = n_col
@@ -240,6 +261,7 @@ class ProgressBar(BaseProgressBar):
         self._elapsed_time = 0
         self._stats_dict = {}
         self._displays = displays
+        self._min_refresh_time = min_refresh_time
 
     @property
     def n_iter(self):
@@ -372,6 +394,7 @@ class ProgressBar(BaseProgressBar):
         self._counter = 0
         self._active = True
         self._start_time = timer()
+        self._last_refresh_time = -float(&#39;inf&#39;)
         self._stats_dict = {}
 
     def update(self, iter, iter_dict=None, refresh=True):
@@ -389,9 +412,12 @@ class ProgressBar(BaseProgressBar):
             self.counter = iter
             if iter_dict is not None:
                 _update_stats_running_means(iter, self._stats_dict, iter_dict)
+            prev_elased_time = self._elapsed_time
             self._elapsed_time = timer() - self._start_time
-        if refresh:
+        if refresh and iter == self.n_iter or (
+                timer() - self._last_refresh_time &gt; self._min_refresh_time):
             self.refresh()
+            self._last_refresh_time = timer()
 
     def refresh(self):
         &#34;&#34;&#34;Refresh visual display(s) of progress bar.&#34;&#34;&#34;
@@ -592,7 +618,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L57-L103" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L57-L103" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BaseProgressBar(abc.ABC):
     &#34;&#34;&#34;Base class defining expected interface for progress bars.&#34;&#34;&#34;
@@ -648,6 +674,7 @@ progress bars.</dd>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="mici.progressbars.DummyProgressBar" href="#mici.progressbars.DummyProgressBar">DummyProgressBar</a></li>
 <li><a title="mici.progressbars.ProgressBar" href="#mici.progressbars.ProgressBar">ProgressBar</a></li>
 <li><a title="mici.progressbars.TqdmProgressBar" href="#mici.progressbars.TqdmProgressBar">TqdmProgressBar</a></li>
 </ul>
@@ -671,7 +698,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L86-L95" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L86-L95" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def update(self, iter, iter_dict, refresh=True):
@@ -687,9 +714,78 @@ def update(self, iter, iter_dict, refresh=True):
 </dd>
 </dl>
 </dd>
+<dt id="mici.progressbars.DummyProgressBar"><code class="flex name class">
+<span>class <span class="ident">DummyProgressBar</span></span>
+<span>(</span><span>n_iter, description, position)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Placeholder progress bar which does not display progress updates.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>n_iter</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of iterations to iterate over.</dd>
+<dt><strong><code>description</code></strong> :&ensp;<code>None</code> or <code>str</code></dt>
+<dd>Description of task to prefix progress
+bar with.</dd>
+<dt><strong><code>position</code></strong> :&ensp;<code>Tuple</code>[<code>int</code>, <code>int</code>]</dt>
+<dd>Tuple specifying position of progress
+bar within a sequence with first entry corresponding to
+zero-indexed position and the second entry the total number of
+progress bars.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L106-L116" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class DummyProgressBar(BaseProgressBar):
+    &#34;&#34;&#34;Placeholder progress bar which does not display progress updates.&#34;&#34;&#34;
+
+    def update(self, iter, iter_dict, refresh=True):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.progressbars.BaseProgressBar" href="#mici.progressbars.BaseProgressBar">BaseProgressBar</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.progressbars.DummyProgressBar.update"><code class="name flex">
+<span>def <span class="ident">update</span></span>(<span>self, iter, iter_dict, refresh=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Update progress bar state.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>iter</code></strong> :&ensp;<code>int</code></dt>
+<dd>New value for iteration counter.</dd>
+<dt><strong><code>iter_dict</code></strong> :&ensp;<code>None</code> or <code>Dict</code>[<code>str</code>, <code>float</code>]</dt>
+<dd>Dictionary of iteration
+statistics key-value pairs to use to update postfix stats.</dd>
+<dt><strong><code>refresh</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to refresh display(s).</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L109-L110" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def update(self, iter, iter_dict, refresh=True):
+    pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="mici.progressbars.ProgressBar"><code class="flex name class">
 <span>class <span class="ident">ProgressBar</span></span>
-<span>(</span><span>n_iter, description=None, position=(0, 1), displays=None, n_col=10, unit='it')</span>
+<span>(</span><span>n_iter, description=None, position=(0, 1), displays=None, n_col=10, unit='it', min_refresh_time=0.25)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Iterable object for tracking progress of an iterative task.</p>
@@ -718,11 +814,14 @@ corresponding to the current progress bar.</dd>
 representation of progress bar.</dd>
 <dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
 <dd>String describing unit of per-iteration tasks.</dd>
+<dt><strong><code>min_referesh_time</code></strong> :&ensp;<code>float</code></dt>
+<dd>Minimum time in seconds between each
+refresh of progress bar visual representation.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L106-L349" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L119-L369" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of an iterative task.
@@ -736,7 +835,7 @@ representation of progress bar.</dd>
     &#34;&#34;&#34;Characters used to create string representation of progress bar.&#34;&#34;&#34;
 
     def __init__(self, n_iter, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit=&#39;it&#39;):
+                 displays=None, n_col=10, unit=&#39;it&#39;, min_refresh_time=0.25):
         &#34;&#34;&#34;
         Args:
             n_iter (int): Number of iterations to iterate over.
@@ -753,6 +852,8 @@ representation of progress bar.</dd>
             n_col (int): Number of columns (characters) to use in string
                 representation of progress bar.
             unit (str): String describing unit of per-iteration tasks.
+            min_referesh_time (float): Minimum time in seconds between each
+                refresh of progress bar visual representation.
         &#34;&#34;&#34;
         super().__init__(n_iter, description, position)
         self._n_col = n_col
@@ -763,6 +864,7 @@ representation of progress bar.</dd>
         self._elapsed_time = 0
         self._stats_dict = {}
         self._displays = displays
+        self._min_refresh_time = min_refresh_time
 
     @property
     def n_iter(self):
@@ -895,6 +997,7 @@ representation of progress bar.</dd>
         self._counter = 0
         self._active = True
         self._start_time = timer()
+        self._last_refresh_time = -float(&#39;inf&#39;)
         self._stats_dict = {}
 
     def update(self, iter, iter_dict=None, refresh=True):
@@ -912,9 +1015,12 @@ representation of progress bar.</dd>
             self.counter = iter
             if iter_dict is not None:
                 _update_stats_running_means(iter, self._stats_dict, iter_dict)
+            prev_elased_time = self._elapsed_time
             self._elapsed_time = timer() - self._start_time
-        if refresh:
+        if refresh and iter == self.n_iter or (
+                timer() - self._last_refresh_time &gt; self._min_refresh_time):
             self.refresh()
+            self._last_refresh_time = timer()
 
     def refresh(self):
         &#34;&#34;&#34;Refresh visual display(s) of progress bar.&#34;&#34;&#34;
@@ -989,7 +1095,7 @@ representation of progress bar.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L146-L149" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L162-L165" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_iter(self):
@@ -1003,7 +1109,7 @@ def n_iter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L151-L154" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L167-L170" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def description(self):
@@ -1017,7 +1123,7 @@ def description(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L156-L159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L172-L175" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def counter(self):
@@ -1031,7 +1137,7 @@ def counter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L165-L168" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L181-L184" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_complete(self):
@@ -1045,7 +1151,7 @@ def prop_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L170-L173" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L186-L189" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def perc_complete(self):
@@ -1059,7 +1165,7 @@ def perc_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L175-L178" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L191-L194" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def elapsed_time(self):
@@ -1073,7 +1179,7 @@ def elapsed_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L180-L189" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L196-L205" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def iter_rate(self):
@@ -1093,7 +1199,7 @@ def iter_rate(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L191-L198" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L207-L214" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def est_remaining_time(self):
@@ -1111,7 +1217,7 @@ def est_remaining_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L200-L203" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L216-L219" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_filled(self):
@@ -1125,7 +1231,7 @@ def n_block_filled(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L205-L208" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L221-L224" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_empty(self):
@@ -1139,7 +1245,7 @@ def n_block_empty(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L210-L213" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L226-L229" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_partial_block(self):
@@ -1153,7 +1259,7 @@ def prop_partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L215-L218" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L231-L234" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def filled_blocks(self):
@@ -1167,7 +1273,7 @@ def filled_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L220-L226" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L236-L242" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def empty_blocks(self):
@@ -1184,7 +1290,7 @@ def empty_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L228-L234" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L244-L250" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def partial_block(self):
@@ -1201,7 +1307,7 @@ def partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L236-L239" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L252-L255" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def progress_bar(self):
@@ -1215,7 +1321,7 @@ def progress_bar(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L241-L249" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L257-L265" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def bar_color(self):
@@ -1234,7 +1340,7 @@ def bar_color(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L251-L254" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L267-L270" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def stats(self):
@@ -1248,7 +1354,7 @@ def stats(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L256-L261" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L272-L277" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prefix(self):
@@ -1264,7 +1370,7 @@ def prefix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L263-L270" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L279-L286" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def postfix(self):
@@ -1287,13 +1393,14 @@ def postfix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L272-L277" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L288-L294" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def reset(self):
     &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
     self._counter = 0
     self._active = True
     self._start_time = timer()
+    self._last_refresh_time = -float(&#39;inf&#39;)
     self._stats_dict = {}</code></pre>
 </details>
 </dd>
@@ -1315,7 +1422,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L279-L296" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L296-L316" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter, iter_dict=None, refresh=True):
     &#34;&#34;&#34;Update progress bar state
@@ -1332,9 +1439,12 @@ statistics key-value pairs to use to update postfix stats.</dd>
         self.counter = iter
         if iter_dict is not None:
             _update_stats_running_means(iter, self._stats_dict, iter_dict)
+        prev_elased_time = self._elapsed_time
         self._elapsed_time = timer() - self._start_time
-    if refresh:
-        self.refresh()</code></pre>
+    if refresh and iter == self.n_iter or (
+            timer() - self._last_refresh_time &gt; self._min_refresh_time):
+        self.refresh()
+        self._last_refresh_time = timer()</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.refresh"><code class="name flex">
@@ -1345,7 +1455,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L298-L301" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L318-L321" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def refresh(self):
     &#34;&#34;&#34;Refresh visual display(s) of progress bar.&#34;&#34;&#34;
@@ -1377,7 +1487,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L352-L389" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L372-L409" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FileDisplay:
     &#34;&#34;&#34;Use file which supports ANSI escape sequences as an updatable display&#34;&#34;&#34;
@@ -1439,7 +1549,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L383-L389" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L403-L409" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, obj):
     self._move_line(self._position[0] - self._position[1])
@@ -1474,7 +1584,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L431-L463" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L451-L483" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TqdmProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Wrapper of `tqdm` with same interface as `ProgressBar`.&#34;&#34;&#34;
@@ -1535,7 +1645,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/progressbars.py#L439-L454" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/progressbars.py#L459-L474" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter, iter_dict=None, refresh=True):
     if self._tqdm_obj is None:
@@ -1563,7 +1673,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>

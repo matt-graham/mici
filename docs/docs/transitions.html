@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.1" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
 <title>mici.transitions API documentation</title>
 <meta name="description" content="Markov transition kernels." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -104,11 +104,37 @@
 </ul>
 </li>
 <li>
+<h4><code><a title="mici.transitions.SubTree" href="#mici.transitions.SubTree">SubTree</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.SubTree.negative" href="#mici.transitions.SubTree.negative">negative</a></code></li>
+<li><code><a title="mici.transitions.SubTree.positive" href="#mici.transitions.SubTree.positive">positive</a></code></li>
+<li><code><a title="mici.transitions.SubTree.sum_mom" href="#mici.transitions.SubTree.sum_mom">sum_mom</a></code></li>
+<li><code><a title="mici.transitions.SubTree.weight" href="#mici.transitions.SubTree.weight">weight</a></code></li>
+<li><code><a title="mici.transitions.SubTree.depth" href="#mici.transitions.SubTree.depth">depth</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.DynamicIntegrationTransition" href="#mici.transitions.DynamicIntegrationTransition">DynamicIntegrationTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.DynamicIntegrationTransition.sample" href="#mici.transitions.DynamicIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.DynamicIntegrationTransition.state_variables" href="#mici.transitions.DynamicIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.DynamicIntegrationTransition.statistic_types" href="#mici.transitions.DynamicIntegrationTransition.statistic_types">statistic_types</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></code></h4>
 <ul class="">
 <li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.sample" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample">sample</a></code></li>
 <li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.state_variables" href="#mici.transitions.MultinomialDynamicIntegrationTransition.state_variables">state_variables</a></code></li>
 <li><code><a title="mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types" href="#mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types">statistic_types</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="mici.transitions.SliceDynamicIntegrationTransition" href="#mici.transitions.SliceDynamicIntegrationTransition">SliceDynamicIntegrationTransition</a></code></h4>
+<ul class="">
+<li><code><a title="mici.transitions.SliceDynamicIntegrationTransition.sample" href="#mici.transitions.SliceDynamicIntegrationTransition.sample">sample</a></code></li>
+<li><code><a title="mici.transitions.SliceDynamicIntegrationTransition.state_variables" href="#mici.transitions.SliceDynamicIntegrationTransition.state_variables">state_variables</a></code></li>
+<li><code><a title="mici.transitions.SliceDynamicIntegrationTransition.statistic_types" href="#mici.transitions.SliceDynamicIntegrationTransition.statistic_types">statistic_types</a></code></li>
 </ul>
 </li>
 </ul>
@@ -124,19 +150,33 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L0-L536" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L0-L669" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Markov transition kernels.&#34;&#34;&#34;
 
 from abc import ABC, abstractmethod, abstractproperty
+from collections import namedtuple
 from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
 from mici.errors import (
-    IntegratorError, NonReversibleStepError, ConvergenceError)
+    Error, NonReversibleStepError, ConvergenceError, HamiltonianDivergenceError)
 
 logger = logging.getLogger(__name__)
+
+
+def _process_integrator_error(exception, stats):
+    logger.info(f&#39;Terminating trajectory due to error:\n{exception!s}&#39;)
+    # Only set stats fields to True if exception is of matching type.
+    # Corresponding fields should be set to False by default for transitions
+    # which potentially raise these errors.
+    if isinstance(exception, HamiltonianDivergenceError):
+        stats[&#39;diverging&#39;] = True
+    elif isinstance(exception, NonReversibleStepError):
+        stats[&#39;non_reversible_step&#39;] = True
+    elif isinstance(exception, ConvergenceError):
+        stats[&#39;convergence_error&#39;] = True
 
 
 class Transition(ABC):
@@ -352,13 +392,10 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
-        except IntegratorError as e:
-            logger.info(
-                f&#39;Terminating trajectory due to integrator error:\n{e!s}&#39;)
-            return state, {
-                &#39;hamiltonian&#39;: h_init, &#39;accept_prob&#39;: 0, &#39;n_step&#39;: s,
-                &#39;non_reversible_step&#39;: isinstance(e, NonReversibleStepError),
-                &#39;convergence_error&#39;: isinstance(e, ConvergenceError)}
+        except Error as e:
+            stats = {&#39;hamiltonian&#39;: h_init, &#39;accept_prob&#39;: 0, &#39;n_step&#39;: s}
+            _process_integrator_error(e, stats)
+            return state, stats
         state_p.dir *= -1
         h_final = self.system.h(state_p)
         metrop_ratio = np.exp(h_init - h_final)
@@ -508,16 +545,20 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
         np.sum(system.dh_dmom(state_2) * sum_mom) &lt; 0)
 
 
-class MultinomialDynamicIntegrationTransition(IntegrationTransition):
-    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+SubTree = namedtuple(&#39;SubTree&#39;, [
+    &#39;negative&#39;, &#39;positive&#39;, &#39;sum_mom&#39;, &#39;weight&#39;, &#39;depth&#39;])
+
+
+class DynamicIntegrationTransition(IntegrationTransition):
+    &#34;&#34;&#34;Base class for dynamic integration transitions.
 
     In each transition a binary tree of states is recursively computed by
-    integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
-    tree leaves is met. The next chain state is chosen from the candidate
-    states using a progressive multinomial sampling scheme [2] based on the
-    relative probability densities of the different candidate states, with the
-    resampling biased towards states further from the current state.
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree&#39;s
+    subtrees is met. The next chain state is chosen from the candidate states
+    using a progressive sampling scheme based on relative weights of the
+    different candidate states, with the sampling biased towards states further
+    from the current state [1, 2].
 
     References:
 
@@ -527,10 +568,10 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
       2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
          Carlo. arXiv preprint arXiv:1701.02434.
     &#34;&#34;&#34;
-
     def __init__(self, system, integrator,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion):
+                 termination_criterion=riemannian_no_u_turn_criterion,
+                 do_extra_subtree_checks=True):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -550,119 +591,237 @@ class MultinomialDynamicIntegrationTransition(IntegrationTransition):
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
         &#34;&#34;&#34;
         super().__init__(system, integrator)
         assert max_tree_depth &gt; 0, &#39;max_tree_depth must be non-negative&#39;
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
-        self._termination_criterion = partial(termination_criterion, system)
+        self.termination_criterion = termination_criterion
+        self.do_extra_subtree_checks = do_extra_subtree_checks
         self.statistic_types[&#39;tree_depth&#39;] = (np.int64, -1)
         self.statistic_types[&#39;diverging&#39;] = (np.bool, False)
 
-    # Key to subscripts used in build_tree and sample_dynamics_transition
-    # _p : proposal
-    # _n : next
-    # _l : left (negative direction)
-    # _r : right (positive direction)
-    # _s : subtree
-    # _i : inner subsubtree
-    # _o : outer subsubtree
+    def _termination_criterion(self, tree, neg_subtree, pos_subtree):
+        # If performing extra subtree checks evaluate lazily i.e. only evaluate
+        # if initial whole tree check fails. Extra subtree checks also only
+        # performed for trees of depth 2 and above (i.e. containing at least
+        # 4 states) as for trees of depth 1 they are redundant.
+        if self.termination_criterion(
+                self.system, tree.negative, tree.positive, tree.sum_mom):
+            return True
+        elif tree.depth &gt; 1 and self.do_extra_subtree_checks:
+            if self.termination_criterion(
+                    self.system, neg_subtree.negative, pos_subtree.negative,
+                    neg_subtree.sum_mom + pos_subtree.negative.mom):
+                return True
+            elif self.termination_criterion(
+                    self.system, neg_subtree.positive, pos_subtree.positive,
+                    pos_subtree.sum_mom + neg_subtree.positive.mom):
+                return True
+        return False
 
-    def _build_tree(
-            self, depth, state, sum_mom, sum_weight, stats, h_init, rng):
+    def _new_leave(self, state, h, aux_info):
+        return SubTree(
+            negative=state, positive=state, sum_mom=np.asarray(state.mom),
+            weight=self._weight_function(h, aux_info), depth=0)
+
+    def _merge_subtrees(self, neg_subtree, pos_subtree):
+        assert neg_subtree.depth == pos_subtree.depth, (
+            &#39;Cannot merg subtrees of different depths&#39;)
+        return SubTree(
+            negative=neg_subtree.negative, positive=pos_subtree.positive,
+            weight=neg_subtree.weight + pos_subtree.weight,
+            sum_mom=neg_subtree.sum_mom + pos_subtree.sum_mom,
+            depth=neg_subtree.depth + 1)
+
+    def _init_aux_vars(self, state, rng):
+        return {&#39;h_init&#39;: self.system.h(state)}
+
+    def _accept_stat(self, h, aux_vars):
+        return min(1, np.exp(aux_vars[&#39;h_init&#39;] - h))
+
+    @abstractmethod
+    def _weight_function(self, h, aux_vars):
+        pass
+
+    @abstractmethod
+    def _weight_ratio(self, numerator, denominator):
+        pass
+
+    @abstractmethod
+    def _check_divergence(self, h, aux_vars):
+        pass
+
+    def _build_tree(self, depth, state, stats, rng, aux_vars):
         if depth == 0:
             # recursion base case
             try:
+                # integrate forward/backward one step depending on state.dir
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += np.asarray(state.mom)
-                sum_weight += LogRepFloat(log_val=-h)
-                stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
+                # create new tree leave
+                tree = self._new_leave(state, h, aux_vars)
+                proposal = state
+                # accumulate stats to calculate proxy acceptance probability
+                stats[&#39;sum_acc_prob&#39;] += self._accept_stat(h, aux_vars)
                 stats[&#39;n_step&#39;] += 1
-                terminate = h - h_init &gt; self.max_delta_h
-                if terminate:
-                    stats[&#39;diverging&#39;] = True
-                    logger.info(
-                        f&#39;Terminating build_tree due to integrator divergence &#39;
-                        f&#39;(delta_h = {h - h_init:.1e}).&#39;)
-            except IntegratorError as e:
-                logger.info(
-                    f&#39;Terminating build_tree due to integrator error:\n{e!s}&#39;)
-                stats[&#39;non_reversible_step&#39;] = isinstance(
-                    e, NonReversibleStepError)
-                stats[&#39;convergence_error&#39;] = isinstance(e, ConvergenceError)
-                state = None
-                terminate = True
-            return terminate, state, state, state
-        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
-        sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
-        # build inner subsubtree
-        terminate_i, state_i, state, state_pi = self._build_tree(
-            depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init, rng)
-        if terminate_i:
-            return True, None, None, None
-        # build outer subsubtree
-        terminate_o, _, state_o, state_po = self._build_tree(
-            depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init, rng)
-        if terminate_o:
-            return True, None, None, None
-        # independently sample proposal from 2 subsubtrees by relative weights
-        sum_weight_s = sum_weight_i + sum_weight_o
-        accept_o_prob = sum_weight_o / sum_weight_s
-        state_p = state_po if rng.uniform() &lt; accept_o_prob else state_pi
-        # update overall tree weight
-        sum_weight += sum_weight_s
-        # calculate termination criteria for subtree
-        sum_mom_s = sum_mom_i + sum_mom_o
-        terminate_s = self._termination_criterion(state_i, state_o, sum_mom_s)
-        # update overall tree summed momentum
-        sum_mom += sum_mom_s
-        return terminate_s, state_i, state_o, state_p
+                # default to assuming valid and then check for divergence
+                terminate = False
+                self._check_divergence(h, aux_vars)
+            except Error as e:
+                _process_integrator_error(e, stats)
+                terminate, tree, proposal = True, None, None
+            return terminate, tree, proposal
+        # build &#39;inner&#39; subtree, i.e. starting from current state
+        terminate, inner_tree, inner_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # build &#39;outer&#39; subtree, i.e. starting from terminus of inner subtree
+        state = inner_tree.positive if state.dir == 1 else inner_tree.negative
+        terminate, outer_tree, outer_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # merge two subtrees accounting for integration direction
+        neg_subtree = inner_tree if state.dir == 1 else outer_tree
+        pos_subtree = outer_tree if state.dir == 1 else inner_tree
+        tree = self._merge_subtrees(neg_subtree, pos_subtree)
+        # sample new proposal from two subtree proposals according to weights
+        accept_outer_prob = self._weight_ratio(outer_tree.weight, tree.weight)
+        proposal = (
+            outer_proposal if rng.uniform() &lt; accept_outer_prob else
+            inner_proposal)
+        # check termination criterion on tree and subtrees
+        terminate = self._termination_criterion(tree, neg_subtree, pos_subtree)
+        return terminate, tree, proposal
 
     def sample(self, state, rng):
-        h_init = self.system.h(state)
-        sum_mom = np.asarray(state.mom).copy()
-        sum_weight = LogRepFloat(log_val=-h_init)
         stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
-        state_n, state_l, state_r = state, state.copy(), state.copy()
-        # set integration directions of initial left and right tree leaves
-        state_l.dir = -1
-        state_r.dir = +1
+        aux_vars = self._init_aux_vars(state, rng)
+        tree = self._new_leave(state, aux_vars[&#39;h_init&#39;], aux_vars)
+        next_state = state
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
             direction = 2 * (rng.uniform() &lt; 0.5) - 1
-            sum_mom_s = np.zeros(state.mom.shape)
-            sum_weight_s = LogRepFloat(0.)
-            if direction == 1:
-                # expand tree by adding subtree to right edge
-                terminate_s, _, state_r, state_p = self._build_tree(
-                    depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            else:
-                # expand tree by adding subtree to left edge
-                terminate_s, _, state_l, state_p = self._build_tree(
-                    depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            if terminate_s:
+            state = tree.positive if direction == 1 else tree.negative
+            state.dir = direction
+            # expand tree by building new subtree of current depth
+            terminate, new_tree, new_proposal = self._build_tree(
+                depth, state, stats, rng, aux_vars)
+            if terminate:
                 break
             # progressively sample new state by choosing between
             # current new state and proposal from new subtree, biasing
             # towards the new subtree proposal
-            if rng.uniform() &lt; sum_weight_s / sum_weight:
-                state_n = state_p
-            sum_weight += sum_weight_s
-            sum_mom += sum_mom_s
-            if self._termination_criterion(state_l, state_r, sum_mom):
+            if rng.uniform() &lt; self._weight_ratio(new_tree.weight, tree.weight):
+                next_state = new_proposal
+            # merge new subtree into current tree accounting for direction
+            neg_subtree = tree if direction == 1 else new_tree
+            pos_subtree = new_tree if direction == 1 else tree
+            tree = self._merge_subtrees(neg_subtree, pos_subtree)
+            # check termination criterion on new tree and subtrees
+            if self._termination_criterion(tree, neg_subtree, pos_subtree):
                 break
         sum_acc_prob = stats.pop(&#39;sum_acc_prob&#39;)
         if stats[&#39;n_step&#39;] &gt; 0:
             stats[&#39;accept_prob&#39;] = sum_acc_prob / stats[&#39;n_step&#39;]
         else:
             stats[&#39;accept_prob&#39;] = 0.
-        stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
+        stats[&#39;hamiltonian&#39;] = self.system.h(next_state)
         stats[&#39;tree_depth&#39;] = depth
-        return state_n, stats</code></pre>
+        return next_state, stats
+
+
+class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps
+    equal to the previous tree size [1,2] until a termination criteria on the
+    tree leaves is met. The next chain state is chosen from the candidate
+    states using a progressive multinomial sampling scheme [2] based on the
+    relative probability densities of the different candidate states, with the
+    sampling biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+         Carlo. arXiv preprint arXiv:1701.02434.
+    &#34;&#34;&#34;
+
+    def _weight_function(self, h, aux_vars):
+        return LogRepFloat(log_val=-h)
+
+    def _weight_ratio(self, numerator, denominator):
+        return min(numerator / denominator, 1)
+
+    def _check_divergence(self, h, aux_vars):
+        if h - aux_vars[&#39;h_init&#39;] &gt; self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f&#39;delta_h = {h - aux_vars[&#34;h_init&#34;]}&#39;)
+
+
+class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree leaves is
+    met. The next chain state is chosen from the candidate states using a
+    progressive slice sampling scheme based on the relative probability
+    densities of the different candidate states, with the slice sampler biased
+    towards states further from the current state.
+
+    When used with the `euclidean_no_u_turn_criterion` this transition is
+    equivalent to the transitions in &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39;
+    in [1].
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+
+    def _init_aux_vars(self, state, rng):
+        aux_vars = super()._init_aux_vars(state, rng)
+        aux_vars[&#39;log_u&#39;] = np.log(rng.uniform()) - aux_vars[&#39;h_init&#39;]
+        return aux_vars
+
+    def _weight_function(self, h, aux_vars):
+        return (aux_vars[&#39;log_u&#39;] &lt;= -h) * 1
+
+    def _weight_ratio(self, numerator, denominator):
+        return (
+            min(numerator / denominator, 1) if denominator &gt; 0 else
+            min(numerator, 1))
+
+    def _check_divergence(self, h, aux_vars):
+        if h + aux_vars[&#39;log_u&#39;] &gt; self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f&#39;delta_h = {h + aux_vars[&#34;log_u&#34;]}&#39;)</code></pre>
 </details>
 </section>
 <section>
@@ -707,7 +866,7 @@ Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L321-L347" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L332-L358" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     &#34;&#34;&#34;No-U-turn termination criterion for Euclidean manifolds [1].
@@ -777,7 +936,7 @@ manifolds. arXiv preprint arXiv:1304.1920.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L350-L380" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L361-L391" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
     &#34;&#34;&#34;Generalised no-U-turn termination criterion on Riemannian manifolds [2].
@@ -827,7 +986,7 @@ manifolds. arXiv preprint arXiv:1304.1920.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L14-L50" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L28-L64" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Transition(ABC):
     &#34;&#34;&#34;Base class for Markov transition kernels.
@@ -884,7 +1043,7 @@ manifolds. arXiv preprint arXiv:1304.1920.</li>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L20-L22" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L34-L36" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractproperty
 def state_variables(self):
@@ -904,7 +1063,7 @@ array with.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L24-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L38-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractproperty
 def statistic_types(self):
@@ -947,7 +1106,7 @@ during the transition or <code>None</code> if no statistics.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L37-L50" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L51-L64" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample(self, state, rng):
@@ -986,7 +1145,7 @@ conditional distribution on momentum to leave invariant.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L53-L90" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L67-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MomentumTransition(Transition):
     &#34;&#34;&#34;Base class for momentum transitions.
@@ -1087,7 +1246,7 @@ during the transition or <code>None</code> if no statistics.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L72-L90" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L86-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample(self, state, rng):
@@ -1129,7 +1288,7 @@ conditional distribution on momentum to leave invariant.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L93-L102" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L107-L116" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class IndependentMomentumTransition(MomentumTransition):
     &#34;&#34;&#34;Independent momentum transition.
@@ -1201,7 +1360,7 @@ during the transition or <code>None</code> if no statistics.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L100-L102" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L114-L116" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     state.mom = self.system.sample_momentum(state, rng)
@@ -1252,7 +1411,7 @@ momentum resampling coefficient.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L105-L155" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L119-L169" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CorrelatedMomentumTransition(MomentumTransition):
     &#34;&#34;&#34;Correlated (partial) momentum transition.
@@ -1365,7 +1524,7 @@ during the transition or <code>None</code> if no statistics.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L148-L155" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L162-L169" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     if self.mom_resample_coeff == 1:
@@ -1400,7 +1559,7 @@ appropriate to the specified Hamiltonian system.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L158-L202" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L172-L216" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class IntegrationTransition(Transition):
     &#34;&#34;&#34;Base class for integration transtions.
@@ -1456,7 +1615,7 @@ appropriate to the specified Hamiltonian system.</dd>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="mici.transitions.MetropolisIntegrationTransition" href="#mici.transitions.MetropolisIntegrationTransition">MetropolisIntegrationTransition</a></li>
-<li><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></li>
+<li><a title="mici.transitions.DynamicIntegrationTransition" href="#mici.transitions.DynamicIntegrationTransition">DynamicIntegrationTransition</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
@@ -1509,7 +1668,7 @@ computed during the transition to be recorded.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L186-L202" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L200-L216" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample(self, state, rng):
@@ -1559,7 +1718,7 @@ appropriate to the specified Hamiltonian system.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L205-L244" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L219-L255" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisIntegrationTransition(IntegrationTransition):
     &#34;&#34;&#34;Base for HMC methods using a Metropolis accept step to sample new state.
@@ -1583,13 +1742,10 @@ appropriate to the specified Hamiltonian system.</dd>
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
-        except IntegratorError as e:
-            logger.info(
-                f&#39;Terminating trajectory due to integrator error:\n{e!s}&#39;)
-            return state, {
-                &#39;hamiltonian&#39;: h_init, &#39;accept_prob&#39;: 0, &#39;n_step&#39;: s,
-                &#39;non_reversible_step&#39;: isinstance(e, NonReversibleStepError),
-                &#39;convergence_error&#39;: isinstance(e, ConvergenceError)}
+        except Error as e:
+            stats = {&#39;hamiltonian&#39;: h_init, &#39;accept_prob&#39;: 0, &#39;n_step&#39;: s}
+            _process_integrator_error(e, stats)
+            return state, stats
         state_p.dir *= -1
         h_final = self.system.h(state_p)
         metrop_ratio = np.exp(h_init - h_final)
@@ -1695,7 +1851,7 @@ transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L247-L277" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L258-L288" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
     &#34;&#34;&#34;Static integration transition with Metropolis sampling of new state.
@@ -1787,7 +1943,7 @@ computed during the transition to be recorded.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L276-L277" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L287-L288" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     return self._sample_n_step(state, self.n_step, rng)</code></pre>
@@ -1831,7 +1987,7 @@ number integrator steps to simulate in each transition.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L280-L318" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L291-L329" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
     &#34;&#34;&#34;Random integration transition with Metropolis sampling of new state.
@@ -1931,7 +2087,7 @@ computed during the transition to be recorded.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L316-L318" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L327-L329" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample(self, state, rng):
     n_step = rng.random_integers(*self.n_step_range)
@@ -1940,19 +2096,53 @@ computed during the transition to be recorded.</dd>
 </dd>
 </dl>
 </dd>
-<dt id="mici.transitions.MultinomialDynamicIntegrationTransition"><code class="flex name class">
-<span>class <span class="ident">MultinomialDynamicIntegrationTransition</span></span>
-<span>(</span><span>system, integrator, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;)</span>
+<dt id="mici.transitions.SubTree"><code class="flex name class">
+<span>class <span class="ident">SubTree</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Dynamic integration transition with multinomial sampling of new state.</p>
+<section class="desc"><p>SubTree(negative, positive, sum_mom, weight, depth)</p></section>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.transitions.SubTree.negative"><code class="name">var <span class="ident">negative</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 0</p></section>
+</dd>
+<dt id="mici.transitions.SubTree.positive"><code class="name">var <span class="ident">positive</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 1</p></section>
+</dd>
+<dt id="mici.transitions.SubTree.sum_mom"><code class="name">var <span class="ident">sum_mom</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 2</p></section>
+</dd>
+<dt id="mici.transitions.SubTree.weight"><code class="name">var <span class="ident">weight</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 3</p></section>
+</dd>
+<dt id="mici.transitions.SubTree.depth"><code class="name">var <span class="ident">depth</span></code></dt>
+<dd>
+<section class="desc"><p>Alias for field number 4</p></section>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.DynamicIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">DynamicIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;, do_extra_subtree_checks=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for dynamic integration transitions.</p>
 <p>In each transition a binary tree of states is recursively computed by
-integrating randomly forward and backward in time by a number of steps
-equal to the previous tree size [1,2] until a termination criteria on the
-tree leaves is met. The next chain state is chosen from the candidate
-states using a progressive multinomial sampling scheme [2] based on the
-relative probability densities of the different candidate states, with the
-resampling biased towards states further from the current state.</p>
+integrating randomly forward and backward in time by a number of steps equal
+to the previous tree size until a termination criteria on the tree's
+subtrees is met. The next chain state is chosen from the candidate states
+using a progressive sampling scheme based on relative weights of the
+different candidate states, with the sampling biased towards states further
+from the current state [1, 2].</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
@@ -1986,22 +2176,40 @@ corresponding to the two edge nodes in the trajectory
 momentums over the trajectory (sub)-tree. Defaults to
 <a title="mici.transitions.riemannian_no_u_turn_criterion" href="#mici.transitions.riemannian_no_u_turn_criterion"><code>riemannian_no_u_turn_criterion()</code></a>.</p>
 </dd>
+<dt><strong><code>do_extra_subtree_checks</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform additional
+termination criterion checks on overlapping subtrees of the
+current tree to improve robustness in systems with dynamics
+which are well approximated by independent system of simple
+harmonic oscillators. In such systems (corresponding to e.g.
+a standard normal target distribution and identity metric
+matrix representation) at certain step sizes a 'resonant'
+behaviour is seen by which the termination criterion fails to
+detect that the trajectory has expanded past a half-period i.e.
+has 'U-turned' resulting in trajectories continuing to expand,
+potentially up until the <code>max_tree_depth</code> limit is hit. For
+more details see the Stan Discourse discussion at kutt.it/yAkIES
+If <code>do_extra_subtree_checks</code> is set to <code>True</code> additional
+termination criterion checks are performed on overlapping
+subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some
+correlated models and some overhead from additional checks.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L383-L537" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L398-L597" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class MultinomialDynamicIntegrationTransition(IntegrationTransition):
-    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+<pre><code class="python">class DynamicIntegrationTransition(IntegrationTransition):
+    &#34;&#34;&#34;Base class for dynamic integration transitions.
 
     In each transition a binary tree of states is recursively computed by
-    integrating randomly forward and backward in time by a number of steps
-    equal to the previous tree size [1,2] until a termination criteria on the
-    tree leaves is met. The next chain state is chosen from the candidate
-    states using a progressive multinomial sampling scheme [2] based on the
-    relative probability densities of the different candidate states, with the
-    resampling biased towards states further from the current state.
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree&#39;s
+    subtrees is met. The next chain state is chosen from the candidate states
+    using a progressive sampling scheme based on relative weights of the
+    different candidate states, with the sampling biased towards states further
+    from the current state [1, 2].
 
     References:
 
@@ -2011,10 +2219,10 @@ momentums over the trajectory (sub)-tree. Defaults to
       2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
          Carlo. arXiv preprint arXiv:1701.02434.
     &#34;&#34;&#34;
-
     def __init__(self, system, integrator,
                  max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=riemannian_no_u_turn_criterion):
+                 termination_criterion=riemannian_no_u_turn_criterion,
+                 do_extra_subtree_checks=True):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -2034,122 +2242,372 @@ momentums over the trajectory (sub)-tree. Defaults to
                 (sub-)tree being checked and an array containing the sum of the
                 momentums over the trajectory (sub)-tree. Defaults to
                 `riemannian_no_u_turn_criterion`.
+            do_extra_subtree_checks (bool): Whether to perform additional
+                termination criterion checks on overlapping subtrees of the
+                current tree to improve robustness in systems with dynamics
+                which are well approximated by independent system of simple
+                harmonic oscillators. In such systems (corresponding to e.g.
+                a standard normal target distribution and identity metric
+                matrix representation) at certain step sizes a &#39;resonant&#39;
+                behaviour is seen by which the termination criterion fails to
+                detect that the trajectory has expanded past a half-period i.e.
+                has &#39;U-turned&#39; resulting in trajectories continuing to expand,
+                potentially up until the `max_tree_depth` limit is hit. For
+                more details see the Stan Discourse discussion at kutt.it/yAkIES
+                If `do_extra_subtree_checks` is set to `True` additional
+                termination criterion checks are performed on overlapping
+                subtrees which help to reduce this resonant behaviour at the
+                cost of more conservative trajectory termination in some
+                correlated models and some overhead from additional checks.
         &#34;&#34;&#34;
         super().__init__(system, integrator)
         assert max_tree_depth &gt; 0, &#39;max_tree_depth must be non-negative&#39;
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
-        self._termination_criterion = partial(termination_criterion, system)
+        self.termination_criterion = termination_criterion
+        self.do_extra_subtree_checks = do_extra_subtree_checks
         self.statistic_types[&#39;tree_depth&#39;] = (np.int64, -1)
         self.statistic_types[&#39;diverging&#39;] = (np.bool, False)
 
-    # Key to subscripts used in build_tree and sample_dynamics_transition
-    # _p : proposal
-    # _n : next
-    # _l : left (negative direction)
-    # _r : right (positive direction)
-    # _s : subtree
-    # _i : inner subsubtree
-    # _o : outer subsubtree
+    def _termination_criterion(self, tree, neg_subtree, pos_subtree):
+        # If performing extra subtree checks evaluate lazily i.e. only evaluate
+        # if initial whole tree check fails. Extra subtree checks also only
+        # performed for trees of depth 2 and above (i.e. containing at least
+        # 4 states) as for trees of depth 1 they are redundant.
+        if self.termination_criterion(
+                self.system, tree.negative, tree.positive, tree.sum_mom):
+            return True
+        elif tree.depth &gt; 1 and self.do_extra_subtree_checks:
+            if self.termination_criterion(
+                    self.system, neg_subtree.negative, pos_subtree.negative,
+                    neg_subtree.sum_mom + pos_subtree.negative.mom):
+                return True
+            elif self.termination_criterion(
+                    self.system, neg_subtree.positive, pos_subtree.positive,
+                    pos_subtree.sum_mom + neg_subtree.positive.mom):
+                return True
+        return False
 
-    def _build_tree(
-            self, depth, state, sum_mom, sum_weight, stats, h_init, rng):
+    def _new_leave(self, state, h, aux_info):
+        return SubTree(
+            negative=state, positive=state, sum_mom=np.asarray(state.mom),
+            weight=self._weight_function(h, aux_info), depth=0)
+
+    def _merge_subtrees(self, neg_subtree, pos_subtree):
+        assert neg_subtree.depth == pos_subtree.depth, (
+            &#39;Cannot merg subtrees of different depths&#39;)
+        return SubTree(
+            negative=neg_subtree.negative, positive=pos_subtree.positive,
+            weight=neg_subtree.weight + pos_subtree.weight,
+            sum_mom=neg_subtree.sum_mom + pos_subtree.sum_mom,
+            depth=neg_subtree.depth + 1)
+
+    def _init_aux_vars(self, state, rng):
+        return {&#39;h_init&#39;: self.system.h(state)}
+
+    def _accept_stat(self, h, aux_vars):
+        return min(1, np.exp(aux_vars[&#39;h_init&#39;] - h))
+
+    @abstractmethod
+    def _weight_function(self, h, aux_vars):
+        pass
+
+    @abstractmethod
+    def _weight_ratio(self, numerator, denominator):
+        pass
+
+    @abstractmethod
+    def _check_divergence(self, h, aux_vars):
+        pass
+
+    def _build_tree(self, depth, state, stats, rng, aux_vars):
         if depth == 0:
             # recursion base case
             try:
+                # integrate forward/backward one step depending on state.dir
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                sum_mom += np.asarray(state.mom)
-                sum_weight += LogRepFloat(log_val=-h)
-                stats[&#39;sum_acc_prob&#39;] += min(1, np.exp(h_init - h))
+                # create new tree leave
+                tree = self._new_leave(state, h, aux_vars)
+                proposal = state
+                # accumulate stats to calculate proxy acceptance probability
+                stats[&#39;sum_acc_prob&#39;] += self._accept_stat(h, aux_vars)
                 stats[&#39;n_step&#39;] += 1
-                terminate = h - h_init &gt; self.max_delta_h
-                if terminate:
-                    stats[&#39;diverging&#39;] = True
-                    logger.info(
-                        f&#39;Terminating build_tree due to integrator divergence &#39;
-                        f&#39;(delta_h = {h - h_init:.1e}).&#39;)
-            except IntegratorError as e:
-                logger.info(
-                    f&#39;Terminating build_tree due to integrator error:\n{e!s}&#39;)
-                stats[&#39;non_reversible_step&#39;] = isinstance(
-                    e, NonReversibleStepError)
-                stats[&#39;convergence_error&#39;] = isinstance(e, ConvergenceError)
-                state = None
-                terminate = True
-            return terminate, state, state, state
-        sum_mom_i, sum_mom_o = np.zeros((2,) + state.mom.shape)
-        sum_weight_i, sum_weight_o = LogRepFloat(0.), LogRepFloat(0.)
-        # build inner subsubtree
-        terminate_i, state_i, state, state_pi = self._build_tree(
-            depth - 1, state, sum_mom_i, sum_weight_i, stats, h_init, rng)
-        if terminate_i:
-            return True, None, None, None
-        # build outer subsubtree
-        terminate_o, _, state_o, state_po = self._build_tree(
-            depth - 1, state, sum_mom_o, sum_weight_o, stats, h_init, rng)
-        if terminate_o:
-            return True, None, None, None
-        # independently sample proposal from 2 subsubtrees by relative weights
-        sum_weight_s = sum_weight_i + sum_weight_o
-        accept_o_prob = sum_weight_o / sum_weight_s
-        state_p = state_po if rng.uniform() &lt; accept_o_prob else state_pi
-        # update overall tree weight
-        sum_weight += sum_weight_s
-        # calculate termination criteria for subtree
-        sum_mom_s = sum_mom_i + sum_mom_o
-        terminate_s = self._termination_criterion(state_i, state_o, sum_mom_s)
-        # update overall tree summed momentum
-        sum_mom += sum_mom_s
-        return terminate_s, state_i, state_o, state_p
+                # default to assuming valid and then check for divergence
+                terminate = False
+                self._check_divergence(h, aux_vars)
+            except Error as e:
+                _process_integrator_error(e, stats)
+                terminate, tree, proposal = True, None, None
+            return terminate, tree, proposal
+        # build &#39;inner&#39; subtree, i.e. starting from current state
+        terminate, inner_tree, inner_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # build &#39;outer&#39; subtree, i.e. starting from terminus of inner subtree
+        state = inner_tree.positive if state.dir == 1 else inner_tree.negative
+        terminate, outer_tree, outer_proposal = self._build_tree(
+            depth - 1, state, stats, rng, aux_vars)
+        if terminate:
+            return terminate, None, None
+        # merge two subtrees accounting for integration direction
+        neg_subtree = inner_tree if state.dir == 1 else outer_tree
+        pos_subtree = outer_tree if state.dir == 1 else inner_tree
+        tree = self._merge_subtrees(neg_subtree, pos_subtree)
+        # sample new proposal from two subtree proposals according to weights
+        accept_outer_prob = self._weight_ratio(outer_tree.weight, tree.weight)
+        proposal = (
+            outer_proposal if rng.uniform() &lt; accept_outer_prob else
+            inner_proposal)
+        # check termination criterion on tree and subtrees
+        terminate = self._termination_criterion(tree, neg_subtree, pos_subtree)
+        return terminate, tree, proposal
 
     def sample(self, state, rng):
-        h_init = self.system.h(state)
-        sum_mom = np.asarray(state.mom).copy()
-        sum_weight = LogRepFloat(log_val=-h_init)
         stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
-        state_n, state_l, state_r = state, state.copy(), state.copy()
-        # set integration directions of initial left and right tree leaves
-        state_l.dir = -1
-        state_r.dir = +1
+        aux_vars = self._init_aux_vars(state, rng)
+        tree = self._new_leave(state, aux_vars[&#39;h_init&#39;], aux_vars)
+        next_state = state
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
             direction = 2 * (rng.uniform() &lt; 0.5) - 1
-            sum_mom_s = np.zeros(state.mom.shape)
-            sum_weight_s = LogRepFloat(0.)
-            if direction == 1:
-                # expand tree by adding subtree to right edge
-                terminate_s, _, state_r, state_p = self._build_tree(
-                    depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            else:
-                # expand tree by adding subtree to left edge
-                terminate_s, _, state_l, state_p = self._build_tree(
-                    depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
-                    rng)
-            if terminate_s:
+            state = tree.positive if direction == 1 else tree.negative
+            state.dir = direction
+            # expand tree by building new subtree of current depth
+            terminate, new_tree, new_proposal = self._build_tree(
+                depth, state, stats, rng, aux_vars)
+            if terminate:
                 break
             # progressively sample new state by choosing between
             # current new state and proposal from new subtree, biasing
             # towards the new subtree proposal
-            if rng.uniform() &lt; sum_weight_s / sum_weight:
-                state_n = state_p
-            sum_weight += sum_weight_s
-            sum_mom += sum_mom_s
-            if self._termination_criterion(state_l, state_r, sum_mom):
+            if rng.uniform() &lt; self._weight_ratio(new_tree.weight, tree.weight):
+                next_state = new_proposal
+            # merge new subtree into current tree accounting for direction
+            neg_subtree = tree if direction == 1 else new_tree
+            pos_subtree = new_tree if direction == 1 else tree
+            tree = self._merge_subtrees(neg_subtree, pos_subtree)
+            # check termination criterion on new tree and subtrees
+            if self._termination_criterion(tree, neg_subtree, pos_subtree):
                 break
         sum_acc_prob = stats.pop(&#39;sum_acc_prob&#39;)
         if stats[&#39;n_step&#39;] &gt; 0:
             stats[&#39;accept_prob&#39;] = sum_acc_prob / stats[&#39;n_step&#39;]
         else:
             stats[&#39;accept_prob&#39;] = 0.
-        stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
+        stats[&#39;hamiltonian&#39;] = self.system.h(next_state)
         stats[&#39;tree_depth&#39;] = depth
-        return state_n, stats</code></pre>
+        return next_state, stats</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.transitions.MultinomialDynamicIntegrationTransition" href="#mici.transitions.MultinomialDynamicIntegrationTransition">MultinomialDynamicIntegrationTransition</a></li>
+<li><a title="mici.transitions.SliceDynamicIntegrationTransition" href="#mici.transitions.SliceDynamicIntegrationTransition">SliceDynamicIntegrationTransition</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.DynamicIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<section class="desc"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object</p>
+<p>Build an unordered collection of unique elements.</p></section>
+</dd>
+<dt id="mici.transitions.DynamicIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<section class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.DynamicIntegrationTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition
+kernel which leaves the canonical distribution on the state space
+corresponding to the Hamiltonian system invariant.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Current chain state.</dd>
+<dt><strong><code>rng</code></strong> :&ensp;<code>RandomState</code></dt>
+<dd>NumPy RandomState random number generator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Updated state object.</dd>
+<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>numeric</code>]</dt>
+<dd>A dictionary of statistics
+computed during the transition to be recorded.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L563-L597" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def sample(self, state, rng):
+    stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
+    aux_vars = self._init_aux_vars(state, rng)
+    tree = self._new_leave(state, aux_vars[&#39;h_init&#39;], aux_vars)
+    next_state = state
+    for depth in range(self.max_tree_depth):
+        # uniformly sample direction to expand tree in
+        direction = 2 * (rng.uniform() &lt; 0.5) - 1
+        state = tree.positive if direction == 1 else tree.negative
+        state.dir = direction
+        # expand tree by building new subtree of current depth
+        terminate, new_tree, new_proposal = self._build_tree(
+            depth, state, stats, rng, aux_vars)
+        if terminate:
+            break
+        # progressively sample new state by choosing between
+        # current new state and proposal from new subtree, biasing
+        # towards the new subtree proposal
+        if rng.uniform() &lt; self._weight_ratio(new_tree.weight, tree.weight):
+            next_state = new_proposal
+        # merge new subtree into current tree accounting for direction
+        neg_subtree = tree if direction == 1 else new_tree
+        pos_subtree = new_tree if direction == 1 else tree
+        tree = self._merge_subtrees(neg_subtree, pos_subtree)
+        # check termination criterion on new tree and subtrees
+        if self._termination_criterion(tree, neg_subtree, pos_subtree):
+            break
+    sum_acc_prob = stats.pop(&#39;sum_acc_prob&#39;)
+    if stats[&#39;n_step&#39;] &gt; 0:
+        stats[&#39;accept_prob&#39;] = sum_acc_prob / stats[&#39;n_step&#39;]
+    else:
+        stats[&#39;accept_prob&#39;] = 0.
+    stats[&#39;hamiltonian&#39;] = self.system.h(next_state)
+    stats[&#39;tree_depth&#39;] = depth
+    return next_state, stats</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.MultinomialDynamicIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">MultinomialDynamicIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;, do_extra_subtree_checks=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Dynamic integration transition with multinomial sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by
+integrating randomly forward and backward in time by a number of steps
+equal to the previous tree size [1,2] until a termination criteria on the
+tree leaves is met. The next chain state is chosen from the candidate
+states using a progressive multinomial sampling scheme [2] based on the
+relative probability densities of the different candidate states, with the
+sampling biased towards states further from the current state.</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+<li>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+Carlo. arXiv preprint arXiv:1701.02434.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>integrator</code></strong> :&ensp;<a title="mici.integrators.Integrator" href="integrators.html#mici.integrators.Integrator"><code>Integrator</code></a></dt>
+<dd>Symplectic integrator
+appropriate to the specified Hamiltonian system.</dd>
+<dt><strong><code>max_tree_depth</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum depth to expand trajectory binary
+tree to. The maximum number of integrator steps corresponds to
+<code>2**max_tree_depth</code>.</dd>
+<dt><strong><code>max_delta_h</code></strong> :&ensp;<code>float</code></dt>
+<dd>Maximum change to tolerate in the Hamiltonian
+function over a trajectory before signalling a divergence.</dd>
+<dt><strong><code>termination_criterion</code></strong> :&ensp;</dt>
+<dt><code>Callable</code>[[<code>System</code>, <code>ChainState</code>, <code>ChainState</code>, <code>array</code>], <code>bool</code>]</dt>
+<dd>
+<p>Function computing criterion to use to determine when to
+terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states
+corresponding to the two edge nodes in the trajectory
+(sub-)tree being checked and an array containing the sum of the
+momentums over the trajectory (sub)-tree. Defaults to
+<a title="mici.transitions.riemannian_no_u_turn_criterion" href="#mici.transitions.riemannian_no_u_turn_criterion"><code>riemannian_no_u_turn_criterion()</code></a>.</p>
+</dd>
+<dt><strong><code>do_extra_subtree_checks</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform additional
+termination criterion checks on overlapping subtrees of the
+current tree to improve robustness in systems with dynamics
+which are well approximated by independent system of simple
+harmonic oscillators. In such systems (corresponding to e.g.
+a standard normal target distribution and identity metric
+matrix representation) at certain step sizes a 'resonant'
+behaviour is seen by which the termination criterion fails to
+detect that the trajectory has expanded past a half-period i.e.
+has 'U-turned' resulting in trajectories continuing to expand,
+potentially up until the <code>max_tree_depth</code> limit is hit. For
+more details see the Stan Discourse discussion at kutt.it/yAkIES
+If <code>do_extra_subtree_checks</code> is set to <code>True</code> additional
+termination criterion checks are performed on overlapping
+subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some
+correlated models and some overhead from additional checks.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L600-L629" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with multinomial sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps
+    equal to the previous tree size [1,2] until a termination criteria on the
+    tree leaves is met. The next chain state is chosen from the candidate
+    states using a progressive multinomial sampling scheme [2] based on the
+    relative probability densities of the different candidate states, with the
+    sampling biased towards states further from the current state.
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte
+         Carlo. arXiv preprint arXiv:1701.02434.
+    &#34;&#34;&#34;
+
+    def _weight_function(self, h, aux_vars):
+        return LogRepFloat(log_val=-h)
+
+    def _weight_ratio(self, numerator, denominator):
+        return min(numerator / denominator, 1)
+
+    def _check_divergence(self, h, aux_vars):
+        if h - aux_vars[&#39;h_init&#39;] &gt; self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f&#39;delta_h = {h - aux_vars[&#34;h_init&#34;]}&#39;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.transitions.DynamicIntegrationTransition" href="#mici.transitions.DynamicIntegrationTransition">DynamicIntegrationTransition</a></li>
 <li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
 <li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
 <li>abc.ABC</li>
@@ -2202,55 +2660,175 @@ corresponding to the Hamiltonian system invariant.</p>
 <dd>A dictionary of statistics
 computed during the transition to be recorded.</dd>
 </dl></section>
+</dd>
+</dl>
+</dd>
+<dt id="mici.transitions.SliceDynamicIntegrationTransition"><code class="flex name class">
+<span>class <span class="ident">SliceDynamicIntegrationTransition</span></span>
+<span>(</span><span>system, integrator, max_tree_depth=10, max_delta_h=1000, termination_criterion=&lt;function riemannian_no_u_turn_criterion&gt;, do_extra_subtree_checks=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Dynamic integration transition with slice sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by
+integrating randomly forward and backward in time by a number of steps equal
+to the previous tree size until a termination criteria on the tree leaves is
+met. The next chain state is chosen from the candidate states using a
+progressive slice sampling scheme based on the relative probability
+densities of the different candidate states, with the slice sampler biased
+towards states further from the current state.</p>
+<p>When used with the <a title="mici.transitions.euclidean_no_u_turn_criterion" href="#mici.transitions.euclidean_no_u_turn_criterion"><code>euclidean_no_u_turn_criterion()</code></a> this transition is
+equivalent to the transitions in 'Algorithm 3: Efficient No-U-Turn Sampler'
+in [1].</p>
+<h2 id="references">References</h2>
+<ol>
+<li>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</li>
+</ol>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
+<dd>Hamiltonian system to be simulated.</dd>
+<dt><strong><code>integrator</code></strong> :&ensp;<a title="mici.integrators.Integrator" href="integrators.html#mici.integrators.Integrator"><code>Integrator</code></a></dt>
+<dd>Symplectic integrator
+appropriate to the specified Hamiltonian system.</dd>
+<dt><strong><code>max_tree_depth</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum depth to expand trajectory binary
+tree to. The maximum number of integrator steps corresponds to
+<code>2**max_tree_depth</code>.</dd>
+<dt><strong><code>max_delta_h</code></strong> :&ensp;<code>float</code></dt>
+<dd>Maximum change to tolerate in the Hamiltonian
+function over a trajectory before signalling a divergence.</dd>
+<dt><strong><code>termination_criterion</code></strong> :&ensp;</dt>
+<dt><code>Callable</code>[[<code>System</code>, <code>ChainState</code>, <code>ChainState</code>, <code>array</code>], <code>bool</code>]</dt>
+<dd>
+<p>Function computing criterion to use to determine when to
+terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states
+corresponding to the two edge nodes in the trajectory
+(sub-)tree being checked and an array containing the sum of the
+momentums over the trajectory (sub)-tree. Defaults to
+<a title="mici.transitions.riemannian_no_u_turn_criterion" href="#mici.transitions.riemannian_no_u_turn_criterion"><code>riemannian_no_u_turn_criterion()</code></a>.</p>
+</dd>
+<dt><strong><code>do_extra_subtree_checks</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to perform additional
+termination criterion checks on overlapping subtrees of the
+current tree to improve robustness in systems with dynamics
+which are well approximated by independent system of simple
+harmonic oscillators. In such systems (corresponding to e.g.
+a standard normal target distribution and identity metric
+matrix representation) at certain step sizes a 'resonant'
+behaviour is seen by which the termination criterion fails to
+detect that the trajectory has expanded past a half-period i.e.
+has 'U-turned' resulting in trajectories continuing to expand,
+potentially up until the <code>max_tree_depth</code> limit is hit. For
+more details see the Stan Discourse discussion at kutt.it/yAkIES
+If <code>do_extra_subtree_checks</code> is set to <code>True</code> additional
+termination criterion checks are performed on overlapping
+subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some
+correlated models and some overhead from additional checks.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/transitions.py#L495-L537" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/transitions.py#L632-L670" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def sample(self, state, rng):
-    h_init = self.system.h(state)
-    sum_mom = np.asarray(state.mom).copy()
-    sum_weight = LogRepFloat(log_val=-h_init)
-    stats = {&#39;n_step&#39;: 0, &#39;sum_acc_prob&#39;: 0.}
-    state_n, state_l, state_r = state, state.copy(), state.copy()
-    # set integration directions of initial left and right tree leaves
-    state_l.dir = -1
-    state_r.dir = +1
-    for depth in range(self.max_tree_depth):
-        # uniformly sample direction to expand tree in
-        direction = 2 * (rng.uniform() &lt; 0.5) - 1
-        sum_mom_s = np.zeros(state.mom.shape)
-        sum_weight_s = LogRepFloat(0.)
-        if direction == 1:
-            # expand tree by adding subtree to right edge
-            terminate_s, _, state_r, state_p = self._build_tree(
-                depth, state_r, sum_mom_s, sum_weight_s, stats, h_init,
-                rng)
-        else:
-            # expand tree by adding subtree to left edge
-            terminate_s, _, state_l, state_p = self._build_tree(
-                depth, state_l, sum_mom_s, sum_weight_s, stats, h_init,
-                rng)
-        if terminate_s:
-            break
-        # progressively sample new state by choosing between
-        # current new state and proposal from new subtree, biasing
-        # towards the new subtree proposal
-        if rng.uniform() &lt; sum_weight_s / sum_weight:
-            state_n = state_p
-        sum_weight += sum_weight_s
-        sum_mom += sum_mom_s
-        if self._termination_criterion(state_l, state_r, sum_mom):
-            break
-    sum_acc_prob = stats.pop(&#39;sum_acc_prob&#39;)
-    if stats[&#39;n_step&#39;] &gt; 0:
-        stats[&#39;accept_prob&#39;] = sum_acc_prob / stats[&#39;n_step&#39;]
-    else:
-        stats[&#39;accept_prob&#39;] = 0.
-    stats[&#39;hamiltonian&#39;] = self.system.h(state_n)
-    stats[&#39;tree_depth&#39;] = depth
-    return state_n, stats</code></pre>
+<pre><code class="python">class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
+    &#34;&#34;&#34;Dynamic integration transition with slice sampling of new state.
+
+    In each transition a binary tree of states is recursively computed by
+    integrating randomly forward and backward in time by a number of steps equal
+    to the previous tree size until a termination criteria on the tree leaves is
+    met. The next chain state is chosen from the candidate states using a
+    progressive slice sampling scheme based on the relative probability
+    densities of the different candidate states, with the slice sampler biased
+    towards states further from the current state.
+
+    When used with the `euclidean_no_u_turn_criterion` this transition is
+    equivalent to the transitions in &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39;
+    in [1].
+
+    References:
+
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+         adaptively setting path lengths in Hamiltonian Monte Carlo.
+         Journal of Machine Learning Research, 15(1), pp.1593-1623.
+    &#34;&#34;&#34;
+
+    def _init_aux_vars(self, state, rng):
+        aux_vars = super()._init_aux_vars(state, rng)
+        aux_vars[&#39;log_u&#39;] = np.log(rng.uniform()) - aux_vars[&#39;h_init&#39;]
+        return aux_vars
+
+    def _weight_function(self, h, aux_vars):
+        return (aux_vars[&#39;log_u&#39;] &lt;= -h) * 1
+
+    def _weight_ratio(self, numerator, denominator):
+        return (
+            min(numerator / denominator, 1) if denominator &gt; 0 else
+            min(numerator, 1))
+
+    def _check_divergence(self, h, aux_vars):
+        if h + aux_vars[&#39;log_u&#39;] &gt; self.max_delta_h:
+            raise HamiltonianDivergenceError(
+                f&#39;delta_h = {h + aux_vars[&#34;log_u&#34;]}&#39;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.transitions.DynamicIntegrationTransition" href="#mici.transitions.DynamicIntegrationTransition">DynamicIntegrationTransition</a></li>
+<li><a title="mici.transitions.IntegrationTransition" href="#mici.transitions.IntegrationTransition">IntegrationTransition</a></li>
+<li><a title="mici.transitions.Transition" href="#mici.transitions.Transition">Transition</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.transitions.SliceDynamicIntegrationTransition.state_variables"><code class="name">var <span class="ident">state_variables</span></code></dt>
+<dd>
+<section class="desc"><p>set() -&gt; new empty set object
+set(iterable) -&gt; new set object</p>
+<p>Build an unordered collection of unique elements.</p></section>
+</dd>
+<dt id="mici.transitions.SliceDynamicIntegrationTransition.statistic_types"><code class="name">var <span class="ident">statistic_types</span></code></dt>
+<dd>
+<section class="desc"><p>dict() -&gt; new empty dictionary
+dict(mapping) -&gt; new dictionary initialized from a mapping object's
+(key, value) pairs
+dict(iterable) -&gt; new dictionary initialized as if via:
+d = {}
+for k, v in iterable:
+d[k] = v
+dict(**kwargs) -&gt; new dictionary initialized with the name=value pairs
+in the keyword argument list.
+For example:
+dict(one=1, two=2)</p></section>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mici.transitions.SliceDynamicIntegrationTransition.sample"><code class="name flex">
+<span>def <span class="ident">sample</span></span>(<span>self, state, rng)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition
+kernel which leaves the canonical distribution on the state space
+corresponding to the Hamiltonian system invariant.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Current chain state.</dd>
+<dt><strong><code>rng</code></strong> :&ensp;<code>RandomState</code></dt>
+<dd>NumPy RandomState random number generator.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>state</code></strong> :&ensp;<a title="mici.states.ChainState" href="states.html#mici.states.ChainState"><code>ChainState</code></a></dt>
+<dd>Updated state object.</dd>
+<dt><strong><code>trans_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>numeric</code>]</dt>
+<dd>A dictionary of statistics
+computed during the transition to be recorded.</dd>
+</dl></section>
 </dd>
 </dl>
 </dd>
@@ -2260,7 +2838,7 @@ computed during the transition to be recorded.</dd>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>

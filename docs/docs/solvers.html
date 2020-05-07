@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.1" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
 <title>mici.solvers API documentation</title>
 <meta name="description" content="Solvers for non-linear systems of equations for implicit integrators." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -52,7 +52,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L0-L287" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L0-L291" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Solvers for non-linear systems of equations for implicit integrators.&#34;&#34;&#34;
 
@@ -148,7 +148,11 @@ def solve_fixed_point_steffensen(
         try:
             x1 = func(x0)
             x2 = func(x1)
-            x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+            denom = x2 - 2 * x1 + x0
+            # Set any zero values in denominator of update term to smalllest
+            # floating point value to prevent divide-by-zero errors
+            denom[abs(denom) == 0.] = np.finfo(x0.dtype).eps
+            x = x0 - (x1 - x0)**2 / denom
             error = norm(x - x0)
             if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
@@ -359,7 +363,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L7-L9" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def euclidean_norm(vct):
     &#34;&#34;&#34;Calculate the Euclidean (L-2) norm of a vector.&#34;&#34;&#34;
@@ -374,7 +378,7 @@ def solve_projection_onto_manifold_newton(
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L12-L14" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def maximum_norm(vct):
     &#34;&#34;&#34;Calculate the maximum (L-infinity) norm of a vector.&#34;&#34;&#34;
@@ -416,7 +420,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L17-L57" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_direct(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -501,7 +505,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L60-L109" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L60-L113" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_fixed_point_steffensen(
         func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
@@ -538,7 +542,11 @@ the iteration.</p></section>
         try:
             x1 = func(x0)
             x2 = func(x1)
-            x = x0 - (x1 - x0)**2 / (x2 - 2 * x1 + x0)
+            denom = x2 - 2 * x1 + x0
+            # Set any zero values in denominator of update term to smalllest
+            # floating point value to prevent divide-by-zero errors
+            denom[abs(denom) == 0.] = np.finfo(x0.dtype).eps
+            x = x0 - (x1 - x0)**2 / denom
             error = norm(x - x0)
             if error &gt; divergence_tol or np.isnan(error):
                 raise ConvergenceError(
@@ -620,7 +628,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L112-L198" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L116-L202" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_quasi_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
@@ -776,7 +784,7 @@ the iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/solvers.py#L201-L288" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/solvers.py#L205-L292" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def solve_projection_onto_manifold_newton(
         state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
@@ -876,7 +884,7 @@ the iteration.</p></section>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>

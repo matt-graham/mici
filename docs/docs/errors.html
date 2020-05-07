@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.1" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
 <title>mici.errors API documentation</title>
 <meta name="description" content="Exception types." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
@@ -34,6 +34,9 @@
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></code></h4>
+</li>
+<li>
 <h4><code><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></code></h4>
 </li>
 <li>
@@ -41,6 +44,12 @@
 </li>
 <li>
 <h4><code><a title="mici.errors.ConvergenceError" href="#mici.errors.ConvergenceError">ConvergenceError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.errors.LinAlgError" href="#mici.errors.LinAlgError">LinAlgError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mici.errors.HamiltonianDivergenceError" href="#mici.errors.HamiltonianDivergenceError">HamiltonianDivergenceError</a></code></h4>
 </li>
 </ul>
 </li>
@@ -55,12 +64,16 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/errors.py#L0-L12" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L0-L24" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Exception types.&#34;&#34;&#34;
 
 
-class IntegratorError(RuntimeError):
+class Error(RuntimeError):
+    &#34;&#34;&#34;Base class for errors.&#34;&#34;&#34;
+
+
+class IntegratorError(Error):
     &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;
 
 
@@ -69,7 +82,15 @@ class NonReversibleStepError(IntegratorError):
 
 
 class ConvergenceError(IntegratorError):
-    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;
+
+
+class LinAlgError(Error):
+    &#34;&#34;&#34;Error raised when a matrix operation raises a linear algebra error.&#34;&#34;&#34;
+
+
+class HamiltonianDivergenceError(Error):
+    &#34;&#34;&#34;Error raised when integration of Hamiltonian dynamics diverges.&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -81,6 +102,33 @@ class ConvergenceError(IntegratorError):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="mici.errors.Error"><code class="flex name class">
+<span>class <span class="ident">Error</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for errors.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L4-L5" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class Error(RuntimeError):
+    &#34;&#34;&#34;Base class for errors.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
+<li><a title="mici.errors.LinAlgError" href="#mici.errors.LinAlgError">LinAlgError</a></li>
+<li><a title="mici.errors.HamiltonianDivergenceError" href="#mici.errors.HamiltonianDivergenceError">HamiltonianDivergenceError</a></li>
+</ul>
+</dd>
 <dt id="mici.errors.IntegratorError"><code class="flex name class">
 <span>class <span class="ident">IntegratorError</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -90,13 +138,14 @@ class ConvergenceError(IntegratorError):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/errors.py#L4-L5" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L8-L9" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class IntegratorError(RuntimeError):
+<pre><code class="python">class IntegratorError(Error):
     &#34;&#34;&#34;Error raised when integrator step fails.&#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></li>
 <li>builtins.RuntimeError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
@@ -116,7 +165,7 @@ class ConvergenceError(IntegratorError):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/errors.py#L8-L9" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L12-L13" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class NonReversibleStepError(IntegratorError):
     &#34;&#34;&#34;Error raised when integrator step fails reversibility check.&#34;&#34;&#34;</code></pre>
@@ -124,6 +173,7 @@ class ConvergenceError(IntegratorError):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
+<li><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></li>
 <li>builtins.RuntimeError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
@@ -138,7 +188,7 @@ class ConvergenceError(IntegratorError):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/02ffeebea97e67a5f32844d7f81a3262956f7580/mici/errors.py#L12-L13" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L16-L17" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConvergenceError(IntegratorError):
     &#34;&#34;&#34;Error raised when solver fails to converge within allowed iterations.&#34;&#34;&#34;</code></pre>
@@ -146,6 +196,51 @@ class ConvergenceError(IntegratorError):
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="mici.errors.IntegratorError" href="#mici.errors.IntegratorError">IntegratorError</a></li>
+<li><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></li>
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mici.errors.LinAlgError"><code class="flex name class">
+<span>class <span class="ident">LinAlgError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Error raised when a matrix operation raises a linear algebra error.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L20-L21" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class LinAlgError(Error):
+    &#34;&#34;&#34;Error raised when a matrix operation raises a linear algebra error.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></li>
+<li>builtins.RuntimeError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mici.errors.HamiltonianDivergenceError"><code class="flex name class">
+<span>class <span class="ident">HamiltonianDivergenceError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Error raised when integration of Hamiltonian dynamics diverges.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/errors.py#L24-L25" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class HamiltonianDivergenceError(Error):
+    &#34;&#34;&#34;Error raised when integration of Hamiltonian dynamics diverges.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mici.errors.Error" href="#mici.errors.Error">Error</a></li>
 <li>builtins.RuntimeError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
@@ -157,7 +252,7 @@ class ConvergenceError(IntegratorError):
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>
