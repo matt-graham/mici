@@ -16,12 +16,19 @@ try:
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
+try:
+    import google.colab
+    ON_COLAB = True
+except ImportError:
+    ON_COLAB = False
 
 
 def _in_zmq_interactive_shell():
     """Check if in interactive ZMQ shell which supports updateable displays"""
     if not IPYTHON_AVAILABLE:
         return False
+    elif ON_COLAB:
+        return True
     else:
         try:
             shell = get_ipython().__class__.__name__
@@ -258,11 +265,11 @@ class ProgressBar(BaseProgressBar):
     def bar_color(self):
         """CSS color property for HTML progress bar."""
         if self.counter == self.n_iter:
-            return 'var(--jp-success-color1)'
+            return 'var(--jp-success-color1, #4caf50)'
         elif self._active:
-            return 'var(--jp-brand-color1)'
+            return 'var(--jp-brand-color1, #2196f3)'
         else:
-            return 'var(--jp-error-color1)'
+            return 'var(--jp-error-color1, #f44336)'
 
     @property
     def stats(self):
@@ -332,8 +339,8 @@ class ProgressBar(BaseProgressBar):
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;">
           <label style="margin-right: 8px; flex-shrink: 0;
-                        font-size: var(--jp-code-font-size);
-                        font-family: var(--jp-code-font-family);">
+                        font-size: var(--jp-code-font-size, 13px);
+                        font-family: var(--jp-code-font-family, monospace);">
             {html.escape(self.prefix).replace(' ', '&nbsp;')}
           </label>
           <div role="progressbar" aria-valuenow="{self.prop_complete}"
@@ -346,8 +353,8 @@ class ProgressBar(BaseProgressBar):
                         height: 100%;"></div>
           </div>
           <div style="margin-left: 8px; flex-shrink: 0;
-                      font-family: var(--jp-code-font-family);
-                      font-size: var(--jp-code-font-size);">
+                      font-family: var(--jp-code-font-family, monospace);
+                      font-size: var(--jp-code-font-size, 13px);">
             {html.escape(self.postfix)}
           </div>
         </div>
