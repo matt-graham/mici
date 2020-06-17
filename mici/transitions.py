@@ -180,9 +180,8 @@ class IntegrationTransition(Transition):
 
     state_variables = {'pos', 'mom', 'dir'}
     statistic_types = {
-        'hamiltonian': (np.float64, np.nan),
         'n_step': (np.int64, -1),
-        'accept_prob': (np.float64, np.nan),
+        'accept_stat': (np.float64, np.nan),
         'non_reversible_step': (np.bool, False),
         'convergence_error': (np.bool, False)
     }
@@ -232,26 +231,39 @@ class MetropolisIntegrationTransition(IntegrationTransition):
     the negation of its initial value.
     """
 
+    def __init__(self, system, integrator):
+        super().__init__(system, integrator)
+        self.statistic_types['metrop_accept_prob'] = (np.float64, np.nan)
+
     def _sample_n_step(self, state, n_step, rng):
         h_init = self.system.h(state)
         state_p = state
+        integration_error = False
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
         except Error as e:
-            stats = {'hamiltonian': h_init, 'accept_prob': 0, 'n_step': s}
+            integration_error = True
+            stats = {'n_step': s}
             _process_integrator_error(e, stats)
-            return state, stats
-        state_p.dir *= -1
-        h_final = self.system.h(state_p)
-        metrop_ratio = np.exp(h_init - h_final)
-        accept_prob = 0 if np.isnan(metrop_ratio) else min(1, metrop_ratio)
-        if rng.uniform() < accept_prob:
+        else:
+            stats = {'n_step': n_step}
+            # Reverse integration direction of proposal to form an involution
+            state_p.dir *= -1
+        if state_p is not state:
+            h_final = self.system.h(state_p)
+            metrop_ratio = np.exp(h_init - h_final)
+            accept_prob = 0 if np.isnan(metrop_ratio) else min(1, metrop_ratio)
+        else:
+            accept_prob = 0.
+        stats['metrop_accept_prob'] = accept_prob
+        stats['accept_stat'] = accept_prob if not integration_error else 0
+        if not integration_error and rng.uniform() < accept_prob:
             state = state_p
+        # Reverse integration direction of new state
+        # As extended target distribution is symmetric in direction indicator
+        # this always leaves the distribution invariant
         state.dir *= -1
-        stats = {'hamiltonian': self.system.h(state),
-                 'accept_prob': accept_prob, 'n_step': n_step,
-                 'non_reversible_step': False, 'convergence_error': False}
         return state, stats
 
 
@@ -461,6 +473,8 @@ class DynamicIntegrationTransition(IntegrationTransition):
         self.max_delta_h = max_delta_h
         self.termination_criterion = termination_criterion
         self.do_extra_subtree_checks = do_extra_subtree_checks
+        self.statistic_types['av_metrop_accept_prob'] = (np.float64, np.nan)
+        self.statistic_types['reject_prob'] = (np.float64, np.nan)
         self.statistic_types['tree_depth'] = (np.int64, -1)
         self.statistic_types['diverging'] = (np.bool, False)
 
@@ -500,9 +514,6 @@ class DynamicIntegrationTransition(IntegrationTransition):
     def _init_aux_vars(self, state, rng):
         return {'h_init': self.system.h(state)}
 
-    def _accept_stat(self, h, aux_vars):
-        return min(1, np.exp(aux_vars['h_init'] - h))
-
     @abstractmethod
     def _weight_function(self, h, aux_vars):
         pass
@@ -526,8 +537,9 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 # create new tree leave
                 tree = self._new_leave(state, h, aux_vars)
                 proposal = state
-                # accumulate stats to calculate proxy acceptance probability
-                stats['sum_acc_prob'] += self._accept_stat(h, aux_vars)
+                # accumulate stats
+                stats['sum_metrop_accept_prob'] += min(
+                    1, np.exp(aux_vars['h_init'] - h))
                 stats['n_step'] += 1
                 # default to assuming valid and then check for divergence
                 terminate = False
@@ -561,7 +573,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         return terminate, tree, proposal
 
     def sample(self, state, rng):
-        stats = {'n_step': 0, 'sum_acc_prob': 0.}
+        stats = {'n_step': 0, 'sum_metrop_accept_prob': 0., 'reject_prob': 1.}
         aux_vars = self._init_aux_vars(state, rng)
         tree = self._new_leave(state, aux_vars['h_init'], aux_vars)
         next_state = state
@@ -578,8 +590,14 @@ class DynamicIntegrationTransition(IntegrationTransition):
             # progressively sample new state by choosing between
             # current new state and proposal from new subtree, biasing
             # towards the new subtree proposal
-            if rng.uniform() < self._weight_ratio(new_tree.weight, tree.weight):
+            accept_proposal_prob = self._weight_ratio(
+                new_tree.weight, tree.weight)
+            if rng.uniform() < accept_proposal_prob:
                 next_state = new_proposal
+            # each proposal acceptance independent therefore overall probability
+            # of 'rejecting' - i.e. not accepting all proposals is product of
+            # probabilties of not accepting each proposal
+            stats['reject_prob'] *= (1. - accept_proposal_prob)
             # merge new subtree into current tree accounting for direction
             neg_subtree = tree if direction == 1 else new_tree
             pos_subtree = new_tree if direction == 1 else tree
@@ -587,12 +605,16 @@ class DynamicIntegrationTransition(IntegrationTransition):
             # check termination criterion on new tree and subtrees
             if self._termination_criterion(tree, neg_subtree, pos_subtree):
                 break
-        sum_acc_prob = stats.pop('sum_acc_prob')
+        sum_accept_prob = stats.pop('sum_metrop_accept_prob')
         if stats['n_step'] > 0:
-            stats['accept_prob'] = sum_acc_prob / stats['n_step']
+            stats['av_metrop_accept_prob'] = sum_accept_prob / stats['n_step']
         else:
-            stats['accept_prob'] = 0.
-        stats['hamiltonian'] = self.system.h(next_state)
+            stats['av_metrop_accept_prob'] = 0.
+        if any(stats.get(key, False) for key in
+               ['diverging', 'convergence_error', 'non_reversible_step']):
+            stats['accept_stat'] = 0.
+        else:
+            stats['accept_stat'] = stats['av_metrop_accept_prob']
         stats['tree_depth'] = depth
         return next_state, stats
 

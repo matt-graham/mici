@@ -928,7 +928,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 for stats_key in kwargs['monitor_stats']]
         else:
             kwargs['monitor_stats'] = [
-                ('integration_transition', 'accept_prob')]
+                ('integration_transition', 'accept_stat')]
 
     def sample_chain(self, n_sample, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -970,7 +970,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             monitor_stats (Iterable[str]): List of string keys of chain
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
-                is to print only the mean `accept_prob` statistic.
+                is to print only the mean `accept_stat` statistic.
             display_progress (bool): Whether to display a progress bar to
                 track the completed chain sampling iterations. Default value
                 is `True`, i.e. to display progress bar.
@@ -1052,7 +1052,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             monitor_stats (Iterable[str]): List of string keys of chain
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
-                is to print only the mean `accept_prob` statistic.
+                is to print only the mean `accept_stat` statistic.
             display_progress (bool): Whether to display a progress bar to
                 track the completed chain sampling iterations. Default value
                 is `True`, i.e. to display progress bar.
