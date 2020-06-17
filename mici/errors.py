@@ -23,3 +23,7 @@ class LinAlgError(Error):
 
 class HamiltonianDivergenceError(Error):
     """Error raised when integration of Hamiltonian dynamics diverges."""
+
+
+class AdaptationError(Error):
+    """Error raised when adaptation of transition parameters fails."""

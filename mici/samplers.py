@@ -314,7 +314,7 @@ def _truncate_chain_data(sample_index, traces, chain_stats):
 
 def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                   chain_index=0, parallel_chains=False, memmap_enabled=False,
-                  memmap_path=None, monitor_stats=None):
+                  memmap_path=None, monitor_stats=None, adapters=None):
     """Sample a chain by iteratively appyling a sequence of transition kernels.
 
     Args:
@@ -359,6 +359,17 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             the `chain_stats` dictionary. The mean over samples computed so far
             of the chain statistics associated with any valid key-pairs will be
             monitored during sampling by printing as postfix to progress bar.
+        adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables of
+            `mici.adapters.Adapter` instances keyed by strings corresponding to
+            the key of the transition in the `transitions` dictionary to apply
+            the adapters to. Each adapter is able to adaptatively set the
+            parameters of a transition while sampling a chain. Note that the
+            adapter updates for each transition are applied in the order the
+            adapters appear in the iterable and so if multiple adapters change
+            the same parameter(s) the order will matter. Adaptation based on the
+            chain state history breaks the Markov property and so any chain
+            samples while adaptation is active should not be used in estimates
+            of expectations.
 
     Returns:
         final_state (mici.states.ChainState): State of chain after final
@@ -390,6 +401,11 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
         transitions, n_sample, memmap_enabled, memmap_path, chain_index)
     traces = _init_traces(
         trace_funcs, state, n_sample, memmap_enabled, memmap_path, chain_index)
+    if adapters is not None:
+        adapter_states = {
+            trans_key: [adapter.initialise(state, transitions[trans_key])
+                        for adapter in adapter_list]
+            for trans_key, adapter_list in adapters.items()}
     try:
         sample_index = 0
         if parallel_chains and not memmap_enabled:
@@ -398,6 +414,11 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             for sample_index, monitor_dict in chain_iterator:
                 for trans_key, transition in transitions.items():
                     state, trans_stats = transition.sample(state, rng)
+                    if adapters is not None and trans_key in adapters:
+                        for adapter, adapter_state in zip(
+                                adapters[trans_key], adapter_states[trans_key]):
+                            adapter.update(
+                                state, adapter_state, trans_stats, transition)
                     _update_chain_stats(
                         sample_index, chain_stats, trans_key, trans_stats)
                 for trace_func in trace_funcs:
@@ -406,6 +427,10 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 if monitor_stats is not None:
                     _update_monitor_stats(
                         sample_index, chain_stats, monitor_stats, monitor_dict)
+        for trans_key, adapter_list in adapters.items():
+            for adapter, adapter_state in zip(
+                    adapter_list, adapter_states[trans_key]):
+                adapter.finalise(adapter_state, transitions[trans_key])
     except KeyboardInterrupt:
         interrupted = True
         if sample_index != n_sample:
@@ -427,7 +452,7 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
     if parallel_chains and memmap_enabled:
             traces = _memmaps_to_file_paths(traces)
             chain_stats = _memmaps_to_file_paths(chain_stats)
-    return state, traces, chain_stats, interrupted
+    return state, traces, chain_stats, adapter_states, interrupted
 
 
 def _collate_chain_outputs(chain_outputs):
@@ -439,8 +464,10 @@ def _collate_chain_outputs(chain_outputs):
     """
     final_states_stack = []
     traces_stack = {}
-    chain_stats_stack = {}
-    for chain_index, (final_state, traces, stats) in enumerate(chain_outputs):
+    stats_stack = {}
+    adapt_states_stack = {}
+    for chain_index, (final_state, traces,
+                      stats, adapt_states) in enumerate(chain_outputs):
         final_states_stack.append(final_state)
         for key, val in traces.items():
             # if value is string => file path to memory mapped array
@@ -452,16 +479,22 @@ def _collate_chain_outputs(chain_outputs):
                 traces_stack[key].append(val)
         for trans_key, trans_stats in stats.items():
             if chain_index == 0:
-                chain_stats_stack[trans_key] = {}
+                stats_stack[trans_key] = {}
             for key, val in trans_stats.items():
                 # if value is string => file path to memory mapped array
                 if isinstance(val, str):
                     val = np.lib.format.open_memmap(val)
                 if chain_index == 0:
-                    chain_stats_stack[trans_key][key] = [val]
+                    stats_stack[trans_key][key] = [val]
                 else:
-                    chain_stats_stack[trans_key][key].append(val)
-    return final_states_stack, traces_stack, chain_stats_stack
+                    stats_stack[trans_key][key].append(val)
+        for trans_key, adapt_state_list in adapt_states.items():
+            if chain_index == 0:
+                adapt_states_stack[trans_key] = [[a] for a in adapt_state_list]
+            else:
+                for i, adapt_state in enumerate(adapt_state_list):
+                    adapt_states_stack[trans_key][i].append(adapt_state)
+    return final_states_stack, traces_stack, stats_stack, adapt_states_stack
 
 
 def _get_per_chain_rngs(base_rng, n_chain):
@@ -508,10 +541,10 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     chain_outputs = []
     for chain_index, (init_state, rng, chain_iterator) in enumerate(
             zip(init_states, rngs, chain_iterators)):
-        final_state, traces, stats, interrupted = _sample_chain(
+        *outputs, interrupted = _sample_chain(
             chain_iterator=chain_iterator, init_state=init_state, rng=rng,
             chain_index=chain_index, parallel_chains=False, **kwargs)
-        chain_outputs.append((final_state, traces, stats))
+        chain_outputs.append(outputs)
         if interrupted:
             break
     return _collate_chain_outputs(chain_outputs)
@@ -707,6 +740,17 @@ class MarkovChainMonteCarloMethod(object):
                 factory function for progress bar to use to show chain
                 progress if enabled (`display_progress=True`). Defaults to
                 `mici.progressbars.ProgressBar`.
+            adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables of
+                `mici.adapters.Adapter` instances keyed by strings corresponding
+                to the key of the transition in the `transitions` dictionary to
+                apply the adapters to. Each adapter is able to adaptatively set
+                the parameters of a transition while sampling a chain. Note that
+                the adapter updates for each transition are applied in the order
+                the adapters appear in the iterable and so if multiple adapters
+                change the same parameter(s) the order will matter. Adaptation
+                based on the chain state history breaks the Markov property and
+                so any chain samples while adaptation is active should not be
+                used in estimates of expectations.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -731,7 +775,7 @@ class MarkovChainMonteCarloMethod(object):
         self.__set_sample_chain_kwargs_defaults(kwargs)
         chain_iterator = _construct_chain_iterators(
             n_sample, kwargs.pop('progress_bar_class'))
-        final_state, traces, chain_stats, interrupted = _sample_chain(
+        final_state, traces, chain_stats, _, interrupted = _sample_chain(
             init_state=init_state, chain_iterator=chain_iterator,
             transitions=self.transitions, rng=self.rng,
             trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
@@ -797,6 +841,17 @@ class MarkovChainMonteCarloMethod(object):
                 factory function for progress bar to use to show chain
                 progress if enabled (`display_progress=True`). Defaults to
                 `mici.progressbars.ProgressBar`.
+            adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables of
+                `mici.adapters.Adapter` instances keyed by strings corresponding
+                to the key of the transition in the `transitions` dictionary to
+                apply the adapters to. Each adapter is able to adaptatively set
+                the parameters of a transition while sampling a chain. Note that
+                the adapter updates for each transition are applied in the order
+                the adapters appear in the iterable and so if multiple adapters
+                change the same parameter(s) the order will matter. Adaptation
+                based on the chain state history breaks the Markov property and
+                so any chain samples while adaptation is active should not be
+                used in estimates of expectations.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
@@ -827,16 +882,23 @@ class MarkovChainMonteCarloMethod(object):
             n_sample, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            return _sample_chains_sequential(
+            *states_traces_stats, adapt_states = _sample_chains_sequential(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, **kwargs)
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            return _sample_chains_parallel(
+            *states_traces_stats, adapt_states = _sample_chains_parallel(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, n_process=n_process, **kwargs)
+        if len(adapt_states) > 0:
+            adapters = kwargs['adapters']
+            for trans_key, adapter_state_list in adapt_states.items():
+                for adapter_state, adapter in zip(
+                        adapter_state_list, adapters[trans_key]):
+                    adapter.finalise(adapter_state, self.transitions[trans_key])
+        return states_traces_stats
 
 
 def _pos_trace_func(state):
@@ -929,6 +991,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         else:
             kwargs['monitor_stats'] = [
                 ('integration_transition', 'accept_stat')]
+        if 'adapters' in kwargs:
+            kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
 
     def sample_chain(self, n_sample, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -978,6 +1042,15 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 factory function for progress bar to use to show chain
                 progress if enabled (`display_progress=True`). Defaults to
                 `mici.progressbars.ProgressBar`.
+            adapters (Iterable[Adapter]): Sequence of `mici.adapters.Adapter`
+                instances to use to adaptatively set parameters of the
+                integration transition such as the step size while sampling a
+                chain. Note that the adapter updates are applied in the order
+                the adapters appear in the iterable and so if multiple adapters
+                change the same parameter(s) the order will matter. Adaptation
+                based on the chain state history breaks the Markov property and
+                so any chain samples while adaptation is active should not be
+                used in estimates of expectations.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -1060,6 +1133,15 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 factory function for progress bar to use to show chain
                 progress if enabled (`display_progress=True`). Defaults to
                 `mici.progressbars.ProgressBar`.
+            adapters (Iterable[Adapter]): Sequence of `mici.adapters.Adapter`
+                instances to use to adaptatively set parameters of the
+                integration transition such as the step size while sampling a
+                chain. Note that the adapter updates are applied in the order
+                the adapters appear in the iterable and so if multiple adapters
+                change the same parameter(s) the order will matter. Adaptation
+                based on the chain state history breaks the Markov property and
+                so any chain samples while adaptation is active should not be
+                used in estimates of expectations.
 
         Returns:
             final_states (List[ChainState]): States of chains after final

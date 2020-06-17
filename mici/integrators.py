@@ -1,7 +1,7 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
 from abc import ABC, abstractmethod
-from mici.errors import NonReversibleStepError
+from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
                           solve_projection_onto_manifold_quasi_newton)
 
@@ -11,17 +11,18 @@ __pdoc__ = {}
 class Integrator(ABC):
     """Base class for integrators."""
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
         """
         self.system = system
         self.step_size = step_size
 
-    @abstractmethod
     def step(self, state):
         """Perform a single integrator step from a supplied state.
 
@@ -33,6 +34,25 @@ class Integrator(ABC):
             new_state (mici.states.ChainState): New object corresponding to
                 stepped state.
         """
+        if self.step_size is None:
+            raise AdaptationError(
+                'Integrator `step_size` is `None`. This value should only be '
+                'used if a step size adapter is being used to set the step '
+                'size.')
+        state = state.copy()
+        self._step(state, state.dir * self.step_size)
+        return state
+
+    @abstractmethod
+    def _step(self, state, dt):
+        """Implementation of single integrator step.
+
+        Args:
+            state (mici.states.ChainState): System state to perform integrator
+                step from. Updated in place.
+            dt (float): Integrator time step. May be positive or negative.
+        """
+
 
 
 class ExplicitLeapfrogIntegrator(Integrator):
@@ -53,7 +73,7 @@ class ExplicitLeapfrogIntegrator(Integrator):
     `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     """
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         if not hasattr(system, 'h1_flow') or not hasattr(system, 'h2_flow'):
             raise ValueError(
                 'Explicit leapfrog integrator can only be used for systems '
@@ -62,13 +82,10 @@ class ExplicitLeapfrogIntegrator(Integrator):
                 'the `ImplicitLeapfrogIntegrator` class may be used instead.')
         super().__init__(system, step_size)
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self.system.h1_flow(state, 0.5 * dt)
         self.system.h2_flow(state, dt)
         self.system.h1_flow(state, 0.5 * dt)
-        return state
 
 
 LeapfrogIntegrator = ExplicitLeapfrogIntegrator
@@ -93,7 +110,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
     of equations.
     """
 
-    def __init__(self, system, step_size, reverse_check_tol=1e-8,
+    def __init__(self, system, step_size=None, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
                  fixed_point_solver_kwargs=None):
@@ -101,7 +118,9 @@ class ImplicitLeapfrogIntegrator(Integrator):
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             reverse_check_tol (float): Tolerance for check of reversibility of
                 implicit sub-steps which involve iterative solving of a
                 non-linear system of equations. The step is assumed to be
@@ -126,8 +145,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
         """
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
@@ -178,16 +196,13 @@ class ImplicitLeapfrogIntegrator(Integrator):
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
-    def step(self, state):
-        dt = 0.5 * state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, dt)
         self._step_b_fwd(state, dt)
         self._step_c_fwd(state, dt)
         self._step_c_adj(state, dt)
         self._step_b_adj(state, dt)
         self._step_a(state, dt)
-        return state
 
 
 class ConstrainedLeapfrogIntegrator(Integrator):
@@ -233,7 +248,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
     integrator will also be in the cotangent bundle.
     """
 
-    def __init__(self, system, step_size, n_inner_step=1,
+    def __init__(self, system, step_size=None, n_inner_step=1,
                  reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
                  projection_solver=solve_projection_onto_manifold_quasi_newton,
                  projection_solver_kwargs=None):
@@ -241,7 +256,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             n_inner_step (int): Positive integer specifying number of 'inner'
                 constrained `system.h2_flow` steps to take within each overall
                 step. As the derivative `system.dh1_dpos` is not evaluated
@@ -292,8 +309,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
             projection_solver_kwargs (None or Dict[str, object]): Dictionary of
                 any keyword arguments to `projection_solver`.
         """
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
@@ -342,10 +358,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                     f'Non-reversible step. Distance between initial and '
                     f'forward-backward integrated positions = {rev_diff:.1e}.')
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, 0.5 * dt)
         self._step_b(state, dt)
         self._step_a(state, 0.5 * dt)
-        return state

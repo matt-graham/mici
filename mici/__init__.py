@@ -4,6 +4,7 @@
 __authors__ = 'Matt Graham'
 __license__ = 'MIT'
 
+import mici.adapters
 import mici.autodiff
 import mici.integrators
 import mici.matrices
