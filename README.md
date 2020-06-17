@@ -137,7 +137,7 @@ class from each module.
      to holonomic constraints 
      ([Hartmann and Schütte, 2005](#hartmann2005constrained); 
       [Brubaker, Salzmann and Urtasun, 2012](#brubaker2012family); 
-      [Lelièvre, Rousset and Stoltz, 2018](#lelievre2018hybrid)) 
+      [Lelièvre, Rousset and Stoltz, 2019](#lelievre2019hybrid)) 
      with a dense constraint function Jacobian matrix,
 
 [`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) - 
@@ -314,7 +314,8 @@ anim = animation.FuncAnimation(fig, update, frames=60, interval=100, blit=True)
  13. <a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual 
      introduction to Hamiltonian Monte Carlo.
      [![arXiv:1701.02434](http://img.shields.io/badge/arXiv-1701.02434-B31B1B.svg)](https://arxiv.org/abs/1701.02434)
- 14. <a id='lelievre2018hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 
-     2018. Hybrid Monte Carlo methods for sampling probability measures on 
-     submanifolds.
+ 14. <a id='lelievre2019hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 
+     2019. Hybrid Monte Carlo methods for sampling probability measures on 
+     submanifolds. In *Numerische Mathematik*, 143(2), (pp.379-421).
+     [![DOI:10.1007/s00211-019-01056-4](https://zenodo.org/badge/DOI/10.1007/s00211-019-01056-4.svg)](https://doi.org/10.1007/s00211-019-01056-4)
      [![arXiv:1807.02356](http://img.shields.io/badge/arXiv-1807.02356-B31B1B.svg)](https://arxiv.org/abs/1807.02356)
