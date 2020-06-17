@@ -490,7 +490,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
 
     def _merge_subtrees(self, neg_subtree, pos_subtree):
         assert neg_subtree.depth == pos_subtree.depth, (
-            'Cannot merg subtrees of different depths')
+            'Cannot merge subtrees of different depths')
         return SubTree(
             negative=neg_subtree.negative, positive=pos_subtree.positive,
             weight=neg_subtree.weight + pos_subtree.weight,
