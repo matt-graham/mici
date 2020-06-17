@@ -224,6 +224,9 @@ class LogRepFloat(object):
         else:
             return self.val - other
 
+    def __rsub__(self, other):
+        return (-self).__radd__(other)
+
     def __mul__(self, other):
         if isinstance(other, LogRepFloat):
             return LogRepFloat(log_val=self.log_val + other.log_val)
