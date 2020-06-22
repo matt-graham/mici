@@ -450,8 +450,8 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
     if memmap_enabled:
         _flush_memmap_chain_data(traces, chain_stats)
     if parallel_chains and memmap_enabled:
-            traces = _memmaps_to_file_paths(traces)
-            chain_stats = _memmaps_to_file_paths(chain_stats)
+        traces = _memmaps_to_file_paths(traces)
+        chain_stats = _memmaps_to_file_paths(chain_stats)
     return state, traces, chain_stats, adapter_states, interrupted
 
 
