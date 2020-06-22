@@ -1892,6 +1892,10 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
                              f'{square_matrix.shape[0]}.')
         if square_matrix.shape[0] != square_matrix.shape[1]:
             raise ValueError('square_matrix argument must be square')
+        if not isinstance(left_factor_matrix, Matrix):
+            left_factor_matrix = DenseRectangularMatrix(left_factor_matrix)
+        if not isinstance(right_factor_matrix, Matrix):
+            right_factor_matrix = DenseRectangularMatrix(right_factor_matrix)
         if right_factor_matrix.shape != (dim_inner, dim_outer):
             raise ValueError(f'Inconsistent factor matrix shapes: '
                              f'{left_factor_matrix.shape} and '
@@ -2033,10 +2037,15 @@ class SymmetricLowRankUpdateMatrix(
             sign (int): One of {-1, +1}, determining whether a low-rank update
                 (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
         """
+        dim_inner = factor_matrix.shape[1]
         if symmetric_matrix.T is not symmetric_matrix:
             raise ValueError('symmetric_matrix must be symmetric')
+        if inner_symmetric_matrix is None:
+            inner_symmetric_matrix = IdentityMatrix(dim_inner)
         if inner_symmetric_matrix.T is not inner_symmetric_matrix:
             raise ValueError('inner_symmetric_matrix must be symmetric')
+        if not isinstance(factor_matrix, Matrix):
+            factor_matrix = DenseRectangularMatrix(factor_matrix)
         self.factor_matrix = factor_matrix
         self.symmetric_matrix = symmetric_matrix
         self.inner_symmetric_matrix = inner_symmetric_matrix
@@ -2135,8 +2144,13 @@ class PositiveDefiniteLowRankUpdateMatrix(
             sign (int): One of {-1, +1}, determining whether a low-rank update
                 (`sign = 1`) or 'downdate' (`sign = -1`) is peformed.
         """
+        dim_inner = factor_matrix.shape[1]
+        if not isinstance(factor_matrix, Matrix):
+            factor_matrix = DenseRectangularMatrix(factor_matrix)
         self.factor_matrix = factor_matrix
         self.pos_def_matrix = pos_def_matrix
+        if inner_pos_def_matrix is None:
+            inner_pos_def_matrix = IdentityMatrix(dim_inner)
         self.inner_pos_def_matrix = inner_pos_def_matrix
         super().__init__(
             factor_matrix, pos_def_matrix, inner_pos_def_matrix,
