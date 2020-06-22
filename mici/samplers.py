@@ -406,6 +406,8 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             trans_key: [adapter.initialise(state, transitions[trans_key])
                         for adapter in adapter_list]
             for trans_key, adapter_list in adapters.items()}
+    else:
+        adapter_states = {}
     try:
         sample_index = 0
         if parallel_chains and not memmap_enabled:
@@ -427,10 +429,6 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 if monitor_stats is not None:
                     _update_monitor_stats(
                         sample_index, chain_stats, monitor_stats, monitor_dict)
-        for trans_key, adapter_list in adapters.items():
-            for adapter, adapter_state in zip(
-                    adapter_list, adapter_states[trans_key]):
-                adapter.finalise(adapter_state, transitions[trans_key])
     except KeyboardInterrupt:
         interrupted = True
         if sample_index != n_sample:
@@ -581,6 +579,14 @@ def _sample_chains_worker(chain_queue, iter_queue):
             iter_queue.put(None)
             raise e
     return chain_outputs
+
+
+def _finalise_adapters(adapter_states, adapters, transitions):
+    """Finalise adapter updates to transitions based on final adapter states."""
+    for trans_key, adapter_state_list in adapter_states.items():
+        for adapter_state, adapter in zip(
+                adapter_state_list, adapters[trans_key]):
+            adapter.finalise(adapter_state, transitions[trans_key])
 
 
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
@@ -775,10 +781,14 @@ class MarkovChainMonteCarloMethod(object):
         self.__set_sample_chain_kwargs_defaults(kwargs)
         chain_iterator = _construct_chain_iterators(
             n_sample, kwargs.pop('progress_bar_class'))
-        final_state, traces, chain_stats, _, interrupted = _sample_chain(
+        final_state, traces, chain_stats, adapter_states, _ = _sample_chain(
             init_state=init_state, chain_iterator=chain_iterator,
             transitions=self.transitions, rng=self.rng,
             trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
+        if len(adapter_states) > 0:
+            _finalise_adapters(
+                adapter_states, kwargs['adapters'], self.transitions)
+
         return final_state, traces, chain_stats
 
     def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
@@ -882,22 +892,19 @@ class MarkovChainMonteCarloMethod(object):
             n_sample, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            *states_traces_stats, adapt_states = _sample_chains_sequential(
+            *states_traces_stats, adapter_states = _sample_chains_sequential(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, **kwargs)
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            *states_traces_stats, adapt_states = _sample_chains_parallel(
+            *states_traces_stats, adapter_states = _sample_chains_parallel(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, n_process=n_process, **kwargs)
-        if len(adapt_states) > 0:
-            adapters = kwargs['adapters']
-            for trans_key, adapter_state_list in adapt_states.items():
-                for adapter_state, adapter in zip(
-                        adapter_state_list, adapters[trans_key]):
-                    adapter.finalise(adapter_state, self.transitions[trans_key])
+        if len(adapter_states) > 0:
+            _finalise_adapters(
+                adapter_states, kwargs['adapters'], self.transitions)
         return states_traces_stats
 
 
@@ -991,7 +998,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         else:
             kwargs['monitor_stats'] = [
                 ('integration_transition', 'accept_stat')]
-        if 'adapters' in kwargs:
+        if 'adapters' in kwargs and kwargs['adapters'] is not None:
             kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
 
     def sample_chain(self, n_sample, init_state, **kwargs):
