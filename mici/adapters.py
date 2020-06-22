@@ -2,7 +2,10 @@
 
 from abc import ABC, abstractmethod, abstractproperty
 from math import exp, log
+import numpy as np
 from mici.errors import IntegratorError, AdaptationError
+from mici.matrices import (
+    PositiveDiagonalMatrix, DensePositiveDefiniteMatrix)
 
 
 class Adapter(ABC):
@@ -61,7 +64,10 @@ class Adapter(ABC):
 
         Args:
             adapt_state (Dict[str, Any] or List[Dict[str, Any]]): Final adapter
-                state or a list of adapter states.
+                state or a list of adapter states. Arrays / buffers associated
+                with the adapter state entries may be recycled to reduce memory
+                usage - if so the corresponding entries will be removed from
+                the adapter state dictionary / dictionaries.
             transition (mici.transitions.Transition): Markov transition being
                 adapted. Attributes of the transition or child objects will be
                 updated in-place by the method.
@@ -170,7 +176,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         try:
             state = integrator.step(init_state)
             delta_h = h_init - system.h(state)
-            sign = 2 * (delta_h  > -log(2)) - 1
+            sign = 2 * (delta_h > -log(2)) - 1
         except IntegratorError:
             sign = 1
         for s in range(self.max_init_step_size_iters):
@@ -178,7 +184,7 @@ class DualAveragingStepSizeAdapter(Adapter):
                 state = integrator.step(init_state)
                 delta_h = h_init - system.h(state)
                 if sign * delta_h < -sign * log(2):
-                    return  integrator.step_size
+                    return integrator.step_size
                 else:
                     integrator.step_size *= 2.**sign
             except IntegratorError:
@@ -210,3 +216,168 @@ class DualAveragingStepSizeAdapter(Adapter):
             transition.integrator.step_size = sum(
                 exp(a['smoothed_log_step_size'])
                 for a in adapt_state) / len(adapt_state)
+
+
+class WelfordVarianceMetricAdapter(Adapter):
+    """Metric adapter using variance estimates and optional regularisation.
+
+    Uses Welford's algorithm [1] to stably compute an online estimate of the
+    sample variances of the chain state position components during sampling. The
+    variance estimates are optionally regularised towards a common scalar value,
+    with increasing weight for small number of samples, to decrease the effect
+    of noisy estimates for small sample sizes, following the approach in Stan
+    [2]. The metric matrix representation is set to a diagonal matrix with
+    diagonal elements corresponding to the reciprocal of the (regularised)
+    variance estimates.
+
+    References:
+
+      1. Welford, B. P., 1962. Note on a method for calculating corrected sums
+         of squares and products. Technometrics, 4(3), pp. 419–420.
+      2. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
+         Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
+         Stan: A probabilistic programming language. Journal of Statistical
+         Software, 76(1).
+    """
+
+    def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
+        """
+        Args:
+            reg_iter_offset (int): Iteration offset used for calculating
+                iteration dependent weighting between regularisation target and
+                current covariance estimate. Higher values cause stronger
+                regularisation during initial iterations.
+            reg_scale (float): Positive scalar defining value variance estimates
+                are regularised towards.
+        """
+        self.reg_iter_offset = reg_iter_offset
+        self.reg_scale = reg_scale
+
+    def initialise(self, chain_state, transition):
+        return {
+            'iter': 0,
+            'mean': np.zeros_like(chain_state.pos),
+            'sum_diff_sq': np.zeros_like(chain_state.pos)
+        }
+
+    def update(self, chain_state, adapt_state, trans_stats, transition):
+        adapt_state['iter'] += 1
+        pos_minus_mean = chain_state.pos - adapt_state['mean']
+        adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
+        adapt_state['sum_diff_sq'] += pos_minus_mean * (
+            chain_state.pos - adapt_state['mean'])
+
+    def _regularise_var_est(self, var_est, n_iter):
+        """Update variance estimates by regularising towards common scalar.
+
+        Performed in place to prevent further array allocations.
+        """
+        if self.reg_iter_offset is not None and self.reg_iter_offset != 0:
+            var_est *= n_iter / (self.reg_iter_offset + n_iter)
+            var_est += self.reg_scale * (
+                self.reg_iter_offset / (self.reg_iter_offset + n_iter))
+
+    def finalise(self, adapt_state, transition):
+        if isinstance(adapt_state, dict):
+            n_iter = adapt_state['iter']
+            var_est = adapt_state.pop('sum_diff_sq')
+            var_est /= (n_iter - 1)
+        else:
+            # Use pooled variance estimator
+            # https://en.wikipedia.org/wiki/Pooled_variance
+            for i, a in enumerate(adapt_state):
+                if i == 0:
+                    n_iter = a['iter']
+                    n_state = 1
+                    var_est = a.pop('sum_diff_sq')
+                else:
+                    n_iter += a['iter']
+                    n_state += 1
+                    var_est += a.pop('sum_diff_sq')
+            var_est /= (n_iter - n_state)
+        self._regularise_var_est(var_est, n_iter)
+        transition.system.metric = PositiveDiagonalMatrix(var_est).inv
+
+
+class WelfordCovarianceMetricAdapter(Adapter):
+    """Metric adapter using variance estimates and optional regularisation.
+
+    Uses Welford's algorithm [1] to stably compute an online estimate of the
+    sample covariances of the chain state position components during sampling.
+    The covariance matrix estimate is optionally regularised towards a scaled
+    identity matrix, with increasing weight for small number of samples, to
+    decrease the effect of noisy estimates for small sample sizes, following the
+    approach in Stan [2]. The metric matrix representation is set to a dense
+    positive definite matrix corresponding to the inverse of the (regularised)
+    covariance estimate.
+
+    References:
+
+      1. Welford, B. P., 1962. Note on a method for calculating corrected sums
+         of squares and products. Technometrics, 4(3), pp. 419–420.
+      2. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
+         Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
+         Stan: A probabilistic programming language. Journal of Statistical
+         Software, 76(1).
+    """
+
+    def __init__(self, reg_iter_offset=5, reg_coefficient=1e-3):
+        """
+        Args:
+            reg_iter_offset (int): Iteration offset used for calculating
+                iteration dependent weighting between regularisation target and
+                current covariance estimate. Higher values cause stronger
+                regularisation during initial iterations.
+            reg_scale (float): Positive scalar defining value variance estimates
+                are regularised towards.
+        """
+        self.reg_iter_offset = reg_iter_offset
+        self.reg_coefficient = reg_coefficient
+
+    def initialise(self, chain_state, transition):
+        dim_pos = chain_state.pos.shape[0]
+        dtype = chain_state.pos.dtype
+        return {
+            'iter': 0,
+            'mean': np.zeros(shape=(dim_pos,), dtype=dtype),
+            'sum_diff_outer': np.zeros(shape=(dim_pos, dim_pos), dtype=dtype)
+        }
+
+    def update(self, chain_state, adapt_state, trans_stats, transition):
+        adapt_state['iter'] += 1
+        pos_minus_mean = chain_state.pos - adapt_state['mean']
+        adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
+        adapt_state['sum_diff_outer'] += pos_minus_mean[None, :] * (
+            chain_state.pos - adapt_state['mean'])[:, None]
+
+    def _regularise_covar_est(self, covar_est, n_iter):
+        """Update covariance estimate by regularising towards identity.
+
+        Performed in place to prevent further array allocations.
+        """
+        covar_est *= (n_iter / (self.reg_iter_offset + n_iter))
+        covar_est_diagonal = np.einsum('ii->i', covar_est)
+        covar_est_diagonal += self.reg_coefficient * (
+            self.reg_iter_offset / (self.reg_iter_offset + n_iter))
+
+    def finalise(self, adapt_state, transition):
+        if isinstance(adapt_state, dict):
+            n_iter = adapt_state['iter']
+            covar_est = adapt_state.pop('sum_diff_outer')
+            covar_est /= (n_iter - 1)
+        else:
+            # Use pooled covariance estimator
+            # https://en.wikipedia.org/wiki/Pooled_covariance_matrix
+            for i, a in enumerate(adapt_state):
+                if i == 0:
+                    n_iter = a['iter']
+                    n_state = 1
+                    covar_est = a.pop('sum_diff_outer')
+                else:
+                    n_iter += a['iter']
+                    n_state += 1
+                    covar_est += a.pop('sum_diff_outer')
+            covar_est /= (n_iter - n_state)
+        self._regularise_covar_est(covar_est, n_iter)
+        transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv
+
