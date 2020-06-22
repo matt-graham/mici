@@ -1,6 +1,6 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
-from mici.errors import ConvergenceError
+from mici.errors import ConvergenceError, LinAlgError
 import numpy as np
 
 
@@ -49,10 +49,10 @@ def solve_fixed_point_direct(
             if error < convergence_tol:
                 return x
             x0 = x
-        except ValueError as e:
-            # Make robust to inf/nan values in intermediate linear algebra ops
+        except (ValueError, LinAlgError) as e:
+            # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'ValueError at iteration {i} of fixed point solver ({e}).')
+                f'{type(e)} at iteration {i} of fixed point solver ({e}).')
     raise ConvergenceError(
         f'Fixed point iteration did not converge. Last error={error:.1e}.')
 
@@ -105,10 +105,10 @@ def solve_fixed_point_steffensen(
             if error < convergence_tol:
                 return x
             x0 = x
-        except ValueError as e:
-            # Make robust to inf/nan values in intermediate linear algebra ops
+        except (ValueError, LinAlgError) as e:
+            # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'ValueError at iteration {i} of fixed point solver ({e}).')
+                f'{type(e)} at iteration {i} of fixed point solver ({e}).')
     raise ConvergenceError(
         f'Fixed point iteration did not converge. Last error={error:.1e}.')
 
@@ -193,10 +193,10 @@ def solve_projection_onto_manifold_quasi_newton(
                 return state
             mu += delta_mu
             state.pos -= delta_pos
-        except ValueError as e:
-            # Make robust to inf/nan values in intermediate linear algebra ops
+        except (ValueError, LinAlgError) as e:
+            # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'ValueError at iteration {i} of Quasi-Newton solver ({e}).')
+                f'{type(e)} at iteration {i} of quasi-Newton solver ({e}).')
     raise ConvergenceError(
         f'Quasi-Newton solver did not converge with {max_iters} iterations. '
         f'Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.')
@@ -283,10 +283,10 @@ def solve_projection_onto_manifold_newton(
                 return state
             mu += delta_mu
             state.pos -= delta_pos
-        except ValueError as e:
-            # Make robust to inf/nan values in intermediate linear algebra ops
+        except (ValueError, LinAlgError) as e:
+            # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'ValueError at iteration {i} of Newton solver ({e}).')
+                f'{type(e)} at iteration {i} of Newton solver ({e}).')
     raise ConvergenceError(
         f'Newton solver did not converge in {max_iters} iterations. '
         f'Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.')

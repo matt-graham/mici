@@ -6,8 +6,8 @@ from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
-from mici.errors import (
-    Error, NonReversibleStepError, ConvergenceError, HamiltonianDivergenceError)
+from mici.errors import (IntegratorError, NonReversibleStepError, 
+                         ConvergenceError, HamiltonianDivergenceError)
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
-        except Error as e:
+        except IntegratorError as e:
             integration_error = True
             stats = {'n_step': s}
             _process_integrator_error(e, stats)
@@ -544,7 +544,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 # default to assuming valid and then check for divergence
                 terminate = False
                 self._check_divergence(h, aux_vars)
-            except Error as e:
+            except IntegratorError as e:
                 _process_integrator_error(e, stats)
                 terminate, tree, proposal = True, None, None
             return terminate, tree, proposal
