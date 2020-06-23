@@ -1236,7 +1236,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
     @cache_in_state('pos')
     def metric(self, state):
         return self._metric_matrix_class(
-            self.metric_func(state), size=pos.shape[0])
+            self.metric_func(state), size=state.pos.shape[0])
 
 
 class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
