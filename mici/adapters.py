@@ -218,23 +218,29 @@ class DualAveragingStepSizeAdapter(Adapter):
                 for a in adapt_state) / len(adapt_state)
 
 
-class WelfordVarianceMetricAdapter(Adapter):
-    """Metric adapter using variance estimates and optional regularisation.
+class OnlineVarianceMetricAdapter(Adapter):
+    """Diagonal metric adapter using online variance estimates.
 
     Uses Welford's algorithm [1] to stably compute an online estimate of the
-    sample variances of the chain state position components during sampling. The
-    variance estimates are optionally regularised towards a common scalar value,
-    with increasing weight for small number of samples, to decrease the effect
-    of noisy estimates for small sample sizes, following the approach in Stan
-    [2]. The metric matrix representation is set to a diagonal matrix with
-    diagonal elements corresponding to the reciprocal of the (regularised)
-    variance estimates.
+    sample variances of the chain state position components during sampling. If
+    online estimates are available from multiple independent chains, the final
+    variance estimate is calculated from the per-chain statistics using the
+    parallel / batched incremental variance algorithm described by Chan et al.
+    [2]. The variance estimates are optionally regularised towards a common
+    scalar value, with increasing weight for small number of samples, to
+    decrease the effect of noisy estimates for small sample sizes, following the
+    approach in Stan [3]. The metric matrix representation is set to a diagonal
+    matrix with diagonal elements corresponding to the reciprocal of the
+    (regularised) variance estimates.
 
     References:
 
       1. Welford, B. P., 1962. Note on a method for calculating corrected sums
          of squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
+      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and
+         a pairwise algorithm for computing sample variances. Technical Report
+         STAN-CS-79-773, Department of Computer Science, Stanford University.
+      3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
          Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
          Stan: A probabilistic programming language. Journal of Statistical
          Software, 76(1).
@@ -246,7 +252,9 @@ class WelfordVarianceMetricAdapter(Adapter):
             reg_iter_offset (int): Iteration offset used for calculating
                 iteration dependent weighting between regularisation target and
                 current covariance estimate. Higher values cause stronger
-                regularisation during initial iterations.
+                regularisation during initial iterations. A value of zero
+                corresponds to no regularisation; this should only be used if
+                the sample covariance is guaranteed to be positive definite.
             reg_scale (float): Positive scalar defining value variance estimates
                 are regularised towards.
         """
@@ -261,6 +269,10 @@ class WelfordVarianceMetricAdapter(Adapter):
         }
 
     def update(self, chain_state, adapt_state, trans_stats, transition):
+        # Use Welford (1962) incremental algorithm to update statistics to
+        # calculate online variance estimate
+        # https://en.wikipedia.org/wiki/
+        #   Algorithms_for_calculating_variance#Welford's_online_algorithm
         adapt_state['iter'] += 1
         pos_minus_mean = chain_state.pos - adapt_state['mean']
         adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
@@ -281,41 +293,57 @@ class WelfordVarianceMetricAdapter(Adapter):
         if isinstance(adapt_state, dict):
             n_iter = adapt_state['iter']
             var_est = adapt_state.pop('sum_diff_sq')
-            var_est /= (n_iter - 1)
         else:
-            # Use pooled variance estimator
-            # https://en.wikipedia.org/wiki/Pooled_variance
+            # Use Chan et al. (1979) parallel variance estimation algorithm
+            # to combine per-chain statistics
+            # https://en.wikipedia.org/wiki/
+            #    Algorithms_for_calculating_variance#Parallel_algorithm
             for i, a in enumerate(adapt_state):
                 if i == 0:
                     n_iter = a['iter']
-                    n_state = 1
+                    mean_est = a.pop('mean')
                     var_est = a.pop('sum_diff_sq')
                 else:
+                    n_iter_prev = n_iter
                     n_iter += a['iter']
-                    n_state += 1
-                    var_est += a.pop('sum_diff_sq')
-            var_est /= (n_iter - n_state)
+                    mean_diff = mean_est - a['mean']
+                    mean_est *= n_iter_prev
+                    mean_est += a['iter'] * a['mean']
+                    mean_est /= n_iter
+                    var_est += a['sum_diff_sq']
+                    var_est += mean_diff**2 * (a['iter'] * n_iter_prev) / n_iter
+        var_est /= (n_iter - 1)
         self._regularise_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
 
 
-class WelfordCovarianceMetricAdapter(Adapter):
-    """Metric adapter using variance estimates and optional regularisation.
+class OnlineCovarianceMetricAdapter(Adapter):
+    """Dense metric adapter using online covariance estimates.
 
     Uses Welford's algorithm [1] to stably compute an online estimate of the
-    sample covariances of the chain state position components during sampling.
-    The covariance matrix estimate is optionally regularised towards a scaled
-    identity matrix, with increasing weight for small number of samples, to
-    decrease the effect of noisy estimates for small sample sizes, following the
-    approach in Stan [2]. The metric matrix representation is set to a dense
-    positive definite matrix corresponding to the inverse of the (regularised)
-    covariance estimate.
+    sample covariane matrix of the chain state position components during
+    sampling. If online estimates are available from multiple independent
+    chains, the final covariance matrix estimate is calculated from the
+    per-chain statistics using a covariance variant due to Schubert and Gertz
+    [2] of the parallel / batched incremental variance algorithm described by
+    Chan et al. [3]. The covariance matrix estimates are optionally regularised
+    towards a scaled identity matrix, with increasing weight for small number of
+    samples, to decrease the effect of noisy estimates for small sample sizes,
+    following the approach in Stan [4]. The metric matrix representation is set
+    to a dense positive definite matrix corresponding to the inverse of the
+    (regularised) covariance matrix estimate.
+
 
     References:
 
       1. Welford, B. P., 1962. Note on a method for calculating corrected sums
          of squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
+      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel
+         computation of (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.
+      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and
+         a pairwise algorithm for computing sample variances. Technical Report
+         STAN-CS-79-773, Department of Computer Science, Stanford University.
+      4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
          Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
          Stan: A probabilistic programming language. Journal of Statistical
          Software, 76(1).
@@ -344,6 +372,10 @@ class WelfordCovarianceMetricAdapter(Adapter):
         }
 
     def update(self, chain_state, adapt_state, trans_stats, transition):
+        # Use Welford (1962) incremental algorithm to update statistics to
+        # calculate online covariance estimate
+        # https://en.wikipedia.org/wiki/
+        #  Algorithms_for_calculating_variance#Online
         adapt_state['iter'] += 1
         pos_minus_mean = chain_state.pos - adapt_state['mean']
         adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
@@ -364,20 +396,24 @@ class WelfordCovarianceMetricAdapter(Adapter):
         if isinstance(adapt_state, dict):
             n_iter = adapt_state['iter']
             covar_est = adapt_state.pop('sum_diff_outer')
-            covar_est /= (n_iter - 1)
         else:
-            # Use pooled covariance estimator
-            # https://en.wikipedia.org/wiki/Pooled_covariance_matrix
+            # Use Schubert and Gertz (2018) parallel covariance estimation
+            # algorithm to combine per-chain statistics
             for i, a in enumerate(adapt_state):
                 if i == 0:
                     n_iter = a['iter']
-                    n_state = 1
+                    mean_est = a.pop('mean')
                     covar_est = a.pop('sum_diff_outer')
                 else:
+                    n_iter_prev = n_iter
                     n_iter += a['iter']
-                    n_state += 1
-                    covar_est += a.pop('sum_diff_outer')
-            covar_est /= (n_iter - n_state)
+                    mean_diff = mean_est - a['mean']
+                    mean_est *= n_iter_prev
+                    mean_est += a['iter'] * a['mean']
+                    mean_est /= n_iter
+                    covar_est += a['sum_diff_outer']
+                    covar_est += np.outer(mean_diff, mean_diff) * (
+                        a['iter'] * n_iter_prev) / n_iter
+        covar_est /= (n_iter - 1)
         self._regularise_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv
-
