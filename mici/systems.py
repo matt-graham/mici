@@ -257,7 +257,7 @@ class EuclideanMetricSystem(System):
 
     @cache_in_state('mom')
     def h2(self, state):
-        return 0.5 * state.mom @ (self.metric.inv @ state.mom)
+        return 0.5 * state.mom @ self.dh2_dmom(state)
 
     @cache_in_state('mom')
     def dh2_dmom(self, state):
