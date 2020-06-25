@@ -936,11 +936,6 @@ class MarkovChainMonteCarloMethod(object):
         return states_traces_stats
 
 
-def _pos_trace_func(state):
-    """Trace function which records the state position (pos) component."""
-    return {'pos': state.pos}
-
-
 class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     """Wrapper class for Hamiltonian Markov chain Monte Carlo (H-MCMC) methods.
 
@@ -1014,9 +1009,11 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         return init_state
 
     def __set_sample_chain_kwargs_defaults(self, kwargs):
-        # default to tracing only position component of state
+        # default to tracing position component of state and Hamiltonian
         if 'trace_funcs' not in kwargs:
-            kwargs['trace_funcs'] = [_pos_trace_func]
+            def default_trace_func(state):
+                return {'pos': state.pos, 'hamiltonian': self.system.h(state)}
+            kwargs['trace_funcs'] = [default_trace_func]
         # if `monitor_stats` specified, expand all statistics keys to key pairs
         # with transition key set to `integration_transition`
         if 'monitor_stats' in kwargs:
@@ -1054,7 +1051,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 in the returned dictionaries are used to index the trace arrays
                 in the returned traces dictionary. If a key appears in multiple
                 dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored.
+                function to return that key will be stored. Default is to use a
+                single function which recordes the position component of the
+                state under the key `pos` and the Hamiltonian at the state
+                under the key `hamiltonian`.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -1145,7 +1145,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 in the returned dictionaries are used to index the trace arrays
                 in the returned traces dictionary. If a key appears in multiple
                 dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored.
+                function to return that key will be stored.  Default is to use a
+                single function which recordes the position component of the
+                state under the key `pos` and the Hamiltonian at the state
+                under the key `hamiltonian`.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
