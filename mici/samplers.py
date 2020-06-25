@@ -15,6 +15,7 @@ import numpy as np
 import mici.transitions as trans
 from mici.states import ChainState
 from mici.progressbars import ProgressBar, DummyProgressBar, _ProxyProgressBar
+from mici.errors import AdaptationError
 
 
 try:
@@ -389,8 +390,8 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             dimension of each array corresponding to the sampling (draw) index.
             The key for each value is a string description of the corresponding
             integration transition statistic.
-        interrupted (bool): Whether sampling was manually interrupted before
-            all chain iterations were completed.
+        exception (None or Exception): Any handled exception which may affect
+            how the returned outputs are processed by the caller.
     """
     state = _check_and_process_init_state(init_state, transitions)
     n_sample = len(chain_iterator)
@@ -401,13 +402,19 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
         transitions, n_sample, memmap_enabled, memmap_path, chain_index)
     traces = _init_traces(
         trace_funcs, state, n_sample, memmap_enabled, memmap_path, chain_index)
-    if adapters is not None:
-        adapter_states = {
-            trans_key: [adapter.initialise(state, transitions[trans_key])
-                        for adapter in adapter_list]
-            for trans_key, adapter_list in adapters.items()}
-    else:
-        adapter_states = {}
+    adapter_states = {}
+    try:
+        if adapters is not None:
+            for trans_key, adapter_list in adapters.items():
+                adapter_states[trans_key] = []
+                for adapter in adapter_list:
+                    adapter_states[trans_key].append(
+                        adapter.initialise(state, transitions[trans_key]))
+    except AdaptationError as exception:
+        logger.error(
+            f'Initialisation of {type(adapter).__name__} for chain '
+            f'{chain_index + 1} failed: {exception}')
+        return state, traces, chain_stats, adapter_states, exception
     try:
         sample_index = 0
         if parallel_chains and not memmap_enabled:
@@ -429,28 +436,24 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 if monitor_stats is not None:
                     _update_monitor_stats(
                         sample_index, chain_stats, monitor_stats, monitor_dict)
-    except KeyboardInterrupt:
-        interrupted = True
-        if sample_index != n_sample:
-            if not parallel_chains:
-                logger.error(
-                    f'Sampling manually interrupted at chain {chain_index + 1}'
-                    f' iteration {sample_index}. Arrays containing chain '
-                    f'traces and statistics computed before interruption will '
-                    f'be returned.')
-            # Sampling interrupted therefore truncate returned arrays
-            # No point truncating if using memory mapping with parallel chains
-            # as will only return file paths of arrays
-            if not (parallel_chains and memmap_enabled):
-                _truncate_chain_data(sample_index, traces, chain_stats)
+    except KeyboardInterrupt as e:
+        exception = e
+        logger.error(
+            f'Sampling manually interrupted for chain {chain_index + 1} at'
+            f' iteration {sample_index}. Arrays containing chain traces and'
+            f' statistics computed before interruption will be returned.')
+        # Sampling interrupted therefore truncate returned arrays unless using
+        # memory mapping with parallel chains as will only return file paths
+        if not (parallel_chains and memmap_enabled):
+            _truncate_chain_data(sample_index, traces, chain_stats)
     else:
-        interrupted = False
+        exception = None
     if memmap_enabled:
         _flush_memmap_chain_data(traces, chain_stats)
     if parallel_chains and memmap_enabled:
         traces = _memmaps_to_file_paths(traces)
         chain_stats = _memmaps_to_file_paths(chain_stats)
-    return state, traces, chain_stats, adapter_states, interrupted
+    return state, traces, chain_stats, adapter_states, exception
 
 
 def _collate_chain_outputs(chain_outputs):
@@ -487,7 +490,7 @@ def _collate_chain_outputs(chain_outputs):
                 else:
                     stats_stack[trans_key][key].append(val)
         for trans_key, adapt_state_list in adapt_states.items():
-            if chain_index == 0:
+            if trans_key not in adapt_states_stack:
                 adapt_states_stack[trans_key] = [[a] for a in adapt_state_list]
             else:
                 for i, adapt_state in enumerate(adapt_state_list):
@@ -539,11 +542,16 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     chain_outputs = []
     for chain_index, (init_state, rng, chain_iterator) in enumerate(
             zip(init_states, rngs, chain_iterators)):
-        *outputs, interrupted = _sample_chain(
+        *outputs, exception = _sample_chain(
             chain_iterator=chain_iterator, init_state=init_state, rng=rng,
             chain_index=chain_index, parallel_chains=False, **kwargs)
-        chain_outputs.append(outputs)
-        if interrupted:
+        # Returned exception being AdaptationError indicates chain terminated
+        # due to adapter initialisation failing therefore do not store returned
+        # chain outputs
+        if not isinstance(exception, AdaptationError):
+            chain_outputs.append(outputs)
+        # If returned handled exception was a manual interrupt break and return
+        if isinstance(exception, KeyboardInterrupt):
             break
     return _collate_chain_outputs(chain_outputs)
 
@@ -559,25 +567,32 @@ def _sample_chains_worker(chain_queue, iter_queue):
         try:
             chain_index, init_state, rng, n_sample, kwargs = chain_queue.get(
                 block=False)
-            *outputs, interrupted = _sample_chain(
+            *outputs, exception = _sample_chain(
                 init_state=init_state, rng=rng, chain_index=chain_index,
                 chain_iterator=_ProxyProgressBar(
                     n_sample, chain_index, iter_queue),
                 parallel_chains=True, **kwargs)
-            chain_outputs.append((chain_index, outputs))
-            if interrupted:
+            # Returned exception being AdaptationError indicates chain
+            # terminated due to adapter initialisation failing therefore do not
+            # store returned chain outputs and put None value on iteration queue
+            # to indicate to parent process chain terminated
+            if isinstance(exception, AdaptationError):
+                iter_queue.put(None)
+            else:
+                chain_outputs.append((chain_index, outputs))
+            # If returned handled exception was a manual interrupt put exception
+            # on iteration queue to communicate to parent process and break
+            if isinstance(exception, KeyboardInterrupt):
+                iter_queue.put(exception)
                 break
         except queue.Empty:
             pass
-        except KeyboardInterrupt:
-            # Put sentinel value on iteration queue to force exit from
-            # iteration update loop
-            iter_queue.put(None)
-        except Exception as e:
-            # Put sentinel value on iteration queue to force exit from
-            # iteration update loop
-            iter_queue.put(None)
-            raise e
+        except Exception as exception:
+            # Log exception here so that correct traceback is logged
+            logger.error('Exception encountered in chain worker process:',
+                         exc_info=exception)
+            # Put exception on iteration queue to be reraised in parent process
+            iter_queue.put(exception)
     return chain_outputs
 
 
@@ -623,14 +638,30 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                 chains_completed = 0
                 while not (iter_queue.empty() and chains_completed == n_chain):
                     iter_queue_item = iter_queue.get()
-                    # Check if queue item is sentinel value and if so break
+                    # Queue item being None indicates a chain terminated early
+                    # due to a non-fatal error e.g. an error in initialising an
+                    # adapter. In this case we continue sampling any other
+                    # remaining chains but increment the completed chains
+                    # counter to ensure correct termination of chain progress
+                    # update loop
                     if iter_queue_item is None:
-                        break
-                    # Otherwise unpack and update progress bar
-                    chain_index, sample_index, data_dict = iter_queue_item
-                    pbars[chain_index].update(sample_index, data_dict)
-                    if sample_index == n_samples[chain_index]:
                         chains_completed += 1
+                    # If queue item is KeyboardInterrupt exception break out of
+                    # chain progress update loop but do not reraise exception
+                    # so that partial chain outputs are returned
+                    elif isinstance(iter_queue_item, KeyboardInterrupt):
+                        break
+                    # Re raise any other exception passed from worker processes
+                    elif isinstance(iter_queue_item, Exception):
+                        raise RuntimeError(
+                            'Unhandled exception in chain worker process.'
+                        ) from iter_queue_item
+                    else:
+                        # Otherwise unpack and update progress bar
+                        chain_index, sample_index, data_dict = iter_queue_item
+                        pbars[chain_index].update(sample_index, data_dict)
+                        if sample_index == n_samples[chain_index]:
+                            chains_completed += 1
         except (PicklingError, AttributeError) as e:
             if not MULTIPROCESS_AVAILABLE and (
                     isinstance(e, PicklingError) or 'pickle' in str(e)):
@@ -652,10 +683,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                 raise e
         except KeyboardInterrupt:
             # Interrupts handled in child processes therefore ignore here
-            logger.error(
-                'Sampling manually interrupted. Arrays containing chain traces'
-                ' and statistics computed prior to interruption will be '
-                'returned.')
+            pass
         if results is not None:
             # Join all output lists from per-process workers in to single list
             indexed_chain_outputs = sum((res for res in results.get()), [])
