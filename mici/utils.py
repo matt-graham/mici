@@ -146,7 +146,7 @@ def log1m_exp(val):
     elif val > LOG_2:
         return log(-expm1(val))
     else:
-        return log1p(-exp(a))
+        return log1p(-exp(val))
 
 
 def log_sum_exp(val1, val2):
