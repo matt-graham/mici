@@ -1023,6 +1023,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         else:
             kwargs['monitor_stats'] = [
                 ('integration_transition', 'accept_stat')]
+        # if adapters kwarg specified, wrap adapter list in dictionary with
+        # adapters applied to integration transition
         if 'adapters' in kwargs and kwargs['adapters'] is not None:
             kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
 
@@ -1061,8 +1063,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 is written to `.npy` files in the directory specified by
                 `memmap_path` (or a temporary directory if not provided). These
                 files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is to
-                for memory mapping to be disabled.
+                be manually deleted when no longer required. Default is for
+                memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
@@ -1085,7 +1087,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 change the same parameter(s) the order will matter. Adaptation
                 based on the chain state history breaks the Markov property and
                 so any chain samples while adaptation is active should not be
-                used in estimates of expectations.
+                used in estimates of expectations. Default is to use no
+                adapters.
 
         Returns:
             final_state (mici.states.ChainState): State of chain after final
@@ -1155,8 +1158,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 is written to `.npy` files in the directory specified by
                 `memmap_path` (or a temporary directory if not provided). These
                 files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is to
-                for memory mapping to be disabled.
+                be manually deleted when no longer required. Default is for
+                memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
                 data to. If not provided, a temporary directory will be created
                 and the chain data written to files there.
@@ -1179,7 +1182,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 change the same parameter(s) the order will matter. Adaptation
                 based on the chain state history breaks the Markov property and
                 so any chain samples while adaptation is active should not be
-                used in estimates of expectations.
+                used in estimates of expectations. Default is to use no
+                adapters.
 
         Returns:
             final_states (List[ChainState]): States of chains after final
