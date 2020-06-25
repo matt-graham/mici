@@ -168,30 +168,62 @@ class DualAveragingStepSizeAdapter(Adapter):
     def _find_and_set_init_step_size(self, state, system, integrator):
         """Find initial step size by coarse search using single step statistics.
 
-        Implementation of Algorithm 4 in Hoffman and Gelman (2014).
+        Adaptation of Algorithm 4 in Hoffman and Gelman (2014).
+
+        Compared to the Hoffman and Gelman algorithm, this version makes two
+        changes:
+
+          1. The absolute value of the change in Hamiltonian over a step being
+             larger or smaller than log(2) is used to determine whether the step
+             size is too big or small as opposed to the value of the equivalent
+             Metropolis accept probability being larger or smaller than 0.5.
+             Although a negative change in the Hamiltonian over a step of
+             magnitude more than log(2) will lead to an accept probability of 1
+             for the forward move, the corresponding reversed move will have an
+             accept probability less than 0.5, and so a change in the
+             Hamiltonian over a step of magnitude more than log(2) irrespective
+             of the sign of the change is indicative of the minimum acceptance
+             probability over both forward and reversed steps being less than
+             0.5.
+          2. To allow for integrators for which an integrator step may fail due
+             to e.g. a convergence error in an iterative solver, the step size
+             is also considered to be too big if any of the step sizes tried in
+             the search result in a failed integrator step, with in this case
+             the step size always being decreased on subsequent steps
+             irrespective of the initial Hamiltonian error, until a integrator
+             step successfully completes and the absolute value of the change in
+             Hamiltonian is below the threshold of log(2) (corresponding to a
+             minimum acceptance probability over forward and reversed steps of
+             0.5).
         """
         init_state = state.copy()
         h_init = system.h(init_state)
-        integrator.step_size = 1.
-        try:
-            state = integrator.step(init_state)
-            delta_h = h_init - system.h(state)
-            sign = 2 * (delta_h > -log(2)) - 1
-        except IntegratorError:
-            sign = 1
+        integrator.step_size = 1
+        delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
             try:
                 state = integrator.step(init_state)
-                delta_h = h_init - system.h(state)
-                if sign * delta_h < -sign * log(2):
+                delta_h = abs(h_init - system.h(state))
+                if s == 0:
+                    step_size_too_big = delta_h > delta_h_threshold
+                if (step_size_too_big and delta_h <= delta_h_threshold) or (
+                        not step_size_too_big and delta_h > delta_h_threshold):
                     return integrator.step_size
+                elif step_size_too_big:
+                    integrator.step_size /= 2
                 else:
-                    integrator.step_size *= 2.**sign
+                    integrator.step_size *= 2
             except IntegratorError:
-                integrator.step_size /= 2.
+                step_size_too_big = True
+                integrator.step_size /= 2
         raise AdaptationError(
-            f'Could not find reasonable initial step size in {s + 1} iterations'
-            f' (final step size {integrator.step_size}).')
+            f'Could not find reasonable initial step size in '
+            f'{self.max_init_step_size_iters} iterations (final step size '
+            f'{integrator.step_size}). A very large final step size may '
+            f'indicate that the target distribution is improper such that the '
+            f'negative log density is flat in one or more directions while a '
+            f'very small final step size may indicate that the density function'
+            f' is insufficiently smooth at the point initialised at.')
 
     def update(self, chain_state, adapt_state, trans_stats, transition):
         adapt_state['iter'] += 1
