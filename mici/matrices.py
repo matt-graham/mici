@@ -179,7 +179,7 @@ class Matrix(abc.ABC):
 
     @classmethod
     def __subclasshook__(cls, C):
-        # Customise isinstance / issubclass behaviour to also return True for
+        # Customize isinstance / issubclass behaviour to also return True for
         # classes / objects with classes which have all required attributes
         # without being direct subclasses
         if hasattr(cls, '_get_required_subclass_attrs'):
@@ -1021,7 +1021,7 @@ class TriangularFactoredDefiniteMatrix(
 
 class TriangularFactoredPositiveDefiniteMatrix(
         TriangularFactoredDefiniteMatrix, PositiveDefiniteMatrix):
-    """Positive definite matrix parameterised a triangular matrix product.
+    """Positive definite matrix parametrized a triangular matrix product.
 
     The matrix is assumed to have the parameterisation
 
@@ -1085,7 +1085,7 @@ class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
                 initialisation, and so if `array` is positive (negative)
                 definite and `is_posdef` is `False` (`True`) then a
                 `LinAlgError` exception will be if a later attempt is made to
-                factorise the matrix.
+                factorize the matrix.
         """
         super().__init__(
             array.shape[0], sign=1 if is_posdef else -1, _array=array)
@@ -1431,7 +1431,7 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 
 class EigendecomposedSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ImplicitArrayMatrix):
-    """Symmetric matrix parameterised by its eigendecomposition.
+    """Symmetric matrix parametrized by its eigendecomposition.
 
     The matrix is assumed to have the parameterisation
 
@@ -1493,7 +1493,7 @@ class EigendecomposedSymmetricMatrix(
 
 class EigendecomposedPositiveDefiniteMatrix(
         EigendecomposedSymmetricMatrix, PositiveDefiniteMatrix):
-    """Positive definite matrix parameterised by its eigendecomposition.
+    """Positive definite matrix parametrized by its eigendecomposition.
 
     The matrix is assumed to have the parameterisation
 
@@ -1524,11 +1524,11 @@ class EigendecomposedPositiveDefiniteMatrix(
         return EigendecomposedSymmetricMatrix(self.eigvec, self.eigval**0.5)
 
 
-class SoftAbsRegularisedPositiveDefiniteMatrix(
+class SoftAbsRegularizedPositiveDefiniteMatrix(
         EigendecomposedPositiveDefiniteMatrix, DifferentiableMatrix):
     """Matrix transformed to be positive definite by regularising eigenvalues.
 
-    Matrix is parameterised by a symmetric array `symmetric_array`, of which an
+    Matrix is parametrized by a symmetric array `symmetric_array`, of which an
     eigendecomposition is formed `eigvec, eigval = eigh(symmetric_array)`, with
     the output matrix then `matrix = eigvec @ softabs(eigval) @ eigvec.T`
     where `softabs` is a smooth approximation to the absolute function.
@@ -1540,7 +1540,7 @@ class SoftAbsRegularisedPositiveDefiniteMatrix(
             symmetric_array (array): 2D square array with symmetric values,
                 i.e. `symmetric_array[i, j] == symmetric_array[j, i]` for all
                 indices `i` and `j` which represents symmetric matrix to
-                form eigenvalue-regularised transformation of.
+                form eigenvalue-regularized transformation of.
             softabs_coeff (float): Positive regularisation coefficient for
                 smooth approximation to absolute value. As the value tends to
                 infinity the approximation becomes increasingly close to the

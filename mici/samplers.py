@@ -32,7 +32,7 @@ except ImportError:
     RANDOMGEN_AVAILABLE = False
 
 # Preferentially import from multiprocess library if available as able to
-# serialise much wider range of types including autograd functions
+# serialize much wider range of types including autograd functions
 try:
     from multiprocess import Pool
     from multiprocess.managers import SyncManager
@@ -46,8 +46,8 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _ignore_sigint_initialiser():
-    """Initialiser for processes to force ignoring SIGINT interrupt signals."""
+def _ignore_sigint_initializer():
+    """Initializer for processes to force ignoring SIGINT interrupt signals."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
@@ -56,7 +56,7 @@ def ignore_sigint_manager():
     """Context-managed SyncManager which ignores SIGINT interrupt signals."""
     manager = SyncManager()
     try:
-        manager.start(_ignore_sigint_initialiser)
+        manager.start(_ignore_sigint_initializer)
         yield manager
     finally:
         manager.shutdown()
@@ -144,7 +144,7 @@ def _check_and_process_init_state(state, transitions):
 
 def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
                       chain_index):
-    """Initialise dictionary of per-transition chain statistics array dicts."""
+    """Initialize dictionary of per-transition chain statistics array dicts."""
     chain_stats = {}
     for trans_key, trans in transitions.items():
         chain_stats[trans_key] = {}
@@ -163,7 +163,7 @@ def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
 
 def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
                  memmap_path, chain_index):
-    """Initialise dictionary of chain trace arrays."""
+    """Initialize dictionary of chain trace arrays."""
     traces = {}
     for trace_func in trace_funcs:
         for key, val in trace_func(init_state).items():
@@ -409,7 +409,7 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 adapter_states[trans_key] = []
                 for adapter in adapter_list:
                     adapter_states[trans_key].append(
-                        adapter.initialise(state, transitions[trans_key]))
+                        adapter.initialize(state, transitions[trans_key]))
     except AdaptationError as exception:
         logger.error(
             f'Initialisation of {type(adapter).__name__} for chain '
@@ -596,12 +596,12 @@ def _sample_chains_worker(chain_queue, iter_queue):
     return chain_outputs
 
 
-def _finalise_adapters(adapter_states, adapters, transitions):
-    """Finalise adapter updates to transitions based on final adapter states."""
+def _finalize_adapters(adapter_states, adapters, transitions):
+    """Finalize adapter updates to transitions based on final adapter states."""
     for trans_key, adapter_state_list in adapter_states.items():
         for adapter_state, adapter in zip(
                 adapter_state_list, adapters[trans_key]):
-            adapter.finalise(adapter_state, transitions[trans_key])
+            adapter.finalize(adapter_state, transitions[trans_key])
 
 
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
@@ -814,7 +814,7 @@ class MarkovChainMonteCarloMethod(object):
             transitions=self.transitions, rng=self.rng,
             trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
         if len(adapter_states) > 0:
-            _finalise_adapters(
+            _finalize_adapters(
                 adapter_states, kwargs['adapters'], self.transitions)
 
         return final_state, traces, chain_stats
@@ -931,7 +931,7 @@ class MarkovChainMonteCarloMethod(object):
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, n_process=n_process, **kwargs)
         if len(adapter_states) > 0:
-            _finalise_adapters(
+            _finalize_adapters(
                 adapter_states, kwargs['adapters'], self.transitions)
         return states_traces_stats
 

@@ -98,7 +98,7 @@ probabilistic programming frameworks including functionality for definining a
 probabilistic model / program, but like emcee and Sampyl, Mici is solely
 focussed on providing implementations of inference algorithms, with the user
 expected to be able to define at a minimum a function specifying the negative
-log (unnormalised) density of the distribution of interest. 
+log (unnormalized) density of the distribution of interest. 
 
 Further while PyStan, (Num)Pyro and TensorFlow Probability all push the
 sampling loop into external compiled non-Python code, in Mici the sampling loop
@@ -131,7 +131,7 @@ class from each module.
      with a position-dependent matrix representation 
      ([Girolami and Calderhead, 2011](#girolami2011riemann)),
    * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* 
-     eigenvalue-regularised Hessian of negative log target density as metric 
+     eigenvalue-regularized Hessian of negative log target density as metric 
      matrix representation ([Betancourt, 2013](#betancourt2013general)),
    * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject 
      to holonomic constraints 
@@ -146,7 +146,7 @@ symplectic integrators for Hamiltonian dynamics
   * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for 
     separable Hamiltonian systems 
     ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
-  * `ImplicitLeapfrogIntegrator` - implicit (or generalised) leapfrog 
+  * `ImplicitLeapfrogIntegrator` - implicit (or generalized) leapfrog 
     integrator for non-separable Hamiltonian systems 
     ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
   * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for 
@@ -176,7 +176,7 @@ samplers for peforming inference
 
 A simple complete example of using the package to compute approximate samples
 from a distribution on a two-dimensional torus embedded in a three-dimensional
-space is given below. The computed samples are visualised in the animation
+space is given below. The computed samples are visualized in the animation
 above. Here we use `autograd` to automatically construct functions to calculate
 the required derivatives (gradient of negative log density of target
 distribution and Jacobian of constraint function), sample four chains in
@@ -214,7 +214,7 @@ system = systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)
 integrator = integrators.ConstrainedLeapfrogIntegrator(system, step_size=0.2)
 
 # Seed a random number generator
-rng = np.random.RandomState(seed=1234)
+rng = np.random.default_rng(seed=1234)
 
 # Use dynamic integration-time HMC implementation as MCMC sampler
 sampler = samplers.DynamicMultinomialHMC(system, integrator, rng)
@@ -240,10 +240,10 @@ final_states, traces, stats = sampler.sample_chains(
 # Print average accept probability and number of integrator steps per chain
 for c in range(n_chain):
     print(f"Chain {c}:")
-    print(f"  Average accept prob. = {stats['accept_prob'][c].mean():.2f}")
+    print(f"  Average accept prob. = {stats['accept_stat'][c].mean():.2f}")
     print(f"  Average number steps = {stats['n_step'][c].mean():.1f}")
 
-# Visualise concatentated chain samples as animated 3D scatter plot   
+# Visualize concatentated chain samples as animated 3D scatter plot   
 fig = plt.figure(figsize=(4, 4))
 ax = Axes3D(fig, [0., 0., 1., 1.], proj_type='ortho')
 points_3d, = ax.plot(*(np.concatenate(traces[k]) for k in 'xyz'), '.', ms=0.5)

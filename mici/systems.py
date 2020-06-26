@@ -8,7 +8,7 @@ from mici.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
     DenseSquareMatrix, TriangularFactoredPositiveDefiniteMatrix,
     DenseDefiniteMatrix, DensePositiveDefiniteMatrix, DenseSymmetricMatrix,
-    EigendecomposedSymmetricMatrix, SoftAbsRegularisedPositiveDefiniteMatrix)
+    EigendecomposedSymmetricMatrix, SoftAbsRegularizedPositiveDefiniteMatrix)
 from mici.autodiff import autodiff_fallback
 
 
@@ -27,7 +27,7 @@ class System(ABC):
     simulable.
 
     By default \(h_1\) is assumed to correspond to the negative logarithm of an
-    unnormalised density on the position variables with respect to the Lebesgue
+    unnormalized density on the position variables with respect to the Lebesgue
     measure, with the corresponding distribution on the position space being
     the target distribution it is wished to draw approximate samples from.
     """
@@ -37,7 +37,7 @@ class System(ABC):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -59,7 +59,7 @@ class System(ABC):
 
     @cache_in_state('pos')
     def neg_log_dens(self, state):
-        """Negative logarithm of unnormalised density of target distribution.
+        """Negative logarithm of unnormalized density of target distribution.
 
         Args:
             state (mici.states.ChainState): State to compute value at.
@@ -204,7 +204,7 @@ class EuclideanMetricSystem(System):
 
     \[ h_1(q) = \ell(q) \]
 
-    where \(\ell(q)\) is the negative log (unnormalised) density of
+    where \(\ell(q)\) is the negative log (unnormalized) density of
     the target distribution with respect to the Lebesgue measure.
     """
 
@@ -213,7 +213,7 @@ class EuclideanMetricSystem(System):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -303,7 +303,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     marginal distribution with covariance specified by \(M\).
 
     Additionally the target distribution on the position variables is assumed
-    to be defined by an unnormalised density with respect to the standard
+    to be defined by an unnormalized density with respect to the standard
     Gaussian measure on the position space (with identity covariance and zero
     mean), with the Hamiltonian component \(h_1\) corresponding to the negative
     logarithm of this density rather than the density with respect to the
@@ -312,7 +312,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     \[ h_1(q) = \ell(q) - \frac{1}{2} q^T q \]
 
     where \(q\) is the position and \(\ell(q)\) is the negative log
-    (unnormalised) density of the target distribution with respect to the
+    (unnormalized) density of the target distribution with respect to the
     Lebesgue measure at \(q\). The Hamiltonian  component function \(h_2\) is
     then assumed to have the form
 
@@ -334,7 +334,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the standard Gaussian measure on the position space,
                 with the corresponding distribution on the position space being
                 the target distribution it is wished to draw approximate
@@ -421,7 +421,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     co-tangent space (tangent space) to the manifold.
 
     The target distribution is either assumed to be directly specified with
-    unnormalised density \(\exp(-\ell(q))\) with respect to the Hausdorff
+    unnormalized density \(\exp(-\ell(q))\) with respect to the Hausdorff
     measure on the manifold (under the metric induced from the ambient metric)
     with in this case the \(h_1\) Hamiltonian component then simply
 
@@ -464,10 +464,10 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the constrained position
+                unnormalized probability density on the constrained position
                 space with respect to the Hausdorff measure on the constraint
                 manifold (if `dens_wrt_hausdorff == True`) or alternatively the
-                negative logarithm of an unnormalised probability density on
+                negative logarithm of an unnormalized probability density on
                 the unconstrained (ambient) position space with respect to the
                 Lebesgue measure. In the former case the target distribution it
                 is wished to draw approximate samples from is assumed to be
@@ -700,10 +700,10 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the constrained position
+                unnormalized probability density on the constrained position
                 space with respect to the Hausdorff measure on the constraint
                 manifold (if `dens_wrt_hausdorff == True`) or alternatively the
-                negative logarithm of an unnormalised probability density on
+                negative logarithm of an unnormalized probability density on
                 the unconstrained (ambient) position space with respect to the
                 Lebesgue measure. In the former case the target distribution it
                 is wished to draw approximate samples from is assumed to be
@@ -855,7 +855,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the unconstrained (ambient)
+                unnormalized probability density on the unconstrained (ambient)
                 position space with respect to the standard Gaussian measure.
                 The density function is taken to specify a prior distribution
                 on the ambient space with the target distribution then
@@ -964,7 +964,7 @@ class RiemannianMetricSystem(System):
     r"""Riemannian Hamiltonian system with a position-dependent metric.
 
     This class allows for metric matrix representations of any generic type.
-    In most cases a specialised subclass such as `DenseRiemannianMetricSystem`,
+    In most cases a specialized subclass such as `DenseRiemannianMetricSystem`,
     `CholeskyFactoredRiemannianMetricSystem`, `DiagonalRiemannianMetricSystem`,
     `ScalarRiemannianMetricSystem` or `SoftAbsRiemannianMetricSystem` will
     provide a simpler method of constructng a system with a metric matrix
@@ -980,7 +980,7 @@ class RiemannianMetricSystem(System):
 
     \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
 
-    where \(\ell(q)\) is the negative log (unnormalised) density of the target
+    where \(\ell(q)\) is the negative log (unnormalized) density of the target
     distribution with respect to the Lebesgue measure at \(q\). The \(h_2\)
     Hamiltonian component is
 
@@ -1006,7 +1006,7 @@ class RiemannianMetricSystem(System):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1184,7 +1184,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1258,7 +1258,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1326,7 +1326,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1395,7 +1395,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1454,7 +1454,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     with `M = metric_func(q)` then the metric matrix representation.
 
     Hamiltonian system with a position dependent metric matrix representation
-    which is specified to be an eigenvalue-regularised transformation of the
+    which is specified to be an eigenvalue-regularized transformation of the
     Hessian of the negative log density function (the symmetric matrix of
     second derivatives the negative log density function with respect to the
     position array components. Specifically if `hess_neg_log_dens` is a
@@ -1492,7 +1492,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
                 position array returns the negative logarithm of an
-                unnormalised probability density on the position space with
+                unnormalized probability density on the position space with
                 respect to the Lebesgue measure, with the corresponding
                 distribution on the position space being the target
                 distribution it is wished to draw approximate samples from.
@@ -1546,7 +1546,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 construct a function which calculates the MTP (and Hesisan and
                 gradient and value) of `neg_log_dens` automatically.
             softabs_coeff (float): Positive regularisation coefficient for
-                smooth approximation to absolute value used to regularise
+                smooth approximation to absolute value used to regularize
                 Hessian eigenvalues in metric matrix representation. As the
                 value tends to infinity the approximation becomes increasingly
                 close to the absolute function.
@@ -1558,7 +1558,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
             mtp_neg_log_dens, neg_log_dens, 'mtp_hessian_grad_and_value',
             'mtp_neg_log_dens')
         super().__init__(neg_log_dens,
-                         SoftAbsRegularisedPositiveDefiniteMatrix,
+                         SoftAbsRegularizedPositiveDefiniteMatrix,
                          self._hess_neg_log_dens, self._mtp_neg_log_dens,
                          grad_neg_log_dens,
                          metric_kwargs={'softabs_coeff': softabs_coeff})

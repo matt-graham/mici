@@ -20,8 +20,8 @@ class Adapter(ABC):
     """
 
     @abstractmethod
-    def initialise(self, chain_state, transition):
-        """Initialise adapter state prior to starting adaptive transitions.
+    def initialize(self, chain_state, transition):
+        """Initialize adapter state prior to starting adaptive transitions.
 
         Args:
             chain_state (mici.states.ChainState): Initial chain state adaptive
@@ -55,7 +55,7 @@ class Adapter(ABC):
         """
 
     @abstractmethod
-    def finalise(self, adapt_state, transition):
+    def finalize(self, adapt_state, transition):
         """Update transition parameters based on final adapter state or states.
 
         Optionally, if multiple adapter states are available, e.g. from a set of
@@ -106,7 +106,7 @@ class DualAveragingStepSizeAdapter(Adapter):
                 value of the statistic to control during adaptation. By default
                 this is set to a function which simply selects the 'accept_stat'
                 value in the statistics dictionary.
-            log_step_size_reg_target (float or None): Value to regularise the
+            log_step_size_reg_target (float or None): Value to regularize the
                 controlled output (logarithm of the integrator step size)
                 towards. If `None` set to `log(10 * init_step_size)` where
                 `init_step_size` is the initial 'reasonable' step size found by
@@ -147,7 +147,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         self.iter_offset = iter_offset
         self.max_init_step_size_iters = max_init_step_size_iters
 
-    def initialise(self, chain_state, transition):
+    def initialize(self, chain_state, transition):
         integrator = transition.integrator
         system = transition.system
         adapt_state = {
@@ -223,7 +223,7 @@ class DualAveragingStepSizeAdapter(Adapter):
             f'indicate that the target distribution is improper such that the '
             f'negative log density is flat in one or more directions while a '
             f'very small final step size may indicate that the density function'
-            f' is insufficiently smooth at the point initialised at.')
+            f' is insufficiently smooth at the point initialized at.')
 
     def update(self, chain_state, adapt_state, trans_stats, transition):
         adapt_state['iter'] += 1
@@ -240,7 +240,7 @@ class DualAveragingStepSizeAdapter(Adapter):
             smoothing_weight * log_step_size)
         transition.integrator.step_size = exp(log_step_size)
 
-    def finalise(self, adapt_state, transition):
+    def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
             transition.integrator.step_size = exp(
                 adapt_state['smoothed_log_step_size'])
@@ -258,12 +258,12 @@ class OnlineVarianceMetricAdapter(Adapter):
     online estimates are available from multiple independent chains, the final
     variance estimate is calculated from the per-chain statistics using the
     parallel / batched incremental variance algorithm described by Chan et al.
-    [2]. The variance estimates are optionally regularised towards a common
+    [2]. The variance estimates are optionally regularized towards a common
     scalar value, with increasing weight for small number of samples, to
     decrease the effect of noisy estimates for small sample sizes, following the
     approach in Stan [3]. The metric matrix representation is set to a diagonal
     matrix with diagonal elements corresponding to the reciprocal of the
-    (regularised) variance estimates.
+    (regularized) variance estimates.
 
     References:
 
@@ -288,12 +288,12 @@ class OnlineVarianceMetricAdapter(Adapter):
                 corresponds to no regularisation; this should only be used if
                 the sample covariance is guaranteed to be positive definite.
             reg_scale (float): Positive scalar defining value variance estimates
-                are regularised towards.
+                are regularized towards.
         """
         self.reg_iter_offset = reg_iter_offset
         self.reg_scale = reg_scale
 
-    def initialise(self, chain_state, transition):
+    def initialize(self, chain_state, transition):
         return {
             'iter': 0,
             'mean': np.zeros_like(chain_state.pos),
@@ -311,8 +311,8 @@ class OnlineVarianceMetricAdapter(Adapter):
         adapt_state['sum_diff_sq'] += pos_minus_mean * (
             chain_state.pos - adapt_state['mean'])
 
-    def _regularise_var_est(self, var_est, n_iter):
-        """Update variance estimates by regularising towards common scalar.
+    def _regularize_var_est(self, var_est, n_iter):
+        """Update variance estimates by regularizing towards common scalar.
 
         Performed in place to prevent further array allocations.
         """
@@ -321,7 +321,7 @@ class OnlineVarianceMetricAdapter(Adapter):
             var_est += self.reg_scale * (
                 self.reg_iter_offset / (self.reg_iter_offset + n_iter))
 
-    def finalise(self, adapt_state, transition):
+    def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
             n_iter = adapt_state['iter']
             var_est = adapt_state.pop('sum_diff_sq')
@@ -345,7 +345,7 @@ class OnlineVarianceMetricAdapter(Adapter):
                     var_est += a['sum_diff_sq']
                     var_est += mean_diff**2 * (a['iter'] * n_iter_prev) / n_iter
         var_est /= (n_iter - 1)
-        self._regularise_var_est(var_est, n_iter)
+        self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
 
 
@@ -358,12 +358,12 @@ class OnlineCovarianceMetricAdapter(Adapter):
     chains, the final covariance matrix estimate is calculated from the
     per-chain statistics using a covariance variant due to Schubert and Gertz
     [2] of the parallel / batched incremental variance algorithm described by
-    Chan et al. [3]. The covariance matrix estimates are optionally regularised
+    Chan et al. [3]. The covariance matrix estimates are optionally regularized
     towards a scaled identity matrix, with increasing weight for small number of
     samples, to decrease the effect of noisy estimates for small sample sizes,
     following the approach in Stan [4]. The metric matrix representation is set
     to a dense positive definite matrix corresponding to the inverse of the
-    (regularised) covariance matrix estimate.
+    (regularized) covariance matrix estimate.
 
 
     References:
@@ -389,12 +389,12 @@ class OnlineCovarianceMetricAdapter(Adapter):
                 current covariance estimate. Higher values cause stronger
                 regularisation during initial iterations.
             reg_scale (float): Positive scalar defining value variance estimates
-                are regularised towards.
+                are regularized towards.
         """
         self.reg_iter_offset = reg_iter_offset
         self.reg_coefficient = reg_coefficient
 
-    def initialise(self, chain_state, transition):
+    def initialize(self, chain_state, transition):
         dim_pos = chain_state.pos.shape[0]
         dtype = chain_state.pos.dtype
         return {
@@ -414,7 +414,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
         adapt_state['sum_diff_outer'] += pos_minus_mean[None, :] * (
             chain_state.pos - adapt_state['mean'])[:, None]
 
-    def _regularise_covar_est(self, covar_est, n_iter):
+    def _regularize_covar_est(self, covar_est, n_iter):
         """Update covariance estimate by regularising towards identity.
 
         Performed in place to prevent further array allocations.
@@ -424,7 +424,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
         covar_est_diagonal += self.reg_coefficient * (
             self.reg_iter_offset / (self.reg_iter_offset + n_iter))
 
-    def finalise(self, adapt_state, transition):
+    def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
             n_iter = adapt_state['iter']
             covar_est = adapt_state.pop('sum_diff_outer')
@@ -447,5 +447,5 @@ class OnlineCovarianceMetricAdapter(Adapter):
                     covar_est += np.outer(mean_diff, mean_diff) * (
                         a['iter'] * n_iter_prev) / n_iter
         covar_est /= (n_iter - 1)
-        self._regularise_covar_est(covar_est, n_iter)
+        self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv

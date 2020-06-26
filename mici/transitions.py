@@ -6,7 +6,7 @@ from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat
-from mici.errors import (IntegratorError, NonReversibleStepError, 
+from mici.errors import (IntegratorError, NonReversibleStepError,
                          ConvergenceError, HamiltonianDivergenceError)
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class Transition(ABC):
         the keys of the statistics returned in the `trans_stats` return value
         of the `sample` method and the first entry of the value tuples an
         appropriate NumPy `dtype` for the array used to store the corresponding
-        statistic values and second entry the default value to initialise this
+        statistic values and second entry the default value to initialize this
         array with.
         """
 
@@ -128,7 +128,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
     refreshing or updating, and was originally proposed in [1].
 
     If the resampling coefficient is equal to zero then the momentum is not
-    randomised at all and succesive applications of the coupled integration
+    randomized at all and succesive applications of the coupled integration
     transitions will continue along the same simulated Hamiltonian trajectory.
     When an integration transition is accepted this means the subsequent
     simulated trajectory will continue evolving in the same direction and so
@@ -371,13 +371,13 @@ def euclidean_no_u_turn_criterion(system, state_1, state_2, sum_mom):
 
 
 def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
-    """Generalised no-U-turn termination criterion on Riemannian manifolds [2].
+    """Generalized no-U-turn termination criterion on Riemannian manifolds [2].
 
     Terminates trajectories when the velocities at the terminal states of
     the trajectory both have negative dot products with the sum of the
     the momentums across the trajectory from the first to second terminal state
     of the first terminal state to the position of the second terminal state.
-    This generalises the no-U-turn criterion of [1] to Riemannian manifolds
+    This generalizes the no-U-turn criterion of [1] to Riemannian manifolds
     where due to the intrinsic curvature of the space the geodesic between
     two points is general no longer a straight line.
 
