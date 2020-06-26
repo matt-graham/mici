@@ -225,7 +225,7 @@ class DualAveragingStepSizeAdapter(Adapter):
             f'very small final step size may indicate that the density function'
             f' is insufficiently smooth at the point initialized at.')
 
-    def update(self, chain_state, adapt_state, trans_stats, transition):
+    def update(self, adapt_state, chain_state, trans_stats, transition):
         adapt_state['iter'] += 1
         error_weight = 1 / (self.iter_offset + adapt_state['iter'])
         adapt_state['adapt_stat_error'] *= (1 - error_weight)
@@ -300,7 +300,7 @@ class OnlineVarianceMetricAdapter(Adapter):
             'sum_diff_sq': np.zeros_like(chain_state.pos)
         }
 
-    def update(self, chain_state, adapt_state, trans_stats, transition):
+    def update(self, adapt_state, chain_state, trans_stats, transition):
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online variance estimate
         # https://en.wikipedia.org/wiki/
@@ -403,7 +403,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
             'sum_diff_outer': np.zeros(shape=(dim_pos, dim_pos), dtype=dtype)
         }
 
-    def update(self, chain_state, adapt_state, trans_stats, transition):
+    def update(self, adapt_state, chain_state, trans_stats, transition):
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online covariance estimate
         # https://en.wikipedia.org/wiki/

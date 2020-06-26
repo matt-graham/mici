@@ -427,7 +427,7 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                         for adapter, adapter_state in zip(
                                 adapters[trans_key], adapter_states[trans_key]):
                             adapter.update(
-                                state, adapter_state, trans_stats, transition)
+                                adapter_state, state, trans_stats, transition)
                     _update_chain_stats(
                         sample_index, chain_stats, trans_key, trans_stats)
                 for trace_func in trace_funcs:
