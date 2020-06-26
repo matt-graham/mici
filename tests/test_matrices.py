@@ -823,7 +823,7 @@ class TestEigendecomposedPositiveDefiniteMatrix(
         super().__init__(matrix_pairs, rng)
 
 
-class TestSoftAbsRegularisedPositiveDefiniteMatrix(
+class TestSoftAbsRegularizedPositiveDefiniteMatrix(
         DifferentiableMatrixTestCase,
         ExplicitShapePositiveDefiniteMatrixTestCase):
 
@@ -837,7 +837,7 @@ class TestSoftAbsRegularisedPositiveDefiniteMatrix(
                 unreg_eigval, eigvec = np.linalg.eigh(sym_array)
                 eigval = unreg_eigval / np.tanh(unreg_eigval * softabs_coeff)
                 matrix_pairs[(sz, softabs_coeff)] = (
-                    matrices.SoftAbsRegularisedPositiveDefiniteMatrix(
+                    matrices.SoftAbsRegularizedPositiveDefiniteMatrix(
                         sym_array, softabs_coeff
                     ), (eigvec * eigval) @ eigvec.T)
 
