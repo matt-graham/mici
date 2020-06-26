@@ -344,6 +344,10 @@ class OnlineVarianceMetricAdapter(Adapter):
                     mean_est /= n_iter
                     var_est += a['sum_diff_sq']
                     var_est += mean_diff**2 * (a['iter'] * n_iter_prev) / n_iter
+        if n_iter < 2:
+            raise AdaptationError(
+                'At least two chain samples required to compute a variance '
+                'estimates.')
         var_est /= (n_iter - 1)
         self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
@@ -446,6 +450,10 @@ class OnlineCovarianceMetricAdapter(Adapter):
                     covar_est += a['sum_diff_outer']
                     covar_est += np.outer(mean_diff, mean_diff) * (
                         a['iter'] * n_iter_prev) / n_iter
+        if n_iter < 2:
+            raise AdaptationError(
+                'At least two chain samples required to compute a variance '
+                'estimates.')
         covar_est /= (n_iter - 1)
         self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv
