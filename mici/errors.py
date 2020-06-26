@@ -27,3 +27,7 @@ class HamiltonianDivergenceError(IntegratorError):
 
 class AdaptationError(Error):
     """Error raised when adaptation of transition parameters fails."""
+
+
+class ReadOnlyStateError(Error):
+    """Error raised when writing to attributes of read-only chain state."""

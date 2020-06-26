@@ -2,6 +2,7 @@
 
 import copy
 from functools import wraps
+from mici.errors import ReadOnlyStateError
 
 
 def cache_in_state(*depends_on):
@@ -93,7 +94,7 @@ class ChainState(object):
     """
 
     def __init__(self, _dependencies=None, _cache=None, _call_counts=None,
-                 **variables):
+                 _read_only=False, **variables):
         """Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor will be used to set
@@ -104,20 +105,22 @@ class ChainState(object):
         will return a `ChainState` instance `state` with variable attributes
         `state.pos`, `state.mom` and `state.dir` with initial values set to
         `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
-        `_dependencies`, `_cache` and `_call_counts` are reserved respectively
-        for the dependency set, cache dictionary and call count dictionary, and
-        cannot be used as state variable names.
+        `_dependencies`, `_cache`, `_call_counts` and `_read_only` are reserved
+        respectively for the dependency set, cache dictionary, call count
+        dictionary and a flag to make the state read-only and cannot be used as
+        state variable names.
         """
-        # Set _variables attribute by directly writing to __dict__ to ensure
-        # set before any cally to __setattr__
+        # Set attributes by directly writing to __dict__ to ensure set before 
+        # any call to __setattr__
         self.__dict__['_variables'] = variables
         if _dependencies is None:
             _dependencies = {name: set() for name in variables}
-        self._dependencies = _dependencies
+        self.__dict__['_dependencies'] = _dependencies
         if _cache is None:
             _cache = {}
-        self._cache = _cache
-        self._call_counts = _call_counts
+        self.__dict__['_cache'] = _cache
+        self.__dict__['_call_counts'] = _call_counts
+        self.__dict__['_read_only'] = _read_only
 
     def __getattr__(self, name):
         if name in self._variables:
@@ -127,6 +130,8 @@ class ChainState(object):
                 f"'{type(self).__name__}' object has no attribute '{name}'")
 
     def __setattr__(self, name, value):
+        if self._read_only:
+            raise ReadOnlyStateError('ChainState instance is read-only.')
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
@@ -138,16 +143,20 @@ class ChainState(object):
     def __contains__(self, name):
         return name in self._variables
 
-    def copy(self):
+    def copy(self, read_only=False):
         """Create a deep copy of the state object.
 
+        Args:
+            read_only (bool): Whether the state copy should be read-only.
+
         Returns:
-            state_copy (ChainState): A copy of the state object which can be
-                updated without affecting the original object's variables.
+            state_copy (ChainState): A copy of the state object with variable
+                attributes that are independent copies of the original state
+                object's variables.
         """
         return type(self)(
             _dependencies=self._dependencies, _cache=self._cache.copy(),
-            _call_counts=self._call_counts,
+            _call_counts=self._call_counts, _read_only=read_only,
             **{name: copy.copy(val) for name, val in self._variables.items()})
 
     def __str__(self):
@@ -167,10 +176,12 @@ class ChainState(object):
             # Don't pickle callable cached 'variables' such as derivative
             # functions
             'cache': {k: v for k, v in self._cache.items() if not callable(v)},
-            'call_counts': self._call_counts}
+            'call_counts': self._call_counts,
+            'read_only': self._read_only}
 
     def __setstate__(self, state):
         self.__dict__['_variables'] = state['variables']
-        self._dependencies = state['dependencies']
-        self._cache = state['cache']
-        self._call_counts = state['call_counts']
+        self.__dict__['_dependencies'] = state['dependencies']
+        self.__dict__['_cache'] = state['cache']
+        self.__dict__['_call_counts'] = state['call_counts']
+        self.__dict__['_read_only'] = state['read_only']
