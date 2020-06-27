@@ -385,7 +385,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
          Software, 76(1).
     """
 
-    def __init__(self, reg_iter_offset=5, reg_coefficient=1e-3):
+    def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         """
         Args:
             reg_iter_offset (int): Iteration offset used for calculating
@@ -396,7 +396,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
                 are regularized towards.
         """
         self.reg_iter_offset = reg_iter_offset
-        self.reg_coefficient = reg_coefficient
+        self.reg_scale = reg_scale
 
     def initialize(self, chain_state, transition):
         dim_pos = chain_state.pos.shape[0]
@@ -425,7 +425,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
         """
         covar_est *= (n_iter / (self.reg_iter_offset + n_iter))
         covar_est_diagonal = np.einsum('ii->i', covar_est)
-        covar_est_diagonal += self.reg_coefficient * (
+        covar_est_diagonal += self.reg_scale * (
             self.reg_iter_offset / (self.reg_iter_offset + n_iter))
 
     def finalize(self, adapt_state, transition):
