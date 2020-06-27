@@ -88,7 +88,7 @@ class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
             self.transition.integrator.step_size,
             exp(adapter_state['smoothed_log_step_size']))
 
-    def test_successful_adaptation(self):
+    def test_adaptation(self):
         chain_state = self.chain_state.copy()
         n_transition = 500
         chain_state, adapter_state = self._run_adaptive_chain(
@@ -153,10 +153,10 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests, unittest.TestCase):
     def setUp(self):
         self.rng = np.random.default_rng(SEED)
         pos, mom = self.rng.standard_normal((2, STATE_DIM))
-        self.var = np.exp(self.rng.standard_normal(STATE_DIM))
+        var = np.exp(self.rng.standard_normal(STATE_DIM))
         system = mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos**2 / self.var) / 2,
-            grad_neg_log_dens=lambda pos: pos / self.var)
+            neg_log_dens=lambda pos: np.sum(pos**2 / var) / 2,
+            grad_neg_log_dens=lambda pos: pos / var)
         integrator = mici.integrators.LeapfrogIntegrator(system, 0.5)
         transition = mici.transitions.MultinomialDynamicIntegrationTransition(
             system, integrator)
@@ -164,18 +164,75 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests, unittest.TestCase):
         self.chain_state = mici.states.ChainState(pos=pos, mom=mom, dir=1)
         self.transition = transition
 
+    def test_adaptation(self):
+        chain_state = self.chain_state.copy()
+        adapter_state = self.adapter.initialize(chain_state, self.transition)
+        n_transition = 10
+        pos_samples = np.full((n_transition, STATE_DIM), np.nan)
+        for i in range(n_transition):
+            chain_state.mom = self.transition.system.sample_momentum(
+                chain_state, self.rng)
+            chain_state, trans_stats = self.transition.sample(
+                chain_state, self.rng)
+            pos_samples[i] = chain_state.pos
+            self.adapter.update(
+                adapter_state, chain_state, trans_stats, self.transition)
+        self.assertEqual(adapter_state['iter'], n_transition)
+        assert np.allclose(adapter_state['mean'], pos_samples.mean(0))
+        assert np.allclose(adapter_state['sum_diff_sq'],
+                           np.sum((pos_samples - pos_samples.mean(0))**2, 0))
+        self.adapter.finalize(adapter_state, self.transition)
+        metric = self.transition.system.metric
+        self.assertIsInstance(metric, mici.matrices.PositiveDiagonalMatrix)
+        var_est = pos_samples.var(axis=0, ddof=1)
+        weight = n_transition / (self.adapter.reg_iter_offset + n_transition)
+        regularized_var_est = (
+            weight * var_est + (1 - weight) * self.adapter.reg_scale)
+        assert np.allclose(metric.diagonal, 1 / regularized_var_est)
+
 
 class TestOnlineCovarianceMetricAdapter(GenericAdapterTests, unittest.TestCase):
 
     def setUp(self):
         self.rng = np.random.default_rng(SEED)
         pos, mom = self.rng.standard_normal((2, STATE_DIM))
+        prec = self.rng.standard_normal((STATE_DIM, STATE_DIM))
+        prec = prec @ prec.T
         system = mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos**2) / 2,
-            grad_neg_log_dens=lambda pos: pos)
+            neg_log_dens=lambda pos: (pos @ prec @ pos) / 2,
+            grad_neg_log_dens=lambda pos: prec @ pos)
         integrator = mici.integrators.LeapfrogIntegrator(system, 0.5)
         transition = mici.transitions.MultinomialDynamicIntegrationTransition(
             system, integrator)
         self.adapter = mici.adapters.OnlineCovarianceMetricAdapter()
         self.chain_state = mici.states.ChainState(pos=pos, mom=mom, dir=1)
         self.transition = transition
+
+    def test_adaptation(self):
+        chain_state = self.chain_state.copy()
+        adapter_state = self.adapter.initialize(chain_state, self.transition)
+        n_transition = 10
+        pos_samples = np.full((n_transition, STATE_DIM), np.nan)
+        for i in range(n_transition):
+            chain_state.mom = self.transition.system.sample_momentum(
+                chain_state, self.rng)
+            chain_state, trans_stats = self.transition.sample(
+                chain_state, self.rng)
+            pos_samples[i] = chain_state.pos
+            self.adapter.update(
+                adapter_state, chain_state, trans_stats, self.transition)
+        self.assertEqual(adapter_state['iter'], n_transition)
+        assert np.allclose(adapter_state['mean'], pos_samples.mean(0))
+        pos_minus_mean_samples = pos_samples - pos_samples.mean(0)
+        assert np.allclose(adapter_state['sum_diff_outer'],
+                           np.einsum('ij,ik->jk', pos_minus_mean_samples,
+                                     pos_minus_mean_samples))
+        self.adapter.finalize(adapter_state, self.transition)
+        metric = self.transition.system.metric
+        self.assertIsInstance(metric, mici.matrices.PositiveDiagonalMatrix)
+        covar_est = np.cov(pos_samples, rowvar=False, ddof=1)
+        weight = n_transition / (self.adapter.reg_iter_offset + n_transition)
+        regularized_covar_est = (
+            weight * covar_est +
+            (1 - weight) * self.adapter.reg_scale * np.identity(STATE_DIM))
+        assert np.allclose(metric.inv.array, regularized_covar_est)
