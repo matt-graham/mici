@@ -358,7 +358,8 @@ class TestConstrainedLeapfrogIntegratorGaussianLinearSystem(
             system = systems.GaussianDenseConstrainedEuclideanMetricSystem(
                 lambda q: 0., grad_neg_log_dens=lambda q: 0. * q,
                 constr=lambda q: q[:1],
-                jacob_constr=lambda q: np.identity(q.shape[0])[:1])
+                jacob_constr=lambda q: np.identity(q.shape[0])[:1],
+                mhp_constr=lambda q: lambda m: np.zeros_like(q))
             integrator = integrators.ConstrainedLeapfrogIntegrator(system, 0.5)
             state_list = [
                 ChainState(pos=np.concatenate([np.array([0.]), q]),
@@ -387,9 +388,10 @@ class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
                             constr=lambda q: q[0:1]**2 + q[1:2]**2 - 1.,
                             jacob_constr=lambda q: np.concatenate(
                                 [2 * q[0:1], 2 * q[1:2],
-                                 np.zeros(q.shape[0] - 2)])[None]))
+                                 np.zeros(q.shape[0] - 2)])[None],
+                            mhp_constr=lambda q: lambda m: 0 * m[0]))
                     integrator = integrators.ConstrainedLeapfrogIntegrator(
-                        system, 0.1, projection_solver=projection_solver)
+                        system, 0.05, projection_solver=projection_solver)
                     state_list = [
                         ChainState(
                             pos=np.concatenate([
@@ -401,6 +403,7 @@ class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
                     ]
                     for state in state_list:
                         state.mom = system.sample_momentum(state, rng)
+                        state._read_only = True
                     integrators_and_state_lists.append(
                         (integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
+        super().__init__(integrators_and_state_lists, h_diff_tol=5e-2)
