@@ -14,7 +14,8 @@ from collections import OrderedDict
 import numpy as np
 import mici.transitions as trans
 from mici.states import ChainState
-from mici.progressbars import ProgressBar, DummyProgressBar, _ProxyProgressBar
+from mici.progressbars import (ProgressBar, LabelledSequenceProgressBar,
+                               DummyProgressBar, _ProxyProgressBar)
 from mici.errors import AdaptationError
 
 
@@ -555,7 +556,7 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
         # If returned handled exception was a manual interrupt break and return
         if isinstance(exception, KeyboardInterrupt):
             break
-    return _collate_chain_outputs(chain_outputs)
+    return (*_collate_chain_outputs(chain_outputs), exception)
 
 
 def _sample_chains_worker(chain_queue, iter_queue):
@@ -613,6 +614,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
     n_chain = len(chain_iterators)
     with ignore_sigint_manager() as manager, Pool(n_process) as pool:
         results = None
+        exception = None
         try:
             # Shared queue for workers to output chain progress updates to
             iter_queue = manager.Queue()
@@ -652,6 +654,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                     # chain progress update loop but do not reraise exception
                     # so that partial chain outputs are returned
                     elif isinstance(iter_queue_item, KeyboardInterrupt):
+                        exception = iter_queue_item
                         break
                     # Re raise any other exception passed from worker processes
                     elif isinstance(iter_queue_item, Exception):
@@ -683,9 +686,9 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                 ) from e
             else:
                 raise e
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
             # Interrupts handled in child processes therefore ignore here
-            pass
+            exception = e
         if results is not None:
             # Join all output lists from per-process workers in to single list
             indexed_chain_outputs = sum((res for res in results.get()), [])
@@ -694,7 +697,55 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
             chain_outputs = [outp for i, outp in sorted(indexed_chain_outputs)]
         else:
             chain_outputs = []
-    return _collate_chain_outputs(chain_outputs)
+    return (*_collate_chain_outputs(chain_outputs), exception)
+
+
+def _set_up_sampling_stages(
+        n_warmup_iter, n_main_iter, fast_adapters, slow_adapters,
+        trace_funcs, n_init_slow_window_iter, n_init_fast_stage_iter,
+        n_final_fast_stage_iter, slow_window_multiplier):
+    """Create dictionary specifying labels and parameters of sampling stages."""
+    use_single_adaptive_stage = slow_adapters is None or len(slow_adapters) == 0
+    if not use_single_adaptive_stage and (
+            n_init_fast_stage_iter + n_init_slow_window_iter +
+            n_final_fast_stage_iter > n_warmup_iter):
+        n_init_fast_stage_iter = int(0.15 * n_warmup_iter)
+        n_final_fast_stage_iter = int(0.1 * n_warmup_iter)
+        n_init_slow_window_iter = (
+            n_warmup_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
+    if use_single_adaptive_stage:
+        sampling_stages = OrderedDict(
+            {'Adaptive': (n_warmup_iter, fast_adapters, [])})
+    else:
+        # initial fast adaptation stage
+        sampling_stages = OrderedDict(
+            {'Initial fast adaptive': (
+                n_init_fast_stage_iter, fast_adapters, [])})
+        # growing size slow adaptation windows
+        n_window_iter = n_init_slow_window_iter
+        slow_windows = []
+        counter = 0
+        n_slow_stage_iter = (
+            n_warmup_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
+        while counter < n_slow_stage_iter:
+            counter_next = (
+                counter + (1 + slow_window_multiplier) * n_window_iter)
+            if counter_next > n_slow_stage_iter:
+                n_window_iter = n_slow_stage_iter - counter
+            slow_windows.append(n_window_iter)
+            counter += n_window_iter
+            n_window_iter *= slow_window_multiplier
+        for i, n_iter in enumerate(slow_windows):
+            sampling_stages[
+                f'Slow adaptive ({i + 1}/{len(slow_windows)})'] = (
+                    n_iter, slow_adapters, [])
+        # final fast adaptation stage
+        sampling_stages['Final fast adaptive'] = (
+            n_final_fast_stage_iter, fast_adapters, [])
+    # main non-adaptive stage
+    sampling_stages['Main non-adaptive'] = (
+        n_main_iter, None, trace_funcs)
+    return sampling_stages
 
 
 class MarkovChainMonteCarloMethod(object):
@@ -922,13 +973,13 @@ class MarkovChainMonteCarloMethod(object):
             n_sample, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            *states_traces_stats, adapter_states = _sample_chains_sequential(
+            *states_traces_stats, adapter_states, _ = _sample_chains_sequential(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, **kwargs)
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            *states_traces_stats, adapter_states = _sample_chains_parallel(
+            *states_traces_stats, adapter_states, _ = _sample_chains_parallel(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
                 trace_funcs=trace_funcs, n_process=n_process, **kwargs)
@@ -936,6 +987,50 @@ class MarkovChainMonteCarloMethod(object):
             _finalize_adapters(
                 adapter_states, kwargs['adapters'], self.transitions)
         return states_traces_stats
+
+    def sample_chains_with_adaptive_warmup(
+            self, n_warmup_iter, n_main_iter, init_states, trace_funcs,
+            fast_adapters, slow_adapters=None, n_process=1,
+            n_init_slow_window_iter=25, n_init_fast_stage_iter=75,
+            n_final_fast_stage_iter=50, slow_window_multiplier=2, **kwargs):
+        self.__set_sample_chain_kwargs_defaults(kwargs)
+        if 'adapters' in kwargs:
+            raise ValueError(
+                'Transition adapters should be specified via `fast_adapters` '
+                'and `slow_adapters` arguments rather than `adapters`.')
+        n_chain = len(init_states)
+        rngs = _get_per_chain_rngs(self.rng, n_chain)
+        progress_bar_class = kwargs.pop('progress_bar_class')
+        common_sample_chains_kwargs = {
+            'rngs': rngs, 'transitions': self.transitions, **kwargs}
+        if n_process > 1:
+            sample_chains_func = _sample_chains_parallel
+            common_sample_chains_kwargs['n_process'] = n_process
+        else:
+            sample_chains_func = _sample_chains_sequential
+        sampling_stages = _set_up_sampling_stages(
+            n_warmup_iter, n_main_iter, fast_adapters, slow_adapters,
+            trace_funcs, n_init_slow_window_iter, n_init_fast_stage_iter,
+            n_final_fast_stage_iter, slow_window_multiplier)
+        with LabelledSequenceProgressBar(
+                    sampling_stages, 'Sampling stage', position=(0, n_chain+1)
+                ) as sampling_stages_pb:
+            chain_iterators = _construct_chain_iterators(
+                n_warmup_iter, progress_bar_class, n_chain, 1)
+            for (n_iter, adapters, trace_funcs), _ in sampling_stages_pb:
+                for chain_it in chain_iterators:
+                    chain_it.sequence = range(n_iter)
+                chain_states, traces, stats, adapter_states, exception = (
+                    sample_chains_func(
+                        init_states=init_states, trace_funcs=trace_funcs,
+                        adapters=adapters, chain_iterators=chain_iterators,
+                        **common_sample_chains_kwargs))
+                if len(adapter_states) > 0:
+                    _finalize_adapters(
+                        adapter_states, adapters, self.transitions)
+                if isinstance(exception, KeyboardInterrupt):
+                    return chain_states, traces, stats
+        return chain_states, traces, stats
 
 
 class HamiltonianMCMC(MarkovChainMonteCarloMethod):
