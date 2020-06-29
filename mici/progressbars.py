@@ -403,6 +403,138 @@ class ProgressBar(BaseProgressBar):
         return ret_val
 
 
+class LabelledSequenceProgressBar(BaseProgressBar):
+
+    def __init__(self, labelled_sequence, description=None, position=(0, 1),
+                 displays=None):
+        """
+        Args:
+            labelled_sequence (OrderedDict): Ordered dictionary with string
+                keys corresponding to labels for stages represented by sequence
+                and values the entries in the sequence being iterated over.
+            description (None or str): Description of task to prefix progress
+                bar with.
+            position (Tuple[int, int]): Tuple specifying position of progress
+                bar within a sequence with first entry corresponding to
+                zero-indexed position and the second entry the total number of
+                progress bars.
+            displays (None or List[object]): List of objects to use to display
+                visual representation(s) of progress bar. Each object much have
+                an `update` method which will be passed a single argument
+                corresponding to the current progress bar.
+        """
+        super().__init__(
+            list(labelled_sequence.values()), description, position)
+        self._labels = list(labelled_sequence.keys())
+        self._description = description
+        self._position = position
+        self._counter = 0
+        self._prev_time = None
+        self._iter_times = [None] * self.n_iter
+        self._stats_dict = {}
+        self._displays = displays
+
+    @property
+    def counter(self):
+        """Progress iteration count."""
+        return self._counter
+
+    @counter.setter
+    def counter(self, value):
+        self._counter = max(0, min(value, self.n_iter))
+
+    @property
+    def description(self):
+        """"Description of task being tracked."""
+        return self._description
+
+    @property
+    def stats(self):
+        """Comma-delimited string list of statistic key=value pairs."""
+        return ', '.join(f'{k}={v:#.3g}' for k, v in self._stats_dict.items())
+
+    @property
+    def prefix(self):
+        """Text to prefix progress bar with."""
+        return f'{self.description + ": " if self.description else ""}'
+
+    @property
+    def postfix(self):
+        """Text to postfix progress bar with."""
+        return f' [{self.stats}]' if self._stats_dict else ''
+
+    @property
+    def completed_labels(self):
+        return [
+            f'{label} [{_format_time(time)}]' for label, time in
+            zip(self._labels[:self._counter], self._iter_times[:self._counter])]
+
+    @property
+    def current_label(self):
+        return self._labels[self._counter] if self.counter < self.n_iter else ''
+
+    @property
+    def progress_bar(self):
+        """Progress bar string."""
+        labels = self.completed_labels
+        if self.counter < self.n_iter:
+            labels.append(self.current_label)
+        return ' > '.join(labels)
+
+    def reset(self):
+        """Reset progress bar state."""
+        self._counter = 0
+        self._prev_time = timer()
+        self._iter_times = [None] * self.n_iter
+        self._stats_dict = {}
+
+    def update(self, iter_count, iter_dict=None, refresh=True):
+        """Update progress bar state
+
+        Args:
+            status (string): New value for status string.
+            iter_dict (None or Dict[str, float]): Dictionary of iteration
+                statistics key-value pairs to use to update postfix stats.
+            refresh (bool): Whether to refresh display(s).
+        """
+        if iter_count == 0:
+            self.reset()
+        else:
+            self.counter = iter_count
+            if iter_dict is not None:
+                _update_stats_running_means(iter, self._stats_dict, iter_dict)
+            curr_time = timer()
+            self._iter_times[iter_count - 1] = curr_time - self._prev_time
+            self._prev_time = curr_time
+        if refresh:
+            self.refresh()
+
+    def refresh(self):
+        """Refresh visual display(s) of status bar."""
+        for display in self._displays:
+            display.update(self)
+
+    def __str__(self):
+        return f'{self.prefix}{self.progress_bar}{self.postfix}'
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __enter__(self):
+        super().__enter__()
+        self.reset()
+        if self._displays is None:
+            self._displays = [_create_display(self, self._position)]
+        self.refresh()
+        return self
+
+    def __exit__(self, *args):
+        ret_val = super().__exit__()
+        if self.counter != self.n_iter:
+            self.refresh()
+        return ret_val
+
+
 class FileDisplay:
     """Use file which supports ANSI escape sequences as an updatable display"""
 
