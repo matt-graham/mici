@@ -239,15 +239,17 @@ def _check_chain_data_size(traces, chain_stats):
             f' memory-mapping enabled (`memmap_enabled=True`).')
 
 
-def _construct_chain_iterators(n_sample, chain_iterator_class, n_chain=None):
+def _construct_chain_iterators(
+        n_sample, chain_iterator_class, n_chain=None, position_offset=0):
     """Set up chain iterator progress bar object(s)."""
     if n_chain is None:
-        return chain_iterator_class(n_iter=n_sample, description='Chain 1/1')
+        return chain_iterator_class(range(n_sample), description='Chain 1/1')
     else:
         return [
             chain_iterator_class(
-                n_iter=n_sample, description=f'Chain {c+1}/{n_chain}',
-                position=(c, n_chain)) for c in range(n_chain)]
+                range(n_sample), description=f'Chain {c+1}/{n_chain}',
+                position=(c + position_offset, n_chain + position_offset))
+            for c in range(n_chain)]
 
 
 def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
@@ -570,7 +572,7 @@ def _sample_chains_worker(chain_queue, iter_queue):
             *outputs, exception = _sample_chain(
                 init_state=init_state, rng=rng, chain_index=chain_index,
                 chain_iterator=_ProxyProgressBar(
-                    n_sample, chain_index, iter_queue),
+                    range(n_sample), chain_index, iter_queue),
                 parallel_chains=True, **kwargs)
             # Returned exception being AdaptationError indicates chain
             # terminated due to adapter initialisation failing therefore do not

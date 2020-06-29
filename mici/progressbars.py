@@ -42,6 +42,25 @@ def _in_zmq_interactive_shell():
             return False
 
 
+def _create_display(obj, position):
+    """Create an updateable display object.
+
+    Args:
+        obj (object): Initial object to display.
+        position (Tuple[int, int]): Tuple specifying position of display within
+            a sequence of displays with first entry corresponding to the
+            zero-indexed position and the second entry the total number of
+            displays.
+
+    Returns:
+        Object with `update` method to update displayed content.
+    """
+    if _in_zmq_interactive_shell():
+        return ipython_display(obj, display_id=True)
+    else:
+        return FileDisplay(position)
+
+
 def _format_time(total_seconds):
     """Format a time interval in seconds as a colon-delimited string [h:]m:s"""
     total_mins, seconds = divmod(int(total_seconds), 60)
@@ -64,10 +83,11 @@ def _update_stats_running_means(iter, means, new_vals):
 class BaseProgressBar(abc.ABC):
     """Base class defining expected interface for progress bars."""
 
-    def __init__(self, n_iter, description, position):
+    def __init__(self, sequence, description, position):
         """
         Args:
-            n_iter (int): Number of iterations to iterate over.
+            sequence (Sequence): Sequence to iterate over. Must be iterable AND
+                have a defined length such that `len(sequence)` is valid.
             description (None or str): Description of task to prefix progress
                 bar with.
             position (Tuple[int, int]): Tuple specifying position of progress
@@ -75,27 +95,44 @@ class BaseProgressBar(abc.ABC):
                 zero-indexed position and the second entry the total number of
                 progress bars.
         """
-        assert isinstance(n_iter, int) and n_iter > 0, (
-            'n_iter must be a positive integer')
-        self._n_iter = n_iter
+        self._sequence = sequence
         self._description = description
         self._position = position
+        self._active = False
+        self._n_iter = len(sequence)
+
+    @property
+    def sequence(self):
+        """Sequence iterated over."""
+        return self._sequence
+
+    @sequence.setter
+    def sequence(self, value):
+        if self._active:
+            raise RuntimeError('Cannot set sequence of active progress bar.')
+        else:
+            self._sequence = value
+            self._n_iter = len(value)
+
+    @property
+    def n_iter(self):
+        return self._n_iter
 
     def __iter__(self):
-        for iter in range(self._n_iter):
+        for i, val in enumerate(self.sequence):
             iter_dict = {}
-            yield iter, iter_dict
-            self.update(iter + 1, iter_dict, refresh=True)
+            yield val, iter_dict
+            self.update(i + 1, iter_dict, refresh=True)
 
     def __len__(self):
         return self._n_iter
 
     @abc.abstractmethod
-    def update(self, iter, iter_dict, refresh=True):
+    def update(self, iter_count, iter_dict, refresh=True):
         """Update progress bar state.
 
         Args:
-            iter (int): New value for iteration counter.
+            iter_count (int): New value for iteration counter.
             iter_dict (None or Dict[str, float]): Dictionary of iteration
                 statistics key-value pairs to use to update postfix stats.
             refresh (bool): Whether to refresh display(s).
@@ -104,23 +141,21 @@ class BaseProgressBar(abc.ABC):
     @abc.abstractmethod
     def __enter__(self):
         """Set up progress bar and any associated resource."""
+        self._active = True
+        return self
 
     @abc.abstractmethod
     def __exit__(self, *args):
         """Close down progress bar and any associated resources."""
+        self._active = False
+        return False
 
 
 class DummyProgressBar(BaseProgressBar):
     """Placeholder progress bar which does not display progress updates."""
 
-    def update(self, iter, iter_dict, refresh=True):
+    def update(self, iter_count, iter_dict, refresh=True):
         pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        return False
 
 
 class ProgressBar(BaseProgressBar):
@@ -134,11 +169,12 @@ class ProgressBar(BaseProgressBar):
     GLYPHS = ' ▏▎▍▌▋▊▉█'
     """Characters used to create string representation of progress bar."""
 
-    def __init__(self, n_iter, description=None, position=(0, 1),
+    def __init__(self, sequence, description=None, position=(0, 1),
                  displays=None, n_col=10, unit='it', min_refresh_time=0.25):
         """
         Args:
-            n_iter (int): Number of iterations to iterate over.
+            sequence (Sequence): Sequence to iterate over. Must be iterable AND
+                have a defined length such that `len(sequence)` is valid.
             description (None or str): Description of task to prefix progress
                 bar with.
             position (Tuple[int, int]): Tuple specifying position of progress
@@ -155,21 +191,15 @@ class ProgressBar(BaseProgressBar):
             min_referesh_time (float): Minimum time in seconds between each
                 refresh of progress bar visual representation.
         """
-        super().__init__(n_iter, description, position)
+        super().__init__(sequence, description, position)
         self._n_col = n_col
         self._unit = unit
         self._counter = 0
-        self._active = False
         self._start_time = None
         self._elapsed_time = 0
         self._stats_dict = {}
         self._displays = displays
         self._min_refresh_time = min_refresh_time
-
-    @property
-    def n_iter(self):
-        """Total number of iterations to complete."""
-        return self._n_iter
 
     @property
     def description(self):
@@ -295,29 +325,28 @@ class ProgressBar(BaseProgressBar):
     def reset(self):
         """Reset progress bar state."""
         self._counter = 0
-        self._active = True
         self._start_time = timer()
         self._last_refresh_time = -float('inf')
         self._stats_dict = {}
 
-    def update(self, iter, iter_dict=None, refresh=True):
+    def update(self, iter_count, iter_dict=None, refresh=True):
         """Update progress bar state
 
         Args:
-            iter (int): New value for iteration counter.
+            iter_count (int): New value for iteration counter.
             iter_dict (None or Dict[str, float]): Dictionary of iteration
                 statistics key-value pairs to use to update postfix stats.
             refresh (bool): Whether to refresh display(s).
         """
-        if iter == 0:
+        if iter_count == 0:
             self.reset()
         else:
-            self.counter = iter
+            self.counter = iter_count
             if iter_dict is not None:
-                _update_stats_running_means(iter, self._stats_dict, iter_dict)
-            prev_elased_time = self._elapsed_time
+                _update_stats_running_means(
+                    iter_count, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
-        if refresh and iter == self.n_iter or (
+        if refresh and iter_count == self.n_iter or (
                 timer() - self._last_refresh_time > self._min_refresh_time):
             self.refresh()
             self._last_refresh_time = timer()
@@ -361,19 +390,17 @@ class ProgressBar(BaseProgressBar):
         '''
 
     def __enter__(self):
+        super().__enter__()
         self.reset()
         if self._displays is None:
-            self._displays = [
-                ipython_display(self, display_id=True)
-                if _in_zmq_interactive_shell()
-                else FileDisplay(self._position)]
+            self._displays = [_create_display(self, self._position)]
         return self
 
     def __exit__(self, *args):
-        self._active = False
+        ret_val = super().__exit__()
         if self.counter != self.n_iter:
             self.refresh()
-        return False
+        return ret_val
 
 
 class FileDisplay:
@@ -400,7 +427,8 @@ class FileDisplay:
         self._position = position
         self._file = file if file is not None else sys.stdout
         self._last_string_length = 0
-        self._file.write('\n')
+        if self._position[0] == 0:
+            self._file.write('\n' * self._position[1])
         self._file.flush()
 
     def _move_line(self, offset):
@@ -423,16 +451,18 @@ class _ProxyProgressBar:
     when distributing tasks across multiple processes.
     """
 
-    def __init__(self, n_iter, job_id, iter_queue):
+    def __init__(self, sequence, job_id, iter_queue):
         """
         Args:
-            n_iter (int): Number of iterations to iterate over.
+            sequence (Sequence): Sequence to iterate over. Must be iterable AND
+                have a defined length such that `len(sequence)` is valid.
             job_id (int): Unique integer identifier for progress bar amongst
                 other progress bars sharing same `iter_queue` object.
             iter_queue (Queue): Shared queue object that progress updates are
                 pushed to.
         """
-        self._n_iter = n_iter
+        self._sequence = sequence
+        self._n_iter = len(sequence)
         self._job_id = job_id
         self._iter_queue = iter_queue
 
@@ -447,10 +477,10 @@ class _ProxyProgressBar:
         return False
 
     def __iter__(self):
-        for iter in range(self._n_iter):
+        for i, val in enumerate(self._sequence):
             iter_dict = {}
-            yield iter, iter_dict
-            self._iter_queue.put((self._job_id, iter + 1, iter_dict))
+            yield val, iter_dict
+            self._iter_queue.put((self._job_id, i + 1, iter_dict))
 
 
 if TQDM_AVAILABLE:
@@ -458,31 +488,32 @@ if TQDM_AVAILABLE:
     class TqdmProgressBar(BaseProgressBar):
         """Wrapper of `tqdm` with same interface as `ProgressBar`."""
 
-        def __init__(self, n_iter, description=None, position=(0, 1)):
-            super().__init__(n_iter, description, position)
+        def __init__(self, sequence, description=None, position=(0, 1)):
+            super().__init__(sequence, description, position)
             self._stats_dict = {}
             self._tqdm_obj = None
 
-        def update(self, iter, iter_dict=None, refresh=True):
+        def update(self, iter_count, iter_dict=None, refresh=True):
             if self._tqdm_obj is None:
                 raise RuntimeError(
                     'Must enter object first in context manager.')
-            if iter == 0:
+            if iter_count == 0:
                 self._tqdm_obj.reset()
             elif not self._tqdm_obj.disable:
-                self._tqdm_obj.update(iter - self._tqdm_obj.n)
+                self._tqdm_obj.update(iter_count - self._tqdm_obj.n)
                 if iter_dict is not None:
                     _update_stats_running_means(
-                        iter, self._stats_dict, iter_dict)
+                        iter_count, self._stats_dict, iter_dict)
                     self._tqdm_obj.set_postfix(self._stats_dict)
-                if iter == self._n_iter:
+                if iter_count == self._n_iter:
                     self._tqdm_obj.close()
                 if refresh:
                     self._tqdm_obj.refresh()
 
         def __enter__(self):
-            self._tqdm_obj = tqdm.trange(
-                self._n_iter, desc=self._description,
+            super.__enter__()
+            self._tqdm_obj = tqdm.tqdm(
+                self._sequence, desc=self._description,
                 position=self._position[0]).__enter__()
             return self
 
