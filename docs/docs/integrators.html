@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200630" />
 <title>mici.integrators API documentation</title>
 <meta name="description" content="Symplectic integrators for simulation of Hamiltonian dynamics." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
 <style>.flex{}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding-top:5px;padding-bottom:5px;padding-right:10px;padding-left:35px;text-indent:-25px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:1000px){#sidebar{width:600px;position:fixed;z-index:1;top:0;bottom:0;overflow-x:hidden;overflow-y:auto}#content{margin-left:600px;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}#footer{margin-left:600px}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:1000px){#sidebar{width:540px;position:fixed;z-index:1;top:0;bottom:0;overflow-x:hidden;overflow-y:auto}#content{margin-left:540px;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}#footer{margin-left:540px}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
@@ -34,25 +34,25 @@
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></code></h4>
+<code><a title="mici.integrators.Integrator" href="#mici.integrators.Integrator">Integrator</a></code>
 <ul class="">
 <li><code><a title="mici.integrators.Integrator.step" href="#mici.integrators.Integrator.step">step</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator">ExplicitLeapfrogIntegrator</a></code></h4>
+<code><a title="mici.integrators.LeapfrogIntegrator" href="#mici.integrators.LeapfrogIntegrator">LeapfrogIntegrator</a></code>
 <ul class="">
-<li><code><a title="mici.integrators.ExplicitLeapfrogIntegrator.step" href="#mici.integrators.ExplicitLeapfrogIntegrator.step">step</a></code></li>
+<li><code><a title="mici.integrators.LeapfrogIntegrator.step" href="#mici.integrators.LeapfrogIntegrator.step">step</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mici.integrators.ImplicitLeapfrogIntegrator" href="#mici.integrators.ImplicitLeapfrogIntegrator">ImplicitLeapfrogIntegrator</a></code></h4>
+<code><a title="mici.integrators.ImplicitLeapfrogIntegrator" href="#mici.integrators.ImplicitLeapfrogIntegrator">ImplicitLeapfrogIntegrator</a></code>
 <ul class="">
 <li><code><a title="mici.integrators.ImplicitLeapfrogIntegrator.step" href="#mici.integrators.ImplicitLeapfrogIntegrator.step">step</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator" href="#mici.integrators.ConstrainedLeapfrogIntegrator">ConstrainedLeapfrogIntegrator</a></code></h4>
+<code><a title="mici.integrators.ConstrainedLeapfrogIntegrator" href="#mici.integrators.ConstrainedLeapfrogIntegrator">ConstrainedLeapfrogIntegrator</a></code>
 <ul class="">
 <li><code><a title="mici.integrators.ConstrainedLeapfrogIntegrator.step" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step">step</a></code></li>
 </ul>
@@ -63,39 +63,38 @@
 </nav>
 <article id="content">
 <header>
-<h1 class="title">Package <code>mici.integrators</code></h1>
+<h1 class="title">Module <code>mici.integrators</code></h1>
 </header>
 <section id="section-intro">
 <p>Symplectic integrators for simulation of Hamiltonian dynamics.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L0-L350" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L0-L355" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
 from abc import ABC, abstractmethod
-from mici.errors import NonReversibleStepError
+from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
                           solve_projection_onto_manifold_quasi_newton)
-
-__pdoc__ = {}
 
 
 class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
         &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
 
-    @abstractmethod
     def step(self, state):
         &#34;&#34;&#34;Perform a single integrator step from a supplied state.
 
@@ -107,9 +106,28 @@ class Integrator(ABC):
             new_state (mici.states.ChainState): New object corresponding to
                 stepped state.
         &#34;&#34;&#34;
+        if self.step_size is None:
+            raise AdaptationError(
+                &#39;Integrator `step_size` is `None`. This value should only be &#39;
+                &#39;used if a step size adapter is being used to set the step &#39;
+                &#39;size.&#39;)
+        state = state.copy()
+        self._step(state, state.dir * self.step_size)
+        return state
+
+    @abstractmethod
+    def _step(self, state, dt):
+        &#34;&#34;&#34;Implementation of single integrator step.
+
+        Args:
+            state (mici.states.ChainState): System state to perform integrator
+                step from. Updated in place.
+            dt (float): Integrator time step. May be positive or negative.
+        &#34;&#34;&#34;
 
 
-class ExplicitLeapfrogIntegrator(Integrator):
+
+class LeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
@@ -123,11 +141,9 @@ class ExplicitLeapfrogIntegrator(Integrator):
     where \(q\) and \(p\) are the position and momentum variables respectively,
     and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
     exact flows can be computed.
-
-    `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         if not hasattr(system, &#39;h1_flow&#39;) or not hasattr(system, &#39;h2_flow&#39;):
             raise ValueError(
                 &#39;Explicit leapfrog integrator can only be used for systems &#39;
@@ -136,17 +152,10 @@ class ExplicitLeapfrogIntegrator(Integrator):
                 &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
         super().__init__(system, step_size)
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self.system.h1_flow(state, 0.5 * dt)
         self.system.h2_flow(state, dt)
         self.system.h1_flow(state, 0.5 * dt)
-        return state
-
-
-LeapfrogIntegrator = ExplicitLeapfrogIntegrator
-__pdoc__[&#39;LeapfrogIntegrator&#39;] = False
 
 
 class ImplicitLeapfrogIntegrator(Integrator):
@@ -167,7 +176,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
     of equations.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size, reverse_check_tol=1e-8,
+    def __init__(self, system, step_size=None, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
                  fixed_point_solver_kwargs=None):
@@ -175,7 +184,9 @@ class ImplicitLeapfrogIntegrator(Integrator):
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             reverse_check_tol (float): Tolerance for check of reversibility of
                 implicit sub-steps which involve iterative solving of a
                 non-linear system of equations. The step is assumed to be
@@ -200,8 +211,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
         &#34;&#34;&#34;
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
@@ -252,16 +262,13 @@ class ImplicitLeapfrogIntegrator(Integrator):
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
-    def step(self, state):
-        dt = 0.5 * state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, dt)
         self._step_b_fwd(state, dt)
         self._step_c_fwd(state, dt)
         self._step_c_adj(state, dt)
         self._step_b_adj(state, dt)
         self._step_a(state, dt)
-        return state
 
 
 class ConstrainedLeapfrogIntegrator(Integrator):
@@ -307,7 +314,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size, n_inner_step=1,
+    def __init__(self, system, step_size=None, n_inner_step=1,
                  reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
                  projection_solver=solve_projection_onto_manifold_quasi_newton,
                  projection_solver_kwargs=None):
@@ -315,7 +322,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             n_inner_step (int): Positive integer specifying number of &#39;inner&#39;
                 constrained `system.h2_flow` steps to take within each overall
                 step. As the derivative `system.dh1_dpos` is not evaluated
@@ -366,8 +375,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
             projection_solver_kwargs (None or Dict[str, object]): Dictionary of
                 any keyword arguments to `projection_solver`.
         &#34;&#34;&#34;
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
@@ -416,13 +424,10 @@ class ConstrainedLeapfrogIntegrator(Integrator):
                     f&#39;Non-reversible step. Distance between initial and &#39;
                     f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, 0.5 * dt)
         self._step_b(state, dt)
-        self._step_a(state, 0.5 * dt)
-        return state</code></pre>
+        self._step_a(state, 0.5 * dt)</code></pre>
 </details>
 </section>
 <section>
@@ -436,7 +441,7 @@ class ConstrainedLeapfrogIntegrator(Integrator):
 <dl>
 <dt id="mici.integrators.Integrator"><code class="flex name class">
 <span>class <span class="ident">Integrator</span></span>
-<span>(</span><span>system, step_size)</span>
+<span>(</span><span>system, step_size=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Base class for integrators.</p>
@@ -445,28 +450,31 @@ class ConstrainedLeapfrogIntegrator(Integrator):
 <dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
 <dd>Hamiltonian system to integrate the
 dynamics of.</dd>
-<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
-<dd>Integrator time step.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code> or <code>None</code></dt>
+<dd>Integrator time step. If set to <code>None</code>
+(the default) it is assumed that a step size adapter will be
+used to set the step size before calling the <code>step</code> method.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L11-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L9-L52" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
         &#34;&#34;&#34;
         self.system = system
         self.step_size = step_size
 
-    @abstractmethod
     def step(self, state):
         &#34;&#34;&#34;Perform a single integrator step from a supplied state.
 
@@ -477,6 +485,24 @@ dynamics of.</dd>
         Returns:
             new_state (mici.states.ChainState): New object corresponding to
                 stepped state.
+        &#34;&#34;&#34;
+        if self.step_size is None:
+            raise AdaptationError(
+                &#39;Integrator `step_size` is `None`. This value should only be &#39;
+                &#39;used if a step size adapter is being used to set the step &#39;
+                &#39;size.&#39;)
+        state = state.copy()
+        self._step(state, state.dir * self.step_size)
+        return state
+
+    @abstractmethod
+    def _step(self, state, dt):
+        &#34;&#34;&#34;Implementation of single integrator step.
+
+        Args:
+            state (mici.states.ChainState): System state to perform integrator
+                step from. Updated in place.
+            dt (float): Integrator time step. May be positive or negative.
         &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -485,7 +511,7 @@ dynamics of.</dd>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator">ExplicitLeapfrogIntegrator</a></li>
+<li><a title="mici.integrators.LeapfrogIntegrator" href="#mici.integrators.LeapfrogIntegrator">LeapfrogIntegrator</a></li>
 <li><a title="mici.integrators.ImplicitLeapfrogIntegrator" href="#mici.integrators.ImplicitLeapfrogIntegrator">ImplicitLeapfrogIntegrator</a></li>
 <li><a title="mici.integrators.ConstrainedLeapfrogIntegrator" href="#mici.integrators.ConstrainedLeapfrogIntegrator">ConstrainedLeapfrogIntegrator</a></li>
 </ul>
@@ -511,10 +537,9 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L24-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L24-L42" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@abstractmethod
-def step(self, state):
+<pre><code class="python">def step(self, state):
     &#34;&#34;&#34;Perform a single integrator step from a supplied state.
 
     Args:
@@ -524,14 +549,22 @@ def step(self, state):
     Returns:
         new_state (mici.states.ChainState): New object corresponding to
             stepped state.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    if self.step_size is None:
+        raise AdaptationError(
+            &#39;Integrator `step_size` is `None`. This value should only be &#39;
+            &#39;used if a step size adapter is being used to set the step &#39;
+            &#39;size.&#39;)
+    state = state.copy()
+    self._step(state, state.dir * self.step_size)
+    return state</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="mici.integrators.ExplicitLeapfrogIntegrator"><code class="flex name class">
-<span>class <span class="ident">ExplicitLeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size)</span>
+<dt id="mici.integrators.LeapfrogIntegrator"><code class="flex name class">
+<span>class <span class="ident">LeapfrogIntegrator</span></span>
+<span>(</span><span>system, step_size=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Leapfrog integrator for Hamiltonian systems with tractable component flows.</p>
@@ -543,21 +576,22 @@ Hamiltonian function <span><span class="MathJax_Preview">h</span><script type="m
 <p>where <span><span class="MathJax_Preview">q</span><script type="math/tex">q</script></span> and <span><span class="MathJax_Preview">p</span><script type="math/tex">p</script></span> are the position and momentum variables respectively,
 and <span><span class="MathJax_Preview">h_1</span><script type="math/tex">h_1</script></span> and <span><span class="MathJax_Preview">h_2</span><script type="math/tex">h_2</script></span> are Hamiltonian component functions for which the
 exact flows can be computed.</p>
-<p><code>LeapfrogIntegrator</code> is an alias for <a title="mici.integrators.ExplicitLeapfrogIntegrator" href="#mici.integrators.ExplicitLeapfrogIntegrator"><code>ExplicitLeapfrogIntegrator</code></a>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
 <dd>Hamiltonian system to integrate the
 dynamics of.</dd>
-<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
-<dd>Integrator time step.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code> or <code>None</code></dt>
+<dd>Integrator time step. If set to <code>None</code>
+(the default) it is assumed that a step size adapter will be
+used to set the step size before calling the <code>step</code> method.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L38-L71" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L56-L84" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class ExplicitLeapfrogIntegrator(Integrator):
+<pre><code class="python">class LeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
@@ -571,11 +605,9 @@ dynamics of.</dd>
     where \(q\) and \(p\) are the position and momentum variables respectively,
     and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
     exact flows can be computed.
-
-    `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size):
+    def __init__(self, system, step_size=None):
         if not hasattr(system, &#39;h1_flow&#39;) or not hasattr(system, &#39;h2_flow&#39;):
             raise ValueError(
                 &#39;Explicit leapfrog integrator can only be used for systems &#39;
@@ -584,13 +616,10 @@ dynamics of.</dd>
                 &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
         super().__init__(system, step_size)
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self.system.h1_flow(state, 0.5 * dt)
         self.system.h2_flow(state, dt)
-        self.system.h1_flow(state, 0.5 * dt)
-        return state</code></pre>
+        self.system.h1_flow(state, 0.5 * dt)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -599,7 +628,7 @@ dynamics of.</dd>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mici.integrators.ExplicitLeapfrogIntegrator.step"><code class="name flex">
+<dt id="mici.integrators.LeapfrogIntegrator.step"><code class="name flex">
 <span>def <span class="ident">step</span></span>(<span>self, state)</span>
 </code></dt>
 <dd>
@@ -616,25 +645,12 @@ step from.</dd>
 <dd>New object corresponding to
 stepped state.</dd>
 </dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L65-L71" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step(self, state):
-    dt = state.dir * self.step_size
-    state = state.copy()
-    self.system.h1_flow(state, 0.5 * dt)
-    self.system.h2_flow(state, dt)
-    self.system.h1_flow(state, 0.5 * dt)
-    return state</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
 <dt id="mici.integrators.ImplicitLeapfrogIntegrator"><code class="flex name class">
 <span>class <span class="ident">ImplicitLeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size, reverse_check_tol=1e-08, reverse_check_norm=&lt;function maximum_norm&gt;, fixed_point_solver=&lt;function solve_fixed_point_direct&gt;, fixed_point_solver_kwargs=None)</span>
+<span>(</span><span>system, step_size=None, reverse_check_tol=1e-08, reverse_check_norm=&lt;function maximum_norm&gt;, fixed_point_solver=&lt;function solve_fixed_point_direct&gt;, fixed_point_solver_kwargs=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Implicit leapfrog integrator for Hamiltonian with non-separable component.</p>
@@ -653,8 +669,10 @@ of equations.</p>
 <dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
 <dd>Hamiltonian system to integrate the
 dynamics of.</dd>
-<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
-<dd>Integrator time step.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code> or <code>None</code></dt>
+<dd>Integrator time step. If set to <code>None</code>
+(the default) it is assumed that a step size adapter will be
+used to set the step size before calling the <code>step</code> method.</dd>
 <dt><strong><code>reverse_check_tol</code></strong> :&ensp;<code>float</code></dt>
 <dd>Tolerance for check of reversibility of
 implicit sub-steps which involve iterative solving of a
@@ -687,7 +705,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L78-L190" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L87-L197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -707,7 +725,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
     of equations.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size, reverse_check_tol=1e-8,
+    def __init__(self, system, step_size=None, reverse_check_tol=1e-8,
                  reverse_check_norm=maximum_norm,
                  fixed_point_solver=solve_fixed_point_direct,
                  fixed_point_solver_kwargs=None):
@@ -715,7 +733,9 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             reverse_check_tol (float): Tolerance for check of reversibility of
                 implicit sub-steps which involve iterative solving of a
                 non-linear system of equations. The step is assumed to be
@@ -740,8 +760,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
             fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
                 of any keyword arguments to `fixed_point_solver`.
         &#34;&#34;&#34;
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = maximum_norm
         self.fixed_point_solver = fixed_point_solver
@@ -792,16 +811,13 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
-    def step(self, state):
-        dt = 0.5 * state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, dt)
         self._step_b_fwd(state, dt)
         self._step_c_fwd(state, dt)
         self._step_c_adj(state, dt)
         self._step_b_adj(state, dt)
-        self._step_a(state, dt)
-        return state</code></pre>
+        self._step_a(state, dt)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -827,28 +843,12 @@ step from.</dd>
 <dd>New object corresponding to
 stepped state.</dd>
 </dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L181-L190" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step(self, state):
-    dt = 0.5 * state.dir * self.step_size
-    state = state.copy()
-    self._step_a(state, dt)
-    self._step_b_fwd(state, dt)
-    self._step_c_fwd(state, dt)
-    self._step_c_adj(state, dt)
-    self._step_b_adj(state, dt)
-    self._step_a(state, dt)
-    return state</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
 <dt id="mici.integrators.ConstrainedLeapfrogIntegrator"><code class="flex name class">
 <span>class <span class="ident">ConstrainedLeapfrogIntegrator</span></span>
-<span>(</span><span>system, step_size, n_inner_step=1, reverse_check_tol=2e-08, reverse_check_norm=&lt;function maximum_norm&gt;, projection_solver=&lt;function solve_projection_onto_manifold_quasi_newton&gt;, projection_solver_kwargs=None)</span>
+<span>(</span><span>system, step_size=None, n_inner_step=1, reverse_check_tol=2e-08, reverse_check_norm=&lt;function maximum_norm&gt;, projection_solver=&lt;function solve_projection_onto_manifold_quasi_newton&gt;, projection_solver_kwargs=None)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Leapfrog integrator for constrained Hamiltonian systems.</p>
@@ -886,8 +886,10 @@ integrator will also be in the cotangent bundle.</p>
 <dt><strong><code>system</code></strong> :&ensp;<a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a></dt>
 <dd>Hamiltonian system to integrate the
 dynamics of.</dd>
-<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code></dt>
-<dd>Integrator time step.</dd>
+<dt><strong><code>step_size</code></strong> :&ensp;<code>float</code> or <code>None</code></dt>
+<dd>Integrator time step. If set to <code>None</code>
+(the default) it is assumed that a step size adapter will be
+used to set the step size before calling the <code>step</code> method.</dd>
 <dt><strong><code>n_inner_step</code></strong> :&ensp;<code>int</code></dt>
 <dd>Positive integer specifying number of 'inner'
 constrained <code>system.h2_flow</code> steps to take within each overall
@@ -946,7 +948,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L193-L351" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/integrators.py#L200-L356" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -991,7 +993,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size, n_inner_step=1,
+    def __init__(self, system, step_size=None, n_inner_step=1,
                  reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
                  projection_solver=solve_projection_onto_manifold_quasi_newton,
                  projection_solver_kwargs=None):
@@ -999,7 +1001,9 @@ any keyword arguments to <code>projection_solver</code>.</dd>
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
                 dynamics of.
-            step_size (float): Integrator time step.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
             n_inner_step (int): Positive integer specifying number of &#39;inner&#39;
                 constrained `system.h2_flow` steps to take within each overall
                 step. As the derivative `system.dh1_dpos` is not evaluated
@@ -1050,8 +1054,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
             projection_solver_kwargs (None or Dict[str, object]): Dictionary of
                 any keyword arguments to `projection_solver`.
         &#34;&#34;&#34;
-        self.system = system
-        self.step_size = step_size
+        super().__init__(system, step_size)
         self.n_inner_step = n_inner_step
         self.reverse_check_tol = reverse_check_tol
         self.reverse_check_norm = reverse_check_norm
@@ -1100,13 +1103,10 @@ any keyword arguments to <code>projection_solver</code>.</dd>
                     f&#39;Non-reversible step. Distance between initial and &#39;
                     f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
 
-    def step(self, state):
-        dt = state.dir * self.step_size
-        state = state.copy()
+    def _step(self, state, dt):
         self._step_a(state, 0.5 * dt)
         self._step_b(state, dt)
-        self._step_a(state, 0.5 * dt)
-        return state</code></pre>
+        self._step_a(state, 0.5 * dt)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1132,19 +1132,6 @@ step from.</dd>
 <dd>New object corresponding to
 stepped state.</dd>
 </dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/integrators.py#L345-L351" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def step(self, state):
-    dt = state.dir * self.step_size
-    state = state.copy()
-    self._step_a(state, 0.5 * dt)
-    self._step_b(state, dt)
-    self._step_a(state, 0.5 * dt)
-    return state</code></pre>
-</details>
 </dd>
 </dl>
 </dd>
@@ -1154,7 +1141,7 @@ stepped state.</dd>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200630</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>

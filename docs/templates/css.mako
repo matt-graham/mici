@@ -280,7 +280,7 @@
 <%def name="desktop()" filter="minify_css">
   @media screen and (min-width: 1000px) {
     #sidebar {
-      width: 600px;
+      width: 540px;
       position: fixed;
       z-index: 1;
       top: 0;
@@ -289,13 +289,13 @@
       overflow-y: auto;
     }
     #content {
-      margin-left: 600px;
+      margin-left: 540px;
       max-width: 100ch;
       padding: 3em 4em;
       border-left: 1px solid #ddd;
     }
     #footer {
-      margin-left: 600px;
+      margin-left: 540px;
     }
     pre code {
       font-size: 1em;

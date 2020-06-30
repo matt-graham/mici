@@ -211,7 +211,7 @@ def neg_log_dens(q):
 system = systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)
 
 # System is constrained therefore use constrained leapfrog integrator
-integrator = integrators.ConstrainedLeapfrogIntegrator(system, step_size=0.2)
+integrator = integrators.ConstrainedLeapfrogIntegrator(system)
 
 # Seed a random number generator
 rng = np.random.default_rng(seed=1234)
@@ -233,9 +233,11 @@ def trace_func(state):
     x, y, z = state.pos
     return {'x': x, 'y': y, 'z': z}
 
-# Sample four chains of 2500 samples in parallel
-final_states, traces, stats = sampler.sample_chains(
-    n_sample=2500, init_states=q_init, n_process=4, trace_funcs=[trace_func])
+# Sample 4 chains in parallel with 500 adaptive warm up iterations in which the
+# integrator step size is tuned, followed by 2000 non-adaptive iterations
+final_states, traces, stats = sampler.sample_chains_with_adaptive_warm_up(
+    n_warm_up_iter=500, n_main_iter=2000, init_states=q_init, n_process=4, 
+    trace_funcs=[trace_func])
 
 # Print average accept probability and number of integrator steps per chain
 for c in range(n_chain):

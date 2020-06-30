@@ -120,7 +120,7 @@
       % endfor
     </nav>
   % endif
-  <h1 class="title">${'Namespace' if module.is_namespace else 'Package'} <code>${module.name}</code></h1>
+  <h1 class="title">${'Package' if module.is_package else 'Module'} <code>${module.name}</code></h1>
   </header>
 
   <section id="section-intro">
@@ -315,7 +315,7 @@
       <ul>
       % for c in classes:
         <li>
-        <h4><code>${link(c)}</code></h4>
+          <code>${link(c)}</code>
         <%
             members = c.functions(sort=sort_identifiers) + c.methods(sort=sort_identifiers)
             if list_class_variables_in_index:
@@ -326,7 +326,14 @@
             if sort_identifiers:
               members = sorted(members)
         %>
-        % if members:
+        % if members and (len(members) > 3 or len(classes) > 5):
+          <details class="source">
+            <summary>
+              <span>Expand members</span>
+            </summary>
+            ${show_column_list(members)}
+          </details>
+        % elif members:
           ${show_column_list(members)}
         % endif
         </li>

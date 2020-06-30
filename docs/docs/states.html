@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200507" />
+<meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200630" />
 <title>mici.states API documentation</title>
 <meta name="description" content="Objects for recording state of a Markov chain." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
 <style>.flex{}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding-top:5px;padding-bottom:5px;padding-right:10px;padding-left:35px;text-indent:-25px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:1000px){#sidebar{width:600px;position:fixed;z-index:1;top:0;bottom:0;overflow-x:hidden;overflow-y:auto}#content{margin-left:600px;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}#footer{margin-left:600px}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:1000px){#sidebar{width:540px;position:fixed;z-index:1;top:0;bottom:0;overflow-x:hidden;overflow-y:auto}#content{margin-left:540px;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}#footer{margin-left:540px}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_CHTML'></script>
 </head>
@@ -40,7 +40,7 @@
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mici.states.ChainState" href="#mici.states.ChainState">ChainState</a></code></h4>
+<code><a title="mici.states.ChainState" href="#mici.states.ChainState">ChainState</a></code>
 <ul class="">
 <li><code><a title="mici.states.ChainState.copy" href="#mici.states.ChainState.copy">copy</a></code></li>
 </ul>
@@ -51,19 +51,20 @@
 </nav>
 <article id="content">
 <header>
-<h1 class="title">Package <code>mici.states</code></h1>
+<h1 class="title">Module <code>mici.states</code></h1>
 </header>
 <section id="section-intro">
 <p>Objects for recording state of a Markov chain.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/states.py#L0-L175" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L0-L186" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Objects for recording state of a Markov chain.&#34;&#34;&#34;
 
 import copy
 from functools import wraps
+from mici.errors import ReadOnlyStateError
 
 
 def cache_in_state(*depends_on):
@@ -155,7 +156,7 @@ class ChainState(object):
     &#34;&#34;&#34;
 
     def __init__(self, _dependencies=None, _cache=None, _call_counts=None,
-                 **variables):
+                 _read_only=False, **variables):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor will be used to set
@@ -166,20 +167,22 @@ class ChainState(object):
         will return a `ChainState` instance `state` with variable attributes
         `state.pos`, `state.mom` and `state.dir` with initial values set to
         `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
-        `_dependencies`, `_cache` and `_call_counts` are reserved respectively
-        for the dependency set, cache dictionary and call count dictionary, and
-        cannot be used as state variable names.
+        `_dependencies`, `_cache`, `_call_counts` and `_read_only` are reserved
+        respectively for the dependency set, cache dictionary, call count
+        dictionary and a flag to make the state read-only and cannot be used as
+        state variable names.
         &#34;&#34;&#34;
-        # Set _variables attribute by directly writing to __dict__ to ensure
-        # set before any cally to __setattr__
+        # Set attributes by directly writing to __dict__ to ensure set before
+        # any call to __setattr__
         self.__dict__[&#39;_variables&#39;] = variables
         if _dependencies is None:
             _dependencies = {name: set() for name in variables}
-        self._dependencies = _dependencies
+        self.__dict__[&#39;_dependencies&#39;] = _dependencies
         if _cache is None:
             _cache = {}
-        self._cache = _cache
-        self._call_counts = _call_counts
+        self.__dict__[&#39;_cache&#39;] = _cache
+        self.__dict__[&#39;_call_counts&#39;] = _call_counts
+        self.__dict__[&#39;_read_only&#39;] = _read_only
 
     def __getattr__(self, name):
         if name in self._variables:
@@ -189,6 +192,8 @@ class ChainState(object):
                 f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;)
 
     def __setattr__(self, name, value):
+        if self._read_only:
+            raise ReadOnlyStateError(&#39;ChainState instance is read-only.&#39;)
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
@@ -200,16 +205,20 @@ class ChainState(object):
     def __contains__(self, name):
         return name in self._variables
 
-    def copy(self):
+    def copy(self, read_only=False):
         &#34;&#34;&#34;Create a deep copy of the state object.
 
+        Args:
+            read_only (bool): Whether the state copy should be read-only.
+
         Returns:
-            state_copy (ChainState): A copy of the state object which can be
-                updated without affecting the original object&#39;s variables.
+            state_copy (ChainState): A copy of the state object with variable
+                attributes that are independent copies of the original state
+                object&#39;s variables.
         &#34;&#34;&#34;
         return type(self)(
             _dependencies=self._dependencies, _cache=self._cache.copy(),
-            _call_counts=self._call_counts,
+            _call_counts=self._call_counts, _read_only=read_only,
             **{name: copy.copy(val) for name, val in self._variables.items()})
 
     def __str__(self):
@@ -229,13 +238,15 @@ class ChainState(object):
             # Don&#39;t pickle callable cached &#39;variables&#39; such as derivative
             # functions
             &#39;cache&#39;: {k: v for k, v in self._cache.items() if not callable(v)},
-            &#39;call_counts&#39;: self._call_counts}
+            &#39;call_counts&#39;: self._call_counts,
+            &#39;read_only&#39;: self._read_only}
 
     def __setstate__(self, state):
         self.__dict__[&#39;_variables&#39;] = state[&#39;variables&#39;]
-        self._dependencies = state[&#39;dependencies&#39;]
-        self._cache = state[&#39;cache&#39;]
-        self._call_counts = state[&#39;call_counts&#39;]</code></pre>
+        self.__dict__[&#39;_dependencies&#39;] = state[&#39;dependencies&#39;]
+        self.__dict__[&#39;_cache&#39;] = state[&#39;cache&#39;]
+        self.__dict__[&#39;_call_counts&#39;] = state[&#39;call_counts&#39;]
+        self.__dict__[&#39;_read_only&#39;] = state[&#39;read_only&#39;]</code></pre>
 </details>
 </section>
 <section>
@@ -263,7 +274,7 @@ changes.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/states.py#L7-L35" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L8-L36" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state(*depends_on):
     &#34;&#34;&#34;Decorator to memoize / cache output of a function of state variable(s).
@@ -325,7 +336,7 @@ be returned) in <code>variables</code> list / position in output of function.</d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/states.py#L38-L84" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L39-L85" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def multi_cache_in_state(depends_on, variables, primary_index=0):
     &#34;&#34;&#34;Decorator to cache multiple outputs of a function of state variable(s).
@@ -398,13 +409,14 @@ state variable attributes of state object for example</p>
 <p>will return a <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instance <code>state</code> with variable attributes
 <code>state.pos</code>, <code>state.mom</code> and <code>state.dir</code> with initial values set to
 <code>pos_val</code>, <code>mom_val</code> and <code>dir_val</code> respectively. The keyword arguments
-<code>_dependencies</code>, <code>_cache</code> and <code>_call_counts</code> are reserved respectively
-for the dependency set, cache dictionary and call count dictionary, and
-cannot be used as state variable names.</p></section>
+<code>_dependencies</code>, <code>_cache</code>, <code>_call_counts</code> and <code>_read_only</code> are reserved
+respectively for the dependency set, cache dictionary, call count
+dictionary and a flag to make the state read-only and cannot be used as
+state variable names.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/states.py#L87-L176" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L88-L187" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ChainState(object):
     &#34;&#34;&#34;Markov chain state.
@@ -415,7 +427,7 @@ cannot be used as state variable names.</p></section>
     &#34;&#34;&#34;
 
     def __init__(self, _dependencies=None, _cache=None, _call_counts=None,
-                 **variables):
+                 _read_only=False, **variables):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor will be used to set
@@ -426,20 +438,22 @@ cannot be used as state variable names.</p></section>
         will return a `ChainState` instance `state` with variable attributes
         `state.pos`, `state.mom` and `state.dir` with initial values set to
         `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
-        `_dependencies`, `_cache` and `_call_counts` are reserved respectively
-        for the dependency set, cache dictionary and call count dictionary, and
-        cannot be used as state variable names.
+        `_dependencies`, `_cache`, `_call_counts` and `_read_only` are reserved
+        respectively for the dependency set, cache dictionary, call count
+        dictionary and a flag to make the state read-only and cannot be used as
+        state variable names.
         &#34;&#34;&#34;
-        # Set _variables attribute by directly writing to __dict__ to ensure
-        # set before any cally to __setattr__
+        # Set attributes by directly writing to __dict__ to ensure set before
+        # any call to __setattr__
         self.__dict__[&#39;_variables&#39;] = variables
         if _dependencies is None:
             _dependencies = {name: set() for name in variables}
-        self._dependencies = _dependencies
+        self.__dict__[&#39;_dependencies&#39;] = _dependencies
         if _cache is None:
             _cache = {}
-        self._cache = _cache
-        self._call_counts = _call_counts
+        self.__dict__[&#39;_cache&#39;] = _cache
+        self.__dict__[&#39;_call_counts&#39;] = _call_counts
+        self.__dict__[&#39;_read_only&#39;] = _read_only
 
     def __getattr__(self, name):
         if name in self._variables:
@@ -449,6 +463,8 @@ cannot be used as state variable names.</p></section>
                 f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;)
 
     def __setattr__(self, name, value):
+        if self._read_only:
+            raise ReadOnlyStateError(&#39;ChainState instance is read-only.&#39;)
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
@@ -460,16 +476,20 @@ cannot be used as state variable names.</p></section>
     def __contains__(self, name):
         return name in self._variables
 
-    def copy(self):
+    def copy(self, read_only=False):
         &#34;&#34;&#34;Create a deep copy of the state object.
 
+        Args:
+            read_only (bool): Whether the state copy should be read-only.
+
         Returns:
-            state_copy (ChainState): A copy of the state object which can be
-                updated without affecting the original object&#39;s variables.
+            state_copy (ChainState): A copy of the state object with variable
+                attributes that are independent copies of the original state
+                object&#39;s variables.
         &#34;&#34;&#34;
         return type(self)(
             _dependencies=self._dependencies, _cache=self._cache.copy(),
-            _call_counts=self._call_counts,
+            _call_counts=self._call_counts, _read_only=read_only,
             **{name: copy.copy(val) for name, val in self._variables.items()})
 
     def __str__(self):
@@ -489,42 +509,54 @@ cannot be used as state variable names.</p></section>
             # Don&#39;t pickle callable cached &#39;variables&#39; such as derivative
             # functions
             &#39;cache&#39;: {k: v for k, v in self._cache.items() if not callable(v)},
-            &#39;call_counts&#39;: self._call_counts}
+            &#39;call_counts&#39;: self._call_counts,
+            &#39;read_only&#39;: self._read_only}
 
     def __setstate__(self, state):
         self.__dict__[&#39;_variables&#39;] = state[&#39;variables&#39;]
-        self._dependencies = state[&#39;dependencies&#39;]
-        self._cache = state[&#39;cache&#39;]
-        self._call_counts = state[&#39;call_counts&#39;]</code></pre>
+        self.__dict__[&#39;_dependencies&#39;] = state[&#39;dependencies&#39;]
+        self.__dict__[&#39;_cache&#39;] = state[&#39;cache&#39;]
+        self.__dict__[&#39;_call_counts&#39;] = state[&#39;call_counts&#39;]
+        self.__dict__[&#39;_read_only&#39;] = state[&#39;read_only&#39;]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.states.ChainState.copy"><code class="name flex">
-<span>def <span class="ident">copy</span></span>(<span>self)</span>
+<span>def <span class="ident">copy</span></span>(<span>self, read_only=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Create a deep copy of the state object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>read_only</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the state copy should be read-only.</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>state_copy</code></strong> :&ensp;<a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a></dt>
-<dd>A copy of the state object which can be
-updated without affecting the original object's variables.</dd>
+<dd>A copy of the state object with variable
+attributes that are independent copies of the original state
+object's variables.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/be3c4cd91f60faf5182ee5704e8e9e61e5dc5b23/mici/states.py#L141-L151" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L146-L160" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def copy(self):
+<pre><code class="python">def copy(self, read_only=False):
     &#34;&#34;&#34;Create a deep copy of the state object.
 
+    Args:
+        read_only (bool): Whether the state copy should be read-only.
+
     Returns:
-        state_copy (ChainState): A copy of the state object which can be
-            updated without affecting the original object&#39;s variables.
+        state_copy (ChainState): A copy of the state object with variable
+            attributes that are independent copies of the original state
+            object&#39;s variables.
     &#34;&#34;&#34;
     return type(self)(
         _dependencies=self._dependencies, _cache=self._cache.copy(),
-        _call_counts=self._call_counts,
+        _call_counts=self._call_counts, _read_only=read_only,
         **{name: copy.copy(val) for name, val in self._variables.items()})</code></pre>
 </details>
 </dd>
@@ -536,7 +568,7 @@ updated without affecting the original object's variables.</dd>
 </main>
 <footer id="footer">
 Copyright © 2019 Matt Graham
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200507</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2.dev0+g1b644f6.d20200630</a>.</p>
 </footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad(); hljs.configure({languages: ["python"]});</script>
