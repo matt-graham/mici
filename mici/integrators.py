@@ -5,8 +5,6 @@ from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (maximum_norm, solve_fixed_point_direct,
                           solve_projection_onto_manifold_quasi_newton)
 
-__pdoc__ = {}
-
 
 class Integrator(ABC):
     """Base class for integrators."""
@@ -55,7 +53,7 @@ class Integrator(ABC):
 
 
 
-class ExplicitLeapfrogIntegrator(Integrator):
+class LeapfrogIntegrator(Integrator):
     r"""
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
@@ -86,10 +84,6 @@ class ExplicitLeapfrogIntegrator(Integrator):
         self.system.h1_flow(state, 0.5 * dt)
         self.system.h2_flow(state, dt)
         self.system.h1_flow(state, 0.5 * dt)
-
-
-LeapfrogIntegrator = ExplicitLeapfrogIntegrator
-__pdoc__['LeapfrogIntegrator'] = False
 
 
 class ImplicitLeapfrogIntegrator(Integrator):
