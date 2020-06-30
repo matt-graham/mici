@@ -53,7 +53,7 @@ def _ignore_sigint_initializer():
 
 
 @contextmanager
-def ignore_sigint_manager():
+def _ignore_sigint_manager():
     """Context-managed SyncManager which ignores SIGINT interrupt signals."""
     manager = SyncManager()
     try:
@@ -612,7 +612,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
     """Sample multiple chains in parallel over multiple processes."""
     n_samples = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
-    with ignore_sigint_manager() as manager, Pool(n_process) as pool:
+    with _ignore_sigint_manager() as manager, Pool(n_process) as pool:
         results = None
         exception = None
         try:

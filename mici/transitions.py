@@ -403,7 +403,7 @@ def riemannian_no_u_turn_criterion(system, state_1, state_2, sum_mom):
         np.sum(system.dh_dmom(state_2) * sum_mom) < 0)
 
 
-SubTree = namedtuple('SubTree', [
+_SubTree = namedtuple('_SubTree', [
     'negative', 'positive', 'sum_mom', 'weight', 'depth'])
 
 
@@ -498,14 +498,14 @@ class DynamicIntegrationTransition(IntegrationTransition):
         return False
 
     def _new_leave(self, state, h, aux_info):
-        return SubTree(
+        return _SubTree(
             negative=state, positive=state, sum_mom=np.asarray(state.mom),
             weight=self._weight_function(h, aux_info), depth=0)
 
     def _merge_subtrees(self, neg_subtree, pos_subtree):
         assert neg_subtree.depth == pos_subtree.depth, (
             'Cannot merge subtrees of different depths')
-        return SubTree(
+        return _SubTree(
             negative=neg_subtree.negative, positive=pos_subtree.positive,
             weight=neg_subtree.weight + pos_subtree.weight,
             sum_mom=neg_subtree.sum_mom + pos_subtree.sum_mom,
