@@ -143,7 +143,7 @@ def _check_and_process_init_state(state, transitions):
     return ChainState(**state) if isinstance(state, dict) else state
 
 
-def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
+def _init_chain_stats(transitions, n_iter, memmap_enabled, memmap_path,
                       chain_index):
     """Initialize dictionary of per-transition chain statistics array dicts."""
     chain_stats = {}
@@ -156,13 +156,13 @@ def _init_chain_stats(transitions, n_sample, memmap_enabled, memmap_path,
                         memmap_path, 'stats', f'{trans_key}_{key}',
                         chain_index)
                     chain_stats[trans_key][key] = _open_new_memmap(
-                        filename, n_sample, val, dtype)
+                        filename, n_iter, val, dtype)
                 else:
-                    chain_stats[trans_key][key] = np.full(n_sample, val, dtype)
+                    chain_stats[trans_key][key] = np.full(n_iter, val, dtype)
     return chain_stats
 
 
-def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
+def _init_traces(trace_funcs, init_state, n_iter, memmap_enabled,
                  memmap_path, chain_index):
     """Initialize dictionary of chain trace arrays."""
     traces = {}
@@ -174,9 +174,9 @@ def _init_traces(trace_funcs, init_state, n_sample, memmap_enabled,
                 filename = _generate_memmap_filename(
                     memmap_path, 'trace', key, chain_index)
                 traces[key] = _open_new_memmap(
-                    filename, (n_sample,) + val.shape, init, val.dtype)
+                    filename, (n_iter,) + val.shape, init, val.dtype)
             else:
-                traces[key] = np.full((n_sample,) + val.shape, init, val.dtype)
+                traces[key] = np.full((n_iter,) + val.shape, init, val.dtype)
     return traces
 
 
@@ -241,14 +241,14 @@ def _check_chain_data_size(traces, chain_stats):
 
 
 def _construct_chain_iterators(
-        n_sample, chain_iterator_class, n_chain=None, position_offset=0):
+        n_iter, chain_iterator_class, n_chain=None, position_offset=0):
     """Set up chain iterator progress bar object(s)."""
     if n_chain is None:
-        return chain_iterator_class(range(n_sample), description='Chain 1/1')
+        return chain_iterator_class(range(n_iter), description='Chain 1/1')
     else:
         return [
             chain_iterator_class(
-                range(n_sample), description=f'Chain {c+1}/{n_chain}',
+                range(n_iter), description=f'Chain {c+1}/{n_chain}',
                 position=(c + position_offset, n_chain + position_offset))
             for c in range(n_chain)]
 
@@ -307,7 +307,7 @@ def _try_resize_dim_0_inplace(array, new_shape_0):
 
 
 def _truncate_chain_data(sample_index, traces, chain_stats):
-    """Truncate first dimension of chain arrays to sample_index < n_sample."""
+    """Truncate first dimension of chain arrays to sample_index < n_iter."""
     for key in traces:
         traces[key] = _try_resize_dim_0_inplace(traces[key], sample_index)
     for trans_stats in chain_stats.values():
@@ -397,14 +397,14 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             how the returned outputs are processed by the caller.
     """
     state = _check_and_process_init_state(init_state, transitions)
-    n_sample = len(chain_iterator)
+    n_iter = len(chain_iterator)
     # Create temporary directory if memory mapping and no path provided
     if memmap_enabled and memmap_path is None:
         memmap_path = tempfile.mkdtemp()
     chain_stats = _init_chain_stats(
-        transitions, n_sample, memmap_enabled, memmap_path, chain_index)
+        transitions, n_iter, memmap_enabled, memmap_path, chain_index)
     traces = _init_traces(
-        trace_funcs, state, n_sample, memmap_enabled, memmap_path, chain_index)
+        trace_funcs, state, n_iter, memmap_enabled, memmap_path, chain_index)
     adapter_states = {}
     try:
         if adapters is not None:
@@ -568,12 +568,12 @@ def _sample_chains_worker(chain_queue, iter_queue):
     chain_outputs = []
     while not chain_queue.empty():
         try:
-            chain_index, init_state, rng, n_sample, kwargs = chain_queue.get(
+            chain_index, init_state, rng, n_iter, kwargs = chain_queue.get(
                 block=False)
             *outputs, exception = _sample_chain(
                 init_state=init_state, rng=rng, chain_index=chain_index,
                 chain_iterator=_ProxyProgressBar(
-                    range(n_sample), chain_index, iter_queue),
+                    range(n_iter), chain_index, iter_queue),
                 parallel_chains=True, **kwargs)
             # Returned exception being AdaptationError indicates chain
             # terminated due to adapter initialisation failing therefore do not
@@ -610,7 +610,7 @@ def _finalize_adapters(adapter_states, adapters, transitions):
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                             **kwargs):
     """Sample multiple chains in parallel over multiple processes."""
-    n_samples = [len(it) for it in chain_iterators]
+    n_iters = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
     with _ignore_sigint_manager() as manager, Pool(n_process) as pool:
         results = None
@@ -621,9 +621,9 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
             # Shared queue for workers to get arguments for _sample_chain calls
             # from on initialising each chain
             chain_queue = manager.Queue()
-            for c, (init_state, rng, n_sample) in enumerate(
-                    zip(init_states, rngs, n_samples)):
-                chain_queue.put((c, init_state, rng, n_sample, kwargs))
+            for c, (init_state, rng, n_iter) in enumerate(
+                    zip(init_states, rngs, n_iters)):
+                chain_queue.put((c, init_state, rng, n_iter, kwargs))
             # Start n_process worker processes which each have access to the
             # shared queues, returning results asynchronously
             results = pool.starmap_async(
@@ -665,7 +665,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                         # Otherwise unpack and update progress bar
                         chain_index, sample_index, data_dict = iter_queue_item
                         pbars[chain_index].update(sample_index, data_dict)
-                        if sample_index == n_samples[chain_index]:
+                        if sample_index == n_iters[chain_index]:
                             chains_completed += 1
         except (PicklingError, AttributeError) as e:
             if not MULTIPROCESS_AVAILABLE and (
@@ -777,7 +777,7 @@ class MarkovChainMonteCarloMethod(object):
         elif 'progress_bar_class' not in kwargs:
             kwargs['progress_bar_class'] = ProgressBar
 
-    def sample_chain(self, n_sample, init_state, trace_funcs, **kwargs):
+    def sample_chain(self, n_iter, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -785,7 +785,7 @@ class MarkovChainMonteCarloMethod(object):
         outputs of functions of the sampled chain state after each iteration.
 
         Args:
-            n_sample (int): Number of samples (iterations) to draw per chain.
+            n_iter (int): Number of iterations (samples to draw) per chain.
             init_state (mici.states.ChainState or Dict[str, object]): Initial
                 chain state. Either a `mici.states.ChainState` object or a
                 dictionary with entries specifying initial values for all state
@@ -861,7 +861,7 @@ class MarkovChainMonteCarloMethod(object):
         """
         self.__set_sample_chain_kwargs_defaults(kwargs)
         chain_iterator = _construct_chain_iterators(
-            n_sample, kwargs.pop('progress_bar_class'))
+            n_iter, kwargs.pop('progress_bar_class'))
         final_state, traces, chain_stats, adapter_states, _ = _sample_chain(
             init_state=init_state, chain_iterator=chain_iterator,
             transitions=self.transitions, rng=self.rng,
@@ -872,7 +872,7 @@ class MarkovChainMonteCarloMethod(object):
 
         return final_state, traces, chain_stats
 
-    def sample_chains(self, n_sample, init_states, trace_funcs, n_process=1,
+    def sample_chains(self, n_iter, init_states, trace_funcs, n_process=1,
                       **kwargs):
         """Sample one or more Markov chains from given initial states.
 
@@ -883,7 +883,7 @@ class MarkovChainMonteCarloMethod(object):
         or sequentially. In all cases all chains use independent random draws.
 
         Args:
-            n_sample (int): Number of samples (iterations) to draw per chain.
+            n_iter (int): Number of iterations (samples to draw) per chain.
             init_states (Iterable[ChainState] or Iterable[Dict[str, object]]):
                 Initial chain states. Each entry can be either a `ChainState`
                 object or a dictionary with entries specifying initial values
@@ -970,7 +970,7 @@ class MarkovChainMonteCarloMethod(object):
         n_chain = len(init_states)
         rngs = _get_per_chain_rngs(self.rng, n_chain)
         chain_iterators = _construct_chain_iterators(
-            n_sample, kwargs.pop('progress_bar_class'), n_chain)
+            n_iter, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
             *states_traces_stats, adapter_states, _ = _sample_chains_sequential(
@@ -1125,7 +1125,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         if 'adapters' in kwargs and kwargs['adapters'] is not None:
             kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
 
-    def sample_chain(self, n_sample, init_state, **kwargs):
+    def sample_chain(self, n_iter, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
 
         Performs a specified number of chain iterations (each of which may be
@@ -1133,7 +1133,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         outputs of functions of the sampled chain state after each iteration.
 
         Args:
-            n_sample (int): Number of samples (iterations) to draw per chain.
+            n_iter (int): Number of iterations (samples to draw) per chain.
             init_state (mici.states.ChainState or array): Initial chain state.
                 The state can be either an array specifying the state position
                 component or a `mici.states.ChainState` instance. If an array
@@ -1207,21 +1207,21 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         init_state = self._preprocess_init_state(init_state)
         self.__set_sample_chain_kwargs_defaults(kwargs)
         final_state, traces, chain_stats = super().sample_chain(
-            n_sample, init_state, **kwargs)
+            n_iter, init_state, **kwargs)
         chain_stats = chain_stats.get('integration_transition', {})
         return final_state, traces, chain_stats
 
-    def sample_chains(self, n_sample, init_states, **kwargs):
+    def sample_chains(self, n_iter, init_states, **kwargs):
         """Sample one or more Markov chains from given initial states.
 
-        Performs a specified number of chain iterations (each of consists of a
-        momentum transition and integration transition), recording the outputs
-        of functions of the sampled chain state after each iteration. The
-        chains may be run in parallel across multiple independent processes or
-        sequentially. In all cases all chains use independent random draws.
+        Performs a specified number of chain iterations, each of consisting of a
+        momentum transition followed by an integration transition, recording the
+        outputs of functions of the sampled chain state after each iteration.
+        The chains may be run in parallel across multiple independent processes
+        or sequentially. In all cases all chains use independent random draws.
 
         Args:
-            n_sample (int): Number of samples (iterations) to draw per chain.
+            n_iter (int): Number of iterations (samples to draw) per chain.
             init_states (Iterable[ChainState] or Iterable[array]): Initial
                 chain states. Each state can be either an array specifying the
                 state position component or a `mici.states.ChainState`
@@ -1232,7 +1232,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
 
         Kwargs:
             n_process (int or None): Number of parallel processes to run chains
-                over. If set to one then chains will be run sequentially in
+                over. If `n_process=1` then chains will be run sequentially
                 otherwise a `multiprocessing.Pool` object will be used to
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
@@ -1258,8 +1258,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 be manually deleted when no longer required. Default is for
                 memory mapping to be disabled.
             memmap_path (str): Path to directory to write memory-mapped chain
-                data to. If not provided, a temporary directory will be created
-                and the chain data written to files there.
+                data to. If not provided (the default), a temporary directory
+                will be created and the chain data written to files there.
             monitor_stats (Iterable[str]): List of string keys of chain
                 statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default
@@ -1290,21 +1290,21 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 Values in dictionary are list of arrays of variables outputted
                 by trace functions in `trace_funcs` with each array in the list
                 corresponding to a single chain and the leading dimension of
-                each array corresponding to the sampling (draw) index. The key
+                each array corresponding to the iteration (draw) index. The key
                 for each value is the corresponding key in the dictionary
                 returned by the trace function which computed the traced value.
             chain_stats (Dict[str, List[array]]): Dictionary of chain
                 integration transition statistics. Values in dictionary are
                 lists of arrays of chain statistic values with each array in
                 the list corresponding to a single chain and the leading
-                dimension of each array corresponding to the sampling (draw)
+                dimension of each array corresponding to the iteration (draw)
                 index. The key for each value is a string description of the
                 corresponding integration transition statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
         self.__set_sample_chain_kwargs_defaults(kwargs)
         final_states, traces, chain_stats = super().sample_chains(
-            n_sample, init_states, **kwargs)
+            n_iter, init_states, **kwargs)
         chain_stats = chain_stats.get('integration_transition', {})
         return final_states, traces, chain_stats
 
