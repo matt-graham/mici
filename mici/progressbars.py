@@ -404,14 +404,16 @@ class ProgressBar(BaseProgressBar):
 
 
 class LabelledSequenceProgressBar(BaseProgressBar):
+    """Iterable object for tracking progress of a sequence of labelled tasks."""
 
     def __init__(self, labelled_sequence, description=None, position=(0, 1),
                  displays=None):
         """
         Args:
-            labelled_sequence (OrderedDict): Ordered dictionary with string
-                keys corresponding to labels for stages represented by sequence
-                and values the entries in the sequence being iterated over.
+            labelled_sequence (OrderedDict[str, Any]): Ordered dictionary with
+                string keys corresponding to labels for stages represented by
+                sequence and values the entries in the sequence being iterated
+                over.
             description (None or str): Description of task to prefix progress
                 bar with.
             position (Tuple[int, int]): Tuple specifying position of progress
@@ -445,7 +447,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
 
     @property
     def description(self):
-        """"Description of task being tracked."""
+        """Description of task being tracked."""
         return self._description
 
     @property
@@ -465,12 +467,14 @@ class LabelledSequenceProgressBar(BaseProgressBar):
 
     @property
     def completed_labels(self):
+        """Labels corresponding to completed iterations."""
         return [
             f'{label} [{_format_time(time)}]' for label, time in
             zip(self._labels[:self._counter], self._iter_times[:self._counter])]
 
     @property
     def current_label(self):
+        """Label corresponding to current iteration."""
         return self._labels[self._counter] if self.counter < self.n_iter else ''
 
     @property
