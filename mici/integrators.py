@@ -67,8 +67,6 @@ class LeapfrogIntegrator(Integrator):
     where \(q\) and \(p\) are the position and momentum variables respectively,
     and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
     exact flows can be computed.
-
-    `LeapfrogIntegrator` is an alias for `ExplicitLeapfrogIntegrator`.
     """
 
     def __init__(self, system, step_size=None):
