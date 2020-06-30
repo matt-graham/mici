@@ -55,7 +55,7 @@ class Transition(ABC):
         Args:
             state (mici.states.ChainState): Current chain state to condition
                 transition kernel on.
-            rng (RandomState): NumPy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
 
         Returns:
             state (mici.states.ChainState): Updated state object.
@@ -95,7 +95,7 @@ class MomentumTransition(Transition):
         Args:
             state (mici.states.ChainState): Current chain state to sample new
                 momentum (momentum updated in place).
-            rng (RandomState): NumPy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
 
         Returns:
             state (mici.states.ChainState): Updated state object.
@@ -206,7 +206,7 @@ class IntegrationTransition(Transition):
 
         Args:
             state (mici.states.ChainState): Current chain state.
-            rng (RandomState): NumPy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
 
         Returns:
             state (mici.states.ChainState): Updated state object.

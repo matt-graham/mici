@@ -331,7 +331,7 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             is iterated over to produce sample indices and (empty) iteration
             statistic dictionaries to output monitored chain statistics to
             during sampling.
-        rng (RandomState): Numpy RandomState random number generator.
+        rng (Generator or RandomState): Numpy random number generator.
         transitions (OrderedDict[str, Transition]): Ordered dictionary of
             Markov transitions kernels to sequentially sample from on each
             chain iteration.
@@ -781,7 +781,7 @@ class MarkovChainMonteCarloMethod(object):
     def __init__(self, rng, transitions):
         """
         Args:
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             transitions (OrderedDict[str, Transition]): Ordered dictionary of
                 Markov transitions kernels to sequentially sample from on each
                 chain iteration.
@@ -1264,7 +1264,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             integration_transition (mici.transitions.IntegrationTransition):
                 Markov transition kernel which leaves canonical distribution
                 invariant and jointly updates the position and momentum
@@ -1725,7 +1725,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             n_step (int): Number of integrator steps to simulate in each
@@ -1788,7 +1788,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             n_step_range (Tuple[int, int]): Tuple `(lower, upper)` with two
@@ -1856,7 +1856,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             max_tree_depth (int): Maximum depth to expand trajectory binary
@@ -1956,7 +1956,7 @@ class DynamicSliceHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (RandomState): Numpy RandomState random number generator.
+            rng (Generator or RandomState): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             max_tree_depth (int): Maximum depth to expand trajectory binary
