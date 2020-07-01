@@ -478,6 +478,11 @@ class LabelledSequenceProgressBar(BaseProgressBar):
         return self._labels[self._counter] if self.counter < self.n_iter else ''
 
     @property
+    def unstarted_labels(self):
+        """Labels corresponding to unstarted iterations."""
+        return self._labels[self._counter + 1:]
+
+    @property
     def progress_bar(self):
         """Progress bar string."""
         labels = self.completed_labels
@@ -523,6 +528,48 @@ class LabelledSequenceProgressBar(BaseProgressBar):
 
     def __repr__(self):
         return self.__str__()
+
+    def _repr_html_(self):
+        html_string = f'''
+        <div style="line-height: 24px; width: 100%; display: flex;
+                    flex-flow: row wrap; align-items: center;
+                    position: relative; margin: 2px;">
+          <label style="flex-shrink: 0;
+                        font-size: var(--jp-code-font-size, 13px);
+                        font-family: var(--jp-code-font-family, monospace);">
+            {html.escape(self.prefix).replace(' ', '&nbsp;')}
+          </label>
+        '''
+        template_string = '''
+          <div style="position: relative; flex-grow: 1; align-self: stretch;
+                      margin: 1px; padding: 0px; text-align: center;
+                      height: initial; background-color: {background_color};
+                      color: {foreground_color}; border-radius: 5px;
+                      border: 1px solid {foreground_color}; font-size: 90%;">
+            {label}
+          </div>
+        '''
+        for label in self.completed_labels:
+            html_string += template_string.format(
+                label=label, foreground_color='white',
+                background_color='#4caf50')
+        if self.counter != self.n_iter:
+            html_string += template_string.format(
+                label=self.current_label, foreground_color='white',
+                background_color='#2196f3' if self._active else '#f44336')
+        for label in self.unstarted_labels:
+            html_string += template_string.format(
+                label=label, foreground_color='#aaa', background_color='white')
+        if self.postfix != '':
+            html_string += f'''
+              <div style="margin-left: 8px; flex-shrink: 0;
+                          font-family: var(--jp-code-font-family, monospace);
+                          font-size: var(--jp-code-font-size, 13px);">
+                {html.escape(self.postfix)}
+              </div>
+            '''
+        html_string += '</div>'
+        return html_string
 
     def __enter__(self):
         super().__enter__()
