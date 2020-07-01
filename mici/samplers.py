@@ -1301,12 +1301,18 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
 
+    def _default_trace_func(self, state):
+        """Default function of the chain state traced while sampling."""
+        # This needs to be a method rather than for example a local nested
+        # function in the __set_sample_chain_kwargs_defaults method to ensure
+        # that it remains pickleable and so can be piped to a separate process
+        # when running multiple chains using multiprocessing
+        return {'pos': state.pos, 'hamiltonian': self.system.h(state)}
+
     def __set_sample_chain_kwargs_defaults(self, kwargs):
         # default to tracing position component of state and Hamiltonian
         if 'trace_funcs' not in kwargs:
-            def default_trace_func(state):
-                return {'pos': state.pos, 'hamiltonian': self.system.h(state)}
-            kwargs['trace_funcs'] = [default_trace_func]
+            kwargs['trace_funcs'] = [self._default_trace_func]
         # if `monitor_stats` specified, expand all statistics keys to key pairs
         # with transition key set to `integration_transition`
         if 'monitor_stats' in kwargs:
