@@ -138,13 +138,11 @@ class BaseProgressBar(abc.ABC):
             refresh (bool): Whether to refresh display(s).
         """
 
-    @abc.abstractmethod
     def __enter__(self):
         """Set up progress bar and any associated resource."""
         self._active = True
         return self
 
-    @abc.abstractmethod
     def __exit__(self, *args):
         """Close down progress bar and any associated resources."""
         self._active = False
