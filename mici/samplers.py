@@ -1207,6 +1207,7 @@ class MarkovChainMonteCarloMethod(object):
             n_warm_up_iter, n_main_iter, fast_adapters, slow_adapters,
             trace_funcs, n_init_slow_window_iter, n_init_fast_stage_iter,
             n_final_fast_stage_iter, slow_window_multiplier)
+        chain_states = init_states
         with LabelledSequenceProgressBar(
                     sampling_stages, 'Sampling stage', position=(0, n_chain + 1)
                 ) as sampling_stages_pb:
@@ -1217,7 +1218,7 @@ class MarkovChainMonteCarloMethod(object):
                     chain_it.sequence = range(n_iter)
                 chain_states, traces, stats, adapter_states, exception = (
                     sample_chains_func(
-                        init_states=init_states, trace_funcs=trace_funcs,
+                        init_states=chain_states, trace_funcs=trace_funcs,
                         adapters=adapters, chain_iterators=chain_iterators,
                         **common_sample_chains_kwargs))
                 if len(adapter_states) > 0:
