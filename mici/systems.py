@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 import logging
 import numpy as np
-from mici.states import cache_in_state, multi_cache_in_state
+from mici.states import cache_in_state, cache_in_state_with_aux
 from mici.matrices import (
     IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
     DenseSquareMatrix, TriangularFactoredPositiveDefiniteMatrix,
@@ -69,7 +69,7 @@ class System(ABC):
         """
         return self._neg_log_dens(state.pos)
 
-    @multi_cache_in_state(['pos'], ['grad_neg_log_dens', 'neg_log_dens'])
+    @cache_in_state_with_aux('pos', 'neg_log_dens')
     def grad_neg_log_dens(self, state):
         """Derivative of negative log density with respect to position.
 
@@ -533,19 +533,19 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                     None or Callable[[array], array or Tuple[array, array]]):
                 Function which given a position array computes the Jacobian
                 (matrix / 2D array of partial derivatives) of the output of the
-                constraint function `c = constr(q)` with respect to the
-                position array argument `q`, returning the computed Jacobian as
-                a 2D array `jacob` with
+                constraint function `c = constr(q)` with respect to the position
+                array argument `q`, returning the computed Jacobian as a 2D
+                array `jacob` with
 
                     jacob[i, j] = ∂c[i] / ∂q[j]
 
                 Optionally the function may instead return a 2-tuple of values
-                with the first being the array corresponding to the Jacobian
-                and the second being the value of `constr` evaluated
-                at the passed position array. If `None` is passed (the default)
-                an automatic differentiation fallback will be used to attempt
-                to construct a function to compute the Jacobian (and value) of
-                `constr` automatically.
+                with the first being the array corresponding to the Jacobian and
+                the second being the value of `constr` evaluated at the passed
+                position array. If `None` is passed (the default) an automatic
+                differentiation fallback will be used to attempt to construct a
+                function to compute the Jacobian (and value) of `constr`
+                automatically.
         """
         super().__init__(neg_log_dens=neg_log_dens, metric=metric,
                          grad_neg_log_dens=grad_neg_log_dens)
@@ -566,7 +566,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         """
         return self._constr(state.pos)
 
-    @multi_cache_in_state(['pos'], ['jacob_constr', 'constr'])
+    @cache_in_state_with_aux('pos', 'constr')
     def jacob_constr(self, state):
         """Jacobian of constraint function at the current position.
 
@@ -817,8 +817,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
             self._mhp_constr = autodiff_fallback(
                 mhp_constr, constr, 'mhp_jacobian_and_value', 'mhp_constr')
 
-    @multi_cache_in_state(
-        ['pos'], ['mhp_constr', 'jacob_constr', 'constr'])
+    @cache_in_state_with_aux('pos', ('jacob_constr', 'constr'))
     def mhp_constr(self, state):
         return self._mhp_constr(state.pos)
 
@@ -1095,7 +1094,7 @@ class RiemannianMetricSystem(System):
         """
         return self._metric_func(state.pos)
 
-    @multi_cache_in_state(['pos'], ['vjp_metric_func', 'metric_func'])
+    @cache_in_state_with_aux('pos', 'metric_func')
     def vjp_metric_func(self, state):
         """
         Function constructing a vector-Jacobian-product for `metric_func`.
@@ -1569,8 +1568,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     def vjp_metric_func(self, state):
         return self.mtp_neg_log_dens(state)
 
-    @multi_cache_in_state(
-        ['pos'], ['hess_neg_log_dens', 'grad_neg_log_dens', 'neg_log_dens'])
+    @cache_in_state_with_aux('pos', ('grad_neg_log_dens', 'neg_log_dens'))
     def hess_neg_log_dens(self, state):
         """Hessian of negative log density with respect to position.
 
@@ -1585,9 +1583,8 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         """
         return self._hess_neg_log_dens(state.pos)
 
-    @multi_cache_in_state(
-        ['pos'], ['mtp_neg_log_dens', 'hess_neg_log_dens',
-                  'grad_neg_log_dens', 'neg_log_dens'])
+    @cache_in_state_with_aux(
+        'pos', ('hess_neg_log_dens', 'grad_neg_log_dens', 'neg_log_dens'))
     def mtp_neg_log_dens(self, state):
         """Generate MTP of negative log density with respect to position.
 
