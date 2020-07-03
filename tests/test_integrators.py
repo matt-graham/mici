@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 import mici.integrators as integrators
 import mici.systems as systems
@@ -5,47 +6,57 @@ import mici.matrices as matrices
 import mici.solvers as solvers
 from mici.states import ChainState
 from mici.errors import IntegratorError
-from functools import wraps
 
 SEED = 3046987125
-SIZES = {1, 2, 5}
 N_STEPS = {1, 5, 20}
 N_STEPS_HAMILTONIAN = {200}
 N_STATE = 5
+N_METRIC = 5
 
 
-def iterate_over_integrators_states(test):
-
-    @wraps(test)
-    def iterated_test(self):
-        for (integrator, state_list) in self.integrators_and_state_lists:
-            for state in state_list:
-                yield (test, integrator, state)
-
-    return iterated_test
+@pytest.fixture
+def rng():
+    return np.random.default_rng(SEED)
 
 
-def iterate_over_integrators_states_n_steps(test):
-
-    @wraps(test)
-    def iterated_test(self):
-        for (integrator, state_list) in self.integrators_and_state_lists:
-            for state in state_list:
-                for n_step in N_STEPS:
-                    yield (test, integrator, state, n_step)
-
-    return iterated_test
+@pytest.fixture(params={1, 2, 5})
+def size(request):
+    return request.param
 
 
-def iterate_over_integrators_state_lists_n_steps(test):
+@pytest.fixture(params={2, 5})
+def size_more_than_one(request):
+    return request.param
 
-    @wraps(test)
-    def iterated_test(self):
-        for (integrator, state_list) in self.integrators_and_state_lists:
-            for n_step in N_STEPS:
-                yield (test, integrator, state_list, n_step)
 
-    return iterated_test
+@pytest.fixture
+def metric_list(rng, size):
+    eigval = np.exp(0.1 * rng.standard_normal(size))
+    eigvec = np.linalg.qr(rng.standard_normal((size, size)))[0]
+    return [
+        matrices.IdentityMatrix(),
+        matrices.IdentityMatrix(size),
+        matrices.PositiveDiagonalMatrix(eigval),
+        matrices.DensePositiveDefiniteMatrix((eigvec * eigval) @ eigvec.T),
+        matrices.EigendecomposedPositiveDefiniteMatrix(eigvec, eigval)
+    ]
+
+
+@pytest.fixture(params=range(N_METRIC))
+def metric(metric_list, request):
+    return metric_list[request.param]
+
+
+@pytest.fixture
+def init_state_list(rng, size):
+    return [
+        ChainState(pos=q, mom=p, dir=1)
+        for q, p in rng.standard_normal((N_STATE, 2, size))]
+
+
+@pytest.fixture(params=range(N_STATE))
+def init_state(init_state_list, request):
+    return init_state_list[request.param]
 
 
 def _integrate_with_reversal(integrator, init_state, n_step):
@@ -59,31 +70,12 @@ def _integrate_with_reversal(integrator, init_state, n_step):
     return state
 
 
-def _generate_rand_eigval_eigvec(rng, size, eigval_scale=0.1):
-    eigval = np.exp(eigval_scale * rng.standard_normal(size))
-    eigvec = np.linalg.qr(rng.standard_normal((size, size)))[0]
-    return eigval, eigvec
+class IntegratorTests:
 
+    h_diff_tol = 5e-3
 
-def _generate_metrics(rng, size, eigval_scale=0.1):
-    eigval, eigvec = _generate_rand_eigval_eigvec(rng, size, eigval_scale)
-    return [
-        matrices.IdentityMatrix(),
-        matrices.IdentityMatrix(size),
-        matrices.PositiveDiagonalMatrix(eigval),
-        matrices.DensePositiveDefiniteMatrix((eigvec * eigval) @ eigvec.T),
-        matrices.EigendecomposedPositiveDefiniteMatrix(eigvec, eigval)
-    ]
-
-
-class IntegratorTestCase(object):
-
-    def __init__(self, integrators_and_state_lists, h_diff_tol=5e-3):
-        self.integrators_and_state_lists = integrators_and_state_lists
-        self.h_diff_tol = h_diff_tol
-
-    @iterate_over_integrators_states_n_steps
-    def test_reversibility(integrator, init_state, n_step):
+    @pytest.mark.parametrize('n_step', N_STEPS)
+    def test_reversibility(self, integrator, init_state, n_step):
         state = _integrate_with_reversal(integrator, init_state, n_step)
         state = _integrate_with_reversal(integrator, state, n_step)
         assert np.allclose(state.pos, init_state.pos), (
@@ -97,9 +89,9 @@ class IntegratorTestCase(object):
         assert state.dir == init_state.dir, (
             'integrator not returning on reversal to initial direction.')
 
-    @staticmethod
-    def check_approx_hamiltonian_conservation(
-            integrator, init_state, n_step, h_diff_tol):
+    @pytest.mark.parametrize('n_step', N_STEPS_HAMILTONIAN)
+    def test_approx_hamiltonian_conservation(
+            self, integrator, init_state, n_step):
         h_vals = [integrator.system.h(init_state)]
         state = init_state
         try:
@@ -110,20 +102,12 @@ class IntegratorTestCase(object):
             return
         diff_h = (
             np.mean(h_vals[:n_step//2]) - np.mean(h_vals[n_step//2:]))
-        assert abs(diff_h) < h_diff_tol, (
+        assert abs(diff_h) < self.h_diff_tol, (
             f'difference in average Hamiltonian over first and second halves '
             f'of trajectory ({diff_h}) is greater in magnitude than tolerance '
-            f'({h_diff_tol}).')
+            f'({self.h_diff_tol}).')
 
-    def test_hamiltonian_conservation(self):
-        for (integrator, state_list) in self.integrators_and_state_lists:
-            for state in state_list:
-                for n_step in N_STEPS_HAMILTONIAN:
-                    yield (self.check_approx_hamiltonian_conservation,
-                           integrator, state, n_step, self.h_diff_tol)
-
-    @iterate_over_integrators_states
-    def test_state_mutation(integrator, init_state):
+    def test_state_mutation(self, integrator, init_state):
         init_pos = init_state.pos.copy()
         init_mom = init_state.mom.copy()
         init_dir = init_state.dir
@@ -138,12 +122,12 @@ class IntegratorTestCase(object):
             'integrator modifiying passed state.dir attribute')
 
 
-class LinearSystemIntegratorTestCase(IntegratorTestCase):
+class LinearSystemIntegratorTests(IntegratorTests):
 
-    @iterate_over_integrators_state_lists_n_steps
-    def test_volume_preservation(integrator, init_states, n_step):
+    @pytest.mark.parametrize('n_step', N_STEPS)
+    def test_volume_preservation(self, integrator, init_state_list, n_step):
         init_zs, final_zs = [], []
-        for state in init_states:
+        for state in init_state_list:
             init_zs.append(np.concatenate((state.pos, state.mom)))
             for s in range(n_step):
                 state = integrator.step(state)
@@ -156,10 +140,23 @@ class LinearSystemIntegratorTestCase(IntegratorTestCase):
             'state space volume spanned by initial and final state differs')
 
 
-class ConstrainedSystemIntegratorTestCase(IntegratorTestCase):
+class ConstrainedSystemIntegratorTests(IntegratorTests):
 
-    @iterate_over_integrators_states_n_steps
-    def test_position_constraint(integrator, init_state, n_step):
+    @pytest.fixture
+    def metric_list(self, rng, size_more_than_one):
+        size = size_more_than_one
+        eigval = np.exp(0.1 * rng.standard_normal(size))
+        eigvec = np.linalg.qr(rng.standard_normal((size, size)))[0]
+        return [
+            matrices.IdentityMatrix(),
+            matrices.IdentityMatrix(size),
+            matrices.PositiveDiagonalMatrix(eigval),
+            matrices.DensePositiveDefiniteMatrix((eigvec * eigval) @ eigvec.T),
+            matrices.EigendecomposedPositiveDefiniteMatrix(eigvec, eigval)
+        ]
+
+    @pytest.mark.parametrize('n_step', N_STEPS)
+    def test_position_constraint(self, integrator, init_state, n_step):
         init_error = np.max(np.abs(integrator.system.constr(init_state)))
         assert init_error < 1e-8, (
             'Position constraint not satisfied at initial state '
@@ -170,8 +167,8 @@ class ConstrainedSystemIntegratorTestCase(IntegratorTestCase):
             'Position constraint not satisfied at final state '
             f'(|c| = {final_error:.1e})')
 
-    @iterate_over_integrators_states_n_steps
-    def test_momentum_constraint(integrator, init_state, n_step):
+    @pytest.mark.parametrize('n_step', N_STEPS)
+    def test_momentum_constraint(self, integrator, init_state, n_step):
         init_error = np.max(np.abs(
             integrator.system.jacob_constr(init_state) @
             integrator.system.dh_dmom(init_state)))
@@ -187,223 +184,180 @@ class ConstrainedSystemIntegratorTestCase(IntegratorTestCase):
             f'(|dc/dq @ dq/dt| = {final_error:.1e})')
 
 
-class TestLeapfrogIntegratorLinearSystem(LinearSystemIntegratorTestCase):
+class ConstrainedLinearSystemIntegratorTests(
+        ConstrainedSystemIntegratorTests, LinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in SIZES:
-            for metric in _generate_metrics(rng, size):
-                system = systems.EuclideanMetricSystem(
-                    neg_log_dens=lambda q: 0.5 * np.sum(q**2),
-                    metric=metric,
-                    grad_neg_log_dens=lambda q: q)
-                integrator = integrators.LeapfrogIntegrator(system, 0.25)
-                state_list = [
-                    ChainState(pos=q, mom=p, dir=1)
-                    for q, p in rng.standard_normal((N_STATE, 2, size))]
-                integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
+    @pytest.fixture
+    def init_state_list(self, rng, size_more_than_one, metric):
+        return [
+            ChainState(
+                pos=np.concatenate([np.array([0.]), q]),
+                mom=metric @ np.concatenate([np.array([0.]), p]),
+                dir=1)
+            for q, p in rng.standard_normal(
+                (N_STATE, 2, size_more_than_one - 1))]
 
 
-class TestLeapfrogIntegratorNonLinearSystem(IntegratorTestCase):
+class ConstrainedNonLinearSystemIntegratorTests(
+        ConstrainedSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in SIZES:
-            for metric in _generate_metrics(rng, size):
-                system = systems.EuclideanMetricSystem(
-                    neg_log_dens=lambda q: 0.25 * np.sum(q**4),
-                    metric=metric,
-                    grad_neg_log_dens=lambda q: q**3)
-                integrator = integrators.LeapfrogIntegrator(system, 0.05)
-                state_list = [
-                    ChainState(pos=q, mom=p, dir=1)
-                    for q, p in rng.standard_normal((N_STATE, 2, size))]
-                integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
-
-
-class TestLeapfrogIntegratorGaussianLinearSystem(
-        LinearSystemIntegratorTestCase):
-
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in SIZES:
-            for metric in _generate_metrics(rng, size):
-                system = systems.GaussianEuclideanMetricSystem(
-                    neg_log_dens=lambda q: 0,
-                    metric=metric,
-                    grad_neg_log_dens=lambda q: 0 * q)
-                integrator = integrators.LeapfrogIntegrator(system, 0.5)
-                state_list = [
-                    ChainState(pos=q, mom=p, dir=1)
-                    for q, p in rng.standard_normal((N_STATE, 2, size))]
-                integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-10)
+    @pytest.fixture
+    def init_state_list(self, rng, size_more_than_one, system):
+        init_state_list = [
+            ChainState(
+                pos=np.concatenate([
+                    np.array([np.cos(theta), np.sin(theta)]), q]),
+                mom=None, dir=1)
+            for theta, q in zip(
+                rng.uniform(size=N_STATE) * 2 * np.pi,
+                rng.standard_normal((N_STATE, size_more_than_one - 2)))
+        ]
+        for state in init_state_list:
+            state.mom = system.sample_momentum(state, rng)
+        return init_state_list
 
 
-class TestLeapfrogIntegratorGaussianNonLinearSystem(IntegratorTestCase):
+class TestLeapfrogIntegratorLinearSystem(LinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in SIZES:
-            for metric in _generate_metrics(rng, size):
-                system = systems.GaussianEuclideanMetricSystem(
-                    neg_log_dens=lambda q: 0.125 * np.sum(q**4),
-                    metric=metric,
-                    grad_neg_log_dens=lambda q: 0.5 * q**3)
-                integrator = integrators.LeapfrogIntegrator(system, 0.1)
-                state_list = [
-                    ChainState(pos=q, mom=p, dir=1)
-                    for q, p in rng.standard_normal((N_STATE, 2, size))]
-                integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
+    h_diff_tol = 2e-3
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.EuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.5 * np.sum(q**2),
+            metric=metric,
+            grad_neg_log_dens=lambda q: q)
+        return integrators.LeapfrogIntegrator(system, 0.25)
 
 
-class TestImplicitLeapfrogIntegratorLinearSystem(
-        LinearSystemIntegratorTestCase):
+class TestLeapfrogIntegratorNonLinearSystem(IntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in SIZES:
-            system = systems.DenseRiemannianMetricSystem(
-                lambda q: 0.5 * np.sum(q**2), grad_neg_log_dens=lambda q: q,
-                metric_func=lambda q: np.identity(q.shape[0]),
-                vjp_metric_func=lambda q: lambda m: np.zeros_like(q))
-            integrator = integrators.ImplicitLeapfrogIntegrator(system, 0.5)
-            state_list = [
-                ChainState(pos=q, mom=p, dir=1)
-                for q, p in rng.standard_normal((N_STATE, 2, size))]
-            integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=5e-3)
+    h_diff_tol = 1e-3
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.EuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.25 * np.sum(q**4),
+            metric=metric,
+            grad_neg_log_dens=lambda q: q**3)
+        return integrators.LeapfrogIntegrator(system, 0.05)
+
+
+class TestLeapfrogIntegratorGaussianLinearSystem(LinearSystemIntegratorTests):
+
+    h_diff_tol=1e-10
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.GaussianEuclideanMetricSystem(
+            neg_log_dens=lambda q: 0,
+            metric=metric,
+            grad_neg_log_dens=lambda q: 0 * q)
+        return integrators.LeapfrogIntegrator(system, 0.5)
+
+
+class TestLeapfrogIntegratorGaussianNonLinearSystem(IntegratorTests):
+
+    h_diff_tol = 2e-3
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.GaussianEuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
+            metric=metric,
+            grad_neg_log_dens=lambda q: 0.5 * q**3)
+        return integrators.LeapfrogIntegrator(system, 0.1)
+
+
+class TestImplicitLeapfrogIntegratorLinearSystem(LinearSystemIntegratorTests):
+
+    h_diff_tol = 5e-3
+
+    @pytest.fixture
+    def integrator(self):
+        system = systems.DenseRiemannianMetricSystem(
+            lambda q: 0.5 * np.sum(q**2), grad_neg_log_dens=lambda q: q,
+            metric_func=lambda q: np.identity(q.shape[0]),
+            vjp_metric_func=lambda q: lambda m: np.zeros_like(q))
+        return integrators.ImplicitLeapfrogIntegrator(system, 0.25)
 
 
 class TestConstrainedLeapfrogIntegratorLinearSystem(
-        ConstrainedSystemIntegratorTestCase, LinearSystemIntegratorTestCase):
+        ConstrainedLinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in [s for s in SIZES if s > 1]:
-            for metric in _generate_metrics(rng, size):
-                system = systems.DenseConstrainedEuclideanMetricSystem(
-                    neg_log_dens=lambda q: 0.5 * np.sum(q**2),
-                    metric=metric,
-                    grad_neg_log_dens=lambda q: q,
-                    constr=lambda q: q[:1],
-                    jacob_constr=lambda q: np.eye(1, q.shape[0], 0))
-                integrator = integrators.ConstrainedLeapfrogIntegrator(
-                    system, 0.1)
-                state_list = [
-                    ChainState(
-                        pos=np.concatenate([np.array([0.]), q]),
-                        mom=metric @ np.concatenate([np.array([0.]), p]),
-                        dir=1)
-                    for q, p in rng.standard_normal((N_STATE, 2, size - 1))
-                ]
-                integrators_and_state_lists.append(
-                    (integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
+    h_diff_tol = 1e-2
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.DenseConstrainedEuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.5 * np.sum(q**2),
+            metric=metric,
+            grad_neg_log_dens=lambda q: q,
+            constr=lambda q: q[:1],
+            jacob_constr=lambda q: np.eye(1, q.shape[0], 0))
+        return integrators.ConstrainedLeapfrogIntegrator(system, 0.1)
 
 
 class TestConstrainedLeapfrogIntegratorNonLinearSystem(
-        ConstrainedSystemIntegratorTestCase):
+        ConstrainedNonLinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in [s for s in SIZES if s > 1]:
-            for metric in _generate_metrics(rng, size):
-                for projection_solver in [
-                        solvers.solve_projection_onto_manifold_quasi_newton,
-                        solvers.solve_projection_onto_manifold_newton]:
-                    system = systems.DenseConstrainedEuclideanMetricSystem(
-                        neg_log_dens=lambda q: 0.125 * np.sum(q**4),
-                        metric=metric,
-                        grad_neg_log_dens=lambda q: 0.5 * q**3,
-                        constr=lambda q: q[0:1]**2 + q[1:2]**2 - 1.,
-                        jacob_constr=lambda q: np.concatenate(
-                            [2 * q[0:1], 2 * q[1:2],
-                             np.zeros(q.shape[0] - 2)])[None])
-                    integrator = integrators.ConstrainedLeapfrogIntegrator(
-                        system, 0.1, projection_solver=projection_solver)
-                    state_list = [
-                        ChainState(
-                            pos=np.concatenate([
-                                np.array([np.cos(theta), np.sin(theta)]), q]),
-                            mom=None, dir=1)
-                        for theta, q in zip(
-                            rng.uniform(size=N_STATE) * 2 * np.pi,
-                            rng.standard_normal((N_STATE, size - 2)))
-                    ]
-                    for state in state_list:
-                        state.mom = system.sample_momentum(state, rng)
-                    integrators_and_state_lists.append(
-                        (integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-2)
+    h_diff_tol = 1e-2
+
+    @pytest.fixture
+    def system(self, metric):
+        return systems.DenseConstrainedEuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
+            metric=metric,
+            grad_neg_log_dens=lambda q: 0.5 * q**3,
+            constr=lambda q: q[0:1]**2 + q[1:2]**2 - 1.,
+            jacob_constr=lambda q: np.concatenate(
+                [2 * q[0:1], 2 * q[1:2],
+                 np.zeros(q.shape[0] - 2)])[None])
+
+    @pytest.fixture(params=[
+            solvers.solve_projection_onto_manifold_quasi_newton,
+            solvers.solve_projection_onto_manifold_newton])
+    def integrator(self, system, request):
+        return integrators.ConstrainedLeapfrogIntegrator(
+            system, 0.1, projection_solver=request.param)
 
 
 class TestConstrainedLeapfrogIntegratorGaussianLinearSystem(
-        ConstrainedSystemIntegratorTestCase, LinearSystemIntegratorTestCase):
+        ConstrainedLinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in [s for s in SIZES if s > 1]:
-            system = systems.GaussianDenseConstrainedEuclideanMetricSystem(
-                lambda q: 0., grad_neg_log_dens=lambda q: 0. * q,
-                constr=lambda q: q[:1],
-                jacob_constr=lambda q: np.identity(q.shape[0])[:1],
-                mhp_constr=lambda q: lambda m: np.zeros_like(q))
-            integrator = integrators.ConstrainedLeapfrogIntegrator(system, 0.5)
-            state_list = [
-                ChainState(pos=np.concatenate([np.array([0.]), q]),
-                           mom=np.concatenate([np.array([0.]), p]), dir=1)
-                for q, p in rng.standard_normal((N_STATE, 2, size - 1))]
-            integrators_and_state_lists.append((integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=1e-10)
+    h_diff_tol = 1e-4
+
+    @pytest.fixture
+    def integrator(self, metric):
+        system = systems.GaussianDenseConstrainedEuclideanMetricSystem(
+            lambda q: 0., grad_neg_log_dens=lambda q: 0. * q,
+            metric=metric,
+            constr=lambda q: q[:1],
+            jacob_constr=lambda q: np.identity(q.shape[0])[:1],
+            mhp_constr=lambda q: lambda m: np.zeros_like(q))
+        return integrators.ConstrainedLeapfrogIntegrator(system, 0.5)
 
 
 class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
-        ConstrainedSystemIntegratorTestCase):
+        ConstrainedNonLinearSystemIntegratorTests):
 
-    def __init__(self):
-        rng = np.random.RandomState(SEED)
-        integrators_and_state_lists = []
-        for size in [s for s in SIZES if s > 1]:
-            for metric in _generate_metrics(rng, size):
-                for projection_solver in [
-                        solvers.solve_projection_onto_manifold_quasi_newton,
-                        solvers.solve_projection_onto_manifold_newton]:
-                    system = (
-                        systems.GaussianDenseConstrainedEuclideanMetricSystem(
-                            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
-                            metric=metric,
-                            grad_neg_log_dens=lambda q: 0.5 * q**3,
-                            constr=lambda q: q[0:1]**2 + q[1:2]**2 - 1.,
-                            jacob_constr=lambda q: np.concatenate(
-                                [2 * q[0:1], 2 * q[1:2],
-                                 np.zeros(q.shape[0] - 2)])[None],
-                            mhp_constr=lambda q: lambda m: 0 * m[0]))
-                    integrator = integrators.ConstrainedLeapfrogIntegrator(
-                        system, 0.05, projection_solver=projection_solver)
-                    state_list = [
-                        ChainState(
-                            pos=np.concatenate([
-                                np.array([np.cos(theta), np.sin(theta)]), q]),
-                            mom=None, dir=1)
-                        for theta, q in zip(
-                            rng.uniform(size=N_STATE) * 2 * np.pi,
-                            rng.standard_normal((N_STATE, size - 2)))
-                    ]
-                    for state in state_list:
-                        state.mom = system.sample_momentum(state, rng)
-                        state._read_only = True
-                    integrators_and_state_lists.append(
-                        (integrator, state_list))
-        super().__init__(integrators_and_state_lists, h_diff_tol=5e-2)
+    h_diff_tol = 5e-2
+
+    @pytest.fixture
+    def system(self, metric):
+        return systems.GaussianDenseConstrainedEuclideanMetricSystem(
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
+            metric=metric,
+            grad_neg_log_dens=lambda q: 0.5 * q**3,
+            constr=lambda q: q[0:1]**2 + q[1:2]**2 - 1.,
+            jacob_constr=lambda q: np.concatenate(
+                [2 * q[0:1], 2 * q[1:2],
+                 np.zeros(q.shape[0] - 2)])[None],
+            mhp_constr=lambda q: lambda m: 0 * m[0])
+
+    @pytest.fixture(params=[
+            solvers.solve_projection_onto_manifold_quasi_newton,
+            solvers.solve_projection_onto_manifold_newton])
+    def integrator(self, system, request):
+        return integrators.ConstrainedLeapfrogIntegrator(
+            system, 0.05, projection_solver=request.param)
