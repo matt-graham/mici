@@ -2,6 +2,7 @@
 
 import copy
 from functools import wraps
+from collections import Counter
 from mici.errors import ReadOnlyStateError
 
 
@@ -22,16 +23,16 @@ def cache_in_state(*depends_on):
     the returned value depends on have not been changed in between the calls.
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
-    dictionary, the memoized method will update a counter for the method in
-    the call counts dictionary every time the method being decorated is called
-    (i.e. when there isn't a valid cached value available).
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn't a valid cached value available).
 
     Args:
-       *depends_on: One or more strings corresponding to the names of any
-           state variables the value returned by the method depends on, e.g.
-           'pos' or 'mom', such that the cache in the state object is correctly
-           cleared when the value of any of these variables (attributes) of the
-           state object changes.
+       *depends_on: One or more strings corresponding to the names of any state
+           variables the value returned by the method depends on, e.g. 'pos' or
+           'mom', such that the cache in the state object is correctly cleared
+           when the value of any of these variables (attributes) of the state
+           object changes.
     """
     def cache_in_state_decorator(method):
         @wraps(method)
@@ -40,8 +41,6 @@ def cache_in_state(*depends_on):
             if key not in state._cache:
                 for dep in depends_on:
                     state._dependencies[dep].add(key)
-            if state._call_counts is not None and key not in state._call_counts:
-                state._call_counts[key] = 0
             if key not in state._cache or state._cache[key] is None:
                 state._cache[key] = method(self, state)
                 if state._call_counts is not None:
@@ -65,24 +64,24 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
     which may optionally also return additional auxiliary outputs, such as
     intermediate result computed while computing the primary output, which
     correspond to the output of another system method decorated with the
-    `cache_in_state` decorator. If such auxiliary outputs are returned they are
-    also used to update cache entry for the corresponding decorated method,
-    potentially saving recomputation of in subsequent calls to that method. A
-    common instance of this pattern is for derivative values computed using
-    automatic differentiation (AD), with the primal value being differentiated
-    usually either calculated alongside the derivative (in forward-mode AD) or
-    calculated first in a forward-pass before the derivatives are calculated in
-    a reverse pass (in reverse-mode AD). By caching the value of the primal
-    computed as part of the derivative calculation, a subsequent call to a
-    method corresponding to calculation of the primal itself will retrieve the
-    cached value and not recompute the primal, providing the relevant state
-    variables the primal (and derivative) depend on have not been changed in
-    between.
+    `cache_in_state` or `cache_in_state_with_aux` decorators. If such auxiliary
+    outputs are returned they are also used to update cache entry for the
+    corresponding decorated method, potentially saving recomputation in
+    subsequent calls to that method. A common instance of this pattern is in
+    derivative values computed using automatic differentiation (AD), with the
+    primal value being differentiated usually either calculated alongside the
+    derivative (in forward-mode AD) or calculated first in a forward-pass before
+    the derivatives are calculated in a reverse-pass (in reverse-mode AD). By
+    caching the value of the primal computed as part of the derivative
+    calculation, a subsequent call to a method corresponding to calculation of
+    the primal itself will retrieve the cached value and not recompute the
+    primal, providing the relevant state variables the primal (and derivative)
+    depend on have not been changed in between.
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
-    dictionary, the memoized method will update a counter for the method in
-    the call counts dictionary every time the method being decorated is called
-    (i.e. when there isn't a valid cached value available).
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn't a valid cached value available).
 
     Args:
         depends_on (str or Tuple[str]): A string or tuple of strings, with each
@@ -115,9 +114,6 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
                 if key not in state._cache:
                     for dep in depends_on:
                         state._dependencies[dep].add(key)
-                if (state._call_counts is not None
-                        and key not in state._call_counts):
-                    state._call_counts[key] = 0
             if prim_key not in state._cache or state._cache[prim_key] is None:
                 vals = method(self, state)
                 if isinstance(vals, tuple):
@@ -204,7 +200,9 @@ class ChainState(object):
         if _cache is None:
             _cache = {}
         self.__dict__['_cache'] = _cache
-        self.__dict__['_call_counts'] = _call_counts
+        self.__dict__['_call_counts'] = (
+            Counter(_call_counts) if isinstance(_call_counts, dict)
+            else _call_counts)
         self.__dict__['_read_only'] = _read_only
 
     def __getattr__(self, name):

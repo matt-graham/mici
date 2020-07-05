@@ -112,8 +112,8 @@ def _mock_memoized_one_output_system_methods(system, state_vars):
 
 def test_cache_in_state(state_vars):
     system = Mock(name='MockSystem')
-    call_counts = {}
-    state = mici.states.ChainState(**state_vars, _call_counts=call_counts)
+    state = mici.states.ChainState(**state_vars, _call_counts={})
+    call_counts = state._call_counts
     for var_names, func, mocked_method, bound_memoized_method in (
             _mock_memoized_one_output_system_methods(system, state_vars)):
         assert mocked_method.call_count == 0, (
@@ -192,8 +192,8 @@ def _mock_memoized_aux_output_system_methods(system, state_vars):
 
 def test_cache_in_state_with_aux(state_vars):
     system = Mock(name='MockSystem')
-    call_counts = {}
-    state = mici.states.ChainState(**state_vars, _call_counts=call_counts)
+    state = mici.states.ChainState(**state_vars, _call_counts={})
+    call_counts = state._call_counts
     for (var_names, prim_func, aux_func, mocked_method, mocked_aux_method,
             bound_memoized_method, bound_memoized_aux_method) in (
             _mock_memoized_aux_output_system_methods(system, state_vars)):
