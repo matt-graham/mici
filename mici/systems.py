@@ -1,7 +1,6 @@
 """Hamiltonian systems encapsulating energy functions and their derivatives."""
 
 from abc import ABC, abstractmethod
-import logging
 import numpy as np
 from mici.states import cache_in_state, cache_in_state_with_aux
 from mici.matrices import (

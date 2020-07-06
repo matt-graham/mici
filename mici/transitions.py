@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod, abstractproperty
 from collections import namedtuple
-from functools import partial
 import logging
 import numpy as np
 from mici.utils import LogRepFloat

@@ -2,7 +2,6 @@
 
 import os
 import sys
-import types
 import inspect
 import queue
 from contextlib import ExitStack, contextmanager

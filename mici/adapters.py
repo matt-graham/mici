@@ -1,6 +1,6 @@
 """Methods for adaptively setting algorithmic parameters of transitions."""
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from math import exp, log
 import numpy as np
 from mici.errors import IntegratorError, AdaptationError
