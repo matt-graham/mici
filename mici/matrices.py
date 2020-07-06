@@ -1660,7 +1660,7 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
 
     @property
     def diagonal(self):
-        return np.concatenate([block.diagonal() for block in self._blocks])
+        return np.concatenate([block.diagonal for block in self._blocks])
 
     def _construct_inv(self):
         return type(self)(tuple(block.inv for block in self._blocks))
