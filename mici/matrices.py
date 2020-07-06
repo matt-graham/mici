@@ -366,7 +366,7 @@ class SquareMatrixProduct(MatrixProduct, SquareMatrix):
         matrices = tuple(matrices)
         if check_shapes:
             if matrices[0].shape[0] != matrices[0].shape[1]:
-                raise ValueError(f'{matrix} is not square.')
+                raise ValueError(f'{matrices[0]} is not square.')
             for matrix in matrices[1:]:
                 if matrix.shape != matrices[0].shape:
                     raise ValueError(
