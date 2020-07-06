@@ -147,10 +147,10 @@ def _init_chain_stats(transitions, n_iter, memmap_enabled, memmap_path,
                       chain_index):
     """Initialize dictionary of per-transition chain statistics array dicts."""
     chain_stats = {}
-    for trans_key, trans in transitions.items():
+    for trans_key, transition in transitions.items():
         chain_stats[trans_key] = {}
-        if trans.statistic_types is not None:
-            for key, (dtype, val) in trans.statistic_types.items():
+        if transition.statistic_types is not None:
+            for key, (dtype, val) in transition.statistic_types.items():
                 if memmap_enabled:
                     filename = _generate_memmap_filename(
                         memmap_path, 'stats', f'{trans_key}_{key}',
