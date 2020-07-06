@@ -899,7 +899,6 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             self._inverse_array.T, lower=not self.lower, make_triangular=False)
 
     def _construct_array(self):
-        #return self @ np.identity(self.shape[0])
         return sla.solve_triangular(
             self._inverse_array, np.identity(self.shape[0]), lower=self.lower,
             check_finite=False)

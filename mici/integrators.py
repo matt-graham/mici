@@ -52,7 +52,6 @@ class Integrator(ABC):
         """
 
 
-
 class LeapfrogIntegrator(Integrator):
     r"""
     Leapfrog integrator for Hamiltonian systems with tractable component flows.

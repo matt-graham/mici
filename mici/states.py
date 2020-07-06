@@ -104,6 +104,7 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
         depends_on = (depends_on,)
     if isinstance(auxiliary_outputs, str):
         auxiliary_outputs = (auxiliary_outputs,)
+
     def cache_in_state_with_aux_decorator(method):
         @wraps(method)
         def wrapper(self, state):
@@ -125,6 +126,7 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
                     state._call_counts[prim_key] += 1
             return state._cache[prim_key]
         return wrapper
+
     return cache_in_state_with_aux_decorator
 
 
