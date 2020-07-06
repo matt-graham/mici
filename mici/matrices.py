@@ -1,10 +1,11 @@
 """Structured matrix classes implementing basic linear algebra operations."""
 
+import abc
+import numbers
 import numpy as np
 from mici.errors import LinAlgError
 import numpy.linalg as nla
 import scipy.linalg as sla
-import abc
 from mici.utils import hash_array
 
 
@@ -18,6 +19,12 @@ def _choose_matrix_product_class(matrix_l, matrix_r):
             return SquareMatrixProduct
     else:
         return MatrixProduct
+
+
+def _is_scalar(val):
+    return (
+        isinstance(val, numbers.Number) or
+        (hasattr(val, '__array__') and np.ndim(val) == 0))
 
 
 class Matrix(abc.ABC):
@@ -53,7 +60,7 @@ class Matrix(abc.ABC):
         return self.array
 
     def __mul__(self, other):
-        if np.isscalar(other) or np.ndim(other) == 0:
+        if _is_scalar(other):
             if other == 0:
                 raise NotImplementedError(
                     'Scalar multiplication by zero not implemented.')
@@ -65,7 +72,7 @@ class Matrix(abc.ABC):
         return self.__mul__(other)
 
     def __truediv__(self, other):
-        if np.isscalar(other) or np.ndim(other) == 0:
+        if _is_scalar(other):
             if other == 0:
                 raise NotImplementedError(
                     'Scalar division by zero not implemented.')
@@ -401,7 +408,7 @@ class InvertibleMatrix(SquareMatrix):
         inverse matrix but may instead return a `Matrix` object that implements
         the matrix multiplication operators by solving the linear system
         defined by the original matrix object.
-        """        
+        """
 
 
 class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
@@ -876,7 +883,7 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 
     def _right_matrix_multiply(self, other):
         return sla.solve_triangular(
-            self._inverse_array, other.T, lower=self.lower, trans=1, 
+            self._inverse_array, other.T, lower=self.lower, trans=1,
             check_finite=False).T
 
     @property
@@ -894,7 +901,7 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     def _construct_array(self):
         #return self @ np.identity(self.shape[0])
         return sla.solve_triangular(
-            self._inverse_array, np.identity(self.shape[0]), lower=self.lower, 
+            self._inverse_array, np.identity(self.shape[0]), lower=self.lower,
             check_finite=False)
 
     @property
@@ -1108,7 +1115,7 @@ class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
         if self._factor is None:
             try:
                 self._factor = TriangularMatrix(
-                    nla.cholesky(self._sign * self._array), lower=True, 
+                    nla.cholesky(self._sign * self._array), lower=True,
                     make_triangular=False)
             except nla.LinAlgError as e:
                 raise LinAlgError('Cholesky factorisation failed.') from e
@@ -1124,7 +1131,7 @@ class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
 
     def _construct_inv(self):
         return DenseDefiniteMatrix(
-            super()._construct_inv().array, factor=self.factor.inv.T, 
+            super()._construct_inv().array, factor=self.factor.inv.T,
             is_posdef=(self._sign == 1))
 
 
@@ -1287,7 +1294,7 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
 
     def _left_matrix_multiply(self, other):
         return sla.lu_solve(
-            self._inv_lu_and_piv, other, self._inv_lu_transposed, 
+            self._inv_lu_and_piv, other, self._inv_lu_transposed,
             check_finite=False)
 
     def _right_matrix_multiply(self, other):
@@ -2113,7 +2120,7 @@ class SymmetricLowRankUpdateMatrix(
 
 
 class PositiveDefiniteLowRankUpdateMatrix(
-        SymmetricLowRankUpdateMatrix, PositiveDefiniteMatrix, 
+        SymmetricLowRankUpdateMatrix, PositiveDefiniteMatrix,
         DifferentiableMatrix):
     """Positive-definite matrix equal to low-rank update to a square matrix.
 
