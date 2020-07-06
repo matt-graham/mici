@@ -3,11 +3,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 from mici.states import cache_in_state, cache_in_state_with_aux
-from mici.matrices import (
-    IdentityMatrix, PositiveScaledIdentityMatrix, PositiveDiagonalMatrix,
-    DenseSquareMatrix, TriangularFactoredPositiveDefiniteMatrix,
-    DenseDefiniteMatrix, DensePositiveDefiniteMatrix, DenseSymmetricMatrix,
-    EigendecomposedSymmetricMatrix, SoftAbsRegularizedPositiveDefiniteMatrix)
+import mici.matrices as matrices
 from mici.autodiff import autodiff_fallback
 
 
@@ -241,12 +237,12 @@ class EuclideanMetricSystem(System):
         """
         super().__init__(neg_log_dens, grad_neg_log_dens)
         if metric is None:
-            self.metric = IdentityMatrix()
+            self.metric = matrices.IdentityMatrix()
         elif isinstance(metric, np.ndarray):
             if metric.ndim == 1:
-                self.metric = PositiveDiagonalMatrix(metric)
+                self.metric = matrices.PositiveDiagonalMatrix(metric)
             elif metric.ndim == 2:
-                self.metric = DensePositiveDefiniteMatrix(metric)
+                self.metric = matrices.DensePositiveDefiniteMatrix(metric)
             else:
                 raise ValueError('If NumPy ndarray value is used for `metric`'
                                  ' must be either 1D (diagonal matrix) or 2D '
@@ -287,7 +283,8 @@ class EuclideanMetricSystem(System):
                 (Jacobian) of momentum output of `h2_flow` with respect to the
                 value of the momentum component of the initial input state.
         """
-        return dt * self.metric.inv, IdentityMatrix(self.metric.shape[0])
+        return (dt * self.metric.inv,
+                matrices.IdentityMatrix(self.metric.shape[0]))
 
     def sample_momentum(self, state, rng):
         return self.metric.sqrt @ rng.standard_normal(state.pos.shape)
@@ -390,11 +387,10 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def dh2_flow_dmom(self, dt):
         omega = 1. / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-        return (
-            EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, sin_omega_dt * omega),
-            EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, cos_omega_dt))
+        return (matrices.EigendecomposedSymmetricMatrix(
+                    self.metric.eigvec, sin_omega_dt * omega),
+                matrices.EigendecomposedSymmetricMatrix(
+                    self.metric.eigvec, cos_omega_dt))
 
 
 class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
@@ -614,7 +610,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
             state (mici.states.ChainState): State to compute value at.
 
         Returns:
-            mici.matrice.PositiveDefiniteMatrix: Gram matrix as matrix object.
+            mici.matrices.PositiveDefiniteMatrix: Gram matrix as matrix object.
         """
         return self.jacob_constr_inner_product(
             self.jacob_constr(state), self.metric.inv)
@@ -823,10 +819,10 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
-            return DensePositiveDefiniteMatrix(
+            return matrices.DensePositiveDefiniteMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
         else:
-            return DenseSquareMatrix(
+            return matrices.DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
     @cache_in_state('pos')
@@ -951,10 +947,10 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
     def jacob_constr_inner_product(
             self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
-            return DenseSymmetricMatrix(
+            return matrices.DenseSymmetricMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
         else:
-            return DenseSquareMatrix(
+            return matrices.DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
 
 
@@ -1228,8 +1224,8 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         """
 
         super().__init__(
-            neg_log_dens, PositiveScaledIdentityMatrix, metric_scalar_func,
-            vjp_metric_scalar_func, grad_neg_log_dens)
+            neg_log_dens, matrices.PositiveScaledIdentityMatrix,
+            metric_scalar_func, vjp_metric_scalar_func, grad_neg_log_dens)
 
     @cache_in_state('pos')
     def metric(self, state):
@@ -1301,7 +1297,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens, PositiveDiagonalMatrix, metric_diagonal_func,
+            neg_log_dens, matrices.PositiveDiagonalMatrix, metric_diagonal_func,
             vjp_metric_diagonal_func, grad_neg_log_dens)
 
 
@@ -1370,7 +1366,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens, TriangularFactoredPositiveDefiniteMatrix,
+            neg_log_dens, matrices.TriangularFactoredPositiveDefiniteMatrix,
             metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens,
             metric_kwargs={'factor_is_lower': True})
 
@@ -1439,7 +1435,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens, DensePositiveDefiniteMatrix, metric_func,
+            neg_log_dens, matrices.DensePositiveDefiniteMatrix, metric_func,
             vjp_metric_func, grad_neg_log_dens)
 
 
@@ -1556,7 +1552,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
             mtp_neg_log_dens, neg_log_dens, 'mtp_hessian_grad_and_value',
             'mtp_neg_log_dens')
         super().__init__(neg_log_dens,
-                         SoftAbsRegularizedPositiveDefiniteMatrix,
+                         matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
                          self._hess_neg_log_dens, self._mtp_neg_log_dens,
                          grad_neg_log_dens,
                          metric_kwargs={'softabs_coeff': softabs_coeff})
