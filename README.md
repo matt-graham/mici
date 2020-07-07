@@ -67,9 +67,9 @@ packages provide extra functionality and features
     Autograd and multiprocess can be installed alongside Mici by running `pip
     install mici[autodiff]`.
   * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is 
-    available  outputs of a sampling run can be converted to an
+    available the traces (dictionary) output of a sampling run can be converted to an
     `arviz.InferenceData` container object using
-    `mici.utils.convert_to_arviz_inference_data`, allowing straightforward use
+    `arviz.convert_to_inference_data`, allowing straightforward use
     of the extensive Arviz visualisation and diagnostic functionality.
 
 ## Why Mici?
