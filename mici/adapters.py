@@ -73,6 +73,17 @@ class Adapter(ABC):
                 updated in-place by the method.
         """
 
+    @property
+    @abstractmethod
+    def is_fast(self):
+        """Whether the adapter is 'fast' or 'slow'.
+
+        An adapter which requires only local information to adapt the transition
+        parameters should be classified as fast while one which requires more
+        global information and so more chain iterations should be classified
+        as slow i.e. `is_fast == False`.
+        """
+
 
 class DualAveragingStepSizeAdapter(Adapter):
     """Dual averaging integrator step size adapter.
@@ -92,6 +103,8 @@ class DualAveragingStepSizeAdapter(Adapter):
       2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex
          problems. Mathematical programming 120(1), pp.221-259.
     """
+
+    is_fast = True
 
     def __init__(self, adapt_stat_target=0.8, adapt_stat_func=None,
                  log_step_size_reg_target=None,
@@ -278,6 +291,8 @@ class OnlineVarianceMetricAdapter(Adapter):
          Software, 76(1).
     """
 
+    is_fast = False
+
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         """
         Args:
@@ -384,6 +399,8 @@ class OnlineCovarianceMetricAdapter(Adapter):
          Stan: A probabilistic programming language. Journal of Statistical
          Software, 76(1).
     """
+
+    is_fast = False
 
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         """

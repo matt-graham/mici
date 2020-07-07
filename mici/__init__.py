@@ -10,6 +10,7 @@ import mici.integrators
 import mici.matrices
 import mici.samplers
 import mici.solvers
+import mici.stagers
 import mici.states
 import mici.systems
 import mici.transitions

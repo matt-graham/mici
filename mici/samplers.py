@@ -19,6 +19,7 @@ from mici.progressbars import (ProgressBar, LabelledSequenceProgressBar,
                                DummyProgressBar, _ProxyProgressBar)
 from mici.errors import AdaptationError
 from mici.adapters import DualAveragingStepSizeAdapter
+from mici.stagers import WarmUpStager, WindowedWarmUpStager
 
 # Preferentially import from multiprocess library if available as able to
 # serialize much wider range of types including autograd functions
@@ -673,76 +674,6 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
     return (*_collate_chain_outputs(chain_outputs), exception)
 
 
-def _set_up_sampling_stages(
-        n_warm_up_iter, n_main_iter, fast_adapters, slow_adapters,
-        trace_funcs, n_init_slow_window_iter, n_init_fast_stage_iter,
-        n_final_fast_stage_iter, slow_window_multiplier):
-    """Create dictionary specifying labels and parameters of sampling stages.
-
-    Constructs an ordered dictionary with entries corresponding to the sequence
-    of sampling stages when running chains with one or more initial adaptation
-    stages. The keys of each entry are string labels for the sampling stage and
-    the values a 3-tuple `(n_iter, adapters, trace_funcs)` with `n_iter` the
-    number of chain iterations in the stage, `adapters` a dictionary of
-    transition adapters to pass to the `_sample_chain` call (or `None` if no
-    adaptation to be used) and `trace_func` a list of trace functions to pass
-    to the `_sample_chain` call (list may be empty if no values to be traced).
-    """
-    use_single_adaptive_stage = slow_adapters is None or len(slow_adapters) == 0
-    if not use_single_adaptive_stage and (
-            n_init_fast_stage_iter + n_init_slow_window_iter +
-            n_final_fast_stage_iter > n_warm_up_iter):
-        n_init_fast_stage_iter = int(0.15 * n_warm_up_iter)
-        n_final_fast_stage_iter = int(0.1 * n_warm_up_iter)
-        n_init_slow_window_iter = (
-            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
-    if use_single_adaptive_stage:
-        sampling_stages = OrderedDict(
-            {'Adaptive warm up': (n_warm_up_iter, fast_adapters, [])})
-    else:
-        # slow adaptation windows use both fast and slow adapters
-        fast_and_slow_adapters = {
-            trans_key: adapter_list.copy()
-            for trans_key, adapter_list in fast_adapters.items()}
-        for trans_key, adapter_list in slow_adapters.items():
-            if trans_key in fast_and_slow_adapters:
-                fast_and_slow_adapters[trans_key] += adapter_list
-            else:
-                fast_and_slow_adapters[trans_key] = adapter_list
-        # initial fast adaptation stage
-        sampling_stages = OrderedDict(
-            {'Initial fast adaptive': (
-                n_init_fast_stage_iter, fast_adapters, [])})
-        # growing size slow adaptation windows
-        n_window_iter = n_init_slow_window_iter
-        slow_windows = []
-        counter = 0
-        n_slow_stage_iter = (
-            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
-        while counter < n_slow_stage_iter:
-            # check if iteration counter at end of next loop iteration will be
-            # greater than total number of warm up iterations and if so set
-            # number of iterations in current window to be equal to all
-            # remaining warm up iterations
-            counter_next = (
-                counter + int((1 + slow_window_multiplier) * n_window_iter))
-            if counter_next > n_slow_stage_iter:
-                n_window_iter = n_slow_stage_iter - counter
-            slow_windows.append(n_window_iter)
-            counter += n_window_iter
-            n_window_iter = int(slow_window_multiplier * n_window_iter)
-        for i, n_iter in enumerate(slow_windows):
-            sampling_stages[
-                f'Slow adaptive ({i + 1}/{len(slow_windows)})'] = (
-                    n_iter, fast_and_slow_adapters, [])
-        # final fast adaptation stage
-        sampling_stages['Final fast adaptive'] = (
-            n_final_fast_stage_iter, fast_adapters, [])
-    # main non-adaptive stage
-    sampling_stages['Main non-adaptive'] = (n_main_iter, None, trace_funcs)
-    return sampling_stages
-
-
 class MarkovChainMonteCarloMethod(object):
     """Generic Markov chain Monte Carlo (MCMC) sampler.
 
@@ -991,9 +922,7 @@ class MarkovChainMonteCarloMethod(object):
 
     def sample_chains_with_adaptive_warm_up(
             self, n_warm_up_iter, n_main_iter, init_states, trace_funcs,
-            fast_adapters, slow_adapters=None, n_process=1,
-            n_init_slow_window_iter=25, n_init_fast_stage_iter=75,
-            n_final_fast_stage_iter=50, slow_window_multiplier=2, **kwargs):
+            adapters, stager=None, n_process=1, **kwargs):
         """Sample Markov chains from given initial states with adaptive warm up.
 
         One or more Markov chains are sampled, with each chain iteration
@@ -1003,53 +932,15 @@ class MarkovChainMonteCarloMethod(object):
         parameters of the transition(s) are adaptively tuned based on the chain
         state and/or transition statistics.
 
-        Following the approach of [Stan](https://mc-stan.org) the adaptive
-        stages are split in to two types - 'fast' adaptation stages which adjust
-        only transition parameters which can be adapted quickly using local
-        information and 'slow' adaptation stages which *addtionally* adjust
-        transition parameters which require more global information. The
-        adapters to be used in both the fast and slow adaptation stages will be
-        referred to as the *fast adapters* and the adapters to use in only the
-        slow adaptation stages the *slow adapters*.
-
-        If only fast adapters are specified the adaptive warm up iterations will
-        form a single fast adaptive stage. If both slow and fast adapters are
-        specified the adaptive warm up iterations will be split into three
-        stages:
-
-          1. An initial fast adaptive stage with only fast adapters active.
-          2. A slow adaptive stage with both slow and fast adapters active.
-          3. A final adaptive stage with only fast adapters active.
-
-        The slow sampling stage (2) is further split in to a sequence of
-        growing, memoryless windows with the adapter stages reset at the
-        beginning of each window, and the number of iterations in each window
-        increasing (by default doubling). The split of the iterations in each of
-        these stages can be controlled using the keyword arguments
-        `n_init_fast_stage_iter`, `n_init_slow_window_iter`,
-        `n_final_fast_stage_iter` and `slow_window_multiplier` (see descriptions
-        below).
-
-        In both cases after the initial adaptive warm up stage(s) a subsequent
-        main sampling stage with no further adaptation is performed. Only in
-        this main sampling stage are traces of the chain state recorded by
-        storing the outputs of functions of the sampled chain state after each
-        iteration.
-
         The chains (including both adaptive and non-adaptive stages) may be run
         in parallel across multiple independent processes or sequentially. In
         all cases all chains use independent random draws.
 
         Args:
             n_warm_up_iter (int): Number of adaptive warm up iterations per
-                chain. Depending on the adapters specified by the
-                `fast_adapters` and `slow_adapters` arguments the warm up
-                iterations may be split between one or more adaptive stages.
-                The keyword arguments `n_init_fast_stage_iter`,
-                `n_init_slow_window_iter`, `n_final_fast_stage_iter` and
-                `slow_window_multiplier` can be used to control the split of
-                the warm up iterations into these different stages - for details
-                see descriptions of the individual keyword arguments below.
+                chain. Depending on the `mici.stages.Stager` instance specified
+                by the `stage arguments the warm up iterations may be split
+                between one or more adaptive stages.
             n_main_iter (int): Number of iterations (samples to draw) per chain
                 during main (non-adaptive) sampling stage.
             init_states (Iterable[ChainState] or Iterable[Dict[str, object]]):
@@ -1067,54 +958,35 @@ class MarkovChainMonteCarloMethod(object):
                 returned traces dictionary. If a key appears in multiple
                 dictionaries only the the value corresponding to the last trace
                 function to return that key will be stored.
-            fast_adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables
+            adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables
                 of `mici.adapters.Adapter` instances keyed by strings
                 corresponding to the key of the transition in the `transitions`
                 dictionary to apply the adapters to, to use to adaptatively set
-                parameters of the transitions during the adaptive (both fast and
-                slow) stages of the chains. Note that the adapter updates are
-                applied in the order the adapters appear in the iterables and so
-                if multiple adapters change the same parameter(s) the order will
-                matter.
+                parameters of the transitions during the adaptive stages of  the
+                chains. Note that the adapter updates are applied in the order
+                the adapters appear in the iterables and so if multiple adapters
+                change the same parameter(s) the order will matter.
 
         Kwargs:
-            slow_adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables
-                of `mici.adapters.Adapter` instances keyed by strings
-                corresponding to the key of the transition in the `transitions`
-                dictionary to apply the adapters to, to use to adaptatively set
-                parameters of the transitions during the slow adaptive stage of
-                the chains. Note that the adapter updates are applied in the
-                order the adapters appear in the iterables and so if multiple
-                adapters change the same parameter(s) the order will matter.
-                Default is to use no slow adapters.
+            stager (mici.stagers.Stager or None): Chain iteration stager object
+                which controls the split of the chain iterations into the
+                adaptive warm up and non-adaptive main stages. If set to `None`
+                (the default) and all adapters specified by the `adapters`
+                argument are of the fast type (i.e. their `is_fast` attribute is
+                `True`) then a `mici.stagers.WarmUpStager` instance will be used
+                corresponding to using a single adaptive warm up stage will all
+                adapters active. If set to `None` and the adapters specified by
+                the adapters argument are not all of the fast type, then a
+                `mici.stagers.WindowedWarmUpStager` (with its default arguments)
+                will be used, corresponding to using multiple adaptive warm up
+                stages with only the fast-type adapters active in some - see
+                docstring of `mici.stagers.WarmUpStager` for details.
             n_process (int or None): Number of parallel processes to run chains
                 over. If `n_process=1` then chains will be run sequentially
                 otherwise a `multiprocessing.Pool` object will be used to
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
-            n_init_slow_window_iter (int): Number of iterations in the initial
-                (smallest) window in the slow adaptation stage. Defaults to 25.
-                If the sum of `n_init_slow_window_iter`,
-                `n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more
-                than `n_warm_up_iter` then `n_init_slow_window_iter` is set to
-                approximately 75% of `n_warm_up_iter` (with a single window
-                being used in the slow adaptation stage in this case).
-            n_init_fast_stage_iter (int): Number of iterations in the initial
-                fast adaptation stage. Defaults to 75. If the sum of
-                `n_init_slow_window_iter`, n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 15% of
-                `n_warm_up_iter`.
-            n_final_fast_stage_iter (int): Number of iterations in the final
-                fast adaptation stage. Defaults to 50. If the sum of
-                `n_init_slow_window_iter`, `n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 10% of
-                `n_warm_up_iter`.
-            slow_window_multiplier (float): Multiplier by which to increase the
-                number of iterations of each subsequent slow adaptation window
-                by. Defaults to 2 such that each window doubles in size.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -1167,10 +1039,6 @@ class MarkovChainMonteCarloMethod(object):
                 statistic.
         """
         self.__set_sample_chain_kwargs_defaults(kwargs)
-        if 'adapters' in kwargs:
-            raise ValueError(
-                'Transition adapters should be specified via `fast_adapters` '
-                'and `slow_adapters` arguments rather than `adapters`.')
         n_chain = len(init_states)
         rngs = _get_per_chain_rngs(self.rng, n_chain)
         progress_bar_class = kwargs.pop('progress_bar_class')
@@ -1181,27 +1049,31 @@ class MarkovChainMonteCarloMethod(object):
             common_sample_chains_kwargs['n_process'] = n_process
         else:
             sample_chains_func = _sample_chains_sequential
-        sampling_stages = _set_up_sampling_stages(
-            n_warm_up_iter, n_main_iter, fast_adapters, slow_adapters,
-            trace_funcs, n_init_slow_window_iter, n_init_fast_stage_iter,
-            n_final_fast_stage_iter, slow_window_multiplier)
+        if stager is None:
+            if all(a.is_fast for a_list in adapters.values() for a in a_list):
+                stager = WarmUpStager()
+            else:
+                stager = WindowedWarmUpStager()
+        sampling_stages = stager.stages(
+            n_warm_up_iter, n_main_iter, adapters, trace_funcs)
         chain_states = init_states
         with LabelledSequenceProgressBar(
                     sampling_stages, 'Sampling stage', position=(0, n_chain + 1)
                 ) as sampling_stages_pb:
             chain_iterators = _construct_chain_iterators(
                 n_warm_up_iter, progress_bar_class, n_chain, 1)
-            for (n_iter, adapters, trace_funcs), _ in sampling_stages_pb:
+            for stage, _ in sampling_stages_pb:
                 for chain_it in chain_iterators:
-                    chain_it.sequence = range(n_iter)
+                    chain_it.sequence = range(stage.n_iter)
                 chain_states, traces, stats, adapter_states, exception = (
                     sample_chains_func(
-                        init_states=chain_states, trace_funcs=trace_funcs,
-                        adapters=adapters, chain_iterators=chain_iterators,
+                        init_states=chain_states, trace_funcs=stage.trace_funcs,
+                        adapters=stage.adapters,
+                        chain_iterators=chain_iterators,
                         **common_sample_chains_kwargs))
                 if len(adapter_states) > 0:
                     _finalize_adapters(
-                        adapter_states, adapters, self.transitions)
+                        adapter_states, stage.adapters, self.transitions)
                 if isinstance(exception, KeyboardInterrupt):
                     return chain_states, traces, stats
         return chain_states, traces, stats
@@ -1501,42 +1373,6 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         transition such as the integrator step size are adaptively tuned based
         on the chain state and/or transition statistics.
 
-        Following the approach of [Stan](https://mc-stan.org) the adaptive
-        stages are split in to two types - 'fast' adaptation stages which adjust
-        only transition parameters which can be adapted quickly using local
-        information (such as the integrator step size) and 'slow' adaptation
-        stages which *addtionally* adjust transition parameters which require
-        more global information (such as the metric matrix representation for
-        Euclidean metric systems which requires estimates of the (co)variances
-        of the target distribution). The adapters to be used in both the fast
-        and slow adaptation stages will be referred to as the *fast adapters*
-        and the adapters to use in only the slow adaptation stages the *slow
-        adapters*.
-
-        If only fast adapters are specified the adaptive warm up iterations will
-        form a single fast adaptive stage. If both slow and fast adapters are
-        specified the adaptive warm up iterations will be split into three
-        stages:
-
-          1. An initial fast adaptive stage with only fast adapters active.
-          2. A slow adaptive stage with both slow and fast adapters active.
-          3. A final adaptive stage with only fast adapters active.
-
-        The slow sampling stage (2) is further split in to a sequence of
-        growing, memoryless windows with the adapter stages reset at the
-        beginning of each window, and the number of iterations in each window
-        increasing (by default doubling). The split of the iterations in each of
-        these stages can be controlled using the keyword arguments
-        `n_init_fast_stage_iter`, `n_init_slow_window_iter`,
-        `n_final_fast_stage_iter` and `slow_window_multiplier` (see descriptions
-        below).
-
-        In both cases after the initial adaptive warm up stage(s) a subsequent
-        main sampling stage with no further adaptation is performed. Only in
-        this main sampling stage are traces of the chain state recorded by
-        storing the outputs of functions of the sampled chain state after each
-        iteration.
-
         The default settings use a single (fast) `DualAveragingStepSizeAdapter`
         adapter instance which adapts the integrator step-size using a
         dual-averaging algorithm in a single adaptive stage.
@@ -1547,14 +1383,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
 
         Args:
             n_warm_up_iter (int): Number of adaptive warm up iterations per
-                chain. Depending on the adapters specified by the
-                `fast_adapters` and `slow_adapters` arguments the warm up
-                iterations may be split between one or more adaptive stages.
-                The keyword arguments `n_init_fast_stage_iter`,
-                `n_init_slow_window_iter`, `n_final_fast_stage_iter` and
-                `slow_window_multiplier` can be used to control the split of
-                the warm up iterations into these different stages - for details
-                see descriptions of the individual keyword arguments below.
+                chain. Depending on the `mici.stages.Stager` instance specified
+                by the `stage arguments the warm up iterations may be split
+                between one or more adaptive stages.
             n_main_iter (int): Number of iterations (samples to draw) per chain
                 during main (non-adaptive) sampling stage.
             init_states (Iterable[ChainState] or Iterable[array]): Initial
@@ -1585,45 +1416,28 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 single function which recordes the position component of the
                 state under the key `pos` and the Hamiltonian at the state under
                 the key `hamiltonian`.
-            fast_adapters (Iterable[Adapter]): List of `mici.adapters.Adapter`
+            adapters (Iterable[Adapter]): List of `mici.adapters.Adapter`
                 instances to use to adaptatively set parameters of the
                 integration transition such as the step size during the adaptive
-                (both fast and slow) stages of the chains. Note that the adapter
-                updates are applied in the order the adapters appear in the
-                iterable and so if multiple adapters change the same
-                parameter(s) the order will matter. Default is to use a single
-                instance of `mici.adapters.DualAveragingStepSizeAdapter` with
-                its default parameters.
-            slow_adapters (Iterable[Adapter]): List of `mici.adapters.Adapter`
-                instances to use to adaptatively set parameters of the
-                integration transition such as the metric of Euclidean
-                Hamiltonian systems during the slow adaptive stage of the
-                chains. Note that the adapter updates are applied in the order
-                the adapters appear in the iterable and so if multiple adapters
-                change the same parameter(s) the order will matter. Default is
-                to use no slow adapters.
-            n_init_slow_window_iter (int): Number of iterations in the initial
-                (smallest) window in the slow adaptation stage. Defaults to 25.
-                If the sum of `n_init_slow_window_iter`,
-                `n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more
-                than `n_warm_up_iter` then `n_init_slow_window_iter` is set to
-                approximately 75% of `n_warm_up_iter` (with a single window
-                being used in the slow adaptation stage in this case).
-            n_init_fast_stage_iter (int): Number of iterations in the initial
-                fast adaptation stage. Defaults to 75. If the sum of
-                `n_init_slow_window_iter`, n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 15% of
-                `n_warm_up_iter`.
-            n_final_fast_stage_iter (int): Number of iterations in the final
-                fast adaptation stage. Defaults to 50. If the sum of
-                `n_init_slow_window_iter`, `n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 10% of
-                `n_warm_up_iter`.
-            slow_window_multiplier (float): Multiplier by which to increase the
-                number of iterations of each subsequent slow adaptation window
-                by. Defaults to 2 such that each window doubles in size.
+                stages of the chains. Note that the adapter updates are applied
+                in the order the adapters appear in the iterable and so if
+                multiple adapters change the same parameter(s) the order will
+                matter. Default is to use a single instance of
+                `mici.adapters.DualAveragingStepSizeAdapter` with its default
+                parameters.
+            stager (mici.stagers.Stager or None): Chain iteration stager object
+                which controls the split of the chain iterations into the
+                adaptive warm up and non-adaptive main stages. If set to `None`
+                (the default) and all adapters specified by the `adapters`
+                argument are of the fast type (i.e. their `is_fast` attribute is
+                `True`) then a `mici.stagers.WarmUpStager` instance will be used
+                corresponding to using a single adaptive warm up stage will all
+                adapters active. If set to `None` and the adapters specified by
+                the adapters argument are not all of the fast type, then a
+                `mici.stagers.WindowedWarmUpStager` (with its default arguments)
+                will be used, corresponding to using multiple adaptive warm up
+                stages with only the fast-type adapters active in some - see
+                docstring of `mici.stagers.WarmUpStager` for details.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -1669,8 +1483,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
-        if 'fast_adapters' not in kwargs:
-            kwargs['fast_adapters'] = [DualAveragingStepSizeAdapter()]
+        if 'adapters' not in kwargs:
+            kwargs['adapters'] = [DualAveragingStepSizeAdapter()]
         self.__set_sample_chain_kwargs_defaults(kwargs)
         final_states, traces, chain_stats = (
             super().sample_chains_with_adaptive_warm_up(
