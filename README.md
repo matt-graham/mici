@@ -180,7 +180,8 @@ space is given below. The computed samples are visualized in the animation
 above. Here we use `autograd` to automatically construct functions to calculate
 the required derivatives (gradient of negative log density of target
 distribution and Jacobian of constraint function), sample four chains in
-parallel using `multiprocess` and use `matplotlib` to plot the samples.
+parallel using `multiprocess`, use `arviz` to calculate diagnostics and use 
+`matplotlib` to plot the samples.
 
 ```Python
 from mici import systems, integrators, samplers
@@ -188,6 +189,7 @@ import autograd.numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
+import arviz
 
 # Define fixed model parameters
 R = 1.0  # toroidal radius ∈ (0, ∞)
@@ -244,6 +246,9 @@ for c in range(n_chain):
     print(f"Chain {c}:")
     print(f"  Average accept prob. = {stats['accept_stat'][c].mean():.2f}")
     print(f"  Average number steps = {stats['n_step'][c].mean():.1f}")
+    
+# Print summary statistics and diagnostics computed using ArviZ
+print(arviz.summary(traces))
 
 # Visualize concatentated chain samples as animated 3D scatter plot   
 fig = plt.figure(figsize=(4, 4))
