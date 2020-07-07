@@ -11,11 +11,7 @@ try:
     IPYTHON_AVAILABLE = True
 except ImportError:
     IPYTHON_AVAILABLE = False
-try:
-    import tqdm.auto as tqdm
-    TQDM_AVAILABLE = True
-except ImportError:
-    TQDM_AVAILABLE = False
+
 try:
     import google.colab
     ON_COLAB = True
@@ -662,41 +658,3 @@ class _ProxyProgressBar:
             iter_dict = {}
             yield val, iter_dict
             self._iter_queue.put((self._job_id, i + 1, iter_dict))
-
-
-if TQDM_AVAILABLE:
-
-    class TqdmProgressBar(BaseProgressBar):
-        """Wrapper of `tqdm` with same interface as `ProgressBar`."""
-
-        def __init__(self, sequence, description=None, position=(0, 1)):
-            super().__init__(sequence, description, position)
-            self._stats_dict = {}
-            self._tqdm_obj = None
-
-        def update(self, iter_count, iter_dict=None, refresh=True):
-            if self._tqdm_obj is None:
-                raise RuntimeError(
-                    'Must enter object first in context manager.')
-            if iter_count == 0:
-                self._tqdm_obj.reset()
-            elif not self._tqdm_obj.disable:
-                self._tqdm_obj.update(iter_count - self._tqdm_obj.n)
-                if iter_dict is not None:
-                    _update_stats_running_means(
-                        iter_count, self._stats_dict, iter_dict)
-                    self._tqdm_obj.set_postfix(self._stats_dict)
-                if iter_count == self._n_iter:
-                    self._tqdm_obj.close()
-                if refresh:
-                    self._tqdm_obj.refresh()
-
-        def __enter__(self):
-            super.__enter__()
-            self._tqdm_obj = tqdm.tqdm(
-                self._sequence, desc=self._description,
-                position=self._position[0]).__enter__()
-            return self
-
-        def __exit__(self, *args):
-            return self._tqdm_obj.__exit__(*args)
