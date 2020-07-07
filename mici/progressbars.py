@@ -83,7 +83,7 @@ def _update_stats_running_means(iter, means, new_vals):
 class BaseProgressBar(abc.ABC):
     """Base class defining expected interface for progress bars."""
 
-    def __init__(self, sequence, description, position):
+    def __init__(self, sequence, description, position=(0, 1)):
         """
         Args:
             sequence (Sequence): Sequence to iterate over. Must be iterable AND
