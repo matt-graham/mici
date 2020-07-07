@@ -9,28 +9,16 @@ from pickle import PicklingError
 import logging
 import tempfile
 import signal
+from warnings import warn
 from collections import OrderedDict
 import numpy as np
+from numpy.random import default_rng
 import mici.transitions as trans
 from mici.states import ChainState
 from mici.progressbars import (ProgressBar, LabelledSequenceProgressBar,
                                DummyProgressBar, _ProxyProgressBar)
 from mici.errors import AdaptationError
 from mici.adapters import DualAveragingStepSizeAdapter
-
-
-try:
-    from numpy.random import default_rng
-    NUMPY_DEFAULT_RNG_AVAILABLE = True
-except ImportError:
-    NUMPY_DEFAULT_RNG_AVAILABLE = False
-
-
-try:
-    import randomgen
-    RANDOMGEN_AVAILABLE = True
-except ImportError:
-    RANDOMGEN_AVAILABLE = False
 
 # Preferentially import from multiprocess library if available as able to
 # serialize much wider range of types including autograd functions
@@ -330,7 +318,7 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
             is iterated over to produce sample indices and (empty) iteration
             statistic dictionaries to output monitored chain statistics to
             during sampling.
-        rng (Generator or RandomState): Numpy random number generator.
+        rng (numpy.random.Generator): Numpy random number generator.
         transitions (OrderedDict[str, Transition]): Ordered dictionary of
             Markov transitions kernels to sequentially sample from on each
             chain iteration.
@@ -504,40 +492,25 @@ def _collate_chain_outputs(chain_outputs):
 def _get_per_chain_rngs(base_rng, n_chain):
     """Construct random number generators (RNGs) for each of a set of chains.
 
-    If NumPy version >= 1.17 is available with updated random generator
-    interface, then if the base RNG bit generator has a `jumped` method this is
-    used to produce a sequence of independent random substreams. Otherwise if
-    the base RNG bit generator has a `_seed_sequence` attribute this is used
-    to spawn a sequence of generators.
-
-    Alternatively if the base RNG supports a `jump` method, as for generator
-    classes from the `randomgen` module, this is used to produce independent
-    random substreams from the base RNG, otherwise if `randomgen` is available
-    the base RNG is used to seed a new `randomgen.Xorshift1024` RNG and this
-    used to generate independent substreams.
-
-    As a final fallback, a set of `numpy.Randomstate` objects with seeds
-    independently generated from the base RNG is used.
+    If the base RNG bit generator has a `jumped` method this is used to produce
+    a sequence of independent random substreams. Otherwise if the base RNG bit
+    generator has a `_seed_seq` attribute this is used to spawn a sequence off
+    generators.
     """
-    if (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, 'bit_generator') and
-            hasattr(base_rng.bit_generator, 'jumped')):
+    if hasattr(base_rng, 'bit_generator'):
         bit_generator = base_rng.bit_generator
-        return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
-    elif (NUMPY_DEFAULT_RNG_AVAILABLE and hasattr(base_rng, 'bit_generator')
-            and hasattr(base_rng.bit_generator, '_seeq_seq')):
-        seed_sequence = base_rng.bit_generator._seeq_seq
-        seeds = seed_sequence.spawn(n_chain)
-        return [default_rng(seed) for seed in seeds]
-    elif hasattr(base_rng, 'jump'):
-        return [base_rng.jump(i).generator for i in range(n_chain)]
-    elif RANDOMGEN_AVAILABLE:
-        seed = base_rng.randint(2**64, dtype='uint64')
-        return [randomgen.Xorshift1024(seed).jump(i).generator
-                for i in range(n_chain)]
+    elif hasattr(base_rng, '_bit_generator'):
+        bit_generator = base_rng._bit_generator
     else:
-        seeds = (base_rng.choice(2**16, n_chain, False) * 2**16 +
-                 base_rng.choice(2**16, n_chain, False))
-        return [np.random.RandomState(seed) for seed in seeds]
+        bit_generator = None
+    if bit_generator is not None and hasattr(bit_generator, 'jumped'):
+        return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
+    elif bit_generator is not None and hasattr(bit_generator, '_seed_seq'):
+        seed_sequence = bit_generator._seed_seq
+        return [default_rng(seed) for seed in seed_sequence.spawn(n_chain)]
+    else:
+        raise ValueError(
+            f'Unsupported random number generator type {type(rng).__name__}.')
 
 
 def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
@@ -780,11 +753,17 @@ class MarkovChainMonteCarloMethod(object):
     def __init__(self, rng, transitions):
         """
         Args:
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             transitions (OrderedDict[str, Transition]): Ordered dictionary of
                 Markov transitions kernels to sequentially sample from on each
                 chain iteration.
         """
+        if isinstance(rng, np.random.RandomState):
+            warn('Use of numpy.random.RandomState random number generators is '
+                 'deprecated. Please use a numpy.random.Generator instance '
+                 'instead for example from a call to numpy.random.default_rng.',
+                 DeprecationWarning)
+            rng = np.random.Generator(rng._bit_generator)
         self.rng = rng
         self.transitions = transitions
 
@@ -1264,7 +1243,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             integration_transition (mici.transitions.IntegrationTransition):
                 Markov transition kernel which leaves canonical distribution
                 invariant and jointly updates the position and momentum
@@ -1731,7 +1710,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             n_step (int): Number of integrator steps to simulate in each
@@ -1794,7 +1773,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             n_step_range (Tuple[int, int]): Tuple `(lower, upper)` with two
@@ -1862,7 +1841,7 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             max_tree_depth (int): Maximum depth to expand trajectory binary
@@ -1962,7 +1941,7 @@ class DynamicSliceHMC(HamiltonianMCMC):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
-            rng (Generator or RandomState): Numpy random number generator.
+            rng (numpy.random.Generator): Numpy random number generator.
             integrator (mici.integrators.Integrator): Symplectic integrator to
                 use to simulate dynamics in integration transition.
             max_tree_depth (int): Maximum depth to expand trajectory binary
