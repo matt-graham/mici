@@ -2,7 +2,6 @@
 
 import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
-import mici
 try:
     import xxhash
     XXHASH_AVAILABLE = True
