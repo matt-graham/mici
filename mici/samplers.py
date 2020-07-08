@@ -511,7 +511,7 @@ def _get_per_chain_rngs(base_rng, n_chain):
         return [default_rng(seed) for seed in seed_sequence.spawn(n_chain)]
     else:
         raise ValueError(
-            f'Unsupported random number generator type {type(rng).__name__}.')
+            f'Unsupported random number generator type {type(base_rng)}.')
 
 
 def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
