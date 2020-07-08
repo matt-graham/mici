@@ -33,7 +33,6 @@
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="mici.utils.convert_to_arviz_inference_data" href="#mici.utils.convert_to_arviz_inference_data">convert_to_arviz_inference_data</a></code></li>
 <li><code><a title="mici.utils.hash_array" href="#mici.utils.hash_array">hash_array</a></code></li>
 <li><code><a title="mici.utils.log1p_exp" href="#mici.utils.log1p_exp">log1p_exp</a></code></li>
 <li><code><a title="mici.utils.log1m_exp" href="#mici.utils.log1m_exp">log1m_exp</a></code></li>
@@ -62,112 +61,17 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L0-L287" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L0-L201" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Utility functions and classes.&#34;&#34;&#34;
 
 import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
-import mici
 try:
     import xxhash
     XXHASH_AVAILABLE = True
 except ImportError:
     XXHASH_AVAILABLE = False
-
-try:
-
-    import tqdm
-    import logging
-
-    class TqdmHandler(logging.StreamHandler):
-        &#34;&#34;&#34;Simple log handler which uses tqdm write method.&#34;&#34;&#34;
-
-        def __init__(self):
-            super().__init__()
-
-        def emit(self, record):
-            msg = self.format(record)
-            tqdm.tqdm.write(msg)
-
-    def setup_tqdm_logger():
-        &#34;&#34;&#34;Returns a logger which redirects log output to `tqdm.write`.&#34;&#34;&#34;
-        logger = logging.getLogger()
-        handler = TqdmHandler()
-        logger.addHandler(handler)
-        return logger
-
-except ImportError:
-    pass
-
-
-try:
-
-    import arviz
-
-    def convert_to_arviz_inference_data(
-            traces, chain_stats, sample_stats_key=None):
-        &#34;&#34;&#34;Wrap chain outputs in an `arviz.InferenceData` container object.
-
-        The `traces` and `chain_stats` arguments should correspond to a
-        multiple-chain sampler output i.e. the returned values from a
-        `sample_chains` call.
-
-        Args:
-            traces (Dict[str, List[array]]): Trace arrays, with one entry per
-                function in `trace_funcs` passed to sampler method. Each entry
-                consists of a list of arrays, one per chain, with the first
-                axes of the arrays corresponding to the sampling (draw) index.
-            chain_stats (Dict[str, List[array]]): Chain integration transition
-                statistics as a dictionary with string keys describing the
-                statistics recorded and values corresponding to a list of
-                arrays with one array per chain and the first axis of the
-                arrays corresponding to the sampling index.
-            sample_stats_key (str): Optional. Key of transition in
-                `chain_stats` to use the recorded statistics of to populate the
-                `sampling_stats` group in the returned `InferenceData` object.
-
-        Returns:
-            arviz.InferenceData:
-                An arviz data container with groups `posterior` and
-                &#39;sample_stats&#39;, both of instances of `xarray.Dataset`. The
-                `posterior` group corresponds to the chain variable traces
-                provides in the `traces` argument and the `sample_stats`
-                group corresponds to the chain transitions statistics passed
-                in the `chain_stats` argument (if multiple transition
-                statistics dictionaries are present the `sample_stats_key`
-                argument should be specified to indicate which to use).
-        &#34;&#34;&#34;
-        if (sample_stats_key is not None and
-                sample_stats_key not in chain_stats):
-            raise ValueError(
-                f&#39;Specified `sample_stats_key` ({sample_stats_key}) does &#39;
-                f&#39;not match any transition in `chain_stats`.&#39;)
-        if sample_stats_key is not None:
-            return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=mici),
-                sample_stats=arviz.dict_to_dataset(
-                    chain_stats[sample_stats_key], library=mici))
-        elif not isinstance(next(iter(chain_stats.values())), dict):
-            # chain_stats dictionary value not another dictionary therefore
-            # assume corresponds to statistics for a single transition
-            return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=mici),
-                sample_stats=arviz.dict_to_dataset(chain_stats, library=mici))
-        elif len(chain_stats) == 1:
-            # single transtition statistics dictionary in chain_stats therefore
-            # unambiguous to set sample_stats
-            return arviz.InferenceData(
-                posterior=arviz.dict_to_dataset(traces, library=mici),
-                sample_stats=arviz.dict_to_dataset(
-                    chain_stats.popitem()[1], library=mici))
-        else:
-            raise ValueError(
-                &#39;`sample_stats_key` must be specified as `chain_stats` &#39;
-                &#39;contains multiple transtitiion statistics dictionaries.&#39;)
-
-except ImportError:
-    pass
 
 
 def hash_array(array):
@@ -217,7 +121,9 @@ def log1m_exp(val):
 
 def log_sum_exp(val1, val2):
     &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) + exp(val2))`.&#34;&#34;&#34;
-    if val1 &gt; val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 &gt; val2:
         return val1 + log1p_exp(val2 - val1)
     else:
         return val2 + log1p_exp(val1 - val2)
@@ -225,7 +131,9 @@ def log_sum_exp(val1, val2):
 
 def log_diff_exp(val1, val2):
     &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) - exp(val2))`.&#34;&#34;&#34;
-    if val1 &lt; val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 &lt; val2:
         return nan
     elif val1 == val2:
         return -inf
@@ -274,7 +182,9 @@ class LogRepFloat(object):
         return self.__add__(other)
 
     def __iadd__(self, other):
-        if isinstance(other, LogRepFloat):
+        if other == 0:
+            return self
+        elif isinstance(other, LogRepFloat):
             self.log_val = log_sum_exp(self.log_val, other.log_val)
         else:
             self.log_val = log_sum_exp(self.log_val, log(other))
@@ -307,6 +217,9 @@ class LogRepFloat(object):
             return LogRepFloat(log_val=self.log_val - other.log_val)
         else:
             return self.val / other
+
+    def __rtruediv__(self, other):
+        return other / self.val
 
     def __neg__(self):
         return -self.val
@@ -361,111 +274,6 @@ class LogRepFloat(object):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="mici.utils.convert_to_arviz_inference_data"><code class="name flex">
-<span>def <span class="ident">convert_to_arviz_inference_data</span></span>(<span>traces, chain_stats, sample_stats_key=None)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Wrap chain outputs in an <code>arviz.InferenceData</code> container object.</p>
-<p>The <code>traces</code> and <code>chain_stats</code> arguments should correspond to a
-multiple-chain sampler output i.e. the returned values from a
-<code>sample_chains</code> call.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>traces</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
-<dd>Trace arrays, with one entry per
-function in <code>trace_funcs</code> passed to sampler method. Each entry
-consists of a list of arrays, one per chain, with the first
-axes of the arrays corresponding to the sampling (draw) index.</dd>
-<dt><strong><code>chain_stats</code></strong> :&ensp;<code>Dict</code>[<code>str</code>, <code>List</code>[<code>array</code>]]</dt>
-<dd>Chain integration transition
-statistics as a dictionary with string keys describing the
-statistics recorded and values corresponding to a list of
-arrays with one array per chain and the first axis of the
-arrays corresponding to the sampling index.</dd>
-<dt><strong><code>sample_stats_key</code></strong> :&ensp;<code>str</code></dt>
-<dd>Optional. Key of transition in
-<code>chain_stats</code> to use the recorded statistics of to populate the
-<code>sampling_stats</code> group in the returned <code>InferenceData</code> object.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>arviz.InferenceData</code>:</dt>
-<dd>An arviz data container with groups <code>posterior</code> and
-'sample_stats', both of instances of <code>xarray.Dataset</code>. The
-<code>posterior</code> group corresponds to the chain variable traces
-provides in the <code>traces</code> argument and the <code>sample_stats</code>
-group corresponds to the chain transitions statistics passed
-in the <code>chain_stats</code> argument (if multiple transition
-statistics dictionaries are present the <code>sample_stats_key</code>
-argument should be specified to indicate which to use).</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L42-L101" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def convert_to_arviz_inference_data(
-        traces, chain_stats, sample_stats_key=None):
-    &#34;&#34;&#34;Wrap chain outputs in an `arviz.InferenceData` container object.
-
-    The `traces` and `chain_stats` arguments should correspond to a
-    multiple-chain sampler output i.e. the returned values from a
-    `sample_chains` call.
-
-    Args:
-        traces (Dict[str, List[array]]): Trace arrays, with one entry per
-            function in `trace_funcs` passed to sampler method. Each entry
-            consists of a list of arrays, one per chain, with the first
-            axes of the arrays corresponding to the sampling (draw) index.
-        chain_stats (Dict[str, List[array]]): Chain integration transition
-            statistics as a dictionary with string keys describing the
-            statistics recorded and values corresponding to a list of
-            arrays with one array per chain and the first axis of the
-            arrays corresponding to the sampling index.
-        sample_stats_key (str): Optional. Key of transition in
-            `chain_stats` to use the recorded statistics of to populate the
-            `sampling_stats` group in the returned `InferenceData` object.
-
-    Returns:
-        arviz.InferenceData:
-            An arviz data container with groups `posterior` and
-            &#39;sample_stats&#39;, both of instances of `xarray.Dataset`. The
-            `posterior` group corresponds to the chain variable traces
-            provides in the `traces` argument and the `sample_stats`
-            group corresponds to the chain transitions statistics passed
-            in the `chain_stats` argument (if multiple transition
-            statistics dictionaries are present the `sample_stats_key`
-            argument should be specified to indicate which to use).
-    &#34;&#34;&#34;
-    if (sample_stats_key is not None and
-            sample_stats_key not in chain_stats):
-        raise ValueError(
-            f&#39;Specified `sample_stats_key` ({sample_stats_key}) does &#39;
-            f&#39;not match any transition in `chain_stats`.&#39;)
-    if sample_stats_key is not None:
-        return arviz.InferenceData(
-            posterior=arviz.dict_to_dataset(traces, library=mici),
-            sample_stats=arviz.dict_to_dataset(
-                chain_stats[sample_stats_key], library=mici))
-    elif not isinstance(next(iter(chain_stats.values())), dict):
-        # chain_stats dictionary value not another dictionary therefore
-        # assume corresponds to statistics for a single transition
-        return arviz.InferenceData(
-            posterior=arviz.dict_to_dataset(traces, library=mici),
-            sample_stats=arviz.dict_to_dataset(chain_stats, library=mici))
-    elif len(chain_stats) == 1:
-        # single transtition statistics dictionary in chain_stats therefore
-        # unambiguous to set sample_stats
-        return arviz.InferenceData(
-            posterior=arviz.dict_to_dataset(traces, library=mici),
-            sample_stats=arviz.dict_to_dataset(
-                chain_stats.popitem()[1], library=mici))
-    else:
-        raise ValueError(
-            &#39;`sample_stats_key` must be specified as `chain_stats` &#39;
-            &#39;contains multiple transtitiion statistics dictionaries.&#39;)</code></pre>
-</details>
-</dd>
 <dt id="mici.utils.hash_array"><code class="name flex">
 <span>def <span class="ident">hash_array</span></span>(<span>array)</span>
 </code></dt>
@@ -484,7 +292,7 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L107-L128" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L12-L33" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def hash_array(array):
     &#34;&#34;&#34;Compute hash of a NumPy array by hashing data as a byte sequence.
@@ -518,7 +326,7 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L134-L139" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L39-L44" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log1p_exp(val):
     &#34;&#34;&#34;Numerically stable implementation of `log(1 + exp(val))`.&#34;&#34;&#34;
@@ -536,7 +344,7 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L142-L149" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L47-L54" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log1m_exp(val):
     &#34;&#34;&#34;Numerically stable implementation of `log(1 - exp(val))`.&#34;&#34;&#34;
@@ -556,11 +364,13 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L152-L157" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L57-L64" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log_sum_exp(val1, val2):
     &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) + exp(val2))`.&#34;&#34;&#34;
-    if val1 &gt; val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 &gt; val2:
         return val1 + log1p_exp(val2 - val1)
     else:
         return val2 + log1p_exp(val1 - val2)</code></pre>
@@ -574,11 +384,13 @@ argument should be specified to indicate which to use).</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L160-L167" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L67-L76" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log_diff_exp(val1, val2):
     &#34;&#34;&#34;Numerically stable implementation of `log(exp(val1) - exp(val2))`.&#34;&#34;&#34;
-    if val1 &lt; val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 &lt; val2:
         return nan
     elif val1 == val2:
         return -inf
@@ -602,7 +414,7 @@ numerically stable implementations where possible.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L170-L288" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L79-L202" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LogRepFloat(object):
     &#34;&#34;&#34;Numerically stable logarithmic representation of positive float values.
@@ -645,7 +457,9 @@ numerically stable implementations where possible.</p></section>
         return self.__add__(other)
 
     def __iadd__(self, other):
-        if isinstance(other, LogRepFloat):
+        if other == 0:
+            return self
+        elif isinstance(other, LogRepFloat):
             self.log_val = log_sum_exp(self.log_val, other.log_val)
         else:
             self.log_val = log_sum_exp(self.log_val, log(other))
@@ -678,6 +492,9 @@ numerically stable implementations where possible.</p></section>
             return LogRepFloat(log_val=self.log_val - other.log_val)
         else:
             return self.val / other
+
+    def __rtruediv__(self, other):
+        return other / self.val
 
     def __neg__(self):
         return -self.val
@@ -732,7 +549,7 @@ numerically stable implementations where possible.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/utils.py#L193-L198" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/utils.py#L102-L107" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def val(self):

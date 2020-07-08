@@ -12,6 +12,7 @@
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
   <img src="images/coverage.svg" alt="Coverage"/>
+  <img src="https://github.com/matt-graham/mici/workflows/Tests/badge.svg" alt="Test status" />
 </p>
 
 **Mici** is a Python package providing implementations of *Markov chain Monte

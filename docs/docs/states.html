@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.7.2.dev0+g1b644f6.d20200630" />
 <title>mici.states API documentation</title>
-<meta name="description" content="Objects for recording state of a Markov chain." />
+<meta name="description" content="Objects for recording state of a Markov chain and caching computations." />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -34,7 +34,7 @@
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="mici.states.cache_in_state" href="#mici.states.cache_in_state">cache_in_state</a></code></li>
-<li><code><a title="mici.states.multi_cache_in_state" href="#mici.states.multi_cache_in_state">multi_cache_in_state</a></code></li>
+<li><code><a title="mici.states.cache_in_state_with_aux" href="#mici.states.cache_in_state_with_aux">cache_in_state_with_aux</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -54,78 +54,125 @@
 <h1 class="title">Module <code>mici.states</code></h1>
 </header>
 <section id="section-intro">
-<p>Objects for recording state of a Markov chain.</p>
+<p>Objects for recording state of a Markov chain and caching computations.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L0-L186" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L0-L271" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Objects for recording state of a Markov chain.&#34;&#34;&#34;
+<pre><code class="python">&#34;&#34;&#34;Objects for recording state of a Markov chain and caching computations.&#34;&#34;&#34;
 
 import copy
 from functools import wraps
+from collections import Counter
 from mici.errors import ReadOnlyStateError
 
 
-def cache_in_state(*depends_on):
-    &#34;&#34;&#34;Decorator to memoize / cache output of a function of state variable(s).
+def _cache_key_func(system, method):
+    &#34;&#34;&#34;Construct cache key for a given system and method pair.&#34;&#34;&#34;
+    if not isinstance(method, str):
+        method = method.__name__
+    return (f&#39;{type(system).__name__}.{method}&#39;, id(system))
 
-    Used to wrap functions of a chain state vaiable(s) to allow caching of
-    the values computed to prevent recomputation when possible.
+
+def cache_in_state(*depends_on):
+    &#34;&#34;&#34;Memoizing decorator for system methods.
+
+    Used to decorate `mici.system.System` methods which compute a function of
+    one or more chain state variable(s), with the decorated method caching the
+    value returned by the method being wrapped in the `ChainState` object to
+    prevent the need for recomputation on future calls if the state variables
+    the returned value depends on have not been changed in between the calls.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
-       *depends_on: One or more strings defining which state variables the
-           computed values depend on e.g. &#39;pos&#39;, &#39;mom&#39;, such that the cache is
-           correctly cleared when one of these parent dependency&#39;s value
-           changes.
+       *depends_on: One or more strings corresponding to the names of any state
+           variables the value returned by the method depends on, e.g. &#39;pos&#39; or
+           &#39;mom&#39;, such that the cache in the state object is correctly cleared
+           when the value of any of these variables (attributes) of the state
+           object changes.
     &#34;&#34;&#34;
     def cache_in_state_decorator(method):
         @wraps(method)
         def wrapper(self, state):
-            key = type(self).__name__ + &#39;.&#39; + method.__name__
+            key = _cache_key_func(self, method)
             if key not in state._cache:
                 for dep in depends_on:
                     state._dependencies[dep].add(key)
             if key not in state._cache or state._cache[key] is None:
                 state._cache[key] = method(self, state)
                 if state._call_counts is not None:
-                    if key not in state._call_counts:
-                        state._call_counts[key] = 1
-                    else:
-                        state._call_counts[key] += 1
+                    state._call_counts[key] += 1
             return state._cache[key]
         return wrapper
     return cache_in_state_decorator
 
 
-def multi_cache_in_state(depends_on, variables, primary_index=0):
-    &#34;&#34;&#34;Decorator to cache multiple outputs of a function of state variable(s).
+def cache_in_state_with_aux(depends_on, auxiliary_outputs):
+    &#34;&#34;&#34;Memoizing decorator for system methods with possible auxiliary outputs.
 
-    Used to wrap functions of a chain state vaiable(s) to allow caching of
-    the values computed to prevent recomputation when possible.
+    Used to decorate `mici.system.System` methods which compute a function of
+    one or more chain state variable(s), with the decorated method caching the
+    value or values returned by the method being wrapped in the `ChainState`
+    object to prevent the need for recomputation on future calls if the state
+    variables the returned value(s) depends on have not been changed in between
+    the calls.
 
-    This variant allows for functions which also cache intermediate computed
-    results which may be used separately elsewhere for example the value of a
-    function calculate in the forward pass of a reverse-mode automatic-
-    differentation implementation of its gradient.
+    Compared to the `cache_in_state` decorator, this variant allows for methods
+    which may optionally also return additional auxiliary outputs, such as
+    intermediate result computed while computing the primary output, which
+    correspond to the output of another system method decorated with the
+    `cache_in_state` or `cache_in_state_with_aux` decorators. If such auxiliary
+    outputs are returned they are also used to update cache entry for the
+    corresponding decorated method, potentially saving recomputation in
+    subsequent calls to that method. A common instance of this pattern is in
+    derivative values computed using automatic differentiation (AD), with the
+    primal value being differentiated usually either calculated alongside the
+    derivative (in forward-mode AD) or calculated first in a forward-pass before
+    the derivatives are calculated in a reverse-pass (in reverse-mode AD). By
+    caching the value of the primal computed as part of the derivative
+    calculation, a subsequent call to a method corresponding to calculation of
+    the primal itself will retrieve the cached value and not recompute the
+    primal, providing the relevant state variables the primal (and derivative)
+    depend on have not been changed in between.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
-        depends_on (List[str]): A list of strings defining which state
-            variables the computed values depend on e.g. `[&#39;pos&#39;, &#39;mom&#39;]`, such
-            that the cache is correctly cleared when one of these parent
-            dependency&#39;s value changes.
-        variables (List[str]): A list of strings defining the variables in the
-            state cache dict corresponding to the outputs of the wrapped
-            function (method) in the corresponding returned order.
-        primary_index (int): Index of primary output of function (i.e. value to
-            be returned) in `variables` list / position in output of function.
+        depends_on (str or Tuple[str]): A string or tuple of strings, with each
+            string corresponding to the name of a state variables the value(s)
+            returned by the method depends on, e.g. &#39;pos&#39; or &#39;mom&#39;, such that
+            the cache in the state object is correctly cleared when the value of
+            any of these variables (attributes) of the state object changes.
+        auxiliary_outputs (str or Tuple[str]): A string or tuple of strings,
+            with each string defining an auxiliary output the wrapped method may
+            additionally return in addition to the primary output. If auxiliary
+            outputs are returned, the returned value should be a tuple with
+            first entry the &#39;primary&#39; output corresponding to the value
+            associated with the name of the method and the subsequent entries in
+            the tuple corresponding to the auxiliary outputs in the order
+            specified by the entries in the `auxiliary_outputs` argument. If the
+            primary output is itself a tuple, it must be wrapped in another
+            tuple even when no auxiliary outputs are being returned.
     &#34;&#34;&#34;
-    def multi_cache_in_state_decorator(method):
+    if isinstance(depends_on, str):
+        depends_on = (depends_on,)
+    if isinstance(auxiliary_outputs, str):
+        auxiliary_outputs = (auxiliary_outputs,)
+
+    def cache_in_state_with_aux_decorator(method):
         @wraps(method)
         def wrapper(self, state):
-            type_prefix = type(self).__name__ + &#39;.&#39;
-            prim_key = type_prefix + variables[primary_index]
-            keys = [type_prefix + v for v in variables]
+            prim_key = _cache_key_func(self, method)
+            keys = [prim_key] + [
+                _cache_key_func(self, a) for a in auxiliary_outputs]
             for i, key in enumerate(keys):
                 if key not in state._cache:
                     for dep in depends_on:
@@ -138,13 +185,11 @@ def multi_cache_in_state(depends_on, variables, primary_index=0):
                 else:
                     state._cache[prim_key] = vals
                 if state._call_counts is not None:
-                    if prim_key not in state._call_counts:
-                        state._call_counts[prim_key] = 1
-                    else:
-                        state._call_counts[prim_key] += 1
+                    state._call_counts[prim_key] += 1
             return state._cache[prim_key]
         return wrapper
-    return multi_cache_in_state_decorator
+
+    return cache_in_state_with_aux_decorator
 
 
 class ChainState(object):
@@ -153,24 +198,62 @@ class ChainState(object):
     As well as recording the chain state variable values, the state object is
     also used to cache derived quantities to avoid recalculation if these
     values are subsequently reused.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    dictionary, any memoized system methods (i.e. those decorated with
+    `cache_in_state` or `cache_in_state_with_aux`) will update a counter for the
+    method in the state `_call_counts` dictionary attribute every time the
+    decorated method is called (i.e. when there isn&#39;t a valid cached value
+    available).
     &#34;&#34;&#34;
 
-    def __init__(self, _dependencies=None, _cache=None, _call_counts=None,
-                 _read_only=False, **variables):
+    def __init__(self, *, _call_counts=None, _read_only=False,
+                 _dependencies=None, _cache=None, **variables):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
-        Any keyword arguments passed to the constructor will be used to set
-        state variable attributes of state object for example
+        Any keyword arguments passed to the constructor (with names not starting
+        with an underscore) will be used to set state variable attributes of
+        state object for example
 
             state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)
 
         will return a `ChainState` instance `state` with variable attributes
         `state.pos`, `state.mom` and `state.dir` with initial values set to
-        `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
-        `_dependencies`, `_cache`, `_call_counts` and `_read_only` are reserved
-        respectively for the dependency set, cache dictionary, call count
-        dictionary and a flag to make the state read-only and cannot be used as
-        state variable names.
+        `pos_val`, `mom_val` and `dir_val` respectively.
+
+        Keyword arguments with a leading underscore in the name are reserved
+        for additional arguments to the constructor not corresponding to
+        state variables. Additionally the name `copy` should not be used as
+        attribute access to this name will be blocked by the `copy` method.
+
+        Kwargs:
+            **variables: Keyword arguments corresponding to state variables. All
+                names must not begin with an underscore and no name can be
+                `copy`. See description above for details.
+            _call_counts (None or Dict): If a dictionary is passed this will be
+                used to store counts of the number of calls of system methods
+                decorated with `cache_in_state` or `cache_in_state_with_aux`
+                when called on this state object and when no cached value for
+                the method is available so that the wrapped method is called.
+                The `_call_counts` dictionary persists between all copies of a
+                state so will count any decorated method calls on copies of the
+                state as well - e.g. all copies of a state in a sampled Markov
+                chain, allowing the `_call_counts` dictionary to be used to
+                monitor the number of method call while sampling a chain.
+            _read_only (bool): If `True` a `mici.errors.ReadOnlyStateError`
+                exception will be raised when attempting to set any attributes
+                of the state object after construction. Defaults to `False`.
+            _dependencies (None or Dict): Intended for internal use only. If not
+                `None` this should be a dictionary with string keys
+                corresponding to the state variable names and values which are
+                sets of strings indicating any dependencies of the relevant
+                state variable in the cache.
+            _cache (None or Dict): Intended for internal use only. If not `None`
+                this should be a dictionary with keys corresponding to unique
+                identifiers for methods decorated with the `cache_in_state` or
+                `cache_in_state_with_aux` decorators and values corresponding
+                to cached computed outputs of these methods or `None` for when
+                a cached output is not available.
         &#34;&#34;&#34;
         # Set attributes by directly writing to __dict__ to ensure set before
         # any call to __setattr__
@@ -181,7 +264,9 @@ class ChainState(object):
         if _cache is None:
             _cache = {}
         self.__dict__[&#39;_cache&#39;] = _cache
-        self.__dict__[&#39;_call_counts&#39;] = _call_counts
+        self.__dict__[&#39;_call_counts&#39;] = (
+            Counter(_call_counts) if isinstance(_call_counts, dict)
+            else _call_counts)
         self.__dict__[&#39;_read_only&#39;] = _read_only
 
     def __getattr__(self, name):
@@ -260,112 +345,185 @@ class ChainState(object):
 <span>def <span class="ident">cache_in_state</span></span>(<span>*depends_on)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Decorator to memoize / cache output of a function of state variable(s).</p>
-<p>Used to wrap functions of a chain state vaiable(s) to allow caching of
-the values computed to prevent recomputation when possible.</p>
+<section class="desc"><p>Memoizing decorator for system methods.</p>
+<p>Used to decorate <code>mici.system.System</code> methods which compute a function of
+one or more chain state variable(s), with the decorated method caching the
+value returned by the method being wrapped in the <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> object to
+prevent the need for recomputation on future calls if the state variables
+the returned value depends on have not been changed in between the calls.</p>
+<p>Additionally for <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instances initialized with a <code>_call_counts</code>
+argument, the memoized method will update a counter for the method in the
+<code>ChainState._call_counts</code> attribute every time the method being decorated is
+called (i.e. when there isn't a valid cached value available).</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>*depends_on</code></strong></dt>
-<dd>One or more strings defining which state variables the
-computed values depend on e.g. 'pos', 'mom', such that the cache is
-correctly cleared when one of these parent dependency's value
-changes.</dd>
+<dd>One or more strings corresponding to the names of any state
+variables the value returned by the method depends on, e.g. 'pos' or
+'mom', such that the cache in the state object is correctly cleared
+when the value of any of these variables (attributes) of the state
+object changes.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L8-L36" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L16-L50" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state(*depends_on):
-    &#34;&#34;&#34;Decorator to memoize / cache output of a function of state variable(s).
+    &#34;&#34;&#34;Memoizing decorator for system methods.
 
-    Used to wrap functions of a chain state vaiable(s) to allow caching of
-    the values computed to prevent recomputation when possible.
+    Used to decorate `mici.system.System` methods which compute a function of
+    one or more chain state variable(s), with the decorated method caching the
+    value returned by the method being wrapped in the `ChainState` object to
+    prevent the need for recomputation on future calls if the state variables
+    the returned value depends on have not been changed in between the calls.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
-       *depends_on: One or more strings defining which state variables the
-           computed values depend on e.g. &#39;pos&#39;, &#39;mom&#39;, such that the cache is
-           correctly cleared when one of these parent dependency&#39;s value
-           changes.
+       *depends_on: One or more strings corresponding to the names of any state
+           variables the value returned by the method depends on, e.g. &#39;pos&#39; or
+           &#39;mom&#39;, such that the cache in the state object is correctly cleared
+           when the value of any of these variables (attributes) of the state
+           object changes.
     &#34;&#34;&#34;
     def cache_in_state_decorator(method):
         @wraps(method)
         def wrapper(self, state):
-            key = type(self).__name__ + &#39;.&#39; + method.__name__
+            key = _cache_key_func(self, method)
             if key not in state._cache:
                 for dep in depends_on:
                     state._dependencies[dep].add(key)
             if key not in state._cache or state._cache[key] is None:
                 state._cache[key] = method(self, state)
                 if state._call_counts is not None:
-                    if key not in state._call_counts:
-                        state._call_counts[key] = 1
-                    else:
-                        state._call_counts[key] += 1
+                    state._call_counts[key] += 1
             return state._cache[key]
         return wrapper
     return cache_in_state_decorator</code></pre>
 </details>
 </dd>
-<dt id="mici.states.multi_cache_in_state"><code class="name flex">
-<span>def <span class="ident">multi_cache_in_state</span></span>(<span>depends_on, variables, primary_index=0)</span>
+<dt id="mici.states.cache_in_state_with_aux"><code class="name flex">
+<span>def <span class="ident">cache_in_state_with_aux</span></span>(<span>depends_on, auxiliary_outputs)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Decorator to cache multiple outputs of a function of state variable(s).</p>
-<p>Used to wrap functions of a chain state vaiable(s) to allow caching of
-the values computed to prevent recomputation when possible.</p>
-<p>This variant allows for functions which also cache intermediate computed
-results which may be used separately elsewhere for example the value of a
-function calculate in the forward pass of a reverse-mode automatic-
-differentation implementation of its gradient.</p>
+<section class="desc"><p>Memoizing decorator for system methods with possible auxiliary outputs.</p>
+<p>Used to decorate <code>mici.system.System</code> methods which compute a function of
+one or more chain state variable(s), with the decorated method caching the
+value or values returned by the method being wrapped in the <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a>
+object to prevent the need for recomputation on future calls if the state
+variables the returned value(s) depends on have not been changed in between
+the calls.</p>
+<p>Compared to the <a title="mici.states.cache_in_state" href="#mici.states.cache_in_state"><code>cache_in_state()</code></a> decorator, this variant allows for methods
+which may optionally also return additional auxiliary outputs, such as
+intermediate result computed while computing the primary output, which
+correspond to the output of another system method decorated with the
+<a title="mici.states.cache_in_state" href="#mici.states.cache_in_state"><code>cache_in_state()</code></a> or <a title="mici.states.cache_in_state_with_aux" href="#mici.states.cache_in_state_with_aux"><code>cache_in_state_with_aux()</code></a> decorators. If such auxiliary
+outputs are returned they are also used to update cache entry for the
+corresponding decorated method, potentially saving recomputation in
+subsequent calls to that method. A common instance of this pattern is in
+derivative values computed using automatic differentiation (AD), with the
+primal value being differentiated usually either calculated alongside the
+derivative (in forward-mode AD) or calculated first in a forward-pass before
+the derivatives are calculated in a reverse-pass (in reverse-mode AD). By
+caching the value of the primal computed as part of the derivative
+calculation, a subsequent call to a method corresponding to calculation of
+the primal itself will retrieve the cached value and not recompute the
+primal, providing the relevant state variables the primal (and derivative)
+depend on have not been changed in between.</p>
+<p>Additionally for <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instances initialized with a <code>_call_counts</code>
+argument, the memoized method will update a counter for the method in the
+<code>ChainState._call_counts</code> attribute every time the method being decorated is
+called (i.e. when there isn't a valid cached value available).</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>depends_on</code></strong> :&ensp;<code>List</code>[<code>str</code>]</dt>
-<dd>A list of strings defining which state
-variables the computed values depend on e.g. <code>['pos', 'mom']</code>, such
-that the cache is correctly cleared when one of these parent
-dependency's value changes.</dd>
-<dt><strong><code>variables</code></strong> :&ensp;<code>List</code>[<code>str</code>]</dt>
-<dd>A list of strings defining the variables in the
-state cache dict corresponding to the outputs of the wrapped
-function (method) in the corresponding returned order.</dd>
-<dt><strong><code>primary_index</code></strong> :&ensp;<code>int</code></dt>
-<dd>Index of primary output of function (i.e. value to
-be returned) in <code>variables</code> list / position in output of function.</dd>
+<dt><strong><code>depends_on</code></strong> :&ensp;<code>str</code> or <code>Tuple</code>[<code>str</code>]</dt>
+<dd>A string or tuple of strings, with each
+string corresponding to the name of a state variables the value(s)
+returned by the method depends on, e.g. 'pos' or 'mom', such that
+the cache in the state object is correctly cleared when the value of
+any of these variables (attributes) of the state object changes.</dd>
+<dt><strong><code>auxiliary_outputs</code></strong> :&ensp;<code>str</code> or <code>Tuple</code>[<code>str</code>]</dt>
+<dd>A string or tuple of strings,
+with each string defining an auxiliary output the wrapped method may
+additionally return in addition to the primary output. If auxiliary
+outputs are returned, the returned value should be a tuple with
+first entry the 'primary' output corresponding to the value
+associated with the name of the method and the subsequent entries in
+the tuple corresponding to the auxiliary outputs in the order
+specified by the entries in the <code>auxiliary_outputs</code> argument. If the
+primary output is itself a tuple, it must be wrapped in another
+tuple even when no auxiliary outputs are being returned.</dd>
 </dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L39-L85" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L53-L130" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def multi_cache_in_state(depends_on, variables, primary_index=0):
-    &#34;&#34;&#34;Decorator to cache multiple outputs of a function of state variable(s).
+<pre><code class="python">def cache_in_state_with_aux(depends_on, auxiliary_outputs):
+    &#34;&#34;&#34;Memoizing decorator for system methods with possible auxiliary outputs.
 
-    Used to wrap functions of a chain state vaiable(s) to allow caching of
-    the values computed to prevent recomputation when possible.
+    Used to decorate `mici.system.System` methods which compute a function of
+    one or more chain state variable(s), with the decorated method caching the
+    value or values returned by the method being wrapped in the `ChainState`
+    object to prevent the need for recomputation on future calls if the state
+    variables the returned value(s) depends on have not been changed in between
+    the calls.
 
-    This variant allows for functions which also cache intermediate computed
-    results which may be used separately elsewhere for example the value of a
-    function calculate in the forward pass of a reverse-mode automatic-
-    differentation implementation of its gradient.
+    Compared to the `cache_in_state` decorator, this variant allows for methods
+    which may optionally also return additional auxiliary outputs, such as
+    intermediate result computed while computing the primary output, which
+    correspond to the output of another system method decorated with the
+    `cache_in_state` or `cache_in_state_with_aux` decorators. If such auxiliary
+    outputs are returned they are also used to update cache entry for the
+    corresponding decorated method, potentially saving recomputation in
+    subsequent calls to that method. A common instance of this pattern is in
+    derivative values computed using automatic differentiation (AD), with the
+    primal value being differentiated usually either calculated alongside the
+    derivative (in forward-mode AD) or calculated first in a forward-pass before
+    the derivatives are calculated in a reverse-pass (in reverse-mode AD). By
+    caching the value of the primal computed as part of the derivative
+    calculation, a subsequent call to a method corresponding to calculation of
+    the primal itself will retrieve the cached value and not recompute the
+    primal, providing the relevant state variables the primal (and derivative)
+    depend on have not been changed in between.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    argument, the memoized method will update a counter for the method in the
+    `ChainState._call_counts` attribute every time the method being decorated is
+    called (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
-        depends_on (List[str]): A list of strings defining which state
-            variables the computed values depend on e.g. `[&#39;pos&#39;, &#39;mom&#39;]`, such
-            that the cache is correctly cleared when one of these parent
-            dependency&#39;s value changes.
-        variables (List[str]): A list of strings defining the variables in the
-            state cache dict corresponding to the outputs of the wrapped
-            function (method) in the corresponding returned order.
-        primary_index (int): Index of primary output of function (i.e. value to
-            be returned) in `variables` list / position in output of function.
+        depends_on (str or Tuple[str]): A string or tuple of strings, with each
+            string corresponding to the name of a state variables the value(s)
+            returned by the method depends on, e.g. &#39;pos&#39; or &#39;mom&#39;, such that
+            the cache in the state object is correctly cleared when the value of
+            any of these variables (attributes) of the state object changes.
+        auxiliary_outputs (str or Tuple[str]): A string or tuple of strings,
+            with each string defining an auxiliary output the wrapped method may
+            additionally return in addition to the primary output. If auxiliary
+            outputs are returned, the returned value should be a tuple with
+            first entry the &#39;primary&#39; output corresponding to the value
+            associated with the name of the method and the subsequent entries in
+            the tuple corresponding to the auxiliary outputs in the order
+            specified by the entries in the `auxiliary_outputs` argument. If the
+            primary output is itself a tuple, it must be wrapped in another
+            tuple even when no auxiliary outputs are being returned.
     &#34;&#34;&#34;
-    def multi_cache_in_state_decorator(method):
+    if isinstance(depends_on, str):
+        depends_on = (depends_on,)
+    if isinstance(auxiliary_outputs, str):
+        auxiliary_outputs = (auxiliary_outputs,)
+
+    def cache_in_state_with_aux_decorator(method):
         @wraps(method)
         def wrapper(self, state):
-            type_prefix = type(self).__name__ + &#39;.&#39;
-            prim_key = type_prefix + variables[primary_index]
-            keys = [type_prefix + v for v in variables]
+            prim_key = _cache_key_func(self, method)
+            keys = [prim_key] + [
+                _cache_key_func(self, a) for a in auxiliary_outputs]
             for i, key in enumerate(keys):
                 if key not in state._cache:
                     for dep in depends_on:
@@ -378,13 +536,11 @@ be returned) in <code>variables</code> list / position in output of function.</d
                 else:
                     state._cache[prim_key] = vals
                 if state._call_counts is not None:
-                    if prim_key not in state._call_counts:
-                        state._call_counts[prim_key] = 1
-                    else:
-                        state._call_counts[prim_key] += 1
+                    state._call_counts[prim_key] += 1
             return state._cache[prim_key]
         return wrapper
-    return multi_cache_in_state_decorator</code></pre>
+
+    return cache_in_state_with_aux_decorator</code></pre>
 </details>
 </dd>
 </dl>
@@ -401,22 +557,64 @@ be returned) in <code>variables</code> list / position in output of function.</d
 <p>As well as recording the chain state variable values, the state object is
 also used to cache derived quantities to avoid recalculation if these
 values are subsequently reused.</p>
+<p>Additionally for <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instances initialized with a <code>_call_counts</code>
+dictionary, any memoized system methods (i.e. those decorated with
+<a title="mici.states.cache_in_state" href="#mici.states.cache_in_state"><code>cache_in_state()</code></a> or <a title="mici.states.cache_in_state_with_aux" href="#mici.states.cache_in_state_with_aux"><code>cache_in_state_with_aux()</code></a>) will update a counter for the
+method in the state <code>_call_counts</code> dictionary attribute every time the
+decorated method is called (i.e. when there isn't a valid cached value
+available).</p>
 <p>Create a new <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instance.</p>
-<p>Any keyword arguments passed to the constructor will be used to set
-state variable attributes of state object for example</p>
+<p>Any keyword arguments passed to the constructor (with names not starting
+with an underscore) will be used to set state variable attributes of
+state object for example</p>
 <pre><code>state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)
 </code></pre>
 <p>will return a <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instance <code>state</code> with variable attributes
 <code>state.pos</code>, <code>state.mom</code> and <code>state.dir</code> with initial values set to
-<code>pos_val</code>, <code>mom_val</code> and <code>dir_val</code> respectively. The keyword arguments
-<code>_dependencies</code>, <code>_cache</code>, <code>_call_counts</code> and <code>_read_only</code> are reserved
-respectively for the dependency set, cache dictionary, call count
-dictionary and a flag to make the state read-only and cannot be used as
-state variable names.</p></section>
+<code>pos_val</code>, <code>mom_val</code> and <code>dir_val</code> respectively.</p>
+<p>Keyword arguments with a leading underscore in the name are reserved
+for additional arguments to the constructor not corresponding to
+state variables. Additionally the name <code>copy</code> should not be used as
+attribute access to this name will be blocked by the <code>copy</code> method.</p>
+<h2 id="kwargs">Kwargs</h2>
+<dl>
+<dt><strong><code>**variables</code></strong></dt>
+<dd>Keyword arguments corresponding to state variables. All
+names must not begin with an underscore and no name can be
+<code>copy</code>. See description above for details.</dd>
+<dt><strong><code>_call_counts</code></strong> :&ensp;<code>None</code> or <code>Dict</code></dt>
+<dd>If a dictionary is passed this will be
+used to store counts of the number of calls of system methods
+decorated with <a title="mici.states.cache_in_state" href="#mici.states.cache_in_state"><code>cache_in_state()</code></a> or <a title="mici.states.cache_in_state_with_aux" href="#mici.states.cache_in_state_with_aux"><code>cache_in_state_with_aux()</code></a>
+when called on this state object and when no cached value for
+the method is available so that the wrapped method is called.
+The <code>_call_counts</code> dictionary persists between all copies of a
+state so will count any decorated method calls on copies of the
+state as well - e.g. all copies of a state in a sampled Markov
+chain, allowing the <code>_call_counts</code> dictionary to be used to
+monitor the number of method call while sampling a chain.</dd>
+<dt><strong><code>_read_only</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If <code>True</code> a <a title="mici.errors.ReadOnlyStateError" href="errors.html#mici.errors.ReadOnlyStateError"><code>ReadOnlyStateError</code></a>
+exception will be raised when attempting to set any attributes
+of the state object after construction. Defaults to <code>False</code>.</dd>
+<dt><strong><code>_dependencies</code></strong> :&ensp;<code>None</code> or <code>Dict</code></dt>
+<dd>Intended for internal use only. If not
+<code>None</code> this should be a dictionary with string keys
+corresponding to the state variable names and values which are
+sets of strings indicating any dependencies of the relevant
+state variable in the cache.</dd>
+<dt><strong><code>_cache</code></strong> :&ensp;<code>None</code> or <code>Dict</code></dt>
+<dd>Intended for internal use only. If not <code>None</code>
+this should be a dictionary with keys corresponding to unique
+identifiers for methods decorated with the <a title="mici.states.cache_in_state" href="#mici.states.cache_in_state"><code>cache_in_state()</code></a> or
+<a title="mici.states.cache_in_state_with_aux" href="#mici.states.cache_in_state_with_aux"><code>cache_in_state_with_aux()</code></a> decorators and values corresponding
+to cached computed outputs of these methods or <code>None</code> for when
+a cached output is not available.</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L88-L187" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L133-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ChainState(object):
     &#34;&#34;&#34;Markov chain state.
@@ -424,24 +622,62 @@ state variable names.</p></section>
     As well as recording the chain state variable values, the state object is
     also used to cache derived quantities to avoid recalculation if these
     values are subsequently reused.
+
+    Additionally for `ChainState` instances initialized with a `_call_counts`
+    dictionary, any memoized system methods (i.e. those decorated with
+    `cache_in_state` or `cache_in_state_with_aux`) will update a counter for the
+    method in the state `_call_counts` dictionary attribute every time the
+    decorated method is called (i.e. when there isn&#39;t a valid cached value
+    available).
     &#34;&#34;&#34;
 
-    def __init__(self, _dependencies=None, _cache=None, _call_counts=None,
-                 _read_only=False, **variables):
+    def __init__(self, *, _call_counts=None, _read_only=False,
+                 _dependencies=None, _cache=None, **variables):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
-        Any keyword arguments passed to the constructor will be used to set
-        state variable attributes of state object for example
+        Any keyword arguments passed to the constructor (with names not starting
+        with an underscore) will be used to set state variable attributes of
+        state object for example
 
             state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)
 
         will return a `ChainState` instance `state` with variable attributes
         `state.pos`, `state.mom` and `state.dir` with initial values set to
-        `pos_val`, `mom_val` and `dir_val` respectively. The keyword arguments
-        `_dependencies`, `_cache`, `_call_counts` and `_read_only` are reserved
-        respectively for the dependency set, cache dictionary, call count
-        dictionary and a flag to make the state read-only and cannot be used as
-        state variable names.
+        `pos_val`, `mom_val` and `dir_val` respectively.
+
+        Keyword arguments with a leading underscore in the name are reserved
+        for additional arguments to the constructor not corresponding to
+        state variables. Additionally the name `copy` should not be used as
+        attribute access to this name will be blocked by the `copy` method.
+
+        Kwargs:
+            **variables: Keyword arguments corresponding to state variables. All
+                names must not begin with an underscore and no name can be
+                `copy`. See description above for details.
+            _call_counts (None or Dict): If a dictionary is passed this will be
+                used to store counts of the number of calls of system methods
+                decorated with `cache_in_state` or `cache_in_state_with_aux`
+                when called on this state object and when no cached value for
+                the method is available so that the wrapped method is called.
+                The `_call_counts` dictionary persists between all copies of a
+                state so will count any decorated method calls on copies of the
+                state as well - e.g. all copies of a state in a sampled Markov
+                chain, allowing the `_call_counts` dictionary to be used to
+                monitor the number of method call while sampling a chain.
+            _read_only (bool): If `True` a `mici.errors.ReadOnlyStateError`
+                exception will be raised when attempting to set any attributes
+                of the state object after construction. Defaults to `False`.
+            _dependencies (None or Dict): Intended for internal use only. If not
+                `None` this should be a dictionary with string keys
+                corresponding to the state variable names and values which are
+                sets of strings indicating any dependencies of the relevant
+                state variable in the cache.
+            _cache (None or Dict): Intended for internal use only. If not `None`
+                this should be a dictionary with keys corresponding to unique
+                identifiers for methods decorated with the `cache_in_state` or
+                `cache_in_state_with_aux` decorators and values corresponding
+                to cached computed outputs of these methods or `None` for when
+                a cached output is not available.
         &#34;&#34;&#34;
         # Set attributes by directly writing to __dict__ to ensure set before
         # any call to __setattr__
@@ -452,7 +688,9 @@ state variable names.</p></section>
         if _cache is None:
             _cache = {}
         self.__dict__[&#39;_cache&#39;] = _cache
-        self.__dict__[&#39;_call_counts&#39;] = _call_counts
+        self.__dict__[&#39;_call_counts&#39;] = (
+            Counter(_call_counts) if isinstance(_call_counts, dict)
+            else _call_counts)
         self.__dict__[&#39;_read_only&#39;] = _read_only
 
     def __getattr__(self, name):
@@ -541,7 +779,7 @@ object's variables.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/states.py#L146-L160" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L231-L245" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def copy(self, read_only=False):
     &#34;&#34;&#34;Create a deep copy of the state object.

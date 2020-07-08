@@ -35,35 +35,59 @@
 <ul>
 <li>
 <code><a title="mici.adapters.Adapter" href="#mici.adapters.Adapter">Adapter</a></code>
+<details class="source">
+<summary>
+<span>Expand members</span>
+</summary>
 <ul class="">
 <li><code><a title="mici.adapters.Adapter.initialize" href="#mici.adapters.Adapter.initialize">initialize</a></code></li>
 <li><code><a title="mici.adapters.Adapter.update" href="#mici.adapters.Adapter.update">update</a></code></li>
 <li><code><a title="mici.adapters.Adapter.finalize" href="#mici.adapters.Adapter.finalize">finalize</a></code></li>
+<li><code><a title="mici.adapters.Adapter.is_fast" href="#mici.adapters.Adapter.is_fast">is_fast</a></code></li>
 </ul>
+</details>
 </li>
 <li>
 <code><a title="mici.adapters.DualAveragingStepSizeAdapter" href="#mici.adapters.DualAveragingStepSizeAdapter">DualAveragingStepSizeAdapter</a></code>
+<details class="source">
+<summary>
+<span>Expand members</span>
+</summary>
 <ul class="">
 <li><code><a title="mici.adapters.DualAveragingStepSizeAdapter.initialize" href="#mici.adapters.DualAveragingStepSizeAdapter.initialize">initialize</a></code></li>
 <li><code><a title="mici.adapters.DualAveragingStepSizeAdapter.update" href="#mici.adapters.DualAveragingStepSizeAdapter.update">update</a></code></li>
 <li><code><a title="mici.adapters.DualAveragingStepSizeAdapter.finalize" href="#mici.adapters.DualAveragingStepSizeAdapter.finalize">finalize</a></code></li>
+<li><code><a title="mici.adapters.DualAveragingStepSizeAdapter.is_fast" href="#mici.adapters.DualAveragingStepSizeAdapter.is_fast">is_fast</a></code></li>
 </ul>
+</details>
 </li>
 <li>
 <code><a title="mici.adapters.OnlineVarianceMetricAdapter" href="#mici.adapters.OnlineVarianceMetricAdapter">OnlineVarianceMetricAdapter</a></code>
+<details class="source">
+<summary>
+<span>Expand members</span>
+</summary>
 <ul class="">
 <li><code><a title="mici.adapters.OnlineVarianceMetricAdapter.initialize" href="#mici.adapters.OnlineVarianceMetricAdapter.initialize">initialize</a></code></li>
 <li><code><a title="mici.adapters.OnlineVarianceMetricAdapter.update" href="#mici.adapters.OnlineVarianceMetricAdapter.update">update</a></code></li>
 <li><code><a title="mici.adapters.OnlineVarianceMetricAdapter.finalize" href="#mici.adapters.OnlineVarianceMetricAdapter.finalize">finalize</a></code></li>
+<li><code><a title="mici.adapters.OnlineVarianceMetricAdapter.is_fast" href="#mici.adapters.OnlineVarianceMetricAdapter.is_fast">is_fast</a></code></li>
 </ul>
+</details>
 </li>
 <li>
 <code><a title="mici.adapters.OnlineCovarianceMetricAdapter" href="#mici.adapters.OnlineCovarianceMetricAdapter">OnlineCovarianceMetricAdapter</a></code>
+<details class="source">
+<summary>
+<span>Expand members</span>
+</summary>
 <ul class="">
 <li><code><a title="mici.adapters.OnlineCovarianceMetricAdapter.initialize" href="#mici.adapters.OnlineCovarianceMetricAdapter.initialize">initialize</a></code></li>
 <li><code><a title="mici.adapters.OnlineCovarianceMetricAdapter.update" href="#mici.adapters.OnlineCovarianceMetricAdapter.update">update</a></code></li>
 <li><code><a title="mici.adapters.OnlineCovarianceMetricAdapter.finalize" href="#mici.adapters.OnlineCovarianceMetricAdapter.finalize">finalize</a></code></li>
+<li><code><a title="mici.adapters.OnlineCovarianceMetricAdapter.is_fast" href="#mici.adapters.OnlineCovarianceMetricAdapter.is_fast">is_fast</a></code></li>
 </ul>
+</details>
 </li>
 </ul>
 </li>
@@ -78,11 +102,11 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L0-L458" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L0-L475" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Methods for adaptively setting algorithmic parameters of transitions.&#34;&#34;&#34;
 
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from math import exp, log
 import numpy as np
 from mici.errors import IntegratorError, AdaptationError
@@ -155,6 +179,17 @@ class Adapter(ABC):
                 updated in-place by the method.
         &#34;&#34;&#34;
 
+    @property
+    @abstractmethod
+    def is_fast(self):
+        &#34;&#34;&#34;Whether the adapter is &#39;fast&#39; or &#39;slow&#39;.
+
+        An adapter which requires only local information to adapt the transition
+        parameters should be classified as fast while one which requires more
+        global information and so more chain iterations should be classified
+        as slow i.e. `is_fast == False`.
+        &#34;&#34;&#34;
+
 
 class DualAveragingStepSizeAdapter(Adapter):
     &#34;&#34;&#34;Dual averaging integrator step size adapter.
@@ -174,6 +209,8 @@ class DualAveragingStepSizeAdapter(Adapter):
       2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex
          problems. Mathematical programming 120(1), pp.221-259.
     &#34;&#34;&#34;
+
+    is_fast = True
 
     def __init__(self, adapt_stat_target=0.8, adapt_stat_func=None,
                  log_step_size_reg_target=None,
@@ -237,9 +274,9 @@ class DualAveragingStepSizeAdapter(Adapter):
             &#39;smoothed_log_step_size&#39;: 0.,
             &#39;adapt_stat_error&#39;: 0.,
         }
-        init_step_size = (self._find_and_set_init_step_size(
-            chain_state, system, integrator) if integrator.step_size is None
-            else integrator.step_size)
+        init_step_size = (
+            self._find_and_set_init_step_size(chain_state, system, integrator)
+            if integrator.step_size is None else integrator.step_size)
         if self.log_step_size_reg_target is None:
             adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
         else:
@@ -360,6 +397,8 @@ class OnlineVarianceMetricAdapter(Adapter):
          Software, 76(1).
     &#34;&#34;&#34;
 
+    is_fast = False
+
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         &#34;&#34;&#34;
         Args:
@@ -467,6 +506,8 @@ class OnlineCovarianceMetricAdapter(Adapter):
          Software, 76(1).
     &#34;&#34;&#34;
 
+    is_fast = False
+
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         &#34;&#34;&#34;
         Args:
@@ -565,7 +606,7 @@ used to perform a final update to the transition parameters.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L11-L74" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L11-L85" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Adapter(ABC):
     &#34;&#34;&#34;Abstract adapter for implementing schemes to adapt transition parameters.
@@ -630,6 +671,17 @@ used to perform a final update to the transition parameters.</p></section>
             transition (mici.transitions.Transition): Markov transition being
                 adapted. Attributes of the transition or child objects will be
                 updated in-place by the method.
+        &#34;&#34;&#34;
+
+    @property
+    @abstractmethod
+    def is_fast(self):
+        &#34;&#34;&#34;Whether the adapter is &#39;fast&#39; or &#39;slow&#39;.
+
+        An adapter which requires only local information to adapt the transition
+        parameters should be classified as fast while one which requires more
+        global information and so more chain iterations should be classified
+        as slow i.e. `is_fast == False`.
         &#34;&#34;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -642,6 +694,33 @@ used to perform a final update to the transition parameters.</p></section>
 <li><a title="mici.adapters.OnlineVarianceMetricAdapter" href="#mici.adapters.OnlineVarianceMetricAdapter">OnlineVarianceMetricAdapter</a></li>
 <li><a title="mici.adapters.OnlineCovarianceMetricAdapter" href="#mici.adapters.OnlineCovarianceMetricAdapter">OnlineCovarianceMetricAdapter</a></li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="mici.adapters.Adapter.is_fast"><code class="name">var <span class="ident">is_fast</span></code></dt>
+<dd>
+<section class="desc"><p>Whether the adapter is 'fast' or 'slow'.</p>
+<p>An adapter which requires only local information to adapt the transition
+parameters should be classified as fast while one which requires more
+global information and so more chain iterations should be classified
+as slow i.e. <code>is_fast == False</code>.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L76-L85" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+@abstractmethod
+def is_fast(self):
+    &#34;&#34;&#34;Whether the adapter is &#39;fast&#39; or &#39;slow&#39;.
+
+    An adapter which requires only local information to adapt the transition
+    parameters should be classified as fast while one which requires more
+    global information and so more chain iterations should be classified
+    as slow i.e. `is_fast == False`.
+    &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.adapters.Adapter.initialize"><code class="name flex">
@@ -668,7 +747,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L22-L36" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L22-L36" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def initialize(self, chain_state, transition):
@@ -714,7 +793,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L38-L55" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L38-L55" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def update(self, adapt_state, chain_state, trans_stats, transition):
@@ -760,7 +839,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L57-L74" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L57-L74" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def finalize(self, adapt_state, transition):
@@ -853,7 +932,7 @@ not found within this many iterations.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L77-L250" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L88-L263" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DualAveragingStepSizeAdapter(Adapter):
     &#34;&#34;&#34;Dual averaging integrator step size adapter.
@@ -873,6 +952,8 @@ not found within this many iterations.</dd>
       2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex
          problems. Mathematical programming 120(1), pp.221-259.
     &#34;&#34;&#34;
+
+    is_fast = True
 
     def __init__(self, adapt_stat_target=0.8, adapt_stat_func=None,
                  log_step_size_reg_target=None,
@@ -936,9 +1017,9 @@ not found within this many iterations.</dd>
             &#39;smoothed_log_step_size&#39;: 0.,
             &#39;adapt_stat_error&#39;: 0.,
         }
-        init_step_size = (self._find_and_set_init_step_size(
-            chain_state, system, integrator) if integrator.step_size is None
-            else integrator.step_size)
+        init_step_size = (
+            self._find_and_set_init_step_size(chain_state, system, integrator)
+            if integrator.step_size is None else integrator.step_size)
         if self.log_step_size_reg_target is None:
             adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
         else:
@@ -1035,6 +1116,16 @@ not found within this many iterations.</dd>
 <li><a title="mici.adapters.Adapter" href="#mici.adapters.Adapter">Adapter</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.adapters.DualAveragingStepSizeAdapter.is_fast"><code class="name">var <span class="ident">is_fast</span></code></dt>
+<dd>
+<section class="desc"><p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.adapters.DualAveragingStepSizeAdapter.initialize"><code class="name flex">
@@ -1061,7 +1152,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L150-L166" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L163-L179" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     integrator = transition.integrator
@@ -1071,9 +1162,9 @@ updated in-place by the method.</dd>
         &#39;smoothed_log_step_size&#39;: 0.,
         &#39;adapt_stat_error&#39;: 0.,
     }
-    init_step_size = (self._find_and_set_init_step_size(
-        chain_state, system, integrator) if integrator.step_size is None
-        else integrator.step_size)
+    init_step_size = (
+        self._find_and_set_init_step_size(chain_state, system, integrator)
+        if integrator.step_size is None else integrator.step_size)
     if self.log_step_size_reg_target is None:
         adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
     else:
@@ -1109,7 +1200,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L228-L241" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L241-L254" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     adapt_state[&#39;iter&#39;] += 1
@@ -1151,7 +1242,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L243-L250" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L256-L263" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):
@@ -1210,7 +1301,7 @@ are regularized towards.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L253-L353" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L266-L368" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OnlineVarianceMetricAdapter(Adapter):
     &#34;&#34;&#34;Diagonal metric adapter using online variance estimates.
@@ -1239,6 +1330,8 @@ are regularized towards.</dd>
          Stan: A probabilistic programming language. Journal of Statistical
          Software, 76(1).
     &#34;&#34;&#34;
+
+    is_fast = False
 
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         &#34;&#34;&#34;
@@ -1319,6 +1412,16 @@ are regularized towards.</dd>
 <li><a title="mici.adapters.Adapter" href="#mici.adapters.Adapter">Adapter</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.adapters.OnlineVarianceMetricAdapter.is_fast"><code class="name">var <span class="ident">is_fast</span></code></dt>
+<dd>
+<section class="desc"><p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.adapters.OnlineVarianceMetricAdapter.initialize"><code class="name flex">
@@ -1345,7 +1448,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L296-L301" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L311-L316" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     return {
@@ -1382,7 +1485,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L303-L312" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L318-L327" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     # Use Welford (1962) incremental algorithm to update statistics to
@@ -1420,7 +1523,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L324-L353" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L339-L368" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):
@@ -1502,7 +1605,7 @@ are regularized towards.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L356-L459" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L371-L476" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OnlineCovarianceMetricAdapter(Adapter):
     &#34;&#34;&#34;Dense metric adapter using online covariance estimates.
@@ -1535,6 +1638,8 @@ are regularized towards.</dd>
          Stan: A probabilistic programming language. Journal of Statistical
          Software, 76(1).
     &#34;&#34;&#34;
+
+    is_fast = False
 
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         &#34;&#34;&#34;
@@ -1614,6 +1719,16 @@ are regularized towards.</dd>
 <li><a title="mici.adapters.Adapter" href="#mici.adapters.Adapter">Adapter</a></li>
 <li>abc.ABC</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="mici.adapters.OnlineCovarianceMetricAdapter.is_fast"><code class="name">var <span class="ident">is_fast</span></code></dt>
+<dd>
+<section class="desc"><p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.</p></section>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="mici.adapters.OnlineCovarianceMetricAdapter.initialize"><code class="name flex">
@@ -1640,7 +1755,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L401-L408" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L418-L425" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     dim_pos = chain_state.pos.shape[0]
@@ -1679,7 +1794,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L410-L419" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L427-L436" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     # Use Welford (1962) incremental algorithm to update statistics to
@@ -1717,7 +1832,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/39019d0bfc441dc54a297e7623bac13534f7c2c1/mici/adapters.py#L431-L459" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L448-L476" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):

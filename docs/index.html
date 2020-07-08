@@ -105,14 +105,17 @@
   <a href="https://zenodo.org/badge/latestdoi/52494384">
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
+  <img src="images/coverage.svg" alt="Coverage"/>
+  <img src="https://github.com/matt-graham/mici/workflows/Tests/badge.svg" alt="Test status" />
 </p>
 
 <p><strong>Mici</strong> is a Python package providing implementations of <em>Markov chain Monte Carlo</em> (MCMC) methods for approximate inference in probabilistic models, with a particular focus on MCMC methods based on simulating Hamiltonian dynamics on a manifold.</p>
 <h2 id="features">Features</h2>
 <p>Key features include</p>
 <ul>
+<li>a modular design allowing use of a wide range of inference algorithms by mixing and matching different components, and making it easy to extend the package,</li>
+<li>a pure Python code base with minimal dependencies, allowing easy integration within other code,</li>
 <li>implementations of MCMC methods for sampling from distributions on embedded manifolds implicitly-defined by a constraint equation and distributions on Riemannian manifolds with a user-specified metric,</li>
-<li>a modular design allowing use of a wide range of inference algorithms by mixing and matching different components, making it easy for users to extend the package and use within their own code,</li>
 <li>computationally efficient inference via transparent caching of the results of expensive operations and intermediate results calculated in derivative computations allowing later reuse without recalculation,</li>
 <li>memory efficient inference for large models by memory-mapping chains to disk, allowing long runs on large models without hitting memory issues.</li>
 </ul>
@@ -124,7 +127,7 @@
 <p>If available in the installed Python environment the following additional packages provide extra functionality and features</p>
 <ul>
 <li><a href="https://github.com/HIPS/autograd">Autograd</a>: if available Autograd will be used to automatically compute the required derivatives of the model functions (providing they are specified using functions from the <code>autograd.numpy</code> and <code>autograd.scipy</code> interfaces). To sample chains in parallel using <code>autograd</code> functions you also need to install <a href="https://github.com/uqfoundation/multiprocess">multiprocess</a>. This will cause <code>multiprocess.Pool</code> to be used in preference to the in-built <code>mutiprocessing.Pool</code> for parallelisation as multiprocess supports serialisation (via <a href="https://github.com/uqfoundation/dill">dill</a>) of a much wider range of types, including of Autograd generated functions. Both Autograd and multiprocess can be installed alongside Mici by running <code>pip install mici[autodiff]</code>.</li>
-<li><a href="https://arviz-devs.github.io/arviz/index.html#">ArviZ</a>: if ArviZ is available outputs of a sampling run can be converted to an <code>arviz.InferenceData</code> container object using <code>mici.utils.convert_to_arviz_inference_data</code>, allowing straightforward use of the extensive Arviz visualisation and diagnostic functionality.</li>
+<li><a href="https://arviz-devs.github.io/arviz/index.html#">ArviZ</a>: if ArviZ is available the traces (dictionary) output of a sampling run can be directly converted to an <code>arviz.InferenceData</code> container object using <code>arviz.convert_to_inference_data</code> or implicitly converted by passing the traces dictionary as the <code>data</code> argument <a href="https://arviz-devs.github.io/arviz/api.html">to ArviZ API functions</a>, allowing straightforward use of the ArviZ's extensive visualisation and diagnostic functions.</li>
 </ul>
 <h2 id="why-mici">Why Mici?</h2>
 <p>Mici is named for <a href="https://en.wikipedia.org/wiki/Augusta_H._Teller">Augusta 'Mici' Teller</a>, who along with <a href="https://en.wikipedia.org/wiki/Arianna_W._Rosenbluth">Arianna Rosenbluth</a> developed the code for the <a href="https://en.wikipedia.org/wiki/MANIAC_I">MANIAC I</a> computer used in the seminal paper <a href="https://doi.org/10.1063%2F1.1699114"><em>Equations of State Calculations by Fast Computing Machines</em></a> which introduced the first example of a Markov chain Monte Carlo method.</p>
@@ -158,83 +161,87 @@
 <h2 id="example-sampling-on-a-torus">Example: sampling on a torus</h2>
 <img src='images/torus-samples.gif' width='360px'/>
 
-<p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualized in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using <code>multiprocess</code> and use <code>matplotlib</code> to plot the samples.</p>
+<p>A simple complete example of using the package to compute approximate samples from a distribution on a two-dimensional torus embedded in a three-dimensional space is given below. The computed samples are visualized in the animation above. Here we use <code>autograd</code> to automatically construct functions to calculate the required derivatives (gradient of negative log density of target distribution and Jacobian of constraint function), sample four chains in parallel using <code>multiprocess</code>, use <code>arviz</code> to calculate diagnostics and use <code>matplotlib</code> to plot the samples.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode Python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="im">from</span> mici <span class="im">import</span> systems, integrators, samplers</span>
 <span id="cb3-2"><a href="#cb3-2"></a><span class="im">import</span> autograd.numpy <span class="im">as</span> np</span>
 <span id="cb3-3"><a href="#cb3-3"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb3-4"><a href="#cb3-4"></a><span class="im">from</span> mpl_toolkits.mplot3d <span class="im">import</span> Axes3D</span>
 <span id="cb3-5"><a href="#cb3-5"></a><span class="im">import</span> matplotlib.animation <span class="im">as</span> animation</span>
-<span id="cb3-6"><a href="#cb3-6"></a></span>
-<span id="cb3-7"><a href="#cb3-7"></a><span class="co"># Define fixed model parameters</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a>R <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># toroidal radius ∈ (0, ∞)</span></span>
-<span id="cb3-9"><a href="#cb3-9"></a>r <span class="op">=</span> <span class="fl">0.5</span>  <span class="co"># poloidal radius ∈ (0, R)</span></span>
-<span id="cb3-10"><a href="#cb3-10"></a>α <span class="op">=</span> <span class="fl">0.9</span>  <span class="co"># density fluctuation amplitude ∈ [0, 1)</span></span>
-<span id="cb3-11"><a href="#cb3-11"></a></span>
-<span id="cb3-12"><a href="#cb3-12"></a><span class="co"># Define constraint function such that the set {q : constr(q) == 0} is a torus</span></span>
-<span id="cb3-13"><a href="#cb3-13"></a><span class="kw">def</span> constr(q):</span>
-<span id="cb3-14"><a href="#cb3-14"></a>    x, y, z <span class="op">=</span> q.T</span>
-<span id="cb3-15"><a href="#cb3-15"></a>    <span class="cf">return</span> np.stack([((x<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> y<span class="op">**</span><span class="dv">2</span>)<span class="op">**</span><span class="fl">0.5</span> <span class="op">-</span> R)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> z<span class="op">**</span><span class="dv">2</span> <span class="op">-</span> r<span class="op">**</span><span class="dv">2</span>], <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb3-16"><a href="#cb3-16"></a></span>
-<span id="cb3-17"><a href="#cb3-17"></a><span class="co"># Define negative log density for the target distribution on torus</span></span>
-<span id="cb3-18"><a href="#cb3-18"></a><span class="co"># (with respect to 2D &#39;area&#39; measure for torus)</span></span>
-<span id="cb3-19"><a href="#cb3-19"></a><span class="kw">def</span> neg_log_dens(q):</span>
-<span id="cb3-20"><a href="#cb3-20"></a>    x, y, z <span class="op">=</span> q.T</span>
-<span id="cb3-21"><a href="#cb3-21"></a>    θ <span class="op">=</span> np.arctan2(y, x)</span>
-<span id="cb3-22"><a href="#cb3-22"></a>    ϕ <span class="op">=</span> np.arctan2(z, x <span class="op">/</span> np.cos(θ) <span class="op">-</span> R)</span>
-<span id="cb3-23"><a href="#cb3-23"></a>    <span class="cf">return</span> np.log1p(r <span class="op">*</span> np.cos(ϕ) <span class="op">/</span> R) <span class="op">-</span> np.log1p(np.sin(<span class="dv">4</span><span class="op">*</span>θ) <span class="op">*</span> np.cos(ϕ) <span class="op">*</span> α)</span>
-<span id="cb3-24"><a href="#cb3-24"></a></span>
-<span id="cb3-25"><a href="#cb3-25"></a><span class="co"># Specify constrained Hamiltonian system with default identity metric</span></span>
-<span id="cb3-26"><a href="#cb3-26"></a>system <span class="op">=</span> systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)</span>
-<span id="cb3-27"><a href="#cb3-27"></a></span>
-<span id="cb3-28"><a href="#cb3-28"></a><span class="co"># System is constrained therefore use constrained leapfrog integrator</span></span>
-<span id="cb3-29"><a href="#cb3-29"></a>integrator <span class="op">=</span> integrators.ConstrainedLeapfrogIntegrator(system)</span>
-<span id="cb3-30"><a href="#cb3-30"></a></span>
-<span id="cb3-31"><a href="#cb3-31"></a><span class="co"># Seed a random number generator</span></span>
-<span id="cb3-32"><a href="#cb3-32"></a>rng <span class="op">=</span> np.random.default_rng(seed<span class="op">=</span><span class="dv">1234</span>)</span>
-<span id="cb3-33"><a href="#cb3-33"></a></span>
-<span id="cb3-34"><a href="#cb3-34"></a><span class="co"># Use dynamic integration-time HMC implementation as MCMC sampler</span></span>
-<span id="cb3-35"><a href="#cb3-35"></a>sampler <span class="op">=</span> samplers.DynamicMultinomialHMC(system, integrator, rng)</span>
-<span id="cb3-36"><a href="#cb3-36"></a></span>
-<span id="cb3-37"><a href="#cb3-37"></a><span class="co"># Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²</span></span>
-<span id="cb3-38"><a href="#cb3-38"></a><span class="co"># x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)</span></span>
-<span id="cb3-39"><a href="#cb3-39"></a>n_chain <span class="op">=</span> <span class="dv">4</span></span>
-<span id="cb3-40"><a href="#cb3-40"></a>θ_init, ϕ_init <span class="op">=</span> rng.uniform(<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> np.pi, size<span class="op">=</span>(<span class="dv">2</span>, n_chain))</span>
-<span id="cb3-41"><a href="#cb3-41"></a>q_init <span class="op">=</span> np.stack([</span>
-<span id="cb3-42"><a href="#cb3-42"></a>    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.cos(θ_init),</span>
-<span id="cb3-43"><a href="#cb3-43"></a>    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.sin(θ_init),</span>
-<span id="cb3-44"><a href="#cb3-44"></a>    r <span class="op">*</span> np.sin(ϕ_init)], <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb3-45"><a href="#cb3-45"></a></span>
-<span id="cb3-46"><a href="#cb3-46"></a><span class="co"># Define function to extract variables to trace during sampling</span></span>
-<span id="cb3-47"><a href="#cb3-47"></a><span class="kw">def</span> trace_func(state):</span>
-<span id="cb3-48"><a href="#cb3-48"></a>    x, y, z <span class="op">=</span> state.pos</span>
-<span id="cb3-49"><a href="#cb3-49"></a>    <span class="cf">return</span> {<span class="st">&#39;x&#39;</span>: x, <span class="st">&#39;y&#39;</span>: y, <span class="st">&#39;z&#39;</span>: z}</span>
-<span id="cb3-50"><a href="#cb3-50"></a></span>
-<span id="cb3-51"><a href="#cb3-51"></a><span class="co"># Sample 4 chains in parallel with 500 adaptive warm up iterations in which the</span></span>
-<span id="cb3-52"><a href="#cb3-52"></a><span class="co"># integrator step size is tuned, followed by 2000 non-adaptive iterations</span></span>
-<span id="cb3-53"><a href="#cb3-53"></a>final_states, traces, stats <span class="op">=</span> sampler.sample_chains_with_adaptive_warm_up(</span>
-<span id="cb3-54"><a href="#cb3-54"></a>    n_warm_up_iter<span class="op">=</span><span class="dv">500</span>, n_main_iter<span class="op">=</span><span class="dv">2000</span>, init_states<span class="op">=</span>q_init, n_process<span class="op">=</span><span class="dv">4</span>, </span>
-<span id="cb3-55"><a href="#cb3-55"></a>    trace_funcs<span class="op">=</span>[trace_func])</span>
-<span id="cb3-56"><a href="#cb3-56"></a></span>
-<span id="cb3-57"><a href="#cb3-57"></a><span class="co"># Print average accept probability and number of integrator steps per chain</span></span>
-<span id="cb3-58"><a href="#cb3-58"></a><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(n_chain):</span>
-<span id="cb3-59"><a href="#cb3-59"></a>    <span class="bu">print</span>(<span class="ss">f&quot;Chain </span><span class="sc">{c}</span><span class="ss">:&quot;</span>)</span>
-<span id="cb3-60"><a href="#cb3-60"></a>    <span class="bu">print</span>(<span class="ss">f&quot;  Average accept prob. = </span><span class="sc">{</span>stats[<span class="st">&#39;accept_stat&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">&quot;</span>)</span>
-<span id="cb3-61"><a href="#cb3-61"></a>    <span class="bu">print</span>(<span class="ss">f&quot;  Average number steps = </span><span class="sc">{</span>stats[<span class="st">&#39;n_step&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.1f}</span><span class="ss">&quot;</span>)</span>
-<span id="cb3-62"><a href="#cb3-62"></a></span>
-<span id="cb3-63"><a href="#cb3-63"></a><span class="co"># Visualize concatentated chain samples as animated 3D scatter plot   </span></span>
-<span id="cb3-64"><a href="#cb3-64"></a>fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
-<span id="cb3-65"><a href="#cb3-65"></a>ax <span class="op">=</span> Axes3D(fig, [<span class="fl">0.</span>, <span class="fl">0.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>], proj_type<span class="op">=</span><span class="st">&#39;ortho&#39;</span>)</span>
-<span id="cb3-66"><a href="#cb3-66"></a>points_3d, <span class="op">=</span> ax.plot(<span class="op">*</span>(np.concatenate(traces[k]) <span class="cf">for</span> k <span class="kw">in</span> <span class="st">&#39;xyz&#39;</span>), <span class="st">&#39;.&#39;</span>, ms<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb3-67"><a href="#cb3-67"></a>ax.axis(<span class="st">&#39;off&#39;</span>)</span>
-<span id="cb3-68"><a href="#cb3-68"></a><span class="cf">for</span> set_lim <span class="kw">in</span> [ax.set_xlim, ax.set_ylim, ax.set_zlim]:</span>
-<span id="cb3-69"><a href="#cb3-69"></a>    set_lim((<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
-<span id="cb3-70"><a href="#cb3-70"></a></span>
-<span id="cb3-71"><a href="#cb3-71"></a><span class="kw">def</span> update(i):</span>
-<span id="cb3-72"><a href="#cb3-72"></a>    angle <span class="op">=</span> <span class="dv">45</span> <span class="op">*</span> (np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> i <span class="op">/</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb3-73"><a href="#cb3-73"></a>    ax.view_init(elev<span class="op">=</span>angle, azim<span class="op">=</span>angle)</span>
-<span id="cb3-74"><a href="#cb3-74"></a>    <span class="cf">return</span> (points_3d,)</span>
-<span id="cb3-75"><a href="#cb3-75"></a></span>
-<span id="cb3-76"><a href="#cb3-76"></a>anim <span class="op">=</span> animation.FuncAnimation(fig, update, frames<span class="op">=</span><span class="dv">60</span>, interval<span class="op">=</span><span class="dv">100</span>, blit<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="im">import</span> arviz</span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co"># Define fixed model parameters</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a>R <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># toroidal radius ∈ (0, ∞)</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a>r <span class="op">=</span> <span class="fl">0.5</span>  <span class="co"># poloidal radius ∈ (0, R)</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a>α <span class="op">=</span> <span class="fl">0.9</span>  <span class="co"># density fluctuation amplitude ∈ [0, 1)</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a></span>
+<span id="cb3-13"><a href="#cb3-13"></a><span class="co"># Define constraint function such that the set {q : constr(q) == 0} is a torus</span></span>
+<span id="cb3-14"><a href="#cb3-14"></a><span class="kw">def</span> constr(q):</span>
+<span id="cb3-15"><a href="#cb3-15"></a>    x, y, z <span class="op">=</span> q.T</span>
+<span id="cb3-16"><a href="#cb3-16"></a>    <span class="cf">return</span> np.stack([((x<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> y<span class="op">**</span><span class="dv">2</span>)<span class="op">**</span><span class="fl">0.5</span> <span class="op">-</span> R)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> z<span class="op">**</span><span class="dv">2</span> <span class="op">-</span> r<span class="op">**</span><span class="dv">2</span>], <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb3-17"><a href="#cb3-17"></a></span>
+<span id="cb3-18"><a href="#cb3-18"></a><span class="co"># Define negative log density for the target distribution on torus</span></span>
+<span id="cb3-19"><a href="#cb3-19"></a><span class="co"># (with respect to 2D &#39;area&#39; measure for torus)</span></span>
+<span id="cb3-20"><a href="#cb3-20"></a><span class="kw">def</span> neg_log_dens(q):</span>
+<span id="cb3-21"><a href="#cb3-21"></a>    x, y, z <span class="op">=</span> q.T</span>
+<span id="cb3-22"><a href="#cb3-22"></a>    θ <span class="op">=</span> np.arctan2(y, x)</span>
+<span id="cb3-23"><a href="#cb3-23"></a>    ϕ <span class="op">=</span> np.arctan2(z, x <span class="op">/</span> np.cos(θ) <span class="op">-</span> R)</span>
+<span id="cb3-24"><a href="#cb3-24"></a>    <span class="cf">return</span> np.log1p(r <span class="op">*</span> np.cos(ϕ) <span class="op">/</span> R) <span class="op">-</span> np.log1p(np.sin(<span class="dv">4</span><span class="op">*</span>θ) <span class="op">*</span> np.cos(ϕ) <span class="op">*</span> α)</span>
+<span id="cb3-25"><a href="#cb3-25"></a></span>
+<span id="cb3-26"><a href="#cb3-26"></a><span class="co"># Specify constrained Hamiltonian system with default identity metric</span></span>
+<span id="cb3-27"><a href="#cb3-27"></a>system <span class="op">=</span> systems.DenseConstrainedEuclideanMetricSystem(neg_log_dens, constr)</span>
+<span id="cb3-28"><a href="#cb3-28"></a></span>
+<span id="cb3-29"><a href="#cb3-29"></a><span class="co"># System is constrained therefore use constrained leapfrog integrator</span></span>
+<span id="cb3-30"><a href="#cb3-30"></a>integrator <span class="op">=</span> integrators.ConstrainedLeapfrogIntegrator(system)</span>
+<span id="cb3-31"><a href="#cb3-31"></a></span>
+<span id="cb3-32"><a href="#cb3-32"></a><span class="co"># Seed a random number generator</span></span>
+<span id="cb3-33"><a href="#cb3-33"></a>rng <span class="op">=</span> np.random.default_rng(seed<span class="op">=</span><span class="dv">1234</span>)</span>
+<span id="cb3-34"><a href="#cb3-34"></a></span>
+<span id="cb3-35"><a href="#cb3-35"></a><span class="co"># Use dynamic integration-time HMC implementation as MCMC sampler</span></span>
+<span id="cb3-36"><a href="#cb3-36"></a>sampler <span class="op">=</span> samplers.DynamicMultinomialHMC(system, integrator, rng)</span>
+<span id="cb3-37"><a href="#cb3-37"></a></span>
+<span id="cb3-38"><a href="#cb3-38"></a><span class="co"># Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²</span></span>
+<span id="cb3-39"><a href="#cb3-39"></a><span class="co"># x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)</span></span>
+<span id="cb3-40"><a href="#cb3-40"></a>n_chain <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb3-41"><a href="#cb3-41"></a>θ_init, ϕ_init <span class="op">=</span> rng.uniform(<span class="dv">0</span>, <span class="dv">2</span> <span class="op">*</span> np.pi, size<span class="op">=</span>(<span class="dv">2</span>, n_chain))</span>
+<span id="cb3-42"><a href="#cb3-42"></a>q_init <span class="op">=</span> np.stack([</span>
+<span id="cb3-43"><a href="#cb3-43"></a>    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.cos(θ_init),</span>
+<span id="cb3-44"><a href="#cb3-44"></a>    (R <span class="op">+</span> r <span class="op">*</span> np.cos(ϕ_init)) <span class="op">*</span> np.sin(θ_init),</span>
+<span id="cb3-45"><a href="#cb3-45"></a>    r <span class="op">*</span> np.sin(ϕ_init)], <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb3-46"><a href="#cb3-46"></a></span>
+<span id="cb3-47"><a href="#cb3-47"></a><span class="co"># Define function to extract variables to trace during sampling</span></span>
+<span id="cb3-48"><a href="#cb3-48"></a><span class="kw">def</span> trace_func(state):</span>
+<span id="cb3-49"><a href="#cb3-49"></a>    x, y, z <span class="op">=</span> state.pos</span>
+<span id="cb3-50"><a href="#cb3-50"></a>    <span class="cf">return</span> {<span class="st">&#39;x&#39;</span>: x, <span class="st">&#39;y&#39;</span>: y, <span class="st">&#39;z&#39;</span>: z}</span>
+<span id="cb3-51"><a href="#cb3-51"></a></span>
+<span id="cb3-52"><a href="#cb3-52"></a><span class="co"># Sample 4 chains in parallel with 500 adaptive warm up iterations in which the</span></span>
+<span id="cb3-53"><a href="#cb3-53"></a><span class="co"># integrator step size is tuned, followed by 2000 non-adaptive iterations</span></span>
+<span id="cb3-54"><a href="#cb3-54"></a>final_states, traces, stats <span class="op">=</span> sampler.sample_chains_with_adaptive_warm_up(</span>
+<span id="cb3-55"><a href="#cb3-55"></a>    n_warm_up_iter<span class="op">=</span><span class="dv">500</span>, n_main_iter<span class="op">=</span><span class="dv">2000</span>, init_states<span class="op">=</span>q_init, n_process<span class="op">=</span><span class="dv">4</span>, </span>
+<span id="cb3-56"><a href="#cb3-56"></a>    trace_funcs<span class="op">=</span>[trace_func])</span>
+<span id="cb3-57"><a href="#cb3-57"></a></span>
+<span id="cb3-58"><a href="#cb3-58"></a><span class="co"># Print average accept probability and number of integrator steps per chain</span></span>
+<span id="cb3-59"><a href="#cb3-59"></a><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(n_chain):</span>
+<span id="cb3-60"><a href="#cb3-60"></a>    <span class="bu">print</span>(<span class="ss">f&quot;Chain </span><span class="sc">{c}</span><span class="ss">:&quot;</span>)</span>
+<span id="cb3-61"><a href="#cb3-61"></a>    <span class="bu">print</span>(<span class="ss">f&quot;  Average accept prob. = </span><span class="sc">{</span>stats[<span class="st">&#39;accept_stat&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ss">&quot;</span>)</span>
+<span id="cb3-62"><a href="#cb3-62"></a>    <span class="bu">print</span>(<span class="ss">f&quot;  Average number steps = </span><span class="sc">{</span>stats[<span class="st">&#39;n_step&#39;</span>][c]<span class="sc">.</span>mean()<span class="sc">:.1f}</span><span class="ss">&quot;</span>)</span>
+<span id="cb3-63"><a href="#cb3-63"></a>    </span>
+<span id="cb3-64"><a href="#cb3-64"></a><span class="co"># Print summary statistics and diagnostics computed using ArviZ</span></span>
+<span id="cb3-65"><a href="#cb3-65"></a><span class="bu">print</span>(arviz.summary(traces))</span>
+<span id="cb3-66"><a href="#cb3-66"></a></span>
+<span id="cb3-67"><a href="#cb3-67"></a><span class="co"># Visualize concatentated chain samples as animated 3D scatter plot   </span></span>
+<span id="cb3-68"><a href="#cb3-68"></a>fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">4</span>, <span class="dv">4</span>))</span>
+<span id="cb3-69"><a href="#cb3-69"></a>ax <span class="op">=</span> Axes3D(fig, [<span class="fl">0.</span>, <span class="fl">0.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>], proj_type<span class="op">=</span><span class="st">&#39;ortho&#39;</span>)</span>
+<span id="cb3-70"><a href="#cb3-70"></a>points_3d, <span class="op">=</span> ax.plot(<span class="op">*</span>(np.concatenate(traces[k]) <span class="cf">for</span> k <span class="kw">in</span> <span class="st">&#39;xyz&#39;</span>), <span class="st">&#39;.&#39;</span>, ms<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb3-71"><a href="#cb3-71"></a>ax.axis(<span class="st">&#39;off&#39;</span>)</span>
+<span id="cb3-72"><a href="#cb3-72"></a><span class="cf">for</span> set_lim <span class="kw">in</span> [ax.set_xlim, ax.set_ylim, ax.set_zlim]:</span>
+<span id="cb3-73"><a href="#cb3-73"></a>    set_lim((<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb3-74"><a href="#cb3-74"></a></span>
+<span id="cb3-75"><a href="#cb3-75"></a><span class="kw">def</span> update(i):</span>
+<span id="cb3-76"><a href="#cb3-76"></a>    angle <span class="op">=</span> <span class="dv">45</span> <span class="op">*</span> (np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> i <span class="op">/</span> <span class="dv">60</span>) <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb3-77"><a href="#cb3-77"></a>    ax.view_init(elev<span class="op">=</span>angle, azim<span class="op">=</span>angle)</span>
+<span id="cb3-78"><a href="#cb3-78"></a>    <span class="cf">return</span> (points_3d,)</span>
+<span id="cb3-79"><a href="#cb3-79"></a></span>
+<span id="cb3-80"><a href="#cb3-80"></a>anim <span class="op">=</span> animation.FuncAnimation(fig, update, frames<span class="op">=</span><span class="dv">60</span>, interval<span class="op">=</span><span class="dv">100</span>, blit<span class="op">=</span><span class="va">True</span>)</span></code></pre></div>
 <h2 id="references">References</h2>
 <ol>
 <li><a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” version of the SHAKE algorithm for molecular dynamics calculations. <em>Journal of Computational Physics</em>, 52(1), pp.24-34. <a href="https://doi.org/10.1016/0021-9991(83)90014-1"><img src="https://zenodo.org/badge/DOI/10.1016/0021-9991(83)90014-1.svg" alt="DOI:10.1016/0021-9991(83)90014-1" /></a></li>
