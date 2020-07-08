@@ -1174,9 +1174,8 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 ('integration_transition', 'accept_stat')]
         # if adapters kwarg specified, wrap adapter list in dictionary with
         # adapters applied to integration transition
-        for key in ['adapters', 'fast_adapters', 'slow_adapters']:
-            if key in kwargs and kwargs[key] is not None:
-                kwargs[key] = {'integration_transition': kwargs[key]}
+        if 'adapters' in kwargs and kwargs['adapters'] is not None:
+            kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
 
     def sample_chain(self, n_iter, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
