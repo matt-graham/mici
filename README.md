@@ -23,12 +23,14 @@ manifold.
 
 Key features include
 
+  * a modular design allowing use of a wide range of inference algorithms by 
+    mixing and matching different components, and making it easy to 
+    extend the package,
+  * a pure Python code base with minimal dependencies,
+    allowing easy integration within other code,
   * implementations of MCMC methods for sampling from distributions on embedded
     manifolds implicitly-defined by a constraint equation and distributions on
-    Riemannian manifolds with a user-specified metric, 
-  * a modular design allowing use of a wide range of inference algorithms by 
-    mixing and matching different components, making it easy for users to 
-    extend the package and use within their own code,  
+    Riemannian manifolds with a user-specified metric,
   * computationally efficient inference via transparent caching of the results
     of expensive operations and intermediate results calculated in derivative 
     computations allowing later reuse without recalculation,  
@@ -68,10 +70,13 @@ packages provide extra functionality and features
     Autograd and multiprocess can be installed alongside Mici by running `pip
     install mici[autodiff]`.
   * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is 
-    available the traces (dictionary) output of a sampling run can be converted to an
-    `arviz.InferenceData` container object using
-    `arviz.convert_to_inference_data`, allowing straightforward use
-    of the extensive Arviz visualisation and diagnostic functionality.
+    available the traces (dictionary) output of a sampling run can be directly
+    converted to an `arviz.InferenceData` container object using
+    `arviz.convert_to_inference_data` or implicitly converted by passing the
+    traces dictionary as the `data` argument 
+    [to ArviZ API functions](https://arviz-devs.github.io/arviz/api.html), 
+    allowing straightforward use of the ArviZ's extensive visualisation and 
+    diagnostic functions.
 
 ## Why Mici?
 
