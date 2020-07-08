@@ -57,7 +57,9 @@ def log1m_exp(val):
 
 def log_sum_exp(val1, val2):
     """Numerically stable implementation of `log(exp(val1) + exp(val2))`."""
-    if val1 > val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 > val2:
         return val1 + log1p_exp(val2 - val1)
     else:
         return val2 + log1p_exp(val1 - val2)
@@ -65,7 +67,9 @@ def log_sum_exp(val1, val2):
 
 def log_diff_exp(val1, val2):
     """Numerically stable implementation of `log(exp(val1) - exp(val2))`."""
-    if val1 < val2:
+    if val1 == -inf and val2 == -inf:
+        return -inf
+    elif val1 < val2:
         return nan
     elif val1 == val2:
         return -inf
@@ -114,7 +118,9 @@ class LogRepFloat(object):
         return self.__add__(other)
 
     def __iadd__(self, other):
-        if isinstance(other, LogRepFloat):
+        if other == 0:
+            return self
+        elif isinstance(other, LogRepFloat):
             self.log_val = log_sum_exp(self.log_val, other.log_val)
         else:
             self.log_val = log_sum_exp(self.log_val, log(other))
@@ -147,6 +153,9 @@ class LogRepFloat(object):
             return LogRepFloat(log_val=self.log_val - other.log_val)
         else:
             return self.val / other
+
+    def __rtruediv__(self, other):
+        return other / self.val
 
     def __neg__(self):
         return -self.val
