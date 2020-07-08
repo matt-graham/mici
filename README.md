@@ -11,6 +11,7 @@
   <a href="https://zenodo.org/badge/latestdoi/52494384">
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
+  <img src="images/coverage.svg" alt="Coverage"/>
 </p>
 
 **Mici** is a Python package providing implementations of *Markov chain Monte
