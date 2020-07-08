@@ -45,14 +45,14 @@ def shape_1(size):
     return size
 
 
-@pytest.fixture(params=((), (1,), (2,), None))
+@pytest.fixture(params=((), (1,), None))
 def premultiplier(rng, shape_0, request):
     shape = (request.param if request.param is not None
              else (shape_0,)) + (shape_0,)
     return rng.standard_normal(shape)
 
 
-@pytest.fixture(params=((), (1,), (2,), None))
+@pytest.fixture(params=((), (1,), None))
 def postmultiplier(rng, shape_1, request):
     shape = (shape_1,) + (request.param if request.param is not None
                           else (shape_1,))
