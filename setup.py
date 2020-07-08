@@ -33,7 +33,6 @@ setuptools.setup(
     install_requires=['numpy>=1.17', 'scipy>=1.1'],
     python_requires='>=3.6',
     extras_require={
-        'autodiff':  ['autograd>=1.2', 'multiprocess>=0.70'],
-        'randomgen': ['randomgen>=1.15'],
+        'autodiff':  ['autograd>=1.3', 'multiprocess>=0.70']
     }
 )
