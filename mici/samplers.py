@@ -4,7 +4,7 @@ import os
 import sys
 import inspect
 import queue
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 from pickle import PicklingError
 import logging
 import tempfile
@@ -31,6 +31,12 @@ except ImportError:
     from multiprocessing import Pool
     from multiprocessing.managers import SyncManager
     MULTIPROCESS_AVAILABLE = False
+
+try:
+    from threadpoolctl import threadpool_limits
+    THREADPOOLCTL_AVAILABLE = True
+except ImportError:
+    THREADPOOLCTL_AVAILABLE = False
 
 
 logger = logging.getLogger(__name__)
@@ -544,11 +550,15 @@ def _sample_chains_worker(chain_queue, iter_queue):
         try:
             chain_index, init_state, rng, n_iter, kwargs = chain_queue.get(
                 block=False)
-            *outputs, exception = _sample_chain(
-                init_state=init_state, rng=rng, chain_index=chain_index,
-                chain_iterator=_ProxyProgressBar(
-                    range(n_iter), chain_index, iter_queue),
-                parallel_chains=True, **kwargs)
+            max_threads = kwargs.pop('max_threads_per_process', None)
+            context = (threadpool_limits(limits=max_threads)
+                       if THREADPOOLCTL_AVAILABLE else nullcontext())
+            with context:
+                *outputs, exception = _sample_chain(
+                    init_state=init_state, rng=rng, chain_index=chain_index,
+                    chain_iterator=_ProxyProgressBar(
+                        range(n_iter), chain_index, iter_queue),
+                    parallel_chains=True, **kwargs)
             # Returned exception being AdaptationError indicates chain
             # terminated due to adapter initialisation failing therefore do not
             # store returned chain outputs and put None value on iteration queue
@@ -838,6 +848,15 @@ class MarkovChainMonteCarloMethod(object):
                 output of `os.cpu_count()`.
 
         Kwargs:
+            max_threads_per_process (int or None): If `threadpoolctl` is
+                available this argument may be used to limit the maximum number
+                of threads that can be used in thread pools used in libraries
+                supported by `threadpoolctl`, which include BLAS and OpenMP
+                implementations. This argument will only have an effect if
+                `n_process > 1` such that chains are being run on multiple
+                processes and only if `threadpoolctl` is installed in the
+                current Python environment. If set to `None` (the default) no
+                limits are set.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -905,6 +924,7 @@ class MarkovChainMonteCarloMethod(object):
             n_iter, kwargs.pop('progress_bar_class'), n_chain)
         if n_process == 1:
             # Using single process therefore run chains sequentially
+            kwargs.pop('max_threads_per_process', None)
             *states_traces_stats, adapter_states, _ = _sample_chains_sequential(
                 init_states=init_states, rngs=rngs,
                 chain_iterators=chain_iterators, transitions=self.transitions,
@@ -987,6 +1007,15 @@ class MarkovChainMonteCarloMethod(object):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
+            max_threads_per_process (int or None): If `threadpoolctl` is
+                available this argument may be used to limit the maximum number
+                of threads that can be used in thread pools used in libraries
+                supported by `threadpoolctl`, which include BLAS and OpenMP
+                implementations. This argument will only have an effect if
+                `n_process > 1` such that chains are being run on multiple
+                processes and only if `threadpoolctl` is installed in the
+                current Python environment. If set to `None` (the default) no
+                limits are set.
             memmap_enabled (bool): Whether to memory-map arrays used to store
                 chain data to files on disk to avoid excessive system memory
                 usage for long chains and/or large chain states. The chain data
@@ -1049,6 +1078,7 @@ class MarkovChainMonteCarloMethod(object):
             common_sample_chains_kwargs['n_process'] = n_process
         else:
             sample_chains_func = _sample_chains_sequential
+            common_sample_chains_kwargs.pop('max_threads_per_process', None)
         if stager is None:
             if all(a.is_fast for a_list in adapters.values() for a in a_list):
                 stager = WarmUpStager()
@@ -1289,6 +1319,15 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
+            max_threads_per_process (int or None): If `threadpoolctl` is
+                available this argument may be used to limit the maximum number
+                of threads that can be used in thread pools used in libraries
+                supported by `threadpoolctl`, which include BLAS and OpenMP
+                implementations. This argument will only have an effect if
+                `n_process > 1` such that chains are being run on multiple
+                processes and only if `threadpoolctl` is installed in the
+                current Python environment. If set to `None` (the default) no
+                limits are set.
             trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
                 List of functions which compute the variables to be recorded at
                 each chain iteration, with each trace function being passed the
@@ -1402,6 +1441,15 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple processes. If set
                 to `None` then the number of processes will be set to the
                 output of `os.cpu_count()`. Default is `n_process=1`.
+            max_threads_per_process (int or None): If `threadpoolctl` is
+                available this argument may be used to limit the maximum number
+                of threads that can be used in thread pools used in libraries
+                supported by `threadpoolctl`, which include BLAS and OpenMP
+                implementations. This argument will only have an effect if
+                `n_process > 1` such that chains are being run on multiple
+                processes and only if `threadpoolctl` is installed in the
+                current Python environment. If set to `None` (the default) no
+                limits are set.
             trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]):
                 List of functions which compute the variables to be recorded at
                 each chain iteration during the main non-adaptive sampling
