@@ -246,7 +246,7 @@ class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
                                      pos_minus_mean_samples))
         adapter.finalize(adapter_state, transition)
         metric = transition.system.metric
-        assert isinstance(metric, mici.matrices.PositiveDiagonalMatrix)
+        assert isinstance(metric, mici.matrices.PositiveDefiniteMatrix)
         covar_est = np.cov(pos_samples, rowvar=False, ddof=1)
         weight = n_transition / (adapter.reg_iter_offset + n_transition)
         regularized_covar_est = (
