@@ -523,6 +523,7 @@ def _get_per_chain_rngs(base_rng, n_chain):
 def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     """Sample multiple chains sequentially in a single process."""
     chain_outputs = []
+    exception = None
     for chain_index, (init_state, rng, chain_iterator) in enumerate(
             zip(init_states, rngs, chain_iterators)):
         *outputs, exception = _sample_chain(
