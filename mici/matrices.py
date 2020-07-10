@@ -37,12 +37,6 @@ class Matrix(abc.ABC):
 
     __array_priority__ = 1
 
-    """Set of attributes required for class to be considered a subclass"""
-    _required_subclass_attrs = {
-        'array', 'shape', 'T', 'diagonal', '__array__', '__mul__', '__rmul__',
-        '__truediv__', '__neg__', '__matmul__', '__rmatmul__'
-    }
-
     def __init__(self, shape, **kwargs):
         """
         Args:
@@ -175,25 +169,6 @@ class Matrix(abc.ABC):
     def __repr__(self):
         return type(self).__name__ + str(self)
 
-    @classmethod
-    def _get_required_subclass_attrs(cls):
-        """Compute set of required subclass attributes."""
-        req = set()
-        for C in cls.__mro__:
-            if hasattr(C, '_required_subclass_attrs'):
-                req |= C._required_subclass_attrs
-        return req
-
-    @classmethod
-    def __subclasshook__(cls, C):
-        # Customize isinstance / issubclass behaviour to also return True for
-        # classes / objects with classes which have all required attributes
-        # without being direct subclasses
-        if hasattr(cls, '_get_required_subclass_attrs'):
-            if all(any(attr in B.__dict__ for B in C.__mro__)
-                   for attr in cls._get_required_subclass_attrs()):
-                return True
-        return NotImplemented
 
     @abc.abstractmethod
     def _compute_hash(self):
@@ -337,8 +312,6 @@ class MatrixProduct(ImplicitArrayMatrix):
 class SquareMatrix(Matrix):
     """Base class for matrices with equal numbers of rows and columns."""
 
-    _required_subclass_attrs = {'log_abs_det'}
-
     def __init__(self, shape, **kwargs):
         if shape[0] != shape[1]:
             raise ValueError(
@@ -381,7 +354,6 @@ class SquareMatrixProduct(MatrixProduct, SquareMatrix):
 class InvertibleMatrix(SquareMatrix):
     """Base class for non-singular square matrices."""
 
-    _required_subclass_attrs = {'inv'}
 
     def __init__(self, shape, **kwargs):
         super().__init__(shape, **kwargs)
@@ -432,8 +404,6 @@ class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
 class SymmetricMatrix(SquareMatrix):
     """Base class for square matrices which are equal to their transpose."""
 
-    _required_subclass_attrs = {'eigval', 'eigvec'}
-
     def __init__(self, shape, **kwargs):
         self._eigval = None
         self._eigvec = None
@@ -467,8 +437,6 @@ class SymmetricMatrix(SquareMatrix):
 
 class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
     """Base class for positive definite matrices."""
-
-    _required_subclass_attrs = {'sqrt'}
 
     def __init__(self, shape, **kwargs):
         self._sqrt = None
@@ -585,8 +553,6 @@ class DifferentiableMatrix(InvertibleMatrix):
     returned gradients will be respectively a tuple or dict of arrays of the
     same shapes and with the same indices / keys.
     """
-
-    _required_subclass_attrs = {'grad_log_abs_det', 'grad_quadratic_form_inv'}
 
     @property
     @abc.abstractmethod
@@ -1678,7 +1644,7 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
         return sum(block.log_abs_det for block in self._blocks)
 
 
-class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
+class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix, SymmetricMatrix):
     """Symmetric specialisation of `SquareBlockDiagonalMatrix`.
 
     All matrix blocks in diagonal are restricted to be symmetric, i.e.
@@ -1706,7 +1672,7 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
 
 
 class PositiveDefiniteBlockDiagonalMatrix(
-        SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix,
+        SquareBlockDiagonalMatrix, PositiveDefiniteMatrix, 
         DifferentiableMatrix):
     """Positive definite specialisation of `SymmetricBlockDiagonalMatrix`.
 
@@ -1734,6 +1700,9 @@ class PositiveDefiniteBlockDiagonalMatrix(
                 tuple(scalar * block for block in self._blocks))
         else:
             return super()._scalar_multiply(scalar)
+
+    def _construct_transpose(self):
+        return self
 
     def _construct_sqrt(self):
         return SquareBlockDiagonalMatrix(
