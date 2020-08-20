@@ -47,6 +47,12 @@ def test_state_copy_independent(state_vars):
         assert np.all(getattr(state, key) == val)
 
 
+def test_state_copy_call_counts_same_obj(state_vars):
+    state = mici.states.ChainState(**state_vars, _call_counts={})
+    state_copy = state.copy()
+    assert state._call_counts is state_copy._call_counts
+
+
 def test_state_contains(state_vars):
     state = mici.states.ChainState(**state_vars)
     for key in state_vars.keys():

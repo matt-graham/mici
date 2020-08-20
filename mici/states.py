@@ -203,7 +203,7 @@ class ChainState(object):
             _cache = {}
         self.__dict__['_cache'] = _cache
         self.__dict__['_call_counts'] = (
-            Counter(_call_counts) if isinstance(_call_counts, dict)
+            Counter(_call_counts) if not isinstance(_call_counts, Counter)
             else _call_counts)
         self.__dict__['_read_only'] = _read_only
 
