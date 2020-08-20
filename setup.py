@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='mici',
-    version='0.1.8',
+    version='0.1.9',
     author='Matt Graham',
     description=(
         'MCMC samplers based on simulating Hamiltonian dynamics on a manifold'

@@ -102,7 +102,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L0-L475" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L0-L478" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Methods for adaptively setting algorithmic parameters of transitions.&#34;&#34;&#34;
 
@@ -276,7 +276,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         }
         init_step_size = (
             self._find_and_set_init_step_size(chain_state, system, integrator)
-            if integrator.step_size is None else integrator.step_size)
+        )
         if self.log_step_size_reg_target is None:
             adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
         else:
@@ -317,14 +317,17 @@ class DualAveragingStepSizeAdapter(Adapter):
         &#34;&#34;&#34;
         init_state = state.copy()
         h_init = system.h(init_state)
+        if np.isnan(h_init):
+            raise AdaptationError(&#39;Hamiltonian evaluating to NaN at initial state.&#39;)
         integrator.step_size = 1
         delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
             try:
                 state = integrator.step(init_state)
                 delta_h = abs(h_init - system.h(state))
-                if s == 0:
-                    step_size_too_big = delta_h &gt; delta_h_threshold
+                if s == 0 or np.isnan(delta_h):
+                    step_size_too_big = (
+                        np.isnan(delta_h) or delta_h &gt; delta_h_threshold)
                 if (step_size_too_big and delta_h &lt;= delta_h_threshold) or (
                         not step_size_too_big and delta_h &gt; delta_h_threshold):
                     return integrator.step_size
@@ -606,7 +609,7 @@ used to perform a final update to the transition parameters.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L11-L85" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L11-L85" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Adapter(ABC):
     &#34;&#34;&#34;Abstract adapter for implementing schemes to adapt transition parameters.
@@ -706,7 +709,7 @@ as slow i.e. <code>is_fast == False</code>.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L76-L85" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L76-L85" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abstractmethod
@@ -747,7 +750,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L22-L36" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L22-L36" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def initialize(self, chain_state, transition):
@@ -793,7 +796,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L38-L55" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L38-L55" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def update(self, adapt_state, chain_state, trans_stats, transition):
@@ -839,7 +842,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L57-L74" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L57-L74" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def finalize(self, adapt_state, transition):
@@ -932,7 +935,7 @@ not found within this many iterations.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L88-L263" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L88-L266" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DualAveragingStepSizeAdapter(Adapter):
     &#34;&#34;&#34;Dual averaging integrator step size adapter.
@@ -1019,7 +1022,7 @@ not found within this many iterations.</dd>
         }
         init_step_size = (
             self._find_and_set_init_step_size(chain_state, system, integrator)
-            if integrator.step_size is None else integrator.step_size)
+        )
         if self.log_step_size_reg_target is None:
             adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
         else:
@@ -1060,14 +1063,17 @@ not found within this many iterations.</dd>
         &#34;&#34;&#34;
         init_state = state.copy()
         h_init = system.h(init_state)
+        if np.isnan(h_init):
+            raise AdaptationError(&#39;Hamiltonian evaluating to NaN at initial state.&#39;)
         integrator.step_size = 1
         delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
             try:
                 state = integrator.step(init_state)
                 delta_h = abs(h_init - system.h(state))
-                if s == 0:
-                    step_size_too_big = delta_h &gt; delta_h_threshold
+                if s == 0 or np.isnan(delta_h):
+                    step_size_too_big = (
+                        np.isnan(delta_h) or delta_h &gt; delta_h_threshold)
                 if (step_size_too_big and delta_h &lt;= delta_h_threshold) or (
                         not step_size_too_big and delta_h &gt; delta_h_threshold):
                     return integrator.step_size
@@ -1152,7 +1158,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L163-L179" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L163-L179" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     integrator = transition.integrator
@@ -1164,7 +1170,7 @@ updated in-place by the method.</dd>
     }
     init_step_size = (
         self._find_and_set_init_step_size(chain_state, system, integrator)
-        if integrator.step_size is None else integrator.step_size)
+    )
     if self.log_step_size_reg_target is None:
         adapt_state[&#39;log_step_size_reg_target&#39;] = log(10 * init_step_size)
     else:
@@ -1200,7 +1206,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L241-L254" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L244-L257" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     adapt_state[&#39;iter&#39;] += 1
@@ -1242,7 +1248,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L256-L263" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L259-L266" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):
@@ -1301,7 +1307,7 @@ are regularized towards.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L266-L368" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L269-L371" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OnlineVarianceMetricAdapter(Adapter):
     &#34;&#34;&#34;Diagonal metric adapter using online variance estimates.
@@ -1448,7 +1454,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L311-L316" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L314-L319" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     return {
@@ -1485,7 +1491,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L318-L327" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L321-L330" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     # Use Welford (1962) incremental algorithm to update statistics to
@@ -1523,7 +1529,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L339-L368" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L342-L371" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):
@@ -1605,7 +1611,7 @@ are regularized towards.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L371-L476" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L374-L479" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OnlineCovarianceMetricAdapter(Adapter):
     &#34;&#34;&#34;Dense metric adapter using online covariance estimates.
@@ -1755,7 +1761,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L418-L425" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L421-L428" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, chain_state, transition):
     dim_pos = chain_state.pos.shape[0]
@@ -1794,7 +1800,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L427-L436" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L430-L439" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, adapt_state, chain_state, trans_stats, transition):
     # Use Welford (1962) incremental algorithm to update statistics to
@@ -1832,7 +1838,7 @@ updated in-place by the method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/adapters.py#L448-L476" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/adapters.py#L451-L479" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def finalize(self, adapt_state, transition):
     if isinstance(adapt_state, dict):

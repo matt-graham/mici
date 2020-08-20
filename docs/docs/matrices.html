@@ -674,6 +674,8 @@
 <li><code><a title="mici.matrices.SymmetricBlockDiagonalMatrix.array" href="#mici.matrices.SymmetricBlockDiagonalMatrix.array">array</a></code></li>
 <li><code><a title="mici.matrices.SymmetricBlockDiagonalMatrix.transpose" href="#mici.matrices.SymmetricBlockDiagonalMatrix.transpose">transpose</a></code></li>
 <li><code><a title="mici.matrices.SymmetricBlockDiagonalMatrix.T" href="#mici.matrices.SymmetricBlockDiagonalMatrix.T">T</a></code></li>
+<li><code><a title="mici.matrices.SymmetricBlockDiagonalMatrix.eigval" href="#mici.matrices.SymmetricBlockDiagonalMatrix.eigval">eigval</a></code></li>
+<li><code><a title="mici.matrices.SymmetricBlockDiagonalMatrix.eigvec" href="#mici.matrices.SymmetricBlockDiagonalMatrix.eigvec">eigvec</a></code></li>
 </ul>
 </details>
 </li>
@@ -821,7 +823,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L0-L2235" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L0-L2204" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Structured matrix classes implementing basic linear algebra operations.&#34;&#34;&#34;
 
@@ -861,12 +863,6 @@ class Matrix(abc.ABC):
     &#34;&#34;&#34;
 
     __array_priority__ = 1
-
-    &#34;&#34;&#34;Set of attributes required for class to be considered a subclass&#34;&#34;&#34;
-    _required_subclass_attrs = {
-        &#39;array&#39;, &#39;shape&#39;, &#39;T&#39;, &#39;diagonal&#39;, &#39;__array__&#39;, &#39;__mul__&#39;, &#39;__rmul__&#39;,
-        &#39;__truediv__&#39;, &#39;__neg__&#39;, &#39;__matmul__&#39;, &#39;__rmatmul__&#39;
-    }
 
     def __init__(self, shape, **kwargs):
         &#34;&#34;&#34;
@@ -1000,25 +996,6 @@ class Matrix(abc.ABC):
     def __repr__(self):
         return type(self).__name__ + str(self)
 
-    @classmethod
-    def _get_required_subclass_attrs(cls):
-        &#34;&#34;&#34;Compute set of required subclass attributes.&#34;&#34;&#34;
-        req = set()
-        for C in cls.__mro__:
-            if hasattr(C, &#39;_required_subclass_attrs&#39;):
-                req |= C._required_subclass_attrs
-        return req
-
-    @classmethod
-    def __subclasshook__(cls, C):
-        # Customize isinstance / issubclass behaviour to also return True for
-        # classes / objects with classes which have all required attributes
-        # without being direct subclasses
-        if hasattr(cls, &#39;_get_required_subclass_attrs&#39;):
-            if all(any(attr in B.__dict__ for B in C.__mro__)
-                   for attr in cls._get_required_subclass_attrs()):
-                return True
-        return NotImplemented
 
     @abc.abstractmethod
     def _compute_hash(self):
@@ -1162,8 +1139,6 @@ class MatrixProduct(ImplicitArrayMatrix):
 class SquareMatrix(Matrix):
     &#34;&#34;&#34;Base class for matrices with equal numbers of rows and columns.&#34;&#34;&#34;
 
-    _required_subclass_attrs = {&#39;log_abs_det&#39;}
-
     def __init__(self, shape, **kwargs):
         if shape[0] != shape[1]:
             raise ValueError(
@@ -1206,7 +1181,6 @@ class SquareMatrixProduct(MatrixProduct, SquareMatrix):
 class InvertibleMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for non-singular square matrices.&#34;&#34;&#34;
 
-    _required_subclass_attrs = {&#39;inv&#39;}
 
     def __init__(self, shape, **kwargs):
         super().__init__(shape, **kwargs)
@@ -1257,8 +1231,6 @@ class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
 class SymmetricMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for square matrices which are equal to their transpose.&#34;&#34;&#34;
 
-    _required_subclass_attrs = {&#39;eigval&#39;, &#39;eigvec&#39;}
-
     def __init__(self, shape, **kwargs):
         self._eigval = None
         self._eigvec = None
@@ -1292,8 +1264,6 @@ class SymmetricMatrix(SquareMatrix):
 
 class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
     &#34;&#34;&#34;Base class for positive definite matrices.&#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;sqrt&#39;}
 
     def __init__(self, shape, **kwargs):
         self._sqrt = None
@@ -1410,8 +1380,6 @@ class DifferentiableMatrix(InvertibleMatrix):
     returned gradients will be respectively a tuple or dict of arrays of the
     same shapes and with the same indices / keys.
     &#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;grad_log_abs_det&#39;, &#39;grad_quadratic_form_inv&#39;}
 
     @property
     @abc.abstractmethod
@@ -2503,7 +2471,7 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
         return sum(block.log_abs_det for block in self._blocks)
 
 
-class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
+class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix, SymmetricMatrix):
     &#34;&#34;&#34;Symmetric specialisation of `SquareBlockDiagonalMatrix`.
 
     All matrix blocks in diagonal are restricted to be symmetric, i.e.
@@ -2531,7 +2499,7 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
 
 
 class PositiveDefiniteBlockDiagonalMatrix(
-        SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix,
+        SquareBlockDiagonalMatrix, PositiveDefiniteMatrix, 
         DifferentiableMatrix):
     &#34;&#34;&#34;Positive definite specialisation of `SymmetricBlockDiagonalMatrix`.
 
@@ -2559,6 +2527,9 @@ class PositiveDefiniteBlockDiagonalMatrix(
                 tuple(scalar * block for block in self._blocks))
         else:
             return super()._scalar_multiply(scalar)
+
+    def _construct_transpose(self):
+        return self
 
     def _construct_sqrt(self):
         return SquareBlockDiagonalMatrix(
@@ -3087,7 +3058,7 @@ second argument is a scalar quantity.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L30-L213" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L30-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Matrix(abc.ABC):
     &#34;&#34;&#34;Base class for matrix-like objects.
@@ -3098,12 +3069,6 @@ second argument is a scalar quantity.</p>
     &#34;&#34;&#34;
 
     __array_priority__ = 1
-
-    &#34;&#34;&#34;Set of attributes required for class to be considered a subclass&#34;&#34;&#34;
-    _required_subclass_attrs = {
-        &#39;array&#39;, &#39;shape&#39;, &#39;T&#39;, &#39;diagonal&#39;, &#39;__array__&#39;, &#39;__mul__&#39;, &#39;__rmul__&#39;,
-        &#39;__truediv__&#39;, &#39;__neg__&#39;, &#39;__matmul__&#39;, &#39;__rmatmul__&#39;
-    }
 
     def __init__(self, shape, **kwargs):
         &#34;&#34;&#34;
@@ -3237,25 +3202,6 @@ second argument is a scalar quantity.</p>
     def __repr__(self):
         return type(self).__name__ + str(self)
 
-    @classmethod
-    def _get_required_subclass_attrs(cls):
-        &#34;&#34;&#34;Compute set of required subclass attributes.&#34;&#34;&#34;
-        req = set()
-        for C in cls.__mro__:
-            if hasattr(C, &#39;_required_subclass_attrs&#39;):
-                req |= C._required_subclass_attrs
-        return req
-
-    @classmethod
-    def __subclasshook__(cls, C):
-        # Customize isinstance / issubclass behaviour to also return True for
-        # classes / objects with classes which have all required attributes
-        # without being direct subclasses
-        if hasattr(cls, &#39;_get_required_subclass_attrs&#39;):
-            if all(any(attr in B.__dict__ for B in C.__mro__)
-                   for attr in cls._get_required_subclass_attrs()):
-                return True
-        return NotImplemented
 
     @abc.abstractmethod
     def _compute_hash(self):
@@ -3292,7 +3238,7 @@ second argument is a scalar quantity.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L108-L111" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L102-L105" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def shape(self):
@@ -3306,7 +3252,7 @@ def shape(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L113-L116" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L107-L110" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -3320,7 +3266,7 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L154-L159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L148-L153" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def transpose(self):
@@ -3336,7 +3282,7 @@ def transpose(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L154-L159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L148-L153" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def transpose(self):
@@ -3352,7 +3298,7 @@ def transpose(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L167-L170" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L161-L164" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -3376,7 +3322,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L216-L240" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L191-L215" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExplicitArrayMatrix(Matrix):
     &#34;&#34;&#34;Matrix with an explicit array representation.&#34;&#34;&#34;
@@ -3426,7 +3372,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L226-L228" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L201-L203" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def array(self):
@@ -3465,7 +3411,7 @@ def array(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L243-L273" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L218-L248" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitArrayMatrix(Matrix):
     &#34;&#34;&#34;Matrix with an implicit array representation.&#34;&#34;&#34;
@@ -3529,7 +3475,7 @@ with it will not be able to exploit any structure in the matrix.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L254-L264" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L229-L239" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def array(self):
@@ -3581,7 +3527,7 @@ dimensions.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L276-L334" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L251-L309" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MatrixProduct(ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix implicitly defined as a product of a sequence of matrices.
@@ -3661,7 +3607,7 @@ dimensions.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L301-L303" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L276-L278" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def matrices(self):
@@ -3707,12 +3653,10 @@ with it will not be able to exploit any structure in the matrix.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L337-L356" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L312-L329" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareMatrix(Matrix):
     &#34;&#34;&#34;Base class for matrices with equal numbers of rows and columns.&#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;log_abs_det&#39;}
 
     def __init__(self, shape, **kwargs):
         if shape[0] != shape[1]:
@@ -3752,7 +3696,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L348-L356" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L321-L329" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -3806,7 +3750,7 @@ dimensions.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L359-L378" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L332-L351" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareMatrixProduct(MatrixProduct, SquareMatrix):
     &#34;&#34;&#34;Matrix implicitly defined as a product of a sequence of square matrices.
@@ -3852,7 +3796,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L376-L378" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L349-L351" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -3898,12 +3842,11 @@ with it will not be able to exploit any structure in the matrix.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L381-L411" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L354-L383" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InvertibleMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for non-singular square matrices.&#34;&#34;&#34;
 
-    _required_subclass_attrs = {&#39;inv&#39;}
 
     def __init__(self, shape, **kwargs):
         super().__init__(shape, **kwargs)
@@ -3968,7 +3911,7 @@ defined by the original matrix object.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L390-L401" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L362-L373" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def inv(self):
@@ -4032,7 +3975,7 @@ dimensions.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L414-L429" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L386-L401" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
     &#34;&#34;&#34;Matrix defined as a product of a sequence of invertible matrices.
@@ -4117,12 +4060,10 @@ defined by the original matrix object.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L432-L465" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L404-L435" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SymmetricMatrix(SquareMatrix):
     &#34;&#34;&#34;Base class for square matrices which are equal to their transpose.&#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;eigval&#39;, &#39;eigvec&#39;}
 
     def __init__(self, shape, **kwargs):
         self._eigval = None
@@ -4168,6 +4109,7 @@ defined by the original matrix object.</p></section>
 <li>mici.matrices._BaseTriangularFactoredDefiniteMatrix</li>
 <li><a title="mici.matrices.DenseSymmetricMatrix" href="#mici.matrices.DenseSymmetricMatrix">DenseSymmetricMatrix</a></li>
 <li><a title="mici.matrices.EigendecomposedSymmetricMatrix" href="#mici.matrices.EigendecomposedSymmetricMatrix">EigendecomposedSymmetricMatrix</a></li>
+<li><a title="mici.matrices.SymmetricBlockDiagonalMatrix" href="#mici.matrices.SymmetricBlockDiagonalMatrix">SymmetricBlockDiagonalMatrix</a></li>
 <li><a title="mici.matrices.SymmetricLowRankUpdateMatrix" href="#mici.matrices.SymmetricLowRankUpdateMatrix">SymmetricLowRankUpdateMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
@@ -4178,7 +4120,7 @@ defined by the original matrix object.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L446-L451" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L416-L421" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -4194,7 +4136,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L453-L458" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L423-L428" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -4213,7 +4155,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L463-L465" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L433-L435" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -4256,12 +4198,10 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L468-L496" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L438-L464" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
     &#34;&#34;&#34;Base class for positive definite matrices.&#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;sqrt&#39;}
 
     def __init__(self, shape, **kwargs):
         self._sqrt = None
@@ -4318,7 +4258,7 @@ matrix satisfying the above property.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L477-L487" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L445-L455" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sqrt(self):
@@ -4397,7 +4337,7 @@ matrix is to be implicitly shaped.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L499-L562" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L467-L530" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix representing identity operator on a vector space.
@@ -4482,7 +4422,7 @@ matrix is to be implicitly shaped.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L529-L531" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L497-L499" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -4495,7 +4435,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L536-L538" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L504-L506" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -4508,7 +4448,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L543-L545" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L511-L513" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -4524,7 +4464,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L554-L556" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L522-L524" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -4594,7 +4534,7 @@ same shapes and with the same indices / keys.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L565-L603" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L533-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DifferentiableMatrix(InvertibleMatrix):
     &#34;&#34;&#34;Parameterically defined matrix defining gradient of scalar operations.
@@ -4619,8 +4559,6 @@ same shapes and with the same indices / keys.</p>
     returned gradients will be respectively a tuple or dict of arrays of the
     same shapes and with the same indices / keys.
     &#34;&#34;&#34;
-
-    _required_subclass_attrs = {&#39;grad_log_abs_det&#39;, &#39;grad_quadratic_form_inv&#39;}
 
     @property
     @abc.abstractmethod
@@ -4661,7 +4599,7 @@ same shapes and with the same indices / keys.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L591-L594" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L557-L560" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -4721,7 +4659,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L596-L603" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L562-L569" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def grad_quadratic_form_inv(self, vector):
@@ -4758,7 +4696,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L606-L688" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L572-L654" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScaledIdentityMatrix(
         SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
@@ -4866,7 +4804,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L630-L633" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L596-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def scalar(self):
@@ -4880,7 +4818,7 @@ def scalar(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L644-L646" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L610-L612" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -4893,7 +4831,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L648-L650" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L614-L616" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -4906,7 +4844,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L655-L657" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L621-L623" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -4922,7 +4860,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L666-L672" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L632-L638" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -4939,7 +4877,7 @@ def log_abs_det(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L674-L676" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L640-L642" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -4987,7 +4925,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L678-L679" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L644-L645" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     return -np.sum(vector**2) / self._scalar**2</code></pre>
@@ -5015,7 +4953,7 @@ available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L691-L714" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L657-L680" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveScaledIdentityMatrix(
         ScaledIdentityMatrix, PositiveDefiniteMatrix):
@@ -5145,7 +5083,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L717-L775" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L683-L741" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalMatrix(
         SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
@@ -5229,7 +5167,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L730-L732" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L696-L698" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -5242,7 +5180,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L750-L752" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L716-L718" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -5255,7 +5193,7 @@ def eigvec(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L754-L756" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L720-L722" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -5268,7 +5206,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L764-L766" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L730-L732" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -5323,7 +5261,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L768-L769" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L734-L735" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     return -(self.inv @ vector)**2</code></pre>
@@ -5346,7 +5284,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L778-L799" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L744-L765" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDiagonalMatrix(DiagonalMatrix, PositiveDefiniteMatrix):
     &#34;&#34;&#34;Specialisation of `DiagonalMatrix` with positive diagonal parameter.
@@ -5480,7 +5418,7 @@ by explicitly zeroing entries in upper triangle if
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L807-L849" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L773-L815" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Matrix with non-zero values only in lower or upper triangle elements.&#34;&#34;&#34;
@@ -5542,7 +5480,7 @@ by explicitly zeroing entries in upper triangle if
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L832-L834" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L798-L800" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def lower(self):
@@ -5558,7 +5496,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L844-L846" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L810-L812" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -5620,7 +5558,7 @@ triangular by explicitly zeroing entries in upper triangle if
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L852-L921" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L818-L887" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Triangular matrix implicitly specified by its inverse.&#34;&#34;&#34;
@@ -5709,7 +5647,7 @@ triangular by explicitly zeroing entries in upper triangle if
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L889-L891" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L855-L857" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def lower(self):
@@ -5722,7 +5660,7 @@ def lower(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L906-L908" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L872-L874" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -5738,7 +5676,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L910-L912" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L876-L878" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -5807,7 +5745,7 @@ or upper-triangular.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L954-L1025" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L920-L991" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularFactoredDefiniteMatrix(
         _BaseTriangularFactoredDefiniteMatrix, DifferentiableMatrix,
@@ -5905,7 +5843,7 @@ or upper-triangular.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1007-L1009" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L973-L975" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -5972,7 +5910,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1011-L1016" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L977-L982" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_factor_vector = self.factor.inv @ vector
@@ -6015,7 +5953,7 @@ or upper-triangular.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1028-L1070" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L994-L1036" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TriangularFactoredPositiveDefiniteMatrix(
         TriangularFactoredDefiniteMatrix, PositiveDefiniteMatrix):
@@ -6178,7 +6116,7 @@ factorize the matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1073-L1134" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1039-L1100" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseDefiniteMatrix(_BaseTriangularFactoredDefiniteMatrix,
                           DifferentiableMatrix, ExplicitArrayMatrix):
@@ -6266,7 +6204,7 @@ factorize the matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1112-L1121" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1078-L1087" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def factor(self):
@@ -6286,7 +6224,7 @@ def factor(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1123-L1125" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1089-L1091" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -6353,7 +6291,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1127-L1129" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1093-L1095" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_matrix_vector = self.inv @ vector
@@ -6384,7 +6322,7 @@ depends on the factor.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1137-L1158" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1103-L1124" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
     &#34;&#34;&#34;Positive-definite matrix specified by a dense 2D array.&#34;&#34;&#34;
@@ -6532,7 +6470,7 @@ matrix. If <code>None</code> an identity matrix is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1161-L1206" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1127-L1172" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DensePositiveDefiniteProductMatrix(DensePositiveDefiniteMatrix):
     &#34;&#34;&#34;Positive-definite matrix specified as a signed symmetric product.
@@ -6603,7 +6541,7 @@ matrix. If <code>None</code> an identity matrix is used.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1197-L1200" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1163-L1166" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -6682,7 +6620,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1202-L1206" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1168-L1172" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_matrix_vector = self.inv @ vector
@@ -6718,7 +6656,7 @@ or its transpose.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1209-L1261" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1175-L1227" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Dense non-singular square matrix.&#34;&#34;&#34;
@@ -6790,7 +6728,7 @@ or its transpose.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1240-L1246" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1206-L1212" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def lu_and_piv(self):
@@ -6810,7 +6748,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1248-L1251" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1214-L1217" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -6873,7 +6811,7 @@ array or transpose of inverse of array.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1264-L1324" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1230-L1290" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix implicitly defined by LU factorisation of inverse.&#34;&#34;&#34;
@@ -6956,7 +6894,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1304-L1306" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1270-L1272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -7018,7 +6956,7 @@ with <code>eigval[i]</code> the eigenvalue associated with column <code>i</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1327-L1357" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1293-L1323" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
@@ -7122,7 +7060,7 @@ defined by the original matrix object.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1360-L1381" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1326-L1347" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix with columns and rows that are orthogonal unit vectors.&#34;&#34;&#34;
@@ -7166,7 +7104,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1373-L1375" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1339-L1341" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -7224,7 +7162,7 @@ matrix represented as a square 2D array.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1384-L1435" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1350-L1401" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix corresponding to orthogonal matrix multiplied by a scalar.
@@ -7295,7 +7233,7 @@ matrix represented as a square 2D array.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1416-L1418" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1382-L1384" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -7311,7 +7249,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1420-L1422" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1386-L1388" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -7371,7 +7309,7 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1438-L1497" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1404-L1463" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EigendecomposedSymmetricMatrix(
         SymmetricMatrix, InvertibleMatrix, ImplicitArrayMatrix):
@@ -7521,7 +7459,7 @@ with column <code>i</code> of <code>eigvec</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1500-L1530" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1466-L1496" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EigendecomposedPositiveDefiniteMatrix(
         EigendecomposedSymmetricMatrix, PositiveDefiniteMatrix):
@@ -7650,7 +7588,7 @@ absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1533-L1585" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1499-L1551" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRegularizedPositiveDefiniteMatrix(
         EigendecomposedPositiveDefiniteMatrix, DifferentiableMatrix):
@@ -7727,7 +7665,7 @@ absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1572-L1575" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1538-L1541" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -7796,7 +7734,7 @@ matrix satisfying the above property.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1562-L1564" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1528-L1530" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def softabs(self, x):
     &#34;&#34;&#34;Smooth approximation to absolute function.&#34;&#34;&#34;
@@ -7811,7 +7749,7 @@ matrix satisfying the above property.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1566-L1570" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1532-L1536" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_softabs(self, x):
     &#34;&#34;&#34;Derivative of smooth approximation to absolute function.&#34;&#34;&#34;
@@ -7834,7 +7772,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1577-L1585" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1543-L1551" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     num_j_mtx = self.eigval[:, None] - self.eigval[None, :]
@@ -7863,7 +7801,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1588-L1604" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1554-L1570" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BlockMatrix(ImplicitArrayMatrix):
     &#34;&#34;&#34;Matrix with non-zero entries defined by a series of submatrix blocks.&#34;&#34;&#34;
@@ -7903,7 +7841,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1591-L1594" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1557-L1560" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 @abc.abstractmethod
@@ -7952,7 +7890,7 @@ left-to-right.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1607-L1678" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1573-L1644" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
     &#34;&#34;&#34;Square matrix with non-zero values only in blocks along diagonal.&#34;&#34;&#34;
@@ -8039,6 +7977,7 @@ left-to-right.</dd>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="mici.matrices.SymmetricBlockDiagonalMatrix" href="#mici.matrices.SymmetricBlockDiagonalMatrix">SymmetricBlockDiagonalMatrix</a></li>
+<li><a title="mici.matrices.PositiveDefiniteBlockDiagonalMatrix" href="#mici.matrices.PositiveDefiniteBlockDiagonalMatrix">PositiveDefiniteBlockDiagonalMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -8048,7 +7987,7 @@ left-to-right.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1626-L1629" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1592-L1595" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def blocks(self):
@@ -8062,7 +8001,7 @@ def blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1660-L1662" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1626-L1628" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -8075,7 +8014,7 @@ def diagonal(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1667-L1669" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1633-L1635" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigval(self):
@@ -8088,7 +8027,7 @@ def eigval(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1671-L1674" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1637-L1640" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def eigvec(self):
@@ -8105,7 +8044,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1676-L1678" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1642-L1644" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -8156,9 +8095,9 @@ left-to-right.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1681-L1705" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1647-L1671" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix):
+<pre><code class="python">class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix, SymmetricMatrix):
     &#34;&#34;&#34;Symmetric specialisation of `SquareBlockDiagonalMatrix`.
 
     All matrix blocks in diagonal are restricted to be symmetric, i.e.
@@ -8188,15 +8127,12 @@ left-to-right.</dd>
 <ul class="hlist">
 <li><a title="mici.matrices.SquareBlockDiagonalMatrix" href="#mici.matrices.SquareBlockDiagonalMatrix">SquareBlockDiagonalMatrix</a></li>
 <li><a title="mici.matrices.InvertibleMatrix" href="#mici.matrices.InvertibleMatrix">InvertibleMatrix</a></li>
+<li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
 <li><a title="mici.matrices.SquareMatrix" href="#mici.matrices.SquareMatrix">SquareMatrix</a></li>
 <li><a title="mici.matrices.BlockMatrix" href="#mici.matrices.BlockMatrix">BlockMatrix</a></li>
 <li><a title="mici.matrices.ImplicitArrayMatrix" href="#mici.matrices.ImplicitArrayMatrix">ImplicitArrayMatrix</a></li>
 <li><a title="mici.matrices.Matrix" href="#mici.matrices.Matrix">Matrix</a></li>
 <li>abc.ABC</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="mici.matrices.PositiveDefiniteBlockDiagonalMatrix" href="#mici.matrices.PositiveDefiniteBlockDiagonalMatrix">PositiveDefiniteBlockDiagonalMatrix</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -8239,6 +8175,14 @@ defined by the original matrix object.</p></section>
 <dd>
 <section class="desc"><p>Transpose of matrix.</p></section>
 </dd>
+<dt id="mici.matrices.SymmetricBlockDiagonalMatrix.eigval"><code class="name">var <span class="ident">eigval</span></code></dt>
+<dd>
+<section class="desc"><p>Eigenvalues of matrix as a 1D array.</p></section>
+</dd>
+<dt id="mici.matrices.SymmetricBlockDiagonalMatrix.eigvec"><code class="name">var <span class="ident">eigvec</span></code></dt>
+<dd>
+<section class="desc"><p>Eigenvectors of matrix stacked as columns of a <a title="mici.matrices.Matrix" href="#mici.matrices.Matrix"><code>Matrix</code></a> object.</p></section>
+</dd>
 </dl>
 </dd>
 <dt id="mici.matrices.PositiveDefiniteBlockDiagonalMatrix"><code class="flex name class">
@@ -8258,10 +8202,10 @@ order left-to-right.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1708-L1757" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1674-L1726" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDefiniteBlockDiagonalMatrix(
-        SymmetricBlockDiagonalMatrix, PositiveDefiniteMatrix,
+        SquareBlockDiagonalMatrix, PositiveDefiniteMatrix, 
         DifferentiableMatrix):
     &#34;&#34;&#34;Positive definite specialisation of `SymmetricBlockDiagonalMatrix`.
 
@@ -8290,6 +8234,9 @@ order left-to-right.</dd>
         else:
             return super()._scalar_multiply(scalar)
 
+    def _construct_transpose(self):
+        return self
+
     def _construct_sqrt(self):
         return SquareBlockDiagonalMatrix(
             tuple(block.sqrt for block in self._blocks))
@@ -8313,7 +8260,6 @@ order left-to-right.</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mici.matrices.SymmetricBlockDiagonalMatrix" href="#mici.matrices.SymmetricBlockDiagonalMatrix">SymmetricBlockDiagonalMatrix</a></li>
 <li><a title="mici.matrices.SquareBlockDiagonalMatrix" href="#mici.matrices.SquareBlockDiagonalMatrix">SquareBlockDiagonalMatrix</a></li>
 <li><a title="mici.matrices.PositiveDefiniteMatrix" href="#mici.matrices.PositiveDefiniteMatrix">PositiveDefiniteMatrix</a></li>
 <li><a title="mici.matrices.SymmetricMatrix" href="#mici.matrices.SymmetricMatrix">SymmetricMatrix</a></li>
@@ -8333,7 +8279,7 @@ order left-to-right.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1742-L1748" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1711-L1717" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -8415,7 +8361,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1750-L1757" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1719-L1726" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     if self.is_differentiable:
@@ -8443,7 +8389,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1760-L1774" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1729-L1743" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRectangularMatrix(ExplicitArrayMatrix):
     &#34;&#34;&#34;Dense rectangular matrix.&#34;&#34;&#34;
@@ -8507,7 +8453,7 @@ concatenated give the overall matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1777-L1819" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1746-L1788" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BlockRowMatrix(BlockMatrix):
     &#34;&#34;&#34;Matrix composed of horizontal concatenation of a series of blocks.&#34;&#34;&#34;
@@ -8568,7 +8514,7 @@ concatenated give the overall matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1796-L1799" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1765-L1768" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def blocks(self):
@@ -8617,7 +8563,7 @@ concatenated give the overall matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1822-L1864" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1791-L1833" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BlockColumnMatrix(BlockMatrix):
     &#34;&#34;&#34;Matrix composed of vertical concatenation of a series of blocks.&#34;&#34;&#34;
@@ -8678,7 +8624,7 @@ concatenated give the overall matrix.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1841-L1844" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1810-L1813" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def blocks(self):
@@ -8769,7 +8715,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1867-L2016" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1836-L1985" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     &#34;&#34;&#34;Square matrix equal to a low-rank update to a square matrix.
@@ -8942,7 +8888,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1970-L1977" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1939-L1946" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def capacitance_matrix(self):
@@ -8960,7 +8906,7 @@ def capacitance_matrix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L1979-L1983" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1948-L1952" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def diagonal(self):
@@ -8978,7 +8924,7 @@ metric with respect to the Lebesgue measure.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2000-L2005" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1969-L1974" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def log_abs_det(self):
@@ -9068,7 +9014,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2019-L2118" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L1988-L2087" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SymmetricLowRankUpdateMatrix(
         SquareLowRankUpdateMatrix, SymmetricMatrix, InvertibleMatrix):
@@ -9193,7 +9139,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2092-L2099" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L2061-L2068" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def capacitance_matrix(self):
@@ -9306,7 +9252,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2121-L2236" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L2090-L2205" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PositiveDefiniteLowRankUpdateMatrix(
         SymmetricLowRankUpdateMatrix, PositiveDefiniteMatrix,
@@ -9446,7 +9392,7 @@ computation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2200-L2208" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L2169-L2177" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def capacitance_matrix(self):
@@ -9465,7 +9411,7 @@ def capacitance_matrix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2226-L2229" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L2195-L2198" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def grad_log_abs_det(self):
@@ -9540,7 +9486,7 @@ form at.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/matrices.py#L2231-L2236" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/matrices.py#L2200-L2205" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def grad_quadratic_form_inv(self, vector):
     inv_matrix_vector = self.inv @ vector

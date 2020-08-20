@@ -58,7 +58,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L0-L271" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L0-L271" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Objects for recording state of a Markov chain and caching computations.&#34;&#34;&#34;
 
@@ -78,7 +78,7 @@ def _cache_key_func(system, method):
 def cache_in_state(*depends_on):
     &#34;&#34;&#34;Memoizing decorator for system methods.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value returned by the method being wrapped in the `ChainState` object to
     prevent the need for recomputation on future calls if the state variables
@@ -86,8 +86,8 @@ def cache_in_state(*depends_on):
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn&#39;t a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
        *depends_on: One or more strings corresponding to the names of any state
@@ -115,7 +115,7 @@ def cache_in_state(*depends_on):
 def cache_in_state_with_aux(depends_on, auxiliary_outputs):
     &#34;&#34;&#34;Memoizing decorator for system methods with possible auxiliary outputs.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value or values returned by the method being wrapped in the `ChainState`
     object to prevent the need for recomputation on future calls if the state
@@ -142,8 +142,8 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn&#39;t a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
         depends_on (str or Tuple[str]): A string or tuple of strings, with each
@@ -265,7 +265,7 @@ class ChainState(object):
             _cache = {}
         self.__dict__[&#39;_cache&#39;] = _cache
         self.__dict__[&#39;_call_counts&#39;] = (
-            Counter(_call_counts) if isinstance(_call_counts, dict)
+            Counter(_call_counts) if not isinstance(_call_counts, Counter)
             else _call_counts)
         self.__dict__[&#39;_read_only&#39;] = _read_only
 
@@ -346,15 +346,15 @@ class ChainState(object):
 </code></dt>
 <dd>
 <section class="desc"><p>Memoizing decorator for system methods.</p>
-<p>Used to decorate <code>mici.system.System</code> methods which compute a function of
+<p>Used to decorate <a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a> methods which compute a function of
 one or more chain state variable(s), with the decorated method caching the
 value returned by the method being wrapped in the <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> object to
 prevent the need for recomputation on future calls if the state variables
 the returned value depends on have not been changed in between the calls.</p>
 <p>Additionally for <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instances initialized with a <code>_call_counts</code>
 argument, the memoized method will update a counter for the method in the
-<code>ChainState._call_counts</code> attribute every time the method being decorated is
-called (i.e. when there isn't a valid cached value available).</p>
+<code>_call_counts</code> attribute every time the method being decorated is called
+(i.e. when there isn't a valid cached value available).</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>*depends_on</code></strong></dt>
@@ -367,12 +367,12 @@ object changes.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L16-L50" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L16-L50" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state(*depends_on):
     &#34;&#34;&#34;Memoizing decorator for system methods.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value returned by the method being wrapped in the `ChainState` object to
     prevent the need for recomputation on future calls if the state variables
@@ -380,8 +380,8 @@ object changes.</dd>
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn&#39;t a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
        *depends_on: One or more strings corresponding to the names of any state
@@ -411,7 +411,7 @@ object changes.</dd>
 </code></dt>
 <dd>
 <section class="desc"><p>Memoizing decorator for system methods with possible auxiliary outputs.</p>
-<p>Used to decorate <code>mici.system.System</code> methods which compute a function of
+<p>Used to decorate <a title="mici.systems.System" href="systems.html#mici.systems.System"><code>System</code></a> methods which compute a function of
 one or more chain state variable(s), with the decorated method caching the
 value or values returned by the method being wrapped in the <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a>
 object to prevent the need for recomputation on future calls if the state
@@ -436,8 +436,8 @@ primal, providing the relevant state variables the primal (and derivative)
 depend on have not been changed in between.</p>
 <p>Additionally for <a title="mici.states.ChainState" href="#mici.states.ChainState"><code>ChainState</code></a> instances initialized with a <code>_call_counts</code>
 argument, the memoized method will update a counter for the method in the
-<code>ChainState._call_counts</code> attribute every time the method being decorated is
-called (i.e. when there isn't a valid cached value available).</p>
+<code>_call_counts</code> attribute every time the method being decorated is called
+(i.e. when there isn't a valid cached value available).</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>depends_on</code></strong> :&ensp;<code>str</code> or <code>Tuple</code>[<code>str</code>]</dt>
@@ -461,12 +461,12 @@ tuple even when no auxiliary outputs are being returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L53-L130" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L53-L130" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state_with_aux(depends_on, auxiliary_outputs):
     &#34;&#34;&#34;Memoizing decorator for system methods with possible auxiliary outputs.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value or values returned by the method being wrapped in the `ChainState`
     object to prevent the need for recomputation on future calls if the state
@@ -493,8 +493,8 @@ tuple even when no auxiliary outputs are being returned.</dd>
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn&#39;t a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn&#39;t a valid cached value available).
 
     Args:
         depends_on (str or Tuple[str]): A string or tuple of strings, with each
@@ -614,7 +614,7 @@ a cached output is not available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L133-L272" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L133-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ChainState(object):
     &#34;&#34;&#34;Markov chain state.
@@ -689,7 +689,7 @@ a cached output is not available.</dd>
             _cache = {}
         self.__dict__[&#39;_cache&#39;] = _cache
         self.__dict__[&#39;_call_counts&#39;] = (
-            Counter(_call_counts) if isinstance(_call_counts, dict)
+            Counter(_call_counts) if not isinstance(_call_counts, Counter)
             else _call_counts)
         self.__dict__[&#39;_read_only&#39;] = _read_only
 
@@ -779,7 +779,7 @@ object's variables.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/056095624298b0e017652794677e9ba43f7f5ed8/mici/states.py#L231-L245" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L231-L245" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def copy(self, read_only=False):
     &#34;&#34;&#34;Create a deep copy of the state object.
