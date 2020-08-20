@@ -170,7 +170,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         }
         init_step_size = (
             self._find_and_set_init_step_size(chain_state, system, integrator)
-            if integrator.step_size is None else integrator.step_size)
+        )
         if self.log_step_size_reg_target is None:
             adapt_state['log_step_size_reg_target'] = log(10 * init_step_size)
         else:
