@@ -16,7 +16,7 @@ def _cache_key_func(system, method):
 def cache_in_state(*depends_on):
     """Memoizing decorator for system methods.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value returned by the method being wrapped in the `ChainState` object to
     prevent the need for recomputation on future calls if the state variables
@@ -24,8 +24,8 @@ def cache_in_state(*depends_on):
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn't a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn't a valid cached value available).
 
     Args:
        *depends_on: One or more strings corresponding to the names of any state
@@ -53,7 +53,7 @@ def cache_in_state(*depends_on):
 def cache_in_state_with_aux(depends_on, auxiliary_outputs):
     """Memoizing decorator for system methods with possible auxiliary outputs.
 
-    Used to decorate `mici.system.System` methods which compute a function of
+    Used to decorate `mici.systems.System` methods which compute a function of
     one or more chain state variable(s), with the decorated method caching the
     value or values returned by the method being wrapped in the `ChainState`
     object to prevent the need for recomputation on future calls if the state
@@ -80,8 +80,8 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
 
     Additionally for `ChainState` instances initialized with a `_call_counts`
     argument, the memoized method will update a counter for the method in the
-    `ChainState._call_counts` attribute every time the method being decorated is
-    called (i.e. when there isn't a valid cached value available).
+    `_call_counts` attribute every time the method being decorated is called
+    (i.e. when there isn't a valid cached value available).
 
     Args:
         depends_on (str or Tuple[str]): A string or tuple of strings, with each

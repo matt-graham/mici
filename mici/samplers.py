@@ -968,7 +968,7 @@ class MarkovChainMonteCarloMethod(object):
 
         Args:
             n_warm_up_iter (int): Number of adaptive warm up iterations per
-                chain. Depending on the `mici.stages.Stager` instance specified
+                chain. Depending on the `mici.stagers.Stager` instance specified
                 by the `stage arguments the warm up iterations may be split
                 between one or more adaptive stages.
             n_main_iter (int): Number of iterations (samples to draw) per chain
@@ -1431,7 +1431,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
 
         Args:
             n_warm_up_iter (int): Number of adaptive warm up iterations per
-                chain. Depending on the `mici.stages.Stager` instance specified
+                chain. Depending on the `mici.stagers.Stager` instance specified
                 by the `stage arguments the warm up iterations may be split
                 between one or more adaptive stages.
             n_main_iter (int): Number of iterations (samples to draw) per chain
