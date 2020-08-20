@@ -80,6 +80,11 @@ class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
         assert adapter_state['smoothed_log_step_size'] == 0
         assert adapter_state['adapt_stat_error'] == 0
 
+    def test_initialize_nan_raises_error(self, adapter, chain_state, transition):
+        chain_state.pos += np.nan
+        with pytest.raises(mici.errors.AdaptationError):
+            adapter.initialize(chain_state, transition)
+
     def test_finalize(self, adapter, chain_state, transition):
         adapter_state = adapter.initialize(chain_state, transition)
         adapter.finalize(adapter_state, transition)

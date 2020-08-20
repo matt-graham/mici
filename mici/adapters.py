@@ -211,14 +211,17 @@ class DualAveragingStepSizeAdapter(Adapter):
         """
         init_state = state.copy()
         h_init = system.h(init_state)
+        if np.isnan(h_init):
+            raise AdaptationError('Hamiltonian evaluating to NaN at initial state.')
         integrator.step_size = 1
         delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
             try:
                 state = integrator.step(init_state)
                 delta_h = abs(h_init - system.h(state))
-                if s == 0:
-                    step_size_too_big = delta_h > delta_h_threshold
+                if s == 0 or np.isnan(delta_h):
+                    step_size_too_big = (
+                        np.isnan(delta_h) or delta_h > delta_h_threshold)
                 if (step_size_too_big and delta_h <= delta_h_threshold) or (
                         not step_size_too_big and delta_h > delta_h_threshold):
                     return integrator.step_size
