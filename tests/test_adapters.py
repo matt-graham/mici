@@ -64,8 +64,13 @@ class GenericAdapterTests:
         for _ in range(5):
             chain_state, trans_stats = transition.sample(chain_state, rng)
             adapter.update(adapter_state, chain_state, trans_stats, transition)
-        adapter.finalize(adapter_state.copy(), transition)
-        adapter.finalize([copy.deepcopy(adapter_state) for i in range(4)], transition)
+        adapter.finalize(adapter_state.copy(), chain_state, transition, rng)
+        adapter.finalize(
+            [copy.deepcopy(adapter_state) for i in range(4)],
+            [chain_state.copy() for i in range(4)],
+            transition,
+            [copy.deepcopy(rng) for i in range(4)],
+        )
 
 
 class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
@@ -82,9 +87,9 @@ class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
         with pytest.raises(mici.errors.AdaptationError):
             adapter.initialize(chain_state, transition)
 
-    def test_finalize(self, adapter, chain_state, transition):
+    def test_finalize(self, adapter, chain_state, transition, rng):
         adapter_state = adapter.initialize(chain_state, transition)
-        adapter.finalize(adapter_state, transition)
+        adapter.finalize(adapter_state, chain_state, transition, rng)
         assert np.isclose(
             transition.integrator.step_size,
             exp(adapter_state["smoothed_log_step_size"]),
@@ -99,7 +104,7 @@ class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
             chain_state, _ = momentum_transition.sample(chain_state, rng)
             chain_state, trans_stats = transition.sample(chain_state, rng)
             adapter.update(adapter_state, chain_state, trans_stats, transition)
-        adapter.finalize(adapter_state, transition)
+        adapter.finalize(adapter_state, chain_state, transition, rng)
         assert abs(adapter_state["adapt_stat_error"]) < 0.02
         sum_accept_stat = 0
         for _ in range(n_transition):
@@ -203,7 +208,7 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
             adapter_state["sum_diff_sq"],
             np.sum((pos_samples - pos_samples.mean(0)) ** 2, 0),
         )
-        adapter.finalize(adapter_state, transition)
+        adapter.finalize(adapter_state, chain_state, transition, rng)
         metric = transition.system.metric
         assert isinstance(metric, mici.matrices.PositiveDiagonalMatrix)
         var_est = pos_samples.var(axis=0, ddof=1)
@@ -253,7 +258,7 @@ class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
             adapter_state["sum_diff_outer"],
             np.einsum("ij,ik->jk", pos_minus_mean_samples, pos_minus_mean_samples),
         )
-        adapter.finalize(adapter_state, transition)
+        adapter.finalize(adapter_state, chain_state, transition, rng)
         metric = transition.system.metric
         assert isinstance(metric, mici.matrices.PositiveDefiniteMatrix)
         covar_est = np.cov(pos_samples, rowvar=False, ddof=1)
