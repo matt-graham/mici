@@ -24,11 +24,11 @@ class Adapter(ABC):
 
         Args:
             chain_state (mici.states.ChainState): Initial chain state adaptive
-                transition will be started from. May be used to calculate
-                initial adapter state but should not be mutated by method.
-            transition (mici.transitions.Transition): Markov transition being
-                adapted. Attributes of the transition or child objects may be
-                updated in-place by the method.
+                transition will be started from. May be used to calculate initial
+                adapter state but should not be mutated by method.
+            transition (mici.transitions.Transition): Markov transition being adapted.
+                Attributes of the transition or child objects may be updated in-place by
+                the method.
 
         Returns:
             adapt_state (Dict[str, Any]): Initial adapter state.
@@ -39,37 +39,44 @@ class Adapter(ABC):
         """Update adapter state after sampling transition being adapted.
 
         Args:
-            adapt_state (Dict[str, Any]): Current adapter state. Entries will
-                be updated in-place by the method.
-            chain_state (mici.states.ChainState): Current chain state following
-                sampling from transition being adapted. May be used to calculate
-                adapter state updates but should not be mutated by method.
-            trans_stats (Dict[str, numeric]): Dictionary of statistics
-                associated with transition being adapted. May be used to
-                calculate adapter state updates but should not be mutated by
-                method.
-            transition (mici.transitions.Transition): Markov transition being
-                adapted. Attributes of the transition or child objects may be
-                updated in-place by the method.
+            adapt_state (Dict[str, Any]): Current adapter state. Entries will be updated
+                in-place by the method.
+            chain_state (mici.states.ChainState): Current chain state following sampling
+                from transition being adapted. May be used to calculate adapter state
+                updates but should not be mutated by method.
+            trans_stats (Dict[str, numeric]): Dictionary of statistics associated with
+                transition being adapted. May be used to calculate adapter state updates
+                but should not be mutated by method.
+            transition (mici.transitions.Transition): Markov transition being adapted.
+                Attributes of the transition or child objects may be updated in-place by
+                the method.
         """
 
     @abstractmethod
-    def finalize(self, adapt_state, transition):
+    def finalize(self, adapt_states, chain_states, transition, rngs):
         """Update transition parameters based on final adapter state or states.
 
         Optionally, if multiple adapter states are available, e.g. from a set of
-        independent adaptive chains, then these adaptation information from all
-        the chains may be combined to set the transition parameter(s).
+        independent adaptive chains, then these adaptation information from all the
+        chains may be combined to set the transition parameter(s).
 
         Args:
-            adapt_state (Dict[str, Any] or List[Dict[str, Any]]): Final adapter
-                state or a list of adapter states. Arrays / buffers associated
-                with the adapter state entries may be recycled to reduce memory
-                usage - if so the corresponding entries will be removed from
-                the adapter state dictionary / dictionaries.
-            transition (mici.transitions.Transition): Markov transition being
-                adapted. Attributes of the transition or child objects will be
-                updated in-place by the method.
+            adapt_states (Dict[str, Any] or List[Dict[str, Any]]): Final adapter state
+                or a list of per chain adapter states. Arrays / buffers associated with
+                the adapter state entries may be recycled to reduce memory usage - if so
+                the corresponding entries will be removed from the adapter state
+                dictionary / dictionaries.
+            chain_states (ChainState or List[mici.states.ChainState]): Final state of
+                chain (or states of chains) in current sampling stage. May be updated
+                in-place if transition parameters altered by adapter require updating
+                any state components.
+            transition (mici.transitions.Transition): Markov transition being dapted.
+                Attributes of the transition or child objects will be updated in-place
+                by the method.
+            rngs (numpy.random.Generator or List[numpy.random.Generator]): Random number
+                generator for the chain or a list of per-chain random number generators.
+                Used to resample any components of states needing to be updated due to
+                adaptation if required.
         """
 
     @property
@@ -87,20 +94,20 @@ class Adapter(ABC):
 class DualAveragingStepSizeAdapter(Adapter):
     """Dual averaging integrator step size adapter.
 
-    Implementation of the dual algorithm step size adaptation algorithm
-    described in [1], a modified version of the stochastic optimisation scheme
-    of [2]. By default the adaptation is performed to control the `accept_prob`
-    statistic of an integration transition to be close to a target value but
-    the statistic adapted on can be altered by changing the `adapt_stat_func`.
+    Implementation of the dual algorithm step size adaptation algorithm described in
+    [1], a modified version of the stochastic optimisation scheme of [2]. By default the
+    adaptation is performed to control the `accept_prob` statistic of an integration
+    transition to be close to a target value but the statistic adapted on can be altered
+    by changing the `adapt_stat_func`.
 
 
     References:
 
-      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
-         adaptively setting path lengths in Hamiltonian Monte Carlo.
-         Journal of Machine Learning Research, 15(1), pp.1593-1623.
-      2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex
-         problems. Mathematical programming 120(1), pp.221-259.
+      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+         15(1), pp.1593-1623.
+      2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex problems.
+         Mathematical programming 120(1), pp.221-259.
     """
 
     is_fast = True
@@ -119,41 +126,38 @@ class DualAveragingStepSizeAdapter(Adapter):
         Args:
             adapt_stat_target (float): Target value for the transition statistic
                 being controlled during adaptation.
-            adapt_stat_func (Callable[[Dict[str, numeric]], numeric]): Function
-                which given a dictionary of transition statistics outputs the
-                value of the statistic to control during adaptation. By default
-                this is set to a function which simply selects the 'accept_stat'
-                value in the statistics dictionary.
-            log_step_size_reg_target (float or None): Value to regularize the
-                controlled output (logarithm of the integrator step size)
-                towards. If `None` set to `log(10 * init_step_size)` where
-                `init_step_size` is the initial 'reasonable' step size found by
-                a coarse search as recommended in Hoffman and Gelman (2014).
-                This has the effect of giving the dual averaging algorithm a
-                tendency towards testing step sizes larger than the initial
-                value, with typically integrating with a larger step size having
-                a lower computational cost.
-            log_step_size_reg_coefficient (float): Coefficient controlling
-                amount of regularisation of controlled output (logarithm of the
-                integrator step size) towards `log_step_size_reg_target`.
-                Defaults to 0.05 as recommended in Hoffman and Gelman (2014).
-            iter_decay_coeff (float): Coefficient controlling exponent of
-                decay in schedule weighting stochastic updates to smoothed log
-                step size estimate. Should be in the interval (0.5, 1] to ensure
-                asymptotic convergence of adaptation. A value of 1 gives equal
-                weight to the whole history of updates while setting to a
-                smaller value increasingly highly weights recent updates, giving
-                a tendency to 'forget' early updates. Defaults to 0.75 as
+            adapt_stat_func (Callable[[Dict[str, numeric]], numeric]): Function which
+                given a dictionary of transition statistics outputs the value of the
+                statistic to control during adaptation. By default this is set to a
+                function which simply selects the 'accept_stat' value in the statistics
+                dictionary.
+            log_step_size_reg_target (float or None): Value to regularize the controlled
+                output (logarithm of the integrator step size) towards. If `None` set to
+                `log(10 * init_step_size)` where `init_step_size` is the initial
+                'reasonable' step size found by a coarse search as recommended in
+                Hoffman and Gelman (2014). This has the effect of giving the dual
+                averaging algorithm a tendency towards testing step sizes larger than
+                the initial value, with typically integrating with a larger step size
+                having a lower computational cost.
+            log_step_size_reg_coefficient (float): Coefficient controlling amount of
+                regularisation of controlled output (logarithm of the integrator step
+                size) towards `log_step_size_reg_target`. Defaults to 0.05 as
                 recommended in Hoffman and Gelman (2014).
-            iter_offset (int): Offset used for the iteration based weighting of
-                the adaptation statistic error estimate. Should be set to a
-                non-negative value. A value > 0 has the effect of stabilising
-                early iterations. Defaults to the value of 10 as recommended in
-                Hoffman and Gelman (2014).
-            max_init_step_size_iters (int): Maximum number of iterations to use
-                in initial search for a reasonable step size with an
-                `AdaptationError` exception raised if a suitable step size is
-                not found within this many iterations.
+            iter_decay_coeff (float): Coefficient controlling exponent of decay in
+                schedule weighting stochastic updates to smoothed log step size
+                estimate. Should be in the interval (0.5, 1] to ensure asymptotic
+                convergence of adaptation. A value of 1 gives equal weight to the whole
+                history of updates while setting to a smaller value increasingly highly
+                weights recent updates, giving a tendency to 'forget' early updates.
+                Defaults to 0.75 as recommended in Hoffman and Gelman (2014).
+            iter_offset (int): Offset used for the iteration based weighting of the
+                adaptation statistic error estimate. Should be set to a non-negative
+                value. A value > 0 has the effect of stabilising early iterations.
+                Defaults to the value of 10 as recommended in Hoffman and Gelman (2014).
+            max_init_step_size_iters (int): Maximum number of iterations to use in
+                initial search for a reasonable step size with an `AdaptationError`
+                exception raised if a suitable step size is not found within this many
+                iterations.
         """
         self.adapt_stat_target = adapt_stat_target
         if adapt_stat_func is None:
@@ -190,31 +194,27 @@ class DualAveragingStepSizeAdapter(Adapter):
 
         Adaptation of Algorithm 4 in Hoffman and Gelman (2014).
 
-        Compared to the Hoffman and Gelman algorithm, this version makes two
-        changes:
+        Compared to the Hoffman and Gelman algorithm, this version makes two changes:
 
-          1. The absolute value of the change in Hamiltonian over a step being
-             larger or smaller than log(2) is used to determine whether the step
-             size is too big or small as opposed to the value of the equivalent
-             Metropolis accept probability being larger or smaller than 0.5.
-             Although a negative change in the Hamiltonian over a step of
-             magnitude more than log(2) will lead to an accept probability of 1
-             for the forward move, the corresponding reversed move will have an
-             accept probability less than 0.5, and so a change in the
-             Hamiltonian over a step of magnitude more than log(2) irrespective
-             of the sign of the change is indicative of the minimum acceptance
-             probability over both forward and reversed steps being less than
-             0.5.
-          2. To allow for integrators for which an integrator step may fail due
-             to e.g. a convergence error in an iterative solver, the step size
-             is also considered to be too big if any of the step sizes tried in
-             the search result in a failed integrator step, with in this case
-             the step size always being decreased on subsequent steps
-             irrespective of the initial Hamiltonian error, until a integrator
-             step successfully completes and the absolute value of the change in
-             Hamiltonian is below the threshold of log(2) (corresponding to a
-             minimum acceptance probability over forward and reversed steps of
-             0.5).
+          1. The absolute value of the change in Hamiltonian over a step being larger or
+             smaller than log(2) is used to determine whether the step size is too big
+             or small as opposed to the value of the equivalent Metropolis accept
+             probability being larger or smaller than 0.5. Although a negative change in
+             the Hamiltonian over a step of magnitude more than log(2) will lead to an
+             accept probability of 1 for the forward move, the corresponding reversed
+             move will have an accept probability less than 0.5, and so a change in the
+             Hamiltonian over a step of magnitude more than log(2) irrespective of the
+             sign of the change is indicative of the minimum acceptance probability over
+             both forward and reversed steps being less than 0.5.
+          2. To allow for integrators for which an integrator step may fail due to e.g.
+             a convergence error in an iterative solver, the step size is also
+             considered to be too big if any of the step sizes tried in the search
+             result in a failed integrator step, with in this case the step size always
+             being decreased on subsequent steps irrespective of the initial Hamiltonian
+             error, until a integrator step successfully completes and the absolute
+             value of the change in Hamiltonian is below the threshold of log(2)
+             (corresponding to a minimum acceptance probability over forward and
+             reversed steps of 0.5).
         """
         init_state = state.copy()
         h_init = system.h(init_state)
@@ -266,41 +266,42 @@ class DualAveragingStepSizeAdapter(Adapter):
         adapt_state["smoothed_log_step_size"] += smoothing_weight * log_step_size
         transition.integrator.step_size = exp(log_step_size)
 
-    def finalize(self, adapt_state, transition):
-        if isinstance(adapt_state, dict):
-            transition.integrator.step_size = exp(adapt_state["smoothed_log_step_size"])
+    def finalize(self, adapt_states, chain_states, transition, rngs):
+        if isinstance(adapt_states, dict):
+            transition.integrator.step_size = exp(
+                adapt_states["smoothed_log_step_size"]
+            )
         else:
             transition.integrator.step_size = sum(
-                exp(a["smoothed_log_step_size"]) for a in adapt_state
-            ) / len(adapt_state)
+                exp(adapt_state["smoothed_log_step_size"])
+                for adapt_state in adapt_states
+            ) / len(adapt_states)
 
 
 class OnlineVarianceMetricAdapter(Adapter):
     """Diagonal metric adapter using online variance estimates.
 
-    Uses Welford's algorithm [1] to stably compute an online estimate of the
-    sample variances of the chain state position components during sampling. If
-    online estimates are available from multiple independent chains, the final
-    variance estimate is calculated from the per-chain statistics using the
-    parallel / batched incremental variance algorithm described by Chan et al.
-    [2]. The variance estimates are optionally regularized towards a common
-    scalar value, with increasing weight for small number of samples, to
-    decrease the effect of noisy estimates for small sample sizes, following the
-    approach in Stan [3]. The metric matrix representation is set to a diagonal
-    matrix with diagonal elements corresponding to the reciprocal of the
+    Uses Welford's algorithm [1] to stably compute an online estimate of the sample
+    variances of the chain state position components during sampling. If online
+    estimates are available from multiple independent chains, the final variance
+    estimate is calculated from the per-chain statistics using the parallel / batched
+    incremental variance algorithm described by Chan et al. [2]. The variance estimates
+    are optionally regularized towards a common scalar value, with increasing weight for
+    small number of samples, to decrease the effect of noisy estimates for small sample
+    sizes, following the approach in Stan [3]. The metric matrix representation is set
+    to a diagonal matrix with diagonal elements corresponding to the reciprocal of the
     (regularized) variance estimates.
 
     References:
 
-      1. Welford, B. P., 1962. Note on a method for calculating corrected sums
-         of squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and
-         a pairwise algorithm for computing sample variances. Technical Report
+      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of
+         squares and products. Technometrics, 4(3), pp. 419–420.
+      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+         pairwise algorithm for computing sample variances. Technical Report
          STAN-CS-79-773, Department of Computer Science, Stanford University.
-      3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
-         Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
-         Stan: A probabilistic programming language. Journal of Statistical
-         Software, 76(1).
+      3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
+         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
+         programming language. Journal of Statistical Software, 76(1).
     """
 
     is_fast = False
@@ -308,14 +309,14 @@ class OnlineVarianceMetricAdapter(Adapter):
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         """
         Args:
-            reg_iter_offset (int): Iteration offset used for calculating
-                iteration dependent weighting between regularisation target and
-                current covariance estimate. Higher values cause stronger
-                regularisation during initial iterations. A value of zero
-                corresponds to no regularisation; this should only be used if
-                the sample covariance is guaranteed to be positive definite.
-            reg_scale (float): Positive scalar defining value variance estimates
-                are regularized towards.
+            reg_iter_offset (int): Iteration offset used for calculating iteration
+                dependent weighting between regularisation target and current covariance
+                estimate. Higher values cause stronger regularisation during initial
+                iterations. A value of zero corresponds to no regularisation; this
+                should only be used if the sample covariance is guaranteed to be
+                positive definite.
+            reg_scale (float): Positive scalar defining value variance estimates are
+                regularized towards.
         """
         self.reg_iter_offset = reg_iter_offset
         self.reg_scale = reg_scale
@@ -350,29 +351,33 @@ class OnlineVarianceMetricAdapter(Adapter):
                 self.reg_iter_offset / (self.reg_iter_offset + n_iter)
             )
 
-    def finalize(self, adapt_state, transition):
-        if isinstance(adapt_state, dict):
-            n_iter = adapt_state["iter"]
-            var_est = adapt_state.pop("sum_diff_sq")
+    def finalize(self, adapt_states, chain_states, transition, rngs):
+        if isinstance(adapt_states, dict):
+            n_iter = adapt_states["iter"]
+            var_est = adapt_states.pop("sum_diff_sq")
+            chain_states = [chain_states]
+            rngs = [rngs]
         else:
             # Use Chan et al. (1979) parallel variance estimation algorithm
             # to combine per-chain statistics
             # https://en.wikipedia.org/wiki/
             #    Algorithms_for_calculating_variance#Parallel_algorithm
-            for i, a in enumerate(adapt_state):
+            for i, adapt_state in enumerate(adapt_states):
                 if i == 0:
-                    n_iter = a["iter"]
-                    mean_est = a.pop("mean")
-                    var_est = a.pop("sum_diff_sq")
+                    n_iter = adapt_state["iter"]
+                    mean_est = adapt_state.pop("mean")
+                    var_est = adapt_state.pop("sum_diff_sq")
                 else:
                     n_iter_prev = n_iter
-                    n_iter += a["iter"]
-                    mean_diff = mean_est - a["mean"]
+                    n_iter += adapt_state["iter"]
+                    mean_diff = mean_est - adapt_state["mean"]
                     mean_est *= n_iter_prev
-                    mean_est += a["iter"] * a["mean"]
+                    mean_est += adapt_state["iter"] * adapt_state["mean"]
                     mean_est /= n_iter
-                    var_est += a["sum_diff_sq"]
-                    var_est += mean_diff ** 2 * (a["iter"] * n_iter_prev) / n_iter
+                    var_est += adapt_state["sum_diff_sq"]
+                    var_est += (
+                        mean_diff ** 2 * (adapt_state["iter"] * n_iter_prev) / n_iter
+                    )
         if n_iter < 2:
             raise AdaptationError(
                 "At least two chain samples required to compute a variance "
@@ -381,6 +386,9 @@ class OnlineVarianceMetricAdapter(Adapter):
         var_est /= n_iter - 1
         self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
+        # Resample momentum to account for altered distribution due to new metric
+        for chain_state, rng in zip(chain_states, rngs):
+            chain_state.mom = transition.system.sample_momentum(chain_state, rng)
 
 
 class OnlineCovarianceMetricAdapter(Adapter):
@@ -401,17 +409,16 @@ class OnlineCovarianceMetricAdapter(Adapter):
 
     References:
 
-      1. Welford, B. P., 1962. Note on a method for calculating corrected sums
-         of squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel
-         computation of (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.
-      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and
-         a pairwise algorithm for computing sample variances. Technical Report
+      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of
+         squares and products. Technometrics, 4(3), pp. 419–420.
+      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel computation of
+         (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.
+      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+         pairwise algorithm for computing sample variances. Technical Report
          STAN-CS-79-773, Department of Computer Science, Stanford University.
-      4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B.,
-         Betancourt, M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017.
-         Stan: A probabilistic programming language. Journal of Statistical
-         Software, 76(1).
+      4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
+         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
+         programming language. Journal of Statistical Software, 76(1).
     """
 
     is_fast = False
@@ -419,12 +426,12 @@ class OnlineCovarianceMetricAdapter(Adapter):
     def __init__(self, reg_iter_offset=5, reg_scale=1e-3):
         """
         Args:
-            reg_iter_offset (int): Iteration offset used for calculating
-                iteration dependent weighting between regularisation target and
-                current covariance estimate. Higher values cause stronger
-                regularisation during initial iterations.
-            reg_scale (float): Positive scalar defining value variance estimates
-                are regularized towards.
+            reg_iter_offset (int): Iteration offset used for calculating iteration
+                dependent weighting between regularisation target and current covariance
+                estimate. Higher values cause stronger regularisation during initial
+                iterations.
+            reg_scale (float): Positive scalar defining value variance estimates are
+                regularized towards.
         """
         self.reg_iter_offset = reg_iter_offset
         self.reg_scale = reg_scale
@@ -461,29 +468,31 @@ class OnlineCovarianceMetricAdapter(Adapter):
             self.reg_iter_offset / (self.reg_iter_offset + n_iter)
         )
 
-    def finalize(self, adapt_state, transition):
-        if isinstance(adapt_state, dict):
-            n_iter = adapt_state["iter"]
-            covar_est = adapt_state.pop("sum_diff_outer")
+    def finalize(self, adapt_states, chain_states, transition, rngs):
+        if isinstance(adapt_states, dict):
+            n_iter = adapt_states["iter"]
+            covar_est = adapt_states.pop("sum_diff_outer")
+            chain_states = [chain_states]
+            rngs = [rngs]
         else:
             # Use Schubert and Gertz (2018) parallel covariance estimation
             # algorithm to combine per-chain statistics
-            for i, a in enumerate(adapt_state):
+            for i, adapt_state in enumerate(adapt_states):
                 if i == 0:
-                    n_iter = a["iter"]
-                    mean_est = a.pop("mean")
-                    covar_est = a.pop("sum_diff_outer")
+                    n_iter = adapt_state["iter"]
+                    mean_est = adapt_state.pop("mean")
+                    covar_est = adapt_state.pop("sum_diff_outer")
                 else:
                     n_iter_prev = n_iter
-                    n_iter += a["iter"]
-                    mean_diff = mean_est - a["mean"]
+                    n_iter += adapt_state["iter"]
+                    mean_diff = mean_est - adapt_state["mean"]
                     mean_est *= n_iter_prev
-                    mean_est += a["iter"] * a["mean"]
+                    mean_est += adapt_state["iter"] * adapt_state["mean"]
                     mean_est /= n_iter
-                    covar_est += a["sum_diff_outer"]
+                    covar_est += adapt_state["sum_diff_outer"]
                     covar_est += (
                         np.outer(mean_diff, mean_diff)
-                        * (a["iter"] * n_iter_prev)
+                        * (adapt_state["iter"] * n_iter_prev)
                         / n_iter
                     )
         if n_iter < 2:
@@ -494,3 +503,6 @@ class OnlineCovarianceMetricAdapter(Adapter):
         covar_est /= n_iter - 1
         self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv
+        # Resample momentum to account for altered distribution due to new metric
+        for chain_state, rng in zip(chain_states, rngs):
+            chain_state.mom = transition.system.sample_momentum(chain_state, rng)

@@ -642,11 +642,11 @@ def _sample_chains_worker(chain_queue, iter_queue):
     return chain_outputs
 
 
-def _finalize_adapters(adapter_states, adapters, transitions):
+def _finalize_adapters(adapter_states_dict, chain_states, adapters, transitions, rngs):
     """Finalize adapter updates to transitions based on final adapter states."""
-    for trans_key, adapter_state_list in adapter_states.items():
-        for adapter_state, adapter in zip(adapter_state_list, adapters[trans_key]):
-            adapter.finalize(adapter_state, transitions[trans_key])
+    for trans_key, adapter_states_list in adapter_states_dict.items():
+        for adapter_states, adapter in zip(adapter_states_list, adapters[trans_key]):
+            adapter.finalize(adapter_states, chain_states, transitions[trans_key], rngs)
 
 
 def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process, **kwargs):
@@ -877,7 +877,13 @@ class MarkovChainMonteCarloMethod(object):
             **kwargs,
         )
         if len(adapter_states) > 0:
-            _finalize_adapters(adapter_states, kwargs["adapters"], self.transitions)
+            _finalize_adapters(
+                adapter_states,
+                final_state,
+                kwargs["adapters"],
+                self.transitions,
+                self.rng,
+            )
 
         return final_state, traces, chain_stats
 
@@ -992,7 +998,7 @@ class MarkovChainMonteCarloMethod(object):
         if n_process == 1:
             # Using single process therefore run chains sequentially
             kwargs.pop("max_threads_per_process", None)
-            *states_traces_stats, adapter_states, _ = _sample_chains_sequential(
+            final_states, traces, stats, adapter_states, _ = _sample_chains_sequential(
                 init_states=init_states,
                 rngs=rngs,
                 chain_iterators=chain_iterators,
@@ -1002,7 +1008,7 @@ class MarkovChainMonteCarloMethod(object):
             )
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            *states_traces_stats, adapter_states, _ = _sample_chains_parallel(
+            final_states, traces, stats, adapter_states, _ = _sample_chains_parallel(
                 init_states=init_states,
                 rngs=rngs,
                 chain_iterators=chain_iterators,
@@ -1012,8 +1018,10 @@ class MarkovChainMonteCarloMethod(object):
                 **kwargs,
             )
         if len(adapter_states) > 0:
-            _finalize_adapters(adapter_states, kwargs["adapters"], self.transitions)
-        return states_traces_stats
+            _finalize_adapters(
+                adapter_states, final_states, kwargs["adapters"], self.transitions, rngs
+            )
+        return final_states, traces, stats
 
     def sample_chains_with_adaptive_warm_up(
         self,
@@ -1197,7 +1205,13 @@ class MarkovChainMonteCarloMethod(object):
                     **common_sample_chains_kwargs,
                 )
                 if len(adapter_states) > 0:
-                    _finalize_adapters(adapter_states, stage.adapters, self.transitions)
+                    _finalize_adapters(
+                        adapter_states,
+                        chain_states,
+                        stage.adapters,
+                        self.transitions,
+                        rngs,
+                    )
                 if isinstance(exception, KeyboardInterrupt):
                     return chain_states, traces, stats
         return chain_states, traces, stats
