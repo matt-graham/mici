@@ -375,7 +375,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
     """Dense metric adapter using online covariance estimates.
 
     Uses Welford's algorithm [1] to stably compute an online estimate of the
-    sample covariane matrix of the chain state position components during
+    sample covariance matrix of the chain state position components during
     sampling. If online estimates are available from multiple independent
     chains, the final covariance matrix estimate is calculated from the
     per-chain statistics using a covariance variant due to Schubert and Gertz
