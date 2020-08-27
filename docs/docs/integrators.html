@@ -70,14 +70,17 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L0-L354" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L0-L377" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Symplectic integrators for simulation of Hamiltonian dynamics.&#34;&#34;&#34;
 
 from abc import ABC, abstractmethod
 from mici.errors import NonReversibleStepError, AdaptationError
-from mici.solvers import (maximum_norm, solve_fixed_point_direct,
-                          solve_projection_onto_manifold_quasi_newton)
+from mici.solvers import (
+    maximum_norm,
+    solve_fixed_point_direct,
+    solve_projection_onto_manifold_quasi_newton,
+)
 
 
 class Integrator(ABC):
@@ -108,9 +111,10 @@ class Integrator(ABC):
         &#34;&#34;&#34;
         if self.step_size is None:
             raise AdaptationError(
-                &#39;Integrator `step_size` is `None`. This value should only be &#39;
-                &#39;used if a step size adapter is being used to set the step &#39;
-                &#39;size.&#39;)
+                &#34;Integrator `step_size` is `None`. This value should only be &#34;
+                &#34;used if a step size adapter is being used to set the step &#34;
+                &#34;size.&#34;
+            )
         state = state.copy()
         self._step(state, state.dir * self.step_size)
         return state
@@ -143,12 +147,13 @@ class LeapfrogIntegrator(Integrator):
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size=None):
-        if not hasattr(system, &#39;h1_flow&#39;) or not hasattr(system, &#39;h2_flow&#39;):
+        if not hasattr(system, &#34;h1_flow&#34;) or not hasattr(system, &#34;h2_flow&#34;):
             raise ValueError(
-                &#39;Explicit leapfrog integrator can only be used for systems &#39;
-                &#39;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#39;
-                &#39;flow maps. For systems in which only `h1_flow` is available &#39;
-                &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
+                &#34;Explicit leapfrog integrator can only be used for systems &#34;
+                &#34;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#34;
+                &#34;flow maps. For systems in which only `h1_flow` is available &#34;
+                &#34;the `ImplicitLeapfrogIntegrator` class may be used instead.&#34;
+            )
         super().__init__(system, step_size)
 
     def _step(self, state, dt):
@@ -175,10 +180,15 @@ class ImplicitLeapfrogIntegrator(Integrator):
     of equations.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size=None, reverse_check_tol=1e-8,
-                 reverse_check_norm=maximum_norm,
-                 fixed_point_solver=solve_fixed_point_direct,
-                 fixed_point_solver_kwargs=None):
+    def __init__(
+        self,
+        system,
+        step_size=None,
+        reverse_check_tol=1e-8,
+        reverse_check_norm=maximum_norm,
+        fixed_point_solver=solve_fixed_point_direct,
+        fixed_point_solver_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -220,7 +230,8 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     def _solve_fixed_point(self, fixed_point_func, x_init):
         return self.fixed_point_solver(
-            fixed_point_func, x_init, **self.fixed_point_solver_kwargs)
+            fixed_point_func, x_init, **self.fixed_point_solver_kwargs
+        )
 
     def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
@@ -229,6 +240,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         def fixed_point_func(mom):
             state.mom = mom
             return mom_init - dt * self.system.dh2_dpos(state)
+
         mom_init = state.mom
         state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
@@ -240,8 +252,9 @@ class ImplicitLeapfrogIntegrator(Integrator):
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
-                f&#39;Non-reversible step. Distance between initial and &#39;
-                f&#39;forward-backward integrated momentums = {rev_diff:.1e}.&#39;)
+                f&#34;Non-reversible step. Distance between initial and &#34;
+                f&#34;forward-backward integrated momentums = {rev_diff:.1e}.&#34;
+            )
 
     def _step_c_fwd(self, state, dt):
         pos_init = state.pos.copy()
@@ -251,13 +264,15 @@ class ImplicitLeapfrogIntegrator(Integrator):
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
-                f&#39;Non-reversible step. Distance between initial and &#39;
-                f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
+                f&#34;Non-reversible step. Distance between initial and &#34;
+                f&#34;forward-backward integrated positions = {rev_diff:.1e}.&#34;
+            )
 
     def _step_c_adj(self, state, dt):
         def fixed_point_func(pos):
             state.pos = pos
             return pos_init + dt * self.system.dh2_dmom(state)
+
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
@@ -313,10 +328,16 @@ class ConstrainedLeapfrogIntegrator(Integrator):
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size=None, n_inner_step=1,
-                 reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
-                 projection_solver=solve_projection_onto_manifold_quasi_newton,
-                 projection_solver_kwargs=None):
+    def __init__(
+        self,
+        system,
+        step_size=None,
+        n_inner_step=1,
+        reverse_check_tol=2e-8,
+        reverse_check_norm=maximum_norm,
+        projection_solver=solve_projection_onto_manifold_quasi_newton,
+        projection_solver_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -385,8 +406,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
 
     def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
         self.system.h2_flow(state, dt)
-        self.projection_solver(state, state_prev, dt, self.system,
-                               **self.projection_solver_kwargs)
+        self.projection_solver(
+            state, state_prev, dt, self.system, **self.projection_solver_kwargs
+        )
 
     def _project_onto_cotangent_space(self, state):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
@@ -420,8 +442,9 @@ class ConstrainedLeapfrogIntegrator(Integrator):
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
-                    f&#39;Non-reversible step. Distance between initial and &#39;
-                    f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
+                    f&#34;Non-reversible step. Distance between initial and &#34;
+                    f&#34;forward-backward integrated positions = {rev_diff:.1e}.&#34;
+                )
 
     def _step(self, state, dt):
         self._step_a(state, 0.5 * dt)
@@ -457,7 +480,7 @@ used to set the step size before calling the <code>step</code> method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L9-L52" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L12-L56" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Integrator(ABC):
     &#34;&#34;&#34;Base class for integrators.&#34;&#34;&#34;
@@ -487,9 +510,10 @@ used to set the step size before calling the <code>step</code> method.</dd>
         &#34;&#34;&#34;
         if self.step_size is None:
             raise AdaptationError(
-                &#39;Integrator `step_size` is `None`. This value should only be &#39;
-                &#39;used if a step size adapter is being used to set the step &#39;
-                &#39;size.&#39;)
+                &#34;Integrator `step_size` is `None`. This value should only be &#34;
+                &#34;used if a step size adapter is being used to set the step &#34;
+                &#34;size.&#34;
+            )
         state = state.copy()
         self._step(state, state.dir * self.step_size)
         return state
@@ -536,7 +560,7 @@ stepped state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L24-L42" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L27-L46" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def step(self, state):
     &#34;&#34;&#34;Perform a single integrator step from a supplied state.
@@ -551,9 +575,10 @@ stepped state.</dd>
     &#34;&#34;&#34;
     if self.step_size is None:
         raise AdaptationError(
-            &#39;Integrator `step_size` is `None`. This value should only be &#39;
-            &#39;used if a step size adapter is being used to set the step &#39;
-            &#39;size.&#39;)
+            &#34;Integrator `step_size` is `None`. This value should only be &#34;
+            &#34;used if a step size adapter is being used to set the step &#34;
+            &#34;size.&#34;
+        )
     state = state.copy()
     self._step(state, state.dir * self.step_size)
     return state</code></pre>
@@ -588,7 +613,7 @@ used to set the step size before calling the <code>step</code> method.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L55-L83" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L59-L88" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -607,12 +632,13 @@ used to set the step size before calling the <code>step</code> method.</dd>
     &#34;&#34;&#34;
 
     def __init__(self, system, step_size=None):
-        if not hasattr(system, &#39;h1_flow&#39;) or not hasattr(system, &#39;h2_flow&#39;):
+        if not hasattr(system, &#34;h1_flow&#34;) or not hasattr(system, &#34;h2_flow&#34;):
             raise ValueError(
-                &#39;Explicit leapfrog integrator can only be used for systems &#39;
-                &#39;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#39;
-                &#39;flow maps. For systems in which only `h1_flow` is available &#39;
-                &#39;the `ImplicitLeapfrogIntegrator` class may be used instead.&#39;)
+                &#34;Explicit leapfrog integrator can only be used for systems &#34;
+                &#34;with explicit `h1_flow` and `h2_flow` Hamiltonian component &#34;
+                &#34;flow maps. For systems in which only `h1_flow` is available &#34;
+                &#34;the `ImplicitLeapfrogIntegrator` class may be used instead.&#34;
+            )
         super().__init__(system, step_size)
 
     def _step(self, state, dt):
@@ -704,7 +730,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L86-L196" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L91-L211" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -724,10 +750,15 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
     of equations.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size=None, reverse_check_tol=1e-8,
-                 reverse_check_norm=maximum_norm,
-                 fixed_point_solver=solve_fixed_point_direct,
-                 fixed_point_solver_kwargs=None):
+    def __init__(
+        self,
+        system,
+        step_size=None,
+        reverse_check_tol=1e-8,
+        reverse_check_norm=maximum_norm,
+        fixed_point_solver=solve_fixed_point_direct,
+        fixed_point_solver_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -769,7 +800,8 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
 
     def _solve_fixed_point(self, fixed_point_func, x_init):
         return self.fixed_point_solver(
-            fixed_point_func, x_init, **self.fixed_point_solver_kwargs)
+            fixed_point_func, x_init, **self.fixed_point_solver_kwargs
+        )
 
     def _step_a(self, state, dt):
         self.system.h1_flow(state, dt)
@@ -778,6 +810,7 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         def fixed_point_func(mom):
             state.mom = mom
             return mom_init - dt * self.system.dh2_dpos(state)
+
         mom_init = state.mom
         state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
@@ -789,8 +822,9 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
-                f&#39;Non-reversible step. Distance between initial and &#39;
-                f&#39;forward-backward integrated momentums = {rev_diff:.1e}.&#39;)
+                f&#34;Non-reversible step. Distance between initial and &#34;
+                f&#34;forward-backward integrated momentums = {rev_diff:.1e}.&#34;
+            )
 
     def _step_c_fwd(self, state, dt):
         pos_init = state.pos.copy()
@@ -800,13 +834,15 @@ of any keyword arguments to <code>fixed_point_solver</code>.</dd>
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff &gt; self.reverse_check_tol:
             raise NonReversibleStepError(
-                f&#39;Non-reversible step. Distance between initial and &#39;
-                f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
+                f&#34;Non-reversible step. Distance between initial and &#34;
+                f&#34;forward-backward integrated positions = {rev_diff:.1e}.&#34;
+            )
 
     def _step_c_adj(self, state, dt):
         def fixed_point_func(pos):
             state.pos = pos
             return pos_init + dt * self.system.dh2_dmom(state)
+
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
@@ -947,7 +983,7 @@ any keyword arguments to <code>projection_solver</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/integrators.py#L199-L355" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/integrators.py#L214-L378" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedLeapfrogIntegrator(Integrator):
     r&#34;&#34;&#34;
@@ -992,10 +1028,16 @@ any keyword arguments to <code>projection_solver</code>.</dd>
     integrator will also be in the cotangent bundle.
     &#34;&#34;&#34;
 
-    def __init__(self, system, step_size=None, n_inner_step=1,
-                 reverse_check_tol=2e-8, reverse_check_norm=maximum_norm,
-                 projection_solver=solve_projection_onto_manifold_quasi_newton,
-                 projection_solver_kwargs=None):
+    def __init__(
+        self,
+        system,
+        step_size=None,
+        n_inner_step=1,
+        reverse_check_tol=2e-8,
+        reverse_check_norm=maximum_norm,
+        projection_solver=solve_projection_onto_manifold_quasi_newton,
+        projection_solver_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             system (mici.systems.System): Hamiltonian system to integrate the
@@ -1064,8 +1106,9 @@ any keyword arguments to <code>projection_solver</code>.</dd>
 
     def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
         self.system.h2_flow(state, dt)
-        self.projection_solver(state, state_prev, dt, self.system,
-                               **self.projection_solver_kwargs)
+        self.projection_solver(
+            state, state_prev, dt, self.system, **self.projection_solver_kwargs
+        )
 
     def _project_onto_cotangent_space(self, state):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
@@ -1099,8 +1142,9 @@ any keyword arguments to <code>projection_solver</code>.</dd>
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff &gt; self.reverse_check_tol:
                 raise NonReversibleStepError(
-                    f&#39;Non-reversible step. Distance between initial and &#39;
-                    f&#39;forward-backward integrated positions = {rev_diff:.1e}.&#39;)
+                    f&#34;Non-reversible step. Distance between initial and &#34;
+                    f&#34;forward-backward integrated positions = {rev_diff:.1e}.&#34;
+                )
 
     def _step(self, state, dt):
         self._step_a(state, 0.5 * dt)

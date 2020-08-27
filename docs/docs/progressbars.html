@@ -125,7 +125,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L0-L659" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L0-L680" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Progress bar classes for tracking progress of chains.&#34;&#34;&#34;
 
@@ -137,12 +137,14 @@ from timeit import default_timer as timer
 try:
     from IPython import get_ipython
     from IPython.display import display as ipython_display
+
     IPYTHON_AVAILABLE = True
 except ImportError:
     IPYTHON_AVAILABLE = False
 
 try:
     import google.colab
+
     ON_COLAB = True
 except ImportError:
     ON_COLAB = False
@@ -157,9 +159,9 @@ def _in_zmq_interactive_shell():
     else:
         try:
             shell = get_ipython().__class__.__name__
-            if shell == &#39;ZMQInteractiveShell&#39;:
+            if shell == &#34;ZMQInteractiveShell&#34;:
                 return True
-            elif shell == &#39;TerminalInteractiveShell&#39;:
+            elif shell == &#34;TerminalInteractiveShell&#34;:
                 return False
             else:
                 return False
@@ -191,9 +193,9 @@ def _format_time(total_seconds):
     total_mins, seconds = divmod(int(total_seconds), 60)
     hours, mins = divmod(total_mins, 60)
     if hours != 0:
-        return f&#39;{hours:d}:{mins:02d}:{seconds:02d}&#39;
+        return f&#34;{hours:d}:{mins:02d}:{seconds:02d}&#34;
     else:
-        return f&#39;{mins:02d}:{seconds:02d}&#39;
+        return f&#34;{mins:02d}:{seconds:02d}&#34;
 
 
 def _update_stats_running_means(iter, means, new_vals):
@@ -234,7 +236,7 @@ class BaseProgressBar(abc.ABC):
     @sequence.setter
     def sequence(self, value):
         if self._active:
-            raise RuntimeError(&#39;Cannot set sequence of active progress bar.&#39;)
+            raise RuntimeError(&#34;Cannot set sequence of active progress bar.&#34;)
         else:
             self._sequence = value
             self._n_iter = len(value)
@@ -289,11 +291,19 @@ class ProgressBar(BaseProgressBar):
     notebooks or interactive terminals.
     &#34;&#34;&#34;
 
-    GLYPHS = &#39; ▏▎▍▌▋▊▉█&#39;
+    GLYPHS = &#34; ▏▎▍▌▋▊▉█&#34;
     &#34;&#34;&#34;Characters used to create string representation of progress bar.&#34;&#34;&#34;
 
-    def __init__(self, sequence, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit=&#39;it&#39;, min_refresh_time=0.25):
+    def __init__(
+        self,
+        sequence,
+        description=None,
+        position=(0, 1),
+        displays=None,
+        n_col=10,
+        unit=&#34;it&#34;,
+        min_refresh_time=0.25,
+    ):
         &#34;&#34;&#34;
         Args:
             sequence (Sequence): Sequence to iterate over. Must be iterable AND
@@ -346,7 +356,7 @@ class ProgressBar(BaseProgressBar):
     @property
     def perc_complete(self):
         &#34;&#34;&#34;Percentage complete formatted as string.&#34;&#34;&#34;
-        return f&#39;{int(self.prop_complete * 100):3d}%&#39;
+        return f&#34;{int(self.prop_complete * 100):3d}%&#34;
 
     @property
     def elapsed_time(self):
@@ -357,21 +367,22 @@ class ProgressBar(BaseProgressBar):
     def iter_rate(self):
         &#34;&#34;&#34;Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string.&#34;&#34;&#34;
         if self.prop_complete == 0:
-            return &#39;?&#39;
+            return &#34;?&#34;
         else:
             mean_time = self._elapsed_time / self.counter
             return (
-                f&#39;{mean_time:.2f}s/{self._unit}&#39; if mean_time &gt; 1
-                else f&#39;{1/mean_time:.2f}{self._unit}/s&#39;)
+                f&#34;{mean_time:.2f}s/{self._unit}&#34;
+                if mean_time &gt; 1
+                else f&#34;{1/mean_time:.2f}{self._unit}/s&#34;
+            )
 
     @property
     def est_remaining_time(self):
         &#34;&#34;&#34;Estimated remaining time to completion formatted as string.&#34;&#34;&#34;
         if self.prop_complete == 0:
-            return &#39;?&#39;
+            return &#34;?&#34;
         else:
-            return _format_time(
-                (1 / self.prop_complete - 1) * self._elapsed_time)
+            return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
 
     @property
     def n_block_filled(self):
@@ -405,51 +416,53 @@ class ProgressBar(BaseProgressBar):
     def partial_block(self):
         &#34;&#34;&#34;Partial block character.&#34;&#34;&#34;
         if self.prop_partial_block == 0:
-            return &#39;&#39;
+            return &#34;&#34;
         else:
             return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
 
     @property
     def progress_bar(self):
         &#34;&#34;&#34;Progress bar string.&#34;&#34;&#34;
-        return f&#39;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#39;
+        return f&#34;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#34;
 
     @property
     def bar_color(self):
         &#34;&#34;&#34;CSS color property for HTML progress bar.&#34;&#34;&#34;
         if self.counter == self.n_iter:
-            return &#39;var(--jp-success-color1, #4caf50)&#39;
+            return &#34;var(--jp-success-color1, #4caf50)&#34;
         elif self._active:
-            return &#39;var(--jp-brand-color1, #2196f3)&#39;
+            return &#34;var(--jp-brand-color1, #2196f3)&#34;
         else:
-            return &#39;var(--jp-error-color1, #f44336)&#39;
+            return &#34;var(--jp-error-color1, #f44336)&#34;
 
     @property
     def stats(self):
         &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-        return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())
+        return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
         &#34;&#34;&#34;Text to prefix progress bar with.&#34;&#34;&#34;
         return (
             f&#39;{self.description + &#34;: &#34;if self.description else &#34;&#34;}&#39;
-            f&#39;{self.perc_complete}&#39;)
+            f&#34;{self.perc_complete}&#34;
+        )
 
     @property
     def postfix(self):
         &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
         return (
-            f&#39;{self.counter}/{self.n_iter} &#39;
-            f&#39;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#39;
-            f&#39;{self.iter_rate}&#39;
-            f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;)
+            f&#34;{self.counter}/{self.n_iter} &#34;
+            f&#34;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#34;
+            f&#34;{self.iter_rate}&#34;
+            f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;
+        )
 
     def reset(self):
         &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
         self._counter = 0
         self._start_time = timer()
-        self._last_refresh_time = -float(&#39;inf&#39;)
+        self._last_refresh_time = -float(&#34;inf&#34;)
         self._stats_dict = {}
 
     def update(self, iter_count, iter_dict=None, refresh=True):
@@ -466,11 +479,13 @@ class ProgressBar(BaseProgressBar):
         else:
             self.counter = iter_count
             if iter_dict is not None:
-                _update_stats_running_means(
-                    iter_count, self._stats_dict, iter_dict)
+                _update_stats_running_means(iter_count, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
-        if refresh and iter_count == self.n_iter or (
-                timer() - self._last_refresh_time &gt; self._min_refresh_time):
+        if (
+            refresh
+            and iter_count == self.n_iter
+            or (timer() - self._last_refresh_time &gt; self._min_refresh_time)
+        ):
             self.refresh()
             self._last_refresh_time = timer()
 
@@ -480,13 +495,13 @@ class ProgressBar(BaseProgressBar):
             display.update(self)
 
     def __str__(self):
-        return f&#39;{self.prefix}{self.progress_bar}{self.postfix}&#39;
+        return f&#34;{self.prefix}{self.progress_bar}{self.postfix}&#34;
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        return f&#39;&#39;&#39;
+        return f&#34;&#34;&#34;
         &lt;div style=&#34;line-height: 28px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;&#34;&gt;
@@ -510,7 +525,7 @@ class ProgressBar(BaseProgressBar):
             {html.escape(self.postfix)}
           &lt;/div&gt;
         &lt;/div&gt;
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
 
     def __enter__(self):
         super().__enter__()
@@ -529,8 +544,9 @@ class ProgressBar(BaseProgressBar):
 class LabelledSequenceProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of a sequence of labelled tasks.&#34;&#34;&#34;
 
-    def __init__(self, labelled_sequence, description=None, position=(0, 1),
-                 displays=None):
+    def __init__(
+        self, labelled_sequence, description=None, position=(0, 1), displays=None
+    ):
         &#34;&#34;&#34;
         Args:
             labelled_sequence (OrderedDict[str, Any]): Ordered dictionary with
@@ -548,8 +564,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                 an `update` method which will be passed a single argument
                 corresponding to the current progress bar.
         &#34;&#34;&#34;
-        super().__init__(
-            list(labelled_sequence.values()), description, position)
+        super().__init__(list(labelled_sequence.values()), description, position)
         self._labels = list(labelled_sequence.keys())
         self._description = description
         self._position = position
@@ -576,7 +591,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
     @property
     def stats(self):
         &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-        return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())
+        return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
@@ -586,24 +601,27 @@ class LabelledSequenceProgressBar(BaseProgressBar):
     @property
     def postfix(self):
         &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
-        return f&#39; [{self.stats}]&#39; if self._stats_dict else &#39;&#39;
+        return f&#34; [{self.stats}]&#34; if self._stats_dict else &#34;&#34;
 
     @property
     def completed_labels(self):
         &#34;&#34;&#34;Labels corresponding to completed iterations.&#34;&#34;&#34;
         return [
-            f&#39;{label} [{_format_time(time)}]&#39; for label, time in
-            zip(self._labels[:self._counter], self._iter_times[:self._counter])]
+            f&#34;{label} [{_format_time(time)}]&#34;
+            for label, time in zip(
+                self._labels[: self._counter], self._iter_times[: self._counter]
+            )
+        ]
 
     @property
     def current_label(self):
         &#34;&#34;&#34;Label corresponding to current iteration.&#34;&#34;&#34;
-        return self._labels[self._counter] if self.counter &lt; self.n_iter else &#39;&#39;
+        return self._labels[self._counter] if self.counter &lt; self.n_iter else &#34;&#34;
 
     @property
     def unstarted_labels(self):
         &#34;&#34;&#34;Labels corresponding to unstarted iterations.&#34;&#34;&#34;
-        return self._labels[self._counter + 1:]
+        return self._labels[self._counter + 1 :]
 
     @property
     def progress_bar(self):
@@ -611,7 +629,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
         labels = self.completed_labels
         if self.counter &lt; self.n_iter:
             labels.append(self.current_label)
-        return &#39; &gt; &#39;.join(labels)
+        return &#34; &gt; &#34;.join(labels)
 
     def reset(self):
         &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
@@ -647,13 +665,13 @@ class LabelledSequenceProgressBar(BaseProgressBar):
             display.update(self)
 
     def __str__(self):
-        return f&#39;{self.prefix}{self.progress_bar}{self.postfix}&#39;
+        return f&#34;{self.prefix}{self.progress_bar}{self.postfix}&#34;
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        html_string = f&#39;&#39;&#39;
+        html_string = f&#34;&#34;&#34;
         &lt;div style=&#34;line-height: 24px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;&#34;&gt;
@@ -662,8 +680,8 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                         font-family: var(--jp-code-font-family, monospace);&#34;&gt;
             {html.escape(self.prefix).replace(&#39; &#39;, &#39;&amp;nbsp;&#39;)}
           &lt;/label&gt;
-        &#39;&#39;&#39;
-        template_string = &#39;&#39;&#39;
+        &#34;&#34;&#34;
+        template_string = &#34;&#34;&#34;
           &lt;div style=&#34;position: relative; flex-grow: 1; align-self: stretch;
                       margin: 1px; padding: 0px; text-align: center;
                       height: initial; background-color: {background_color};
@@ -671,27 +689,30 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                       border: 1px solid {foreground_color}; font-size: 90%;&#34;&gt;
             {label}
           &lt;/div&gt;
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         for label in self.completed_labels:
             html_string += template_string.format(
-                label=label, foreground_color=&#39;white&#39;,
-                background_color=&#39;#4caf50&#39;)
+                label=label, foreground_color=&#34;white&#34;, background_color=&#34;#4caf50&#34;
+            )
         if self.counter != self.n_iter:
             html_string += template_string.format(
-                label=self.current_label, foreground_color=&#39;white&#39;,
-                background_color=&#39;#2196f3&#39; if self._active else &#39;#f44336&#39;)
+                label=self.current_label,
+                foreground_color=&#34;white&#34;,
+                background_color=&#34;#2196f3&#34; if self._active else &#34;#f44336&#34;,
+            )
         for label in self.unstarted_labels:
             html_string += template_string.format(
-                label=label, foreground_color=&#39;#aaa&#39;, background_color=&#39;white&#39;)
-        if self.postfix != &#39;&#39;:
-            html_string += f&#39;&#39;&#39;
+                label=label, foreground_color=&#34;#aaa&#34;, background_color=&#34;white&#34;
+            )
+        if self.postfix != &#34;&#34;:
+            html_string += f&#34;&#34;&#34;
               &lt;div style=&#34;margin-left: 8px; flex-shrink: 0;
                           font-family: var(--jp-code-font-family, monospace);
                           font-size: var(--jp-code-font-size, 13px);&#34;&gt;
                 {html.escape(self.postfix)}
               &lt;/div&gt;
-            &#39;&#39;&#39;
-        html_string += &#39;&lt;/div&gt;&#39;
+            &#34;&#34;&#34;
+        html_string += &#34;&lt;/div&gt;&#34;
         return html_string
 
     def __enter__(self):
@@ -712,10 +733,10 @@ class LabelledSequenceProgressBar(BaseProgressBar):
 class FileDisplay:
     &#34;&#34;&#34;Use file which supports ANSI escape sequences as an updatable display&#34;&#34;&#34;
 
-    CURSOR_UP = &#39;\x1b[A&#39;
+    CURSOR_UP = &#34;\x1b[A&#34;
     &#34;&#34;&#34;ANSI escape sequence to move cursor up one line.&#34;&#34;&#34;
 
-    CURSOR_DOWN = &#39;\x1b[B&#39;
+    CURSOR_DOWN = &#34;\x1b[B&#34;
     &#34;&#34;&#34;ANSI escape sequence to move cursor down one line.&#34;&#34;&#34;
 
     def __init__(self, position=(0, 1), file=None):
@@ -734,7 +755,7 @@ class FileDisplay:
         self._file = file if file is not None else sys.stdout
         self._last_string_length = 0
         if self._position[0] == 0:
-            self._file.write(&#39;\n&#39; * self._position[1])
+            self._file.write(&#34;\n&#34; * self._position[1])
         self._file.flush()
 
     def _move_line(self, offset):
@@ -744,7 +765,7 @@ class FileDisplay:
     def update(self, obj):
         self._move_line(self._position[0] - self._position[1])
         string = str(obj)
-        self._file.write(f&#39;{string: &lt;{self._last_string_length}}\r&#39;)
+        self._file.write(f&#34;{string: &lt;{self._last_string_length}}\r&#34;)
         self._last_string_length = len(string)
         self._move_line(self._position[1] - self._position[0])
         self._file.flush()
@@ -821,7 +842,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L79-L145" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L81-L147" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BaseProgressBar(abc.ABC):
     &#34;&#34;&#34;Base class defining expected interface for progress bars.&#34;&#34;&#34;
@@ -852,7 +873,7 @@ progress bars.</dd>
     @sequence.setter
     def sequence(self, value):
         if self._active:
-            raise RuntimeError(&#39;Cannot set sequence of active progress bar.&#39;)
+            raise RuntimeError(&#34;Cannot set sequence of active progress bar.&#34;)
         else:
             self._sequence = value
             self._n_iter = len(value)
@@ -909,7 +930,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L100-L103" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L102-L105" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def sequence(self):
@@ -923,7 +944,7 @@ def sequence(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L113-L115" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L115-L117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_iter(self):
@@ -951,7 +972,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L126-L135" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L128-L137" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def update(self, iter_count, iter_dict, refresh=True):
@@ -990,7 +1011,7 @@ progress bars.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L148-L152" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L150-L154" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DummyProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Placeholder progress bar which does not display progress updates.&#34;&#34;&#34;
@@ -1030,7 +1051,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L151-L152" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L153-L154" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter_count, iter_dict, refresh=True):
     pass</code></pre>
@@ -1077,7 +1098,7 @@ refresh of progress bar visual representation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L155-L397" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L157-L412" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of an iterative task.
@@ -1087,11 +1108,19 @@ refresh of progress bar visual representation.</dd>
     notebooks or interactive terminals.
     &#34;&#34;&#34;
 
-    GLYPHS = &#39; ▏▎▍▌▋▊▉█&#39;
+    GLYPHS = &#34; ▏▎▍▌▋▊▉█&#34;
     &#34;&#34;&#34;Characters used to create string representation of progress bar.&#34;&#34;&#34;
 
-    def __init__(self, sequence, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit=&#39;it&#39;, min_refresh_time=0.25):
+    def __init__(
+        self,
+        sequence,
+        description=None,
+        position=(0, 1),
+        displays=None,
+        n_col=10,
+        unit=&#34;it&#34;,
+        min_refresh_time=0.25,
+    ):
         &#34;&#34;&#34;
         Args:
             sequence (Sequence): Sequence to iterate over. Must be iterable AND
@@ -1144,7 +1173,7 @@ refresh of progress bar visual representation.</dd>
     @property
     def perc_complete(self):
         &#34;&#34;&#34;Percentage complete formatted as string.&#34;&#34;&#34;
-        return f&#39;{int(self.prop_complete * 100):3d}%&#39;
+        return f&#34;{int(self.prop_complete * 100):3d}%&#34;
 
     @property
     def elapsed_time(self):
@@ -1155,21 +1184,22 @@ refresh of progress bar visual representation.</dd>
     def iter_rate(self):
         &#34;&#34;&#34;Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string.&#34;&#34;&#34;
         if self.prop_complete == 0:
-            return &#39;?&#39;
+            return &#34;?&#34;
         else:
             mean_time = self._elapsed_time / self.counter
             return (
-                f&#39;{mean_time:.2f}s/{self._unit}&#39; if mean_time &gt; 1
-                else f&#39;{1/mean_time:.2f}{self._unit}/s&#39;)
+                f&#34;{mean_time:.2f}s/{self._unit}&#34;
+                if mean_time &gt; 1
+                else f&#34;{1/mean_time:.2f}{self._unit}/s&#34;
+            )
 
     @property
     def est_remaining_time(self):
         &#34;&#34;&#34;Estimated remaining time to completion formatted as string.&#34;&#34;&#34;
         if self.prop_complete == 0:
-            return &#39;?&#39;
+            return &#34;?&#34;
         else:
-            return _format_time(
-                (1 / self.prop_complete - 1) * self._elapsed_time)
+            return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
 
     @property
     def n_block_filled(self):
@@ -1203,51 +1233,53 @@ refresh of progress bar visual representation.</dd>
     def partial_block(self):
         &#34;&#34;&#34;Partial block character.&#34;&#34;&#34;
         if self.prop_partial_block == 0:
-            return &#39;&#39;
+            return &#34;&#34;
         else:
             return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
 
     @property
     def progress_bar(self):
         &#34;&#34;&#34;Progress bar string.&#34;&#34;&#34;
-        return f&#39;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#39;
+        return f&#34;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#34;
 
     @property
     def bar_color(self):
         &#34;&#34;&#34;CSS color property for HTML progress bar.&#34;&#34;&#34;
         if self.counter == self.n_iter:
-            return &#39;var(--jp-success-color1, #4caf50)&#39;
+            return &#34;var(--jp-success-color1, #4caf50)&#34;
         elif self._active:
-            return &#39;var(--jp-brand-color1, #2196f3)&#39;
+            return &#34;var(--jp-brand-color1, #2196f3)&#34;
         else:
-            return &#39;var(--jp-error-color1, #f44336)&#39;
+            return &#34;var(--jp-error-color1, #f44336)&#34;
 
     @property
     def stats(self):
         &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-        return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())
+        return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
         &#34;&#34;&#34;Text to prefix progress bar with.&#34;&#34;&#34;
         return (
             f&#39;{self.description + &#34;: &#34;if self.description else &#34;&#34;}&#39;
-            f&#39;{self.perc_complete}&#39;)
+            f&#34;{self.perc_complete}&#34;
+        )
 
     @property
     def postfix(self):
         &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
         return (
-            f&#39;{self.counter}/{self.n_iter} &#39;
-            f&#39;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#39;
-            f&#39;{self.iter_rate}&#39;
-            f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;)
+            f&#34;{self.counter}/{self.n_iter} &#34;
+            f&#34;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#34;
+            f&#34;{self.iter_rate}&#34;
+            f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;
+        )
 
     def reset(self):
         &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
         self._counter = 0
         self._start_time = timer()
-        self._last_refresh_time = -float(&#39;inf&#39;)
+        self._last_refresh_time = -float(&#34;inf&#34;)
         self._stats_dict = {}
 
     def update(self, iter_count, iter_dict=None, refresh=True):
@@ -1264,11 +1296,13 @@ refresh of progress bar visual representation.</dd>
         else:
             self.counter = iter_count
             if iter_dict is not None:
-                _update_stats_running_means(
-                    iter_count, self._stats_dict, iter_dict)
+                _update_stats_running_means(iter_count, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
-        if refresh and iter_count == self.n_iter or (
-                timer() - self._last_refresh_time &gt; self._min_refresh_time):
+        if (
+            refresh
+            and iter_count == self.n_iter
+            or (timer() - self._last_refresh_time &gt; self._min_refresh_time)
+        ):
             self.refresh()
             self._last_refresh_time = timer()
 
@@ -1278,13 +1312,13 @@ refresh of progress bar visual representation.</dd>
             display.update(self)
 
     def __str__(self):
-        return f&#39;{self.prefix}{self.progress_bar}{self.postfix}&#39;
+        return f&#34;{self.prefix}{self.progress_bar}{self.postfix}&#34;
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        return f&#39;&#39;&#39;
+        return f&#34;&#34;&#34;
         &lt;div style=&#34;line-height: 28px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;&#34;&gt;
@@ -1308,7 +1342,7 @@ refresh of progress bar visual representation.</dd>
             {html.escape(self.postfix)}
           &lt;/div&gt;
         &lt;/div&gt;
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
 
     def __enter__(self):
         super().__enter__()
@@ -1343,7 +1377,7 @@ refresh of progress bar visual representation.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L198-L201" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L208-L211" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def description(self):
@@ -1357,7 +1391,7 @@ def description(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L203-L206" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L213-L216" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def counter(self):
@@ -1371,7 +1405,7 @@ def counter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L212-L215" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L222-L225" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_complete(self):
@@ -1385,12 +1419,12 @@ def prop_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L217-L220" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L227-L230" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def perc_complete(self):
     &#34;&#34;&#34;Percentage complete formatted as string.&#34;&#34;&#34;
-    return f&#39;{int(self.prop_complete * 100):3d}%&#39;</code></pre>
+    return f&#34;{int(self.prop_complete * 100):3d}%&#34;</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.elapsed_time"><code class="name">var <span class="ident">elapsed_time</span></code></dt>
@@ -1399,7 +1433,7 @@ def perc_complete(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L222-L225" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L232-L235" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def elapsed_time(self):
@@ -1413,18 +1447,20 @@ def elapsed_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L227-L236" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L237-L248" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def iter_rate(self):
     &#34;&#34;&#34;Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string.&#34;&#34;&#34;
     if self.prop_complete == 0:
-        return &#39;?&#39;
+        return &#34;?&#34;
     else:
         mean_time = self._elapsed_time / self.counter
         return (
-            f&#39;{mean_time:.2f}s/{self._unit}&#39; if mean_time &gt; 1
-            else f&#39;{1/mean_time:.2f}{self._unit}/s&#39;)</code></pre>
+            f&#34;{mean_time:.2f}s/{self._unit}&#34;
+            if mean_time &gt; 1
+            else f&#34;{1/mean_time:.2f}{self._unit}/s&#34;
+        )</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.est_remaining_time"><code class="name">var <span class="ident">est_remaining_time</span></code></dt>
@@ -1433,16 +1469,15 @@ def iter_rate(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L238-L245" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L250-L256" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def est_remaining_time(self):
     &#34;&#34;&#34;Estimated remaining time to completion formatted as string.&#34;&#34;&#34;
     if self.prop_complete == 0:
-        return &#39;?&#39;
+        return &#34;?&#34;
     else:
-        return _format_time(
-            (1 / self.prop_complete - 1) * self._elapsed_time)</code></pre>
+        return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.n_block_filled"><code class="name">var <span class="ident">n_block_filled</span></code></dt>
@@ -1451,7 +1486,7 @@ def est_remaining_time(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L247-L250" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L258-L261" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_filled(self):
@@ -1465,7 +1500,7 @@ def n_block_filled(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L252-L255" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L263-L266" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def n_block_empty(self):
@@ -1479,7 +1514,7 @@ def n_block_empty(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L257-L260" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L268-L271" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prop_partial_block(self):
@@ -1493,7 +1528,7 @@ def prop_partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L262-L265" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L273-L276" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def filled_blocks(self):
@@ -1507,7 +1542,7 @@ def filled_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L267-L273" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L278-L284" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def empty_blocks(self):
@@ -1524,13 +1559,13 @@ def empty_blocks(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L275-L281" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L286-L292" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def partial_block(self):
     &#34;&#34;&#34;Partial block character.&#34;&#34;&#34;
     if self.prop_partial_block == 0:
-        return &#39;&#39;
+        return &#34;&#34;
     else:
         return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]</code></pre>
 </details>
@@ -1541,12 +1576,12 @@ def partial_block(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L283-L286" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L294-L297" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def progress_bar(self):
     &#34;&#34;&#34;Progress bar string.&#34;&#34;&#34;
-    return f&#39;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#39;</code></pre>
+    return f&#34;|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|&#34;</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.bar_color"><code class="name">var <span class="ident">bar_color</span></code></dt>
@@ -1555,17 +1590,17 @@ def progress_bar(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L288-L296" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L299-L307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def bar_color(self):
     &#34;&#34;&#34;CSS color property for HTML progress bar.&#34;&#34;&#34;
     if self.counter == self.n_iter:
-        return &#39;var(--jp-success-color1, #4caf50)&#39;
+        return &#34;var(--jp-success-color1, #4caf50)&#34;
     elif self._active:
-        return &#39;var(--jp-brand-color1, #2196f3)&#39;
+        return &#34;var(--jp-brand-color1, #2196f3)&#34;
     else:
-        return &#39;var(--jp-error-color1, #f44336)&#39;</code></pre>
+        return &#34;var(--jp-error-color1, #f44336)&#34;</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.stats"><code class="name">var <span class="ident">stats</span></code></dt>
@@ -1574,12 +1609,12 @@ def bar_color(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L298-L301" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L309-L312" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def stats(self):
     &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-    return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())</code></pre>
+    return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.prefix"><code class="name">var <span class="ident">prefix</span></code></dt>
@@ -1588,14 +1623,15 @@ def stats(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L303-L308" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L314-L320" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prefix(self):
     &#34;&#34;&#34;Text to prefix progress bar with.&#34;&#34;&#34;
     return (
         f&#39;{self.description + &#34;: &#34;if self.description else &#34;&#34;}&#39;
-        f&#39;{self.perc_complete}&#39;)</code></pre>
+        f&#34;{self.perc_complete}&#34;
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.postfix"><code class="name">var <span class="ident">postfix</span></code></dt>
@@ -1604,16 +1640,17 @@ def prefix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L310-L317" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L322-L330" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def postfix(self):
     &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
     return (
-        f&#39;{self.counter}/{self.n_iter} &#39;
-        f&#39;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#39;
-        f&#39;{self.iter_rate}&#39;
-        f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;)</code></pre>
+        f&#34;{self.counter}/{self.n_iter} &#34;
+        f&#34;[{self.elapsed_time}&lt;{self.est_remaining_time}, &#34;
+        f&#34;{self.iter_rate}&#34;
+        f&#39;{&#34;, &#34; + self.stats if self._stats_dict else &#34;&#34;}]&#39;
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.ProgressBar.sequence"><code class="name">var <span class="ident">sequence</span></code></dt>
@@ -1631,13 +1668,13 @@ def postfix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L319-L324" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L332-L337" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def reset(self):
     &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
     self._counter = 0
     self._start_time = timer()
-    self._last_refresh_time = -float(&#39;inf&#39;)
+    self._last_refresh_time = -float(&#34;inf&#34;)
     self._stats_dict = {}</code></pre>
 </details>
 </dd>
@@ -1659,7 +1696,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L326-L346" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L339-L361" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter_count, iter_dict=None, refresh=True):
     &#34;&#34;&#34;Update progress bar state
@@ -1675,11 +1712,13 @@ statistics key-value pairs to use to update postfix stats.</dd>
     else:
         self.counter = iter_count
         if iter_dict is not None:
-            _update_stats_running_means(
-                iter_count, self._stats_dict, iter_dict)
+            _update_stats_running_means(iter_count, self._stats_dict, iter_dict)
         self._elapsed_time = timer() - self._start_time
-    if refresh and iter_count == self.n_iter or (
-            timer() - self._last_refresh_time &gt; self._min_refresh_time):
+    if (
+        refresh
+        and iter_count == self.n_iter
+        or (timer() - self._last_refresh_time &gt; self._min_refresh_time)
+    ):
         self.refresh()
         self._last_refresh_time = timer()</code></pre>
 </details>
@@ -1692,7 +1731,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L348-L351" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L363-L366" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def refresh(self):
     &#34;&#34;&#34;Refresh visual display(s) of progress bar.&#34;&#34;&#34;
@@ -1732,13 +1771,14 @@ corresponding to the current progress bar.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L400-L580" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L415-L601" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LabelledSequenceProgressBar(BaseProgressBar):
     &#34;&#34;&#34;Iterable object for tracking progress of a sequence of labelled tasks.&#34;&#34;&#34;
 
-    def __init__(self, labelled_sequence, description=None, position=(0, 1),
-                 displays=None):
+    def __init__(
+        self, labelled_sequence, description=None, position=(0, 1), displays=None
+    ):
         &#34;&#34;&#34;
         Args:
             labelled_sequence (OrderedDict[str, Any]): Ordered dictionary with
@@ -1756,8 +1796,7 @@ corresponding to the current progress bar.</dd>
                 an `update` method which will be passed a single argument
                 corresponding to the current progress bar.
         &#34;&#34;&#34;
-        super().__init__(
-            list(labelled_sequence.values()), description, position)
+        super().__init__(list(labelled_sequence.values()), description, position)
         self._labels = list(labelled_sequence.keys())
         self._description = description
         self._position = position
@@ -1784,7 +1823,7 @@ corresponding to the current progress bar.</dd>
     @property
     def stats(self):
         &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-        return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())
+        return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
@@ -1794,24 +1833,27 @@ corresponding to the current progress bar.</dd>
     @property
     def postfix(self):
         &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
-        return f&#39; [{self.stats}]&#39; if self._stats_dict else &#39;&#39;
+        return f&#34; [{self.stats}]&#34; if self._stats_dict else &#34;&#34;
 
     @property
     def completed_labels(self):
         &#34;&#34;&#34;Labels corresponding to completed iterations.&#34;&#34;&#34;
         return [
-            f&#39;{label} [{_format_time(time)}]&#39; for label, time in
-            zip(self._labels[:self._counter], self._iter_times[:self._counter])]
+            f&#34;{label} [{_format_time(time)}]&#34;
+            for label, time in zip(
+                self._labels[: self._counter], self._iter_times[: self._counter]
+            )
+        ]
 
     @property
     def current_label(self):
         &#34;&#34;&#34;Label corresponding to current iteration.&#34;&#34;&#34;
-        return self._labels[self._counter] if self.counter &lt; self.n_iter else &#39;&#39;
+        return self._labels[self._counter] if self.counter &lt; self.n_iter else &#34;&#34;
 
     @property
     def unstarted_labels(self):
         &#34;&#34;&#34;Labels corresponding to unstarted iterations.&#34;&#34;&#34;
-        return self._labels[self._counter + 1:]
+        return self._labels[self._counter + 1 :]
 
     @property
     def progress_bar(self):
@@ -1819,7 +1861,7 @@ corresponding to the current progress bar.</dd>
         labels = self.completed_labels
         if self.counter &lt; self.n_iter:
             labels.append(self.current_label)
-        return &#39; &gt; &#39;.join(labels)
+        return &#34; &gt; &#34;.join(labels)
 
     def reset(self):
         &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
@@ -1855,13 +1897,13 @@ corresponding to the current progress bar.</dd>
             display.update(self)
 
     def __str__(self):
-        return f&#39;{self.prefix}{self.progress_bar}{self.postfix}&#39;
+        return f&#34;{self.prefix}{self.progress_bar}{self.postfix}&#34;
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        html_string = f&#39;&#39;&#39;
+        html_string = f&#34;&#34;&#34;
         &lt;div style=&#34;line-height: 24px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;&#34;&gt;
@@ -1870,8 +1912,8 @@ corresponding to the current progress bar.</dd>
                         font-family: var(--jp-code-font-family, monospace);&#34;&gt;
             {html.escape(self.prefix).replace(&#39; &#39;, &#39;&amp;nbsp;&#39;)}
           &lt;/label&gt;
-        &#39;&#39;&#39;
-        template_string = &#39;&#39;&#39;
+        &#34;&#34;&#34;
+        template_string = &#34;&#34;&#34;
           &lt;div style=&#34;position: relative; flex-grow: 1; align-self: stretch;
                       margin: 1px; padding: 0px; text-align: center;
                       height: initial; background-color: {background_color};
@@ -1879,27 +1921,30 @@ corresponding to the current progress bar.</dd>
                       border: 1px solid {foreground_color}; font-size: 90%;&#34;&gt;
             {label}
           &lt;/div&gt;
-        &#39;&#39;&#39;
+        &#34;&#34;&#34;
         for label in self.completed_labels:
             html_string += template_string.format(
-                label=label, foreground_color=&#39;white&#39;,
-                background_color=&#39;#4caf50&#39;)
+                label=label, foreground_color=&#34;white&#34;, background_color=&#34;#4caf50&#34;
+            )
         if self.counter != self.n_iter:
             html_string += template_string.format(
-                label=self.current_label, foreground_color=&#39;white&#39;,
-                background_color=&#39;#2196f3&#39; if self._active else &#39;#f44336&#39;)
+                label=self.current_label,
+                foreground_color=&#34;white&#34;,
+                background_color=&#34;#2196f3&#34; if self._active else &#34;#f44336&#34;,
+            )
         for label in self.unstarted_labels:
             html_string += template_string.format(
-                label=label, foreground_color=&#39;#aaa&#39;, background_color=&#39;white&#39;)
-        if self.postfix != &#39;&#39;:
-            html_string += f&#39;&#39;&#39;
+                label=label, foreground_color=&#34;#aaa&#34;, background_color=&#34;white&#34;
+            )
+        if self.postfix != &#34;&#34;:
+            html_string += f&#34;&#34;&#34;
               &lt;div style=&#34;margin-left: 8px; flex-shrink: 0;
                           font-family: var(--jp-code-font-family, monospace);
                           font-size: var(--jp-code-font-size, 13px);&#34;&gt;
                 {html.escape(self.postfix)}
               &lt;/div&gt;
-            &#39;&#39;&#39;
-        html_string += &#39;&lt;/div&gt;&#39;
+            &#34;&#34;&#34;
+        html_string += &#34;&lt;/div&gt;&#34;
         return html_string
 
     def __enter__(self):
@@ -1929,7 +1974,7 @@ corresponding to the current progress bar.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L433-L436" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L448-L451" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def counter(self):
@@ -1943,7 +1988,7 @@ def counter(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L442-L445" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L457-L460" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def description(self):
@@ -1957,12 +2002,12 @@ def description(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L447-L450" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L462-L465" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def stats(self):
     &#34;&#34;&#34;Comma-delimited string list of statistic key=value pairs.&#34;&#34;&#34;
-    return &#39;, &#39;.join(f&#39;{k}={v:#.3g}&#39; for k, v in self._stats_dict.items())</code></pre>
+    return &#34;, &#34;.join(f&#34;{k}={v:#.3g}&#34; for k, v in self._stats_dict.items())</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.prefix"><code class="name">var <span class="ident">prefix</span></code></dt>
@@ -1971,7 +2016,7 @@ def stats(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L452-L455" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L467-L470" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def prefix(self):
@@ -1985,12 +2030,12 @@ def prefix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L457-L460" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L472-L475" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def postfix(self):
     &#34;&#34;&#34;Text to postfix progress bar with.&#34;&#34;&#34;
-    return f&#39; [{self.stats}]&#39; if self._stats_dict else &#39;&#39;</code></pre>
+    return f&#34; [{self.stats}]&#34; if self._stats_dict else &#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.completed_labels"><code class="name">var <span class="ident">completed_labels</span></code></dt>
@@ -1999,14 +2044,17 @@ def postfix(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L462-L467" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L477-L485" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def completed_labels(self):
     &#34;&#34;&#34;Labels corresponding to completed iterations.&#34;&#34;&#34;
     return [
-        f&#39;{label} [{_format_time(time)}]&#39; for label, time in
-        zip(self._labels[:self._counter], self._iter_times[:self._counter])]</code></pre>
+        f&#34;{label} [{_format_time(time)}]&#34;
+        for label, time in zip(
+            self._labels[: self._counter], self._iter_times[: self._counter]
+        )
+    ]</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.current_label"><code class="name">var <span class="ident">current_label</span></code></dt>
@@ -2015,12 +2063,12 @@ def completed_labels(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L469-L472" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L487-L490" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def current_label(self):
     &#34;&#34;&#34;Label corresponding to current iteration.&#34;&#34;&#34;
-    return self._labels[self._counter] if self.counter &lt; self.n_iter else &#39;&#39;</code></pre>
+    return self._labels[self._counter] if self.counter &lt; self.n_iter else &#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.unstarted_labels"><code class="name">var <span class="ident">unstarted_labels</span></code></dt>
@@ -2029,12 +2077,12 @@ def current_label(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L474-L477" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L492-L495" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def unstarted_labels(self):
     &#34;&#34;&#34;Labels corresponding to unstarted iterations.&#34;&#34;&#34;
-    return self._labels[self._counter + 1:]</code></pre>
+    return self._labels[self._counter + 1 :]</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.progress_bar"><code class="name">var <span class="ident">progress_bar</span></code></dt>
@@ -2043,7 +2091,7 @@ def unstarted_labels(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L479-L485" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L497-L503" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def progress_bar(self):
@@ -2051,7 +2099,7 @@ def progress_bar(self):
     labels = self.completed_labels
     if self.counter &lt; self.n_iter:
         labels.append(self.current_label)
-    return &#39; &gt; &#39;.join(labels)</code></pre>
+    return &#34; &gt; &#34;.join(labels)</code></pre>
 </details>
 </dd>
 <dt id="mici.progressbars.LabelledSequenceProgressBar.sequence"><code class="name">var <span class="ident">sequence</span></code></dt>
@@ -2069,7 +2117,7 @@ def progress_bar(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L487-L492" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L505-L510" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def reset(self):
     &#34;&#34;&#34;Reset progress bar state.&#34;&#34;&#34;
@@ -2097,7 +2145,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L494-L513" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L512-L531" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, iter_count, iter_dict=None, refresh=True):
     &#34;&#34;&#34;Update progress bar state
@@ -2129,7 +2177,7 @@ statistics key-value pairs to use to update postfix stats.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L515-L518" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L533-L536" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def refresh(self):
     &#34;&#34;&#34;Refresh visual display(s) of status bar.&#34;&#34;&#34;
@@ -2161,15 +2209,15 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L583-L621" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L604-L642" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FileDisplay:
     &#34;&#34;&#34;Use file which supports ANSI escape sequences as an updatable display&#34;&#34;&#34;
 
-    CURSOR_UP = &#39;\x1b[A&#39;
+    CURSOR_UP = &#34;\x1b[A&#34;
     &#34;&#34;&#34;ANSI escape sequence to move cursor up one line.&#34;&#34;&#34;
 
-    CURSOR_DOWN = &#39;\x1b[B&#39;
+    CURSOR_DOWN = &#34;\x1b[B&#34;
     &#34;&#34;&#34;ANSI escape sequence to move cursor down one line.&#34;&#34;&#34;
 
     def __init__(self, position=(0, 1), file=None):
@@ -2188,7 +2236,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
         self._file = file if file is not None else sys.stdout
         self._last_string_length = 0
         if self._position[0] == 0:
-            self._file.write(&#39;\n&#39; * self._position[1])
+            self._file.write(&#34;\n&#34; * self._position[1])
         self._file.flush()
 
     def _move_line(self, offset):
@@ -2198,7 +2246,7 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
     def update(self, obj):
         self._move_line(self._position[0] - self._position[1])
         string = str(obj)
-        self._file.write(f&#39;{string: &lt;{self._last_string_length}}\r&#39;)
+        self._file.write(f&#34;{string: &lt;{self._last_string_length}}\r&#34;)
         self._last_string_length = len(string)
         self._move_line(self._position[1] - self._position[0])
         self._file.flush()</code></pre>
@@ -2224,12 +2272,12 @@ ANSI escape sequences <code>\x1b[A}</code> (cursor up) and <code>\x1b[B</code>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/progressbars.py#L615-L621" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/progressbars.py#L636-L642" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def update(self, obj):
     self._move_line(self._position[0] - self._position[1])
     string = str(obj)
-    self._file.write(f&#39;{string: &lt;{self._last_string_length}}\r&#39;)
+    self._file.write(f&#34;{string: &lt;{self._last_string_length}}\r&#34;)
     self._last_string_length = len(string)
     self._move_line(self._position[1] - self._position[0])
     self._file.flush()</code></pre>

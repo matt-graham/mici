@@ -355,7 +355,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L0-L1605" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L0-L1703" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Hamiltonian systems encapsulating energy functions and their derivatives.&#34;&#34;&#34;
 
@@ -408,10 +408,10 @@ class System(ABC):
         &#34;&#34;&#34;
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
-            grad_neg_log_dens, neg_log_dens,
-            &#39;grad_and_value&#39;, &#39;grad_neg_log_dens&#39;)
+            grad_neg_log_dens, neg_log_dens, &#34;grad_and_value&#34;, &#34;grad_neg_log_dens&#34;
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def neg_log_dens(self, state):
         &#34;&#34;&#34;Negative logarithm of unnormalized density of target distribution.
 
@@ -423,7 +423,7 @@ class System(ABC):
         &#34;&#34;&#34;
         return self._neg_log_dens(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;neg_log_dens&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;neg_log_dens&#34;)
     def grad_neg_log_dens(self, state):
         &#34;&#34;&#34;Derivative of negative log density with respect to position.
 
@@ -511,7 +511,7 @@ class System(ABC):
         Returns:
             array: Value of `h(state)` derivative with respect to `state.pos`.
         &#34;&#34;&#34;
-        if hasattr(self, &#39;dh2_dpos&#39;):
+        if hasattr(self, &#34;dh2_dpos&#34;):
             return self.dh1_dpos(state) + self.dh2_dpos(state)
         else:
             return self.dh1_dpos(state)
@@ -603,17 +603,19 @@ class EuclideanMetricSystem(System):
             elif metric.ndim == 2:
                 self.metric = matrices.DensePositiveDefiniteMatrix(metric)
             else:
-                raise ValueError(&#39;If NumPy ndarray value is used for `metric`&#39;
-                                 &#39; must be either 1D (diagonal matrix) or 2D &#39;
-                                 &#39;(dense positive definite matrix)&#39;)
+                raise ValueError(
+                    &#34;If NumPy ndarray value is used for `metric`&#34;
+                    &#34; must be either 1D (diagonal matrix) or 2D &#34;
+                    &#34;(dense positive definite matrix)&#34;
+                )
         else:
             self.metric = metric
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def h2(self, state):
         return 0.5 * state.mom @ self.dh2_dmom(state)
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dmom(self, state):
         return self.metric.inv @ state.mom
 
@@ -642,8 +644,7 @@ class EuclideanMetricSystem(System):
                 (Jacobian) of momentum output of `h2_flow` with respect to the
                 value of the momentum component of the initial input state.
         &#34;&#34;&#34;
-        return (dt * self.metric.inv,
-                matrices.IdentityMatrix(self.metric.shape[0]))
+        return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))
 
     def sample_momentum(self, state, rng):
         return self.metric.sqrt @ rng.standard_normal(state.pos.shape)
@@ -720,36 +721,39 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
         super().__init__(neg_log_dens, metric, grad_neg_log_dens)
 
     def h2(self, state):
-        return (0.5 * state.pos @ state.pos +
-                0.5 * state.mom @ self.metric.inv @ state.mom)
+        return (
+            0.5 * state.pos @ state.pos + 0.5 * state.mom @ self.metric.inv @ state.mom
+        )
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dmom(self, state):
         return self.metric.inv @ state.mom
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dpos(self, state):
         return state.pos
 
     def h2_flow(self, state, dt):
-        omega = 1. / self.metric.eigval**0.5
+        omega = 1.0 / self.metric.eigval ** 0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         eigvec_T_pos = self.metric.eigvec.T @ state.pos
         eigvec_T_mom = self.metric.eigvec.T @ state.mom
         state.pos = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_pos +
-            (sin_omega_dt * omega) * eigvec_T_mom)
+            cos_omega_dt * eigvec_T_pos + (sin_omega_dt * omega) * eigvec_T_mom
+        )
         state.mom = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_mom -
-            (sin_omega_dt / omega) * eigvec_T_pos)
+            cos_omega_dt * eigvec_T_mom - (sin_omega_dt / omega) * eigvec_T_pos
+        )
 
     def dh2_flow_dmom(self, dt):
-        omega = 1. / self.metric.eigval**0.5
+        omega = 1.0 / self.metric.eigval ** 0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-        return (matrices.EigendecomposedSymmetricMatrix(
-                    self.metric.eigvec, sin_omega_dt * omega),
-                matrices.EigendecomposedSymmetricMatrix(
-                    self.metric.eigvec, cos_omega_dt))
+        return (
+            matrices.EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega
+            ),
+            matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
+        )
 
 
 class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
@@ -811,9 +815,15 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
          11(2), pp.5105-5164.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
-                 jacob_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        dens_wrt_hausdorff=True,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -901,14 +911,18 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                 function to compute the Jacobian (and value) of `constr`
                 automatically.
         &#34;&#34;&#34;
-        super().__init__(neg_log_dens=neg_log_dens, metric=metric,
-                         grad_neg_log_dens=grad_neg_log_dens)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            metric=metric,
+            grad_neg_log_dens=grad_neg_log_dens,
+        )
         self._constr = constr
         self.dens_wrt_hausdorff = dens_wrt_hausdorff
         self._jacob_constr = autodiff_fallback(
-            jacob_constr, constr, &#39;jacobian_and_value&#39;, &#39;jacob_constr&#39;)
+            jacob_constr, constr, &#34;jacobian_and_value&#34;, &#34;jacob_constr&#34;
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def constr(self, state):
         &#34;&#34;&#34;Constraint function at the current position.
 
@@ -920,7 +934,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         &#34;&#34;&#34;
         return self._constr(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;constr&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;constr&#34;)
     def jacob_constr(self, state):
         &#34;&#34;&#34;Jacobian of constraint function at the current position.
 
@@ -934,7 +948,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     @abstractmethod
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
 
         Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
@@ -953,7 +968,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                the constraint Jacobian rows.
         &#34;&#34;&#34;
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def gram(self, state):
         &#34;&#34;&#34;Gram matrix at current position.
 
@@ -972,7 +987,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
             mici.matrices.PositiveDefiniteMatrix: Gram matrix as matrix object.
         &#34;&#34;&#34;
         return self.jacob_constr_inner_product(
-            self.jacob_constr(state), self.metric.inv)
+            self.jacob_constr(state), self.metric.inv
+        )
 
     def inv_gram(self, state):
         &#34;&#34;&#34;Inverse of Gram matrix at current position.
@@ -1012,8 +1028,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         if self.dens_wrt_hausdorff:
             return self.grad_neg_log_dens(state)
         else:
-            return (self.grad_neg_log_dens(state) +
-                    self.grad_log_det_sqrt_gram(state))
+            return self.grad_neg_log_dens(state) + self.grad_log_det_sqrt_gram(state)
 
     def project_onto_cotangent_space(self, mom, state):
         &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.
@@ -1029,9 +1044,9 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         &#34;&#34;&#34;
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
-        mom -= (self.jacob_constr(state).T @ (
-                    self.inv_gram(state) @ (
-                        self.jacob_constr(state) @ (self.metric.inv @ mom))))
+        mom -= self.jacob_constr(state).T @ (
+            self.inv_gram(state) @ (self.jacob_constr(state) @ (self.metric.inv @ mom))
+        )
         return mom
 
     def sample_momentum(self, state, rng):
@@ -1047,9 +1062,16 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
-                 jacob_constr=None, mhp_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        dens_wrt_hausdorff=True,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+        mhp_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1163,38 +1185,48 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 construct a function which calculates the MHP (and Jacobian and
                 value) of `constr` automatically.
         &#34;&#34;&#34;
-        super().__init__(neg_log_dens=neg_log_dens, constr=constr,
-                         metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
-                         grad_neg_log_dens=grad_neg_log_dens,
-                         jacob_constr=jacob_constr)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            constr=constr,
+            metric=metric,
+            dens_wrt_hausdorff=dens_wrt_hausdorff,
+            grad_neg_log_dens=grad_neg_log_dens,
+            jacob_constr=jacob_constr,
+        )
         if not dens_wrt_hausdorff:
             self._mhp_constr = autodiff_fallback(
-                mhp_constr, constr, &#39;mhp_jacobian_and_value&#39;, &#39;mhp_constr&#39;)
+                mhp_constr, constr, &#34;mhp_jacobian_and_value&#34;, &#34;mhp_constr&#34;
+            )
 
-    @cache_in_state_with_aux(&#39;pos&#39;, (&#39;jacob_constr&#39;, &#39;constr&#39;))
+    @cache_in_state_with_aux(&#34;pos&#34;, (&#34;jacob_constr&#34;, &#34;constr&#34;))
     def mhp_constr(self, state):
         return self._mhp_constr(state.pos)
 
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DensePositiveDefiniteMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+            )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+            )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def grad_log_det_sqrt_gram(self, state):
         # Evaluate MHP of constraint function before Jacobian as Jacobian value
         # will potentially be computed in &#39;forward&#39; pass and cached
         mhp_constr = self.mhp_constr(state)
         return mhp_constr(
-            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)
+            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv
+        )
 
 
 class GaussianDenseConstrainedEuclideanMetricSystem(
-        GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
+    GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem
+):
     r&#34;&#34;&#34;Gaussian Euclidean Hamiltonian system st. a dense set of constraints.
 
     See `ConstrainedEuclideanMetricSystem` for more details about constrained
@@ -1202,8 +1234,15 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
     systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+        mhp_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1298,19 +1337,27 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 value) of `constr` automatically.
         &#34;&#34;&#34;
         DenseConstrainedEuclideanMetricSystem.__init__(
-            self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
+            self,
+            neg_log_dens=neg_log_dens,
+            constr=constr,
+            metric=metric,
             dens_wrt_hausdorff=False,
-            grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
-            mhp_constr=mhp_constr)
+            grad_neg_log_dens=grad_neg_log_dens,
+            jacob_constr=jacob_constr,
+            mhp_constr=mhp_constr,
+        )
 
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DenseSymmetricMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+            )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+            )
 
 
 class RiemannianMetricSystem(System):
@@ -1352,9 +1399,15 @@ class RiemannianMetricSystem(System):
          Society: Series B (Statistical Methodology), 73(2), pp.123-214.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
-                 vjp_metric_func=None, grad_neg_log_dens=None,
-                 metric_kwargs=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_matrix_class,
+        metric_func,
+        vjp_metric_func=None,
+        grad_neg_log_dens=None,
+        metric_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1431,11 +1484,12 @@ class RiemannianMetricSystem(System):
         self._metric_matrix_class = metric_matrix_class
         self._metric_func = metric_func
         self._vjp_metric_func = autodiff_fallback(
-            vjp_metric_func, metric_func, &#39;vjp_and_value&#39;, &#39;vjp_metric_func&#39;)
+            vjp_metric_func, metric_func, &#34;vjp_and_value&#34;, &#34;vjp_metric_func&#34;
+        )
         self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
         super().__init__(neg_log_dens, grad_neg_log_dens)
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric_func(self, state):
         &#34;&#34;&#34;
         Function computing the parameter of the metric matrix representation.
@@ -1448,7 +1502,7 @@ class RiemannianMetricSystem(System):
         &#34;&#34;&#34;
         return self._metric_func(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;metric_func&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;metric_func&#34;)
     def vjp_metric_func(self, state):
         &#34;&#34;&#34;
         Function constructing a vector-Jacobian-product for `metric_func`.
@@ -1471,7 +1525,7 @@ class RiemannianMetricSystem(System):
         &#34;&#34;&#34;
         return self._vjp_metric_func(state.pos)
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric(self, state):
         &#34;&#34;&#34;
         Function computing the metric matrix representation.
@@ -1485,8 +1539,7 @@ class RiemannianMetricSystem(System):
         Returns:
             mici.matrices.PositiveDefiniteMatrix: Metric matrix representation.
         &#34;&#34;&#34;
-        return self._metric_matrix_class(
-            self.metric_func(state), **self._metric_kwargs)
+        return self._metric_matrix_class(self.metric_func(state), **self._metric_kwargs)
 
     def h(self, state):
         return self.h1(state) + self.h2(state)
@@ -1498,8 +1551,9 @@ class RiemannianMetricSystem(System):
         # Evaluate VJP of metric function before metric as metric value will
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
-        return (self.grad_neg_log_dens(state) +
-                0.5 * vjp_metric(self.metric(state).grad_log_abs_det))
+        return self.grad_neg_log_dens(state) + 0.5 * vjp_metric(
+            self.metric(state).grad_log_abs_det
+        )
 
     def h2(self, state):
         return 0.5 * state.mom @ self.metric(state).inv @ state.mom
@@ -1508,8 +1562,7 @@ class RiemannianMetricSystem(System):
         # Evaluate VJP of metric function before metric as metric value will
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
-        return 0.5 * vjp_metric(
-            self.metric(state).grad_quadratic_form_inv(state.mom))
+        return 0.5 * vjp_metric(self.metric(state).grad_quadratic_form_inv(state.mom))
 
     def dh2_dmom(self, state):
         return self.metric(state).inv @ state.mom
@@ -1531,8 +1584,13 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_scalar_func,
-                 vjp_metric_scalar_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_scalar_func,
+        vjp_metric_scalar_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1583,13 +1641,18 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         &#34;&#34;&#34;
 
         super().__init__(
-            neg_log_dens, matrices.PositiveScaledIdentityMatrix,
-            metric_scalar_func, vjp_metric_scalar_func, grad_neg_log_dens)
+            neg_log_dens,
+            matrices.PositiveScaledIdentityMatrix,
+            metric_scalar_func,
+            vjp_metric_scalar_func,
+            grad_neg_log_dens,
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric(self, state):
         return self._metric_matrix_class(
-            self.metric_func(state), size=state.pos.shape[0])
+            self.metric_func(state), size=state.pos.shape[0]
+        )
 
 
 class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
@@ -1605,8 +1668,13 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_diagonal_func,
-                 vjp_metric_diagonal_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_diagonal_func,
+        vjp_metric_diagonal_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1656,8 +1724,12 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.PositiveDiagonalMatrix, metric_diagonal_func,
-            vjp_metric_diagonal_func, grad_neg_log_dens)
+            neg_log_dens,
+            matrices.PositiveDiagonalMatrix,
+            metric_diagonal_func,
+            vjp_metric_diagonal_func,
+            grad_neg_log_dens,
+        )
 
 
 class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
@@ -1673,8 +1745,13 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_chol_func,
-                 vjp_metric_chol_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_chol_func,
+        vjp_metric_chol_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1725,9 +1802,13 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.TriangularFactoredPositiveDefiniteMatrix,
-            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens,
-            metric_kwargs={&#39;factor_is_lower&#39;: True})
+            neg_log_dens,
+            matrices.TriangularFactoredPositiveDefiniteMatrix,
+            metric_chol_func,
+            vjp_metric_chol_func,
+            grad_neg_log_dens,
+            metric_kwargs={&#34;factor_is_lower&#34;: True},
+        )
 
 
 class DenseRiemannianMetricSystem(RiemannianMetricSystem):
@@ -1742,8 +1823,9 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_func,
-                 vjp_metric_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self, neg_log_dens, metric_func, vjp_metric_func=None, grad_neg_log_dens=None
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1794,8 +1876,12 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.DensePositiveDefiniteMatrix, metric_func,
-            vjp_metric_func, grad_neg_log_dens)
+            neg_log_dens,
+            matrices.DensePositiveDefiniteMatrix,
+            metric_func,
+            vjp_metric_func,
+            grad_neg_log_dens,
+        )
 
 
 class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
@@ -1838,9 +1924,14 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
          (pp. 327-334).
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, grad_neg_log_dens=None,
-                 hess_neg_log_dens=None, mtp_neg_log_dens=None,
-                 softabs_coeff=1.):
+    def __init__(
+        self,
+        neg_log_dens,
+        grad_neg_log_dens=None,
+        hess_neg_log_dens=None,
+        mtp_neg_log_dens=None,
+        softabs_coeff=1.0,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -1905,16 +1996,22 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 close to the absolute function.
         &#34;&#34;&#34;
         self._hess_neg_log_dens = autodiff_fallback(
-            hess_neg_log_dens, neg_log_dens, &#39;hessian_grad_and_value&#39;,
-            &#39;neg_log_dens&#39;)
+            hess_neg_log_dens, neg_log_dens, &#34;hessian_grad_and_value&#34;, &#34;neg_log_dens&#34;
+        )
         self._mtp_neg_log_dens = autodiff_fallback(
-            mtp_neg_log_dens, neg_log_dens, &#39;mtp_hessian_grad_and_value&#39;,
-            &#39;mtp_neg_log_dens&#39;)
-        super().__init__(neg_log_dens,
-                         matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
-                         self._hess_neg_log_dens, self._mtp_neg_log_dens,
-                         grad_neg_log_dens,
-                         metric_kwargs={&#39;softabs_coeff&#39;: softabs_coeff})
+            mtp_neg_log_dens,
+            neg_log_dens,
+            &#34;mtp_hessian_grad_and_value&#34;,
+            &#34;mtp_neg_log_dens&#34;,
+        )
+        super().__init__(
+            neg_log_dens,
+            matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
+            self._hess_neg_log_dens,
+            self._mtp_neg_log_dens,
+            grad_neg_log_dens,
+            metric_kwargs={&#34;softabs_coeff&#34;: softabs_coeff},
+        )
 
     def metric_func(self, state):
         return self.hess_neg_log_dens(state)
@@ -1922,7 +2019,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     def vjp_metric_func(self, state):
         return self.mtp_neg_log_dens(state)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, (&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+    @cache_in_state_with_aux(&#34;pos&#34;, (&#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;))
     def hess_neg_log_dens(self, state):
         &#34;&#34;&#34;Hessian of negative log density with respect to position.
 
@@ -1938,7 +2035,8 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         return self._hess_neg_log_dens(state.pos)
 
     @cache_in_state_with_aux(
-        &#39;pos&#39;, (&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+        &#34;pos&#34;, (&#34;hess_neg_log_dens&#34;, &#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;)
+    )
     def mtp_neg_log_dens(self, state):
         &#34;&#34;&#34;Generate MTP of negative log density with respect to position.
 
@@ -2017,7 +2115,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L10-L182" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L10-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class System(ABC):
     r&#34;&#34;&#34;Base class for Hamiltonian systems.
@@ -2061,10 +2159,10 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
         &#34;&#34;&#34;
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
-            grad_neg_log_dens, neg_log_dens,
-            &#39;grad_and_value&#39;, &#39;grad_neg_log_dens&#39;)
+            grad_neg_log_dens, neg_log_dens, &#34;grad_and_value&#34;, &#34;grad_neg_log_dens&#34;
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def neg_log_dens(self, state):
         &#34;&#34;&#34;Negative logarithm of unnormalized density of target distribution.
 
@@ -2076,7 +2174,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
         &#34;&#34;&#34;
         return self._neg_log_dens(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;neg_log_dens&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;neg_log_dens&#34;)
     def grad_neg_log_dens(self, state):
         &#34;&#34;&#34;Derivative of negative log density with respect to position.
 
@@ -2164,7 +2262,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
         Returns:
             array: Value of `h(state)` derivative with respect to `state.pos`.
         &#34;&#34;&#34;
-        if hasattr(self, &#39;dh2_dpos&#39;):
+        if hasattr(self, &#34;dh2_dpos&#34;):
             return self.dh1_dpos(state) + self.dh2_dpos(state)
         else:
             return self.dh1_dpos(state)
@@ -2222,9 +2320,9 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L55-L65" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L55-L65" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def neg_log_dens(self, state):
     &#34;&#34;&#34;Negative logarithm of unnormalized density of target distribution.
 
@@ -2256,9 +2354,9 @@ def neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L67-L78" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L67-L78" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state_with_aux(&#39;pos&#39;, &#39;neg_log_dens&#39;)
+<pre><code class="python">@cache_in_state_with_aux(&#34;pos&#34;, &#34;neg_log_dens&#34;)
 def grad_neg_log_dens(self, state):
     &#34;&#34;&#34;Derivative of negative log density with respect to position.
 
@@ -2290,7 +2388,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L80-L89" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L80-L89" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     &#34;&#34;&#34;Hamiltonian component depending only on position.
@@ -2322,7 +2420,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L91-L100" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L91-L100" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     &#34;&#34;&#34;Derivative of `h1` Hamiltonian component with respect to position.
@@ -2352,7 +2450,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L102-L111" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L102-L111" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1_flow(self, state, dt):
     &#34;&#34;&#34;Apply exact flow map corresponding to `h1` Hamiltonian component.
@@ -2384,7 +2482,7 @@ def grad_neg_log_dens(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L113-L122" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L113-L122" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def h2(self, state):
@@ -2416,7 +2514,7 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L124-L133" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L124-L133" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def dh2_dmom(self, state):
@@ -2448,7 +2546,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L135-L144" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L135-L144" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     &#34;&#34;&#34;Hamiltonian function for system.
@@ -2480,7 +2578,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L146-L158" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L146-L158" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dpos(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to position.
@@ -2491,7 +2589,7 @@ def dh2_dmom(self, state):
     Returns:
         array: Value of `h(state)` derivative with respect to `state.pos`.
     &#34;&#34;&#34;
-    if hasattr(self, &#39;dh2_dpos&#39;):
+    if hasattr(self, &#34;dh2_dpos&#34;):
         return self.dh1_dpos(state) + self.dh2_dpos(state)
     else:
         return self.dh1_dpos(state)</code></pre>
@@ -2515,7 +2613,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L160-L169" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L160-L169" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh_dmom(self, state):
     &#34;&#34;&#34;Derivative of Hamiltonian with respect to momentum.
@@ -2548,7 +2646,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L171-L182" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L171-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def sample_momentum(self, state, rng):
@@ -2621,7 +2719,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L185-L290" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L185-L291" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class EuclideanMetricSystem(System):
     r&#34;&#34;&#34;Hamiltonian system with a Euclidean metric on the position space.
@@ -2685,17 +2783,19 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
             elif metric.ndim == 2:
                 self.metric = matrices.DensePositiveDefiniteMatrix(metric)
             else:
-                raise ValueError(&#39;If NumPy ndarray value is used for `metric`&#39;
-                                 &#39; must be either 1D (diagonal matrix) or 2D &#39;
-                                 &#39;(dense positive definite matrix)&#39;)
+                raise ValueError(
+                    &#34;If NumPy ndarray value is used for `metric`&#34;
+                    &#34; must be either 1D (diagonal matrix) or 2D &#34;
+                    &#34;(dense positive definite matrix)&#34;
+                )
         else:
             self.metric = metric
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def h2(self, state):
         return 0.5 * state.mom @ self.dh2_dmom(state)
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dmom(self, state):
         return self.metric.inv @ state.mom
 
@@ -2724,8 +2824,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
                 (Jacobian) of momentum output of `h2_flow` with respect to the
                 value of the momentum component of the initial input state.
         &#34;&#34;&#34;
-        return (dt * self.metric.inv,
-                matrices.IdentityMatrix(self.metric.shape[0]))
+        return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))
 
     def sample_momentum(self, state, rng):
         return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
@@ -2760,9 +2859,9 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L253-L255" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L255-L257" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+<pre><code class="python">@cache_in_state(&#34;mom&#34;)
 def h2(self, state):
     return 0.5 * state.mom @ self.dh2_dmom(state)</code></pre>
 </details>
@@ -2785,9 +2884,9 @@ def h2(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L257-L259" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L259-L261" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+<pre><code class="python">@cache_in_state(&#34;mom&#34;)
 def dh2_dmom(self, state):
     return self.metric.inv @ state.mom</code></pre>
 </details>
@@ -2808,7 +2907,7 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L261-L270" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L263-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
     &#34;&#34;&#34;Apply exact flow map corresponding to `h2` Hamiltonian component.
@@ -2846,7 +2945,7 @@ value of the momentum component of the initial input state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L272-L287" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L274-L288" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
     &#34;&#34;&#34;Derivatives of `h2_flow` flow map with respect to input momentum.
@@ -2862,8 +2961,7 @@ value of the momentum component of the initial input state.</dd>
             (Jacobian) of momentum output of `h2_flow` with respect to the
             value of the momentum component of the initial input state.
     &#34;&#34;&#34;
-    return (dt * self.metric.inv,
-            matrices.IdentityMatrix(self.metric.shape[0]))</code></pre>
+    return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.EuclideanMetricSystem.sample_momentum"><code class="name flex">
@@ -2885,7 +2983,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L289-L290" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L290-L291" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric.sqrt @ rng.standard_normal(state.pos.shape)</code></pre>
@@ -3091,7 +3189,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L293-L393" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L294-L397" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     r&#34;&#34;&#34;Euclidean Hamiltonian system with a tractable Gaussian component.
@@ -3164,36 +3262,39 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
         super().__init__(neg_log_dens, metric, grad_neg_log_dens)
 
     def h2(self, state):
-        return (0.5 * state.pos @ state.pos +
-                0.5 * state.mom @ self.metric.inv @ state.mom)
+        return (
+            0.5 * state.pos @ state.pos + 0.5 * state.mom @ self.metric.inv @ state.mom
+        )
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dmom(self, state):
         return self.metric.inv @ state.mom
 
-    @cache_in_state(&#39;mom&#39;)
+    @cache_in_state(&#34;mom&#34;)
     def dh2_dpos(self, state):
         return state.pos
 
     def h2_flow(self, state, dt):
-        omega = 1. / self.metric.eigval**0.5
+        omega = 1.0 / self.metric.eigval ** 0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         eigvec_T_pos = self.metric.eigvec.T @ state.pos
         eigvec_T_mom = self.metric.eigvec.T @ state.mom
         state.pos = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_pos +
-            (sin_omega_dt * omega) * eigvec_T_mom)
+            cos_omega_dt * eigvec_T_pos + (sin_omega_dt * omega) * eigvec_T_mom
+        )
         state.mom = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_mom -
-            (sin_omega_dt / omega) * eigvec_T_pos)
+            cos_omega_dt * eigvec_T_mom - (sin_omega_dt / omega) * eigvec_T_pos
+        )
 
     def dh2_flow_dmom(self, dt):
-        omega = 1. / self.metric.eigval**0.5
+        omega = 1.0 / self.metric.eigval ** 0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-        return (matrices.EigendecomposedSymmetricMatrix(
-                    self.metric.eigvec, sin_omega_dt * omega),
-                matrices.EigendecomposedSymmetricMatrix(
-                    self.metric.eigvec, cos_omega_dt))</code></pre>
+        return (
+            matrices.EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega
+            ),
+            matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -3225,11 +3326,12 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L363-L365" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L364-L367" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
-    return (0.5 * state.pos @ state.pos +
-            0.5 * state.mom @ self.metric.inv @ state.mom)</code></pre>
+    return (
+        0.5 * state.pos @ state.pos + 0.5 * state.mom @ self.metric.inv @ state.mom
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_dmom"><code class="name flex">
@@ -3250,9 +3352,9 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L367-L369" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L369-L371" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+<pre><code class="python">@cache_in_state(&#34;mom&#34;)
 def dh2_dmom(self, state):
     return self.metric.inv @ state.mom</code></pre>
 </details>
@@ -3265,9 +3367,9 @@ def dh2_dmom(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L371-L373" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L373-L375" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;mom&#39;)
+<pre><code class="python">@cache_in_state(&#34;mom&#34;)
 def dh2_dpos(self, state):
     return state.pos</code></pre>
 </details>
@@ -3288,19 +3390,19 @@ def dh2_dpos(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L375-L385" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L377-L387" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2_flow(self, state, dt):
-    omega = 1. / self.metric.eigval**0.5
+    omega = 1.0 / self.metric.eigval ** 0.5
     sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
     eigvec_T_pos = self.metric.eigvec.T @ state.pos
     eigvec_T_mom = self.metric.eigvec.T @ state.mom
     state.pos = self.metric.eigvec @ (
-        cos_omega_dt * eigvec_T_pos +
-        (sin_omega_dt * omega) * eigvec_T_mom)
+        cos_omega_dt * eigvec_T_pos + (sin_omega_dt * omega) * eigvec_T_mom
+    )
     state.mom = self.metric.eigvec @ (
-        cos_omega_dt * eigvec_T_mom -
-        (sin_omega_dt / omega) * eigvec_T_pos)</code></pre>
+        cos_omega_dt * eigvec_T_mom - (sin_omega_dt / omega) * eigvec_T_pos
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom"><code class="name flex">
@@ -3327,15 +3429,17 @@ value of the momentum component of the initial input state.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L387-L393" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L389-L397" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_flow_dmom(self, dt):
-    omega = 1. / self.metric.eigval**0.5
+    omega = 1.0 / self.metric.eigval ** 0.5
     sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-    return (matrices.EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, sin_omega_dt * omega),
-            matrices.EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, cos_omega_dt))</code></pre>
+    return (
+        matrices.EigendecomposedSymmetricMatrix(
+            self.metric.eigvec, sin_omega_dt * omega
+        ),
+        matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianEuclideanMetricSystem.sample_momentum"><code class="name flex">
@@ -3636,7 +3740,7 @@ automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L396-L681" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L400-L696" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     r&#34;&#34;&#34;Base class for Euclidean Hamiltonian systems subject to constraints.
@@ -3697,9 +3801,15 @@ automatically.</p>
          11(2), pp.5105-5164.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
-                 jacob_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        dens_wrt_hausdorff=True,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -3787,14 +3897,18 @@ automatically.</p>
                 function to compute the Jacobian (and value) of `constr`
                 automatically.
         &#34;&#34;&#34;
-        super().__init__(neg_log_dens=neg_log_dens, metric=metric,
-                         grad_neg_log_dens=grad_neg_log_dens)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            metric=metric,
+            grad_neg_log_dens=grad_neg_log_dens,
+        )
         self._constr = constr
         self.dens_wrt_hausdorff = dens_wrt_hausdorff
         self._jacob_constr = autodiff_fallback(
-            jacob_constr, constr, &#39;jacobian_and_value&#39;, &#39;jacob_constr&#39;)
+            jacob_constr, constr, &#34;jacobian_and_value&#34;, &#34;jacob_constr&#34;
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def constr(self, state):
         &#34;&#34;&#34;Constraint function at the current position.
 
@@ -3806,7 +3920,7 @@ automatically.</p>
         &#34;&#34;&#34;
         return self._constr(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;constr&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;constr&#34;)
     def jacob_constr(self, state):
         &#34;&#34;&#34;Jacobian of constraint function at the current position.
 
@@ -3820,7 +3934,8 @@ automatically.</p>
 
     @abstractmethod
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
 
         Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
@@ -3839,7 +3954,7 @@ automatically.</p>
                the constraint Jacobian rows.
         &#34;&#34;&#34;
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def gram(self, state):
         &#34;&#34;&#34;Gram matrix at current position.
 
@@ -3858,7 +3973,8 @@ automatically.</p>
             mici.matrices.PositiveDefiniteMatrix: Gram matrix as matrix object.
         &#34;&#34;&#34;
         return self.jacob_constr_inner_product(
-            self.jacob_constr(state), self.metric.inv)
+            self.jacob_constr(state), self.metric.inv
+        )
 
     def inv_gram(self, state):
         &#34;&#34;&#34;Inverse of Gram matrix at current position.
@@ -3898,8 +4014,7 @@ automatically.</p>
         if self.dens_wrt_hausdorff:
             return self.grad_neg_log_dens(state)
         else:
-            return (self.grad_neg_log_dens(state) +
-                    self.grad_log_det_sqrt_gram(state))
+            return self.grad_neg_log_dens(state) + self.grad_log_det_sqrt_gram(state)
 
     def project_onto_cotangent_space(self, mom, state):
         &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.
@@ -3915,9 +4030,9 @@ automatically.</p>
         &#34;&#34;&#34;
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
-        mom -= (self.jacob_constr(state).T @ (
-                    self.inv_gram(state) @ (
-                        self.jacob_constr(state) @ (self.metric.inv @ mom))))
+        mom -= self.jacob_constr(state).T @ (
+            self.inv_gram(state) @ (self.jacob_constr(state) @ (self.metric.inv @ mom))
+        )
         return mom
 
     def sample_momentum(self, state, rng):
@@ -3955,9 +4070,9 @@ automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L552-L562" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L566-L576" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def constr(self, state):
     &#34;&#34;&#34;Constraint function at the current position.
 
@@ -3988,9 +4103,9 @@ def constr(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L564-L574" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L578-L588" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state_with_aux(&#39;pos&#39;, &#39;constr&#39;)
+<pre><code class="python">@cache_in_state_with_aux(&#34;pos&#34;, &#34;constr&#34;)
 def jacob_constr(self, state):
     &#34;&#34;&#34;Jacobian of constraint function at the current position.
 
@@ -4028,11 +4143,12 @@ the constraint Jacobian rows.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L576-L595" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L590-L610" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def jacob_constr_inner_product(
-        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+    self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+):
     &#34;&#34;&#34;Compute inner product of rows of constraint Jacobian matrices.
 
     Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
@@ -4073,9 +4189,9 @@ ambient space.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L597-L616" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L612-L632" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def gram(self, state):
     &#34;&#34;&#34;Gram matrix at current position.
 
@@ -4094,7 +4210,8 @@ def gram(self, state):
         mici.matrices.PositiveDefiniteMatrix: Gram matrix as matrix object.
     &#34;&#34;&#34;
     return self.jacob_constr_inner_product(
-        self.jacob_constr(state), self.metric.inv)</code></pre>
+        self.jacob_constr(state), self.metric.inv
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.ConstrainedEuclideanMetricSystem.inv_gram"><code class="name flex">
@@ -4115,7 +4232,7 @@ def gram(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L618-L628" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L634-L644" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def inv_gram(self, state):
     &#34;&#34;&#34;Inverse of Gram matrix at current position.
@@ -4138,7 +4255,7 @@ def gram(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L630-L632" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L646-L648" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def log_det_sqrt_gram(self, state):
     &#34;&#34;&#34;Value of (half of) log-determinant of Gram matrix.&#34;&#34;&#34;
@@ -4164,7 +4281,7 @@ to <code>state.pos</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L634-L644" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L650-L660" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abstractmethod
 def grad_log_det_sqrt_gram(self, state):
@@ -4197,7 +4314,7 @@ def grad_log_det_sqrt_gram(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L646-L650" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L662-L666" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     if self.dens_wrt_hausdorff:
@@ -4224,14 +4341,13 @@ def grad_log_det_sqrt_gram(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L652-L657" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L668-L672" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     if self.dens_wrt_hausdorff:
         return self.grad_neg_log_dens(state)
     else:
-        return (self.grad_neg_log_dens(state) +
-                self.grad_log_det_sqrt_gram(state))</code></pre>
+        return self.grad_neg_log_dens(state) + self.grad_log_det_sqrt_gram(state)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><code class="name flex">
@@ -4256,7 +4372,7 @@ manifold to project in to the co-tangent space of.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L659-L676" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L674-L691" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def project_onto_cotangent_space(self, mom, state):
     &#34;&#34;&#34;Project a momentum on to the co-tangent space at a position.
@@ -4272,9 +4388,9 @@ manifold to project in to the co-tangent space of.</dd>
     &#34;&#34;&#34;
     # Use parenthesis to force right-to-left evaluation to avoid
     # matrix-matrix products
-    mom -= (self.jacob_constr(state).T @ (
-                self.inv_gram(state) @ (
-                    self.jacob_constr(state) @ (self.metric.inv @ mom))))
+    mom -= self.jacob_constr(state).T @ (
+        self.inv_gram(state) @ (self.jacob_constr(state) @ (self.metric.inv @ mom))
+    )
     return mom</code></pre>
 </details>
 </dd>
@@ -4297,7 +4413,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L678-L681" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L693-L696" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     mom = super().sample_momentum(state, rng)
@@ -4602,7 +4718,7 @@ value) of <code>constr</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L684-L834" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L699-L865" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     r&#34;&#34;&#34;Euclidean Hamiltonian system subject to a dense set of constraints.
@@ -4611,9 +4727,16 @@ value) of <code>constr</code> automatically.</p>
     systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 dens_wrt_hausdorff=True, grad_neg_log_dens=None,
-                 jacob_constr=None, mhp_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        dens_wrt_hausdorff=True,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+        mhp_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -4727,34 +4850,43 @@ value) of <code>constr</code> automatically.</p>
                 construct a function which calculates the MHP (and Jacobian and
                 value) of `constr` automatically.
         &#34;&#34;&#34;
-        super().__init__(neg_log_dens=neg_log_dens, constr=constr,
-                         metric=metric, dens_wrt_hausdorff=dens_wrt_hausdorff,
-                         grad_neg_log_dens=grad_neg_log_dens,
-                         jacob_constr=jacob_constr)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            constr=constr,
+            metric=metric,
+            dens_wrt_hausdorff=dens_wrt_hausdorff,
+            grad_neg_log_dens=grad_neg_log_dens,
+            jacob_constr=jacob_constr,
+        )
         if not dens_wrt_hausdorff:
             self._mhp_constr = autodiff_fallback(
-                mhp_constr, constr, &#39;mhp_jacobian_and_value&#39;, &#39;mhp_constr&#39;)
+                mhp_constr, constr, &#34;mhp_jacobian_and_value&#34;, &#34;mhp_constr&#34;
+            )
 
-    @cache_in_state_with_aux(&#39;pos&#39;, (&#39;jacob_constr&#39;, &#39;constr&#39;))
+    @cache_in_state_with_aux(&#34;pos&#34;, (&#34;jacob_constr&#34;, &#34;constr&#34;))
     def mhp_constr(self, state):
         return self._mhp_constr(state.pos)
 
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DensePositiveDefiniteMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+            )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+            )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def grad_log_det_sqrt_gram(self, state):
         # Evaluate MHP of constraint function before Jacobian as Jacobian value
         # will potentially be computed in &#39;forward&#39; pass and cached
         mhp_constr = self.mhp_constr(state)
         return mhp_constr(
-            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
+            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -4777,9 +4909,9 @@ value) of <code>constr</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L815-L817" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L842-L844" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state_with_aux(&#39;pos&#39;, (&#39;jacob_constr&#39;, &#39;constr&#39;))
+<pre><code class="python">@cache_in_state_with_aux(&#34;pos&#34;, (&#34;jacob_constr&#34;, &#34;constr&#34;))
 def mhp_constr(self, state):
     return self._mhp_constr(state.pos)</code></pre>
 </details>
@@ -4809,16 +4941,19 @@ the constraint Jacobian rows.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L819-L826" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L846-L856" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
-        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+    self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+):
     if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
         return matrices.DensePositiveDefiniteMatrix(
-            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+        )
     else:
         return matrices.DenseSquareMatrix(
-            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))</code></pre>
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+        )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><code class="name flex">
@@ -4840,15 +4975,16 @@ to <code>state.pos</code>.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L828-L834" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L858-L865" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def grad_log_det_sqrt_gram(self, state):
     # Evaluate MHP of constraint function before Jacobian as Jacobian value
     # will potentially be computed in &#39;forward&#39; pass and cached
     mhp_constr = self.mhp_constr(state)
     return mhp_constr(
-        self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv)</code></pre>
+        self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.DenseConstrainedEuclideanMetricSystem.constr"><code class="name flex">
@@ -5270,10 +5406,11 @@ value) of <code>constr</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L837-L954" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L868-L1001" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GaussianDenseConstrainedEuclideanMetricSystem(
-        GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem):
+    GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem
+):
     r&#34;&#34;&#34;Gaussian Euclidean Hamiltonian system st. a dense set of constraints.
 
     See `ConstrainedEuclideanMetricSystem` for more details about constrained
@@ -5281,8 +5418,15 @@ value) of <code>constr</code> automatically.</p>
     systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, constr, metric=None,
-                 grad_neg_log_dens=None, jacob_constr=None, mhp_constr=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        constr,
+        metric=None,
+        grad_neg_log_dens=None,
+        jacob_constr=None,
+        mhp_constr=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -5377,19 +5521,27 @@ value) of <code>constr</code> automatically.</p>
                 value) of `constr` automatically.
         &#34;&#34;&#34;
         DenseConstrainedEuclideanMetricSystem.__init__(
-            self, neg_log_dens=neg_log_dens, constr=constr, metric=metric,
+            self,
+            neg_log_dens=neg_log_dens,
+            constr=constr,
+            metric=metric,
             dens_wrt_hausdorff=False,
-            grad_neg_log_dens=grad_neg_log_dens, jacob_constr=jacob_constr,
-            mhp_constr=mhp_constr)
+            grad_neg_log_dens=grad_neg_log_dens,
+            jacob_constr=jacob_constr,
+            mhp_constr=mhp_constr,
+        )
 
     def jacob_constr_inner_product(
-            self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+    ):
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DenseSymmetricMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+            )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))</code></pre>
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+            )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -5427,16 +5579,19 @@ the constraint Jacobian rows.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L947-L954" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L991-L1001" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def jacob_constr_inner_product(
-        self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None):
+    self, jacob_constr_1, inner_product_matrix, jacob_constr_2=None
+):
     if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
         return matrices.DenseSymmetricMatrix(
-            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T))
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+        )
     else:
         return matrices.DenseSquareMatrix(
-            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T))</code></pre>
+            jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+        )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2"><code class="name flex">
@@ -5880,7 +6035,7 @@ of any additional keyword arguments to the initializer of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L957-L1159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1004-L1212" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RiemannianMetricSystem(System):
     r&#34;&#34;&#34;Riemannian Hamiltonian system with a position-dependent metric.
@@ -5921,9 +6076,15 @@ of any additional keyword arguments to the initializer of
          Society: Series B (Statistical Methodology), 73(2), pp.123-214.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_matrix_class, metric_func,
-                 vjp_metric_func=None, grad_neg_log_dens=None,
-                 metric_kwargs=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_matrix_class,
+        metric_func,
+        vjp_metric_func=None,
+        grad_neg_log_dens=None,
+        metric_kwargs=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -6000,11 +6161,12 @@ of any additional keyword arguments to the initializer of
         self._metric_matrix_class = metric_matrix_class
         self._metric_func = metric_func
         self._vjp_metric_func = autodiff_fallback(
-            vjp_metric_func, metric_func, &#39;vjp_and_value&#39;, &#39;vjp_metric_func&#39;)
+            vjp_metric_func, metric_func, &#34;vjp_and_value&#34;, &#34;vjp_metric_func&#34;
+        )
         self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
         super().__init__(neg_log_dens, grad_neg_log_dens)
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric_func(self, state):
         &#34;&#34;&#34;
         Function computing the parameter of the metric matrix representation.
@@ -6017,7 +6179,7 @@ of any additional keyword arguments to the initializer of
         &#34;&#34;&#34;
         return self._metric_func(state.pos)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, &#39;metric_func&#39;)
+    @cache_in_state_with_aux(&#34;pos&#34;, &#34;metric_func&#34;)
     def vjp_metric_func(self, state):
         &#34;&#34;&#34;
         Function constructing a vector-Jacobian-product for `metric_func`.
@@ -6040,7 +6202,7 @@ of any additional keyword arguments to the initializer of
         &#34;&#34;&#34;
         return self._vjp_metric_func(state.pos)
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric(self, state):
         &#34;&#34;&#34;
         Function computing the metric matrix representation.
@@ -6054,8 +6216,7 @@ of any additional keyword arguments to the initializer of
         Returns:
             mici.matrices.PositiveDefiniteMatrix: Metric matrix representation.
         &#34;&#34;&#34;
-        return self._metric_matrix_class(
-            self.metric_func(state), **self._metric_kwargs)
+        return self._metric_matrix_class(self.metric_func(state), **self._metric_kwargs)
 
     def h(self, state):
         return self.h1(state) + self.h2(state)
@@ -6067,8 +6228,9 @@ of any additional keyword arguments to the initializer of
         # Evaluate VJP of metric function before metric as metric value will
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
-        return (self.grad_neg_log_dens(state) +
-                0.5 * vjp_metric(self.metric(state).grad_log_abs_det))
+        return self.grad_neg_log_dens(state) + 0.5 * vjp_metric(
+            self.metric(state).grad_log_abs_det
+        )
 
     def h2(self, state):
         return 0.5 * state.mom @ self.metric(state).inv @ state.mom
@@ -6077,8 +6239,7 @@ of any additional keyword arguments to the initializer of
         # Evaluate VJP of metric function before metric as metric value will
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
-        return 0.5 * vjp_metric(
-            self.metric(state).grad_quadratic_form_inv(state.mom))
+        return 0.5 * vjp_metric(self.metric(state).grad_quadratic_form_inv(state.mom))
 
     def dh2_dmom(self, state):
         return self.metric(state).inv @ state.mom
@@ -6119,9 +6280,9 @@ of any additional keyword arguments to the initializer of
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1079-L1090" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1133-L1144" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def metric_func(self, state):
     &#34;&#34;&#34;
     Function computing the parameter of the metric matrix representation.
@@ -6158,9 +6319,9 @@ the array of partial derivatives of the function such that</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1092-L1113" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1146-L1167" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state_with_aux(&#39;pos&#39;, &#39;metric_func&#39;)
+<pre><code class="python">@cache_in_state_with_aux(&#34;pos&#34;, &#34;metric_func&#34;)
 def vjp_metric_func(self, state):
     &#34;&#34;&#34;
     Function constructing a vector-Jacobian-product for `metric_func`.
@@ -6201,9 +6362,9 @@ def vjp_metric_func(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1115-L1130" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1169-L1183" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def metric(self, state):
     &#34;&#34;&#34;
     Function computing the metric matrix representation.
@@ -6217,8 +6378,7 @@ def metric(self, state):
     Returns:
         mici.matrices.PositiveDefiniteMatrix: Metric matrix representation.
     &#34;&#34;&#34;
-    return self._metric_matrix_class(
-        self.metric_func(state), **self._metric_kwargs)</code></pre>
+    return self._metric_matrix_class(self.metric_func(state), **self._metric_kwargs)</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.h"><code class="name flex">
@@ -6239,7 +6399,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1132-L1133" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1185-L1186" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h(self, state):
     return self.h1(state) + self.h2(state)</code></pre>
@@ -6263,7 +6423,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1135-L1136" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1188-L1189" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h1(self, state):
     return self.neg_log_dens(state) + 0.5 * self.metric(state).log_abs_det</code></pre>
@@ -6287,14 +6447,15 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1138-L1143" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1191-L1197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh1_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
     # potentially be computed in forward pass and cached
     vjp_metric = self.vjp_metric_func(state)
-    return (self.grad_neg_log_dens(state) +
-            0.5 * vjp_metric(self.metric(state).grad_log_abs_det))</code></pre>
+    return self.grad_neg_log_dens(state) + 0.5 * vjp_metric(
+        self.metric(state).grad_log_abs_det
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.h2"><code class="name flex">
@@ -6315,7 +6476,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1145-L1146" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1199-L1200" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def h2(self, state):
     return 0.5 * state.mom @ self.metric(state).inv @ state.mom</code></pre>
@@ -6329,14 +6490,13 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1148-L1153" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1202-L1206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dpos(self, state):
     # Evaluate VJP of metric function before metric as metric value will
     # potentially be computed in forward pass and cached
     vjp_metric = self.vjp_metric_func(state)
-    return 0.5 * vjp_metric(
-        self.metric(state).grad_quadratic_form_inv(state.mom))</code></pre>
+    return 0.5 * vjp_metric(self.metric(state).grad_quadratic_form_inv(state.mom))</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.RiemannianMetricSystem.dh2_dmom"><code class="name flex">
@@ -6357,7 +6517,7 @@ def metric(self, state):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1155-L1156" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1208-L1209" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dh2_dmom(self, state):
     return self.metric(state).inv @ state.mom</code></pre>
@@ -6382,7 +6542,7 @@ condition on.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1158-L1159" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1211-L1212" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def sample_momentum(self, state, rng):
     return self.metric(state).sqrt @ rng.normal(size=state.pos.shape)</code></pre>
@@ -6537,7 +6697,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1162-L1233" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1215-L1296" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;Riemannian-metric system with scaled identity matrix representation.
@@ -6552,8 +6712,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_scalar_func,
-                 vjp_metric_scalar_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_scalar_func,
+        vjp_metric_scalar_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -6604,13 +6769,18 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
         &#34;&#34;&#34;
 
         super().__init__(
-            neg_log_dens, matrices.PositiveScaledIdentityMatrix,
-            metric_scalar_func, vjp_metric_scalar_func, grad_neg_log_dens)
+            neg_log_dens,
+            matrices.PositiveScaledIdentityMatrix,
+            metric_scalar_func,
+            vjp_metric_scalar_func,
+            grad_neg_log_dens,
+        )
 
-    @cache_in_state(&#39;pos&#39;)
+    @cache_in_state(&#34;pos&#34;)
     def metric(self, state):
         return self._metric_matrix_class(
-            self.metric_func(state), size=state.pos.shape[0])</code></pre>
+            self.metric_func(state), size=state.pos.shape[0]
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6637,12 +6807,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1230-L1233" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1292-L1296" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state(&#39;pos&#39;)
+<pre><code class="python">@cache_in_state(&#34;pos&#34;)
 def metric(self, state):
     return self._metric_matrix_class(
-        self.metric_func(state), size=state.pos.shape[0])</code></pre>
+        self.metric_func(state), size=state.pos.shape[0]
+    )</code></pre>
 </details>
 </dd>
 <dt id="mici.systems.ScalarRiemannianMetricSystem.metric_func"><code class="name flex">
@@ -6928,7 +7099,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1236-L1301" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1299-L1373" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;Riemannian-metric system with diagonal matrix representation.
@@ -6943,8 +7114,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_diagonal_func,
-                 vjp_metric_diagonal_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_diagonal_func,
+        vjp_metric_diagonal_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -6994,8 +7170,12 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.PositiveDiagonalMatrix, metric_diagonal_func,
-            vjp_metric_diagonal_func, grad_neg_log_dens)</code></pre>
+            neg_log_dens,
+            matrices.PositiveDiagonalMatrix,
+            metric_diagonal_func,
+            vjp_metric_diagonal_func,
+            grad_neg_log_dens,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7304,7 +7484,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1304-L1371" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1376-L1452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;Riemannian-metric system with Cholesky-factored matrix representation.
@@ -7319,8 +7499,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_chol_func,
-                 vjp_metric_chol_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self,
+        neg_log_dens,
+        metric_chol_func,
+        vjp_metric_chol_func=None,
+        grad_neg_log_dens=None,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -7371,9 +7556,13 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.TriangularFactoredPositiveDefiniteMatrix,
-            metric_chol_func, vjp_metric_chol_func, grad_neg_log_dens,
-            metric_kwargs={&#39;factor_is_lower&#39;: True})</code></pre>
+            neg_log_dens,
+            matrices.TriangularFactoredPositiveDefiniteMatrix,
+            metric_chol_func,
+            vjp_metric_chol_func,
+            grad_neg_log_dens,
+            metric_kwargs={&#34;factor_is_lower&#34;: True},
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -7681,7 +7870,7 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1374-L1439" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1455-L1525" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DenseRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;Riemannian-metric system with dense matrix representation.
@@ -7695,8 +7884,9 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
     about Riemannian-metric Hamiltonian systems.
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, metric_func,
-                 vjp_metric_func=None, grad_neg_log_dens=None):
+    def __init__(
+        self, neg_log_dens, metric_func, vjp_metric_func=None, grad_neg_log_dens=None
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -7747,8 +7937,12 @@ to construct the derivative of <code>neg_log_dens</code> automatically.</p>
                 to construct the derivative of `neg_log_dens` automatically.
         &#34;&#34;&#34;
         super().__init__(
-            neg_log_dens, matrices.DensePositiveDefiniteMatrix, metric_func,
-            vjp_metric_func, grad_neg_log_dens)</code></pre>
+            neg_log_dens,
+            matrices.DensePositiveDefiniteMatrix,
+            metric_func,
+            vjp_metric_func,
+            grad_neg_log_dens,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -8098,7 +8292,7 @@ close to the absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1442-L1606" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1528-L1704" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     &#34;&#34;&#34;SoftAbs Riemmanian metric Hamiltonian system.
@@ -8140,9 +8334,14 @@ close to the absolute function.</dd>
          (pp. 327-334).
     &#34;&#34;&#34;
 
-    def __init__(self, neg_log_dens, grad_neg_log_dens=None,
-                 hess_neg_log_dens=None, mtp_neg_log_dens=None,
-                 softabs_coeff=1.):
+    def __init__(
+        self,
+        neg_log_dens,
+        grad_neg_log_dens=None,
+        hess_neg_log_dens=None,
+        mtp_neg_log_dens=None,
+        softabs_coeff=1.0,
+    ):
         &#34;&#34;&#34;
         Args:
             neg_log_dens (Callable[[array], float]): Function which given a
@@ -8207,16 +8406,22 @@ close to the absolute function.</dd>
                 close to the absolute function.
         &#34;&#34;&#34;
         self._hess_neg_log_dens = autodiff_fallback(
-            hess_neg_log_dens, neg_log_dens, &#39;hessian_grad_and_value&#39;,
-            &#39;neg_log_dens&#39;)
+            hess_neg_log_dens, neg_log_dens, &#34;hessian_grad_and_value&#34;, &#34;neg_log_dens&#34;
+        )
         self._mtp_neg_log_dens = autodiff_fallback(
-            mtp_neg_log_dens, neg_log_dens, &#39;mtp_hessian_grad_and_value&#39;,
-            &#39;mtp_neg_log_dens&#39;)
-        super().__init__(neg_log_dens,
-                         matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
-                         self._hess_neg_log_dens, self._mtp_neg_log_dens,
-                         grad_neg_log_dens,
-                         metric_kwargs={&#39;softabs_coeff&#39;: softabs_coeff})
+            mtp_neg_log_dens,
+            neg_log_dens,
+            &#34;mtp_hessian_grad_and_value&#34;,
+            &#34;mtp_neg_log_dens&#34;,
+        )
+        super().__init__(
+            neg_log_dens,
+            matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
+            self._hess_neg_log_dens,
+            self._mtp_neg_log_dens,
+            grad_neg_log_dens,
+            metric_kwargs={&#34;softabs_coeff&#34;: softabs_coeff},
+        )
 
     def metric_func(self, state):
         return self.hess_neg_log_dens(state)
@@ -8224,7 +8429,7 @@ close to the absolute function.</dd>
     def vjp_metric_func(self, state):
         return self.mtp_neg_log_dens(state)
 
-    @cache_in_state_with_aux(&#39;pos&#39;, (&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+    @cache_in_state_with_aux(&#34;pos&#34;, (&#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;))
     def hess_neg_log_dens(self, state):
         &#34;&#34;&#34;Hessian of negative log density with respect to position.
 
@@ -8240,7 +8445,8 @@ close to the absolute function.</dd>
         return self._hess_neg_log_dens(state.pos)
 
     @cache_in_state_with_aux(
-        &#39;pos&#39;, (&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+        &#34;pos&#34;, (&#34;hess_neg_log_dens&#34;, &#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;)
+    )
     def mtp_neg_log_dens(self, state):
         &#34;&#34;&#34;Generate MTP of negative log density with respect to position.
 
@@ -8292,7 +8498,7 @@ close to the absolute function.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1560-L1561" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1657-L1658" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def metric_func(self, state):
     return self.hess_neg_log_dens(state)</code></pre>
@@ -8321,7 +8527,7 @@ the array of partial derivatives of the function such that</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1563-L1564" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1660-L1661" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def vjp_metric_func(self, state):
     return self.mtp_neg_log_dens(state)</code></pre>
@@ -8348,9 +8554,9 @@ the second derivative of <code>neg_log_dens(state)</code> with respect to
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1566-L1579" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1663-L1676" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">@cache_in_state_with_aux(&#39;pos&#39;, (&#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+<pre><code class="python">@cache_in_state_with_aux(&#34;pos&#34;, (&#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;))
 def hess_neg_log_dens(self, state):
     &#34;&#34;&#34;Hessian of negative log density with respect to position.
 
@@ -8396,10 +8602,11 @@ containing the computed MTP value.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/systems.py#L1581-L1606" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/systems.py#L1678-L1704" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@cache_in_state_with_aux(
-    &#39;pos&#39;, (&#39;hess_neg_log_dens&#39;, &#39;grad_neg_log_dens&#39;, &#39;neg_log_dens&#39;))
+    &#34;pos&#34;, (&#34;hess_neg_log_dens&#34;, &#34;grad_neg_log_dens&#34;, &#34;neg_log_dens&#34;)
+)
 def mtp_neg_log_dens(self, state):
     &#34;&#34;&#34;Generate MTP of negative log density with respect to position.
 

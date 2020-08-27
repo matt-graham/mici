@@ -72,7 +72,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L0-L196" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L0-L213" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Classes for controlling sampling of Markov chains split into stages.&#34;&#34;&#34;
 
@@ -80,7 +80,7 @@ import abc
 from collections import OrderedDict, namedtuple
 
 
-ChainStage = namedtuple(&#39;ChainStage&#39;, [&#39;n_iter&#39;, &#39;adapters&#39;, &#39;trace_funcs&#39;])
+ChainStage = namedtuple(&#34;ChainStage&#34;, [&#34;n_iter&#34;, &#34;adapters&#34;, &#34;trace_funcs&#34;])
 
 
 class Stager(abc.ABC):
@@ -148,10 +148,12 @@ class WarmUpStager(Stager):
     def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
         # adaptive warm up stage
         sampling_stages = OrderedDict(
-            {&#39;Adaptive warm up&#39;: ChainStage(n_warm_up_iter, adapters, [])})
+            {&#34;Adaptive warm up&#34;: ChainStage(n_warm_up_iter, adapters, [])}
+        )
         # main non-adaptive stage
-        sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-            n_main_iter, None, trace_funcs)
+        sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+            n_main_iter, None, trace_funcs
+        )
         return sampling_stages
 
 
@@ -190,8 +192,12 @@ class WindowedWarmUpStager(Stager):
     &#34;&#34;&#34;
 
     def __init__(
-            self, n_init_slow_window_iter=25, n_init_fast_stage_iter=75,
-            n_final_fast_stage_iter=50, slow_window_multiplier=2):
+        self,
+        n_init_slow_window_iter=25,
+        n_init_fast_stage_iter=75,
+        n_final_fast_stage_iter=50,
+        slow_window_multiplier=2,
+    ):
         &#34;&#34;&#34;
         Args:
             n_init_slow_window_iter (int): Number of iterations in the initial
@@ -225,35 +231,44 @@ class WindowedWarmUpStager(Stager):
     def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
         fast_adapters = {
             trans_key: [adapter for adapter in adapter_list if adapter.is_fast]
-            for trans_key, adapter_list in adapters.items()}
-        if (self.n_init_fast_stage_iter + self.n_init_slow_window_iter +
-                self.n_final_fast_stage_iter) &gt; n_warm_up_iter:
+            for trans_key, adapter_list in adapters.items()
+        }
+        if (
+            self.n_init_fast_stage_iter
+            + self.n_init_slow_window_iter
+            + self.n_final_fast_stage_iter
+        ) &gt; n_warm_up_iter:
             n_init_fast_stage_iter = int(0.15 * n_warm_up_iter)
             n_final_fast_stage_iter = int(0.1 * n_warm_up_iter)
             n_init_slow_window_iter = (
-                n_warm_up_iter - n_init_fast_stage_iter -
-                n_final_fast_stage_iter)
+                n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+            )
         else:
             n_init_slow_window_iter = self.n_init_slow_window_iter
             n_init_fast_stage_iter = self.n_init_fast_stage_iter
             n_final_fast_stage_iter = self.n_final_fast_stage_iter
         # initial fast adaptation stage
         sampling_stages = OrderedDict(
-            {&#39;Initial fast adaptive&#39;:
-                ChainStage(n_init_fast_stage_iter, fast_adapters, [])})
+            {
+                &#34;Initial fast adaptive&#34;: ChainStage(
+                    n_init_fast_stage_iter, fast_adapters, []
+                )
+            }
+        )
         # growing size slow adaptation windows
         n_window_iter = n_init_slow_window_iter
         slow_windows = []
         counter = 0
         n_slow_stage_iter = (
-            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
+            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+        )
         while counter &lt; n_slow_stage_iter:
             # check if iteration counter at end of next loop iteration will be
             # greater than total number of warm up iterations and if so set
             # number of iterations in current window to be equal to all
             # remaining warm up iterations
-            counter_next = (
-                counter + int((1 + self.slow_window_multiplier) * n_window_iter)
+            counter_next = counter + int(
+                (1 + self.slow_window_multiplier) * n_window_iter
             )
             if counter_next &gt; n_slow_stage_iter:
                 n_window_iter = n_slow_stage_iter - counter
@@ -262,14 +277,16 @@ class WindowedWarmUpStager(Stager):
             n_window_iter = int(self.slow_window_multiplier * n_window_iter)
         for i, n_iter in enumerate(slow_windows):
             sampling_stages[
-                f&#39;Slow adaptive ({i + 1}/{len(slow_windows)})&#39;] = ChainStage(
-                    n_iter, adapters, [])
+                f&#34;Slow adaptive ({i + 1}/{len(slow_windows)})&#34;
+            ] = ChainStage(n_iter, adapters, [])
         # final fast adaptation stage
-        sampling_stages[&#39;Final fast adaptive&#39;] = ChainStage(
-            n_final_fast_stage_iter, fast_adapters, [])
+        sampling_stages[&#34;Final fast adaptive&#34;] = ChainStage(
+            n_final_fast_stage_iter, fast_adapters, []
+        )
         # main non-adaptive stage
-        sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-            n_main_iter, None, trace_funcs)
+        sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+            n_main_iter, None, trace_funcs
+        )
         return sampling_stages</code></pre>
 </details>
 </section>
@@ -317,7 +334,7 @@ class WindowedWarmUpStager(Stager):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L10-L56" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L10-L56" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Stager(abc.ABC):
     &#34;&#34;&#34;Abstract chain iteration stager.&#34;&#34;&#34;
@@ -432,7 +449,7 @@ change the same parameter(s) the order will matter.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L13-L56" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L13-L56" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@abc.abstractmethod
 def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
@@ -499,7 +516,7 @@ iteration.</p></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L59-L79" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L59-L81" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class WarmUpStager(Stager):
     &#34;&#34;&#34;Chain iteration stager with a single adaptive warm up stage.
@@ -517,10 +534,12 @@ iteration.</p></section>
     def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
         # adaptive warm up stage
         sampling_stages = OrderedDict(
-            {&#39;Adaptive warm up&#39;: ChainStage(n_warm_up_iter, adapters, [])})
+            {&#34;Adaptive warm up&#34;: ChainStage(n_warm_up_iter, adapters, [])}
+        )
         # main non-adaptive stage
-        sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-            n_main_iter, None, trace_funcs)
+        sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+            n_main_iter, None, trace_funcs
+        )
         return sampling_stages</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -584,15 +603,17 @@ change the same parameter(s) the order will matter.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L72-L79" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L72-L81" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
     # adaptive warm up stage
     sampling_stages = OrderedDict(
-        {&#39;Adaptive warm up&#39;: ChainStage(n_warm_up_iter, adapters, [])})
+        {&#34;Adaptive warm up&#34;: ChainStage(n_warm_up_iter, adapters, [])}
+    )
     # main non-adaptive stage
-    sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-        n_main_iter, None, trace_funcs)
+    sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+        n_main_iter, None, trace_funcs
+    )
     return sampling_stages</code></pre>
 </details>
 </dd>
@@ -660,7 +681,7 @@ by. Defaults to 2 such that each window doubles in size.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L82-L197" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L84-L214" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class WindowedWarmUpStager(Stager):
     &#34;&#34;&#34;Chain iteration stager with a hierarchy of adaptive warm up stages.
@@ -697,8 +718,12 @@ by. Defaults to 2 such that each window doubles in size.</dd>
     &#34;&#34;&#34;
 
     def __init__(
-            self, n_init_slow_window_iter=25, n_init_fast_stage_iter=75,
-            n_final_fast_stage_iter=50, slow_window_multiplier=2):
+        self,
+        n_init_slow_window_iter=25,
+        n_init_fast_stage_iter=75,
+        n_final_fast_stage_iter=50,
+        slow_window_multiplier=2,
+    ):
         &#34;&#34;&#34;
         Args:
             n_init_slow_window_iter (int): Number of iterations in the initial
@@ -732,35 +757,44 @@ by. Defaults to 2 such that each window doubles in size.</dd>
     def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
         fast_adapters = {
             trans_key: [adapter for adapter in adapter_list if adapter.is_fast]
-            for trans_key, adapter_list in adapters.items()}
-        if (self.n_init_fast_stage_iter + self.n_init_slow_window_iter +
-                self.n_final_fast_stage_iter) &gt; n_warm_up_iter:
+            for trans_key, adapter_list in adapters.items()
+        }
+        if (
+            self.n_init_fast_stage_iter
+            + self.n_init_slow_window_iter
+            + self.n_final_fast_stage_iter
+        ) &gt; n_warm_up_iter:
             n_init_fast_stage_iter = int(0.15 * n_warm_up_iter)
             n_final_fast_stage_iter = int(0.1 * n_warm_up_iter)
             n_init_slow_window_iter = (
-                n_warm_up_iter - n_init_fast_stage_iter -
-                n_final_fast_stage_iter)
+                n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+            )
         else:
             n_init_slow_window_iter = self.n_init_slow_window_iter
             n_init_fast_stage_iter = self.n_init_fast_stage_iter
             n_final_fast_stage_iter = self.n_final_fast_stage_iter
         # initial fast adaptation stage
         sampling_stages = OrderedDict(
-            {&#39;Initial fast adaptive&#39;:
-                ChainStage(n_init_fast_stage_iter, fast_adapters, [])})
+            {
+                &#34;Initial fast adaptive&#34;: ChainStage(
+                    n_init_fast_stage_iter, fast_adapters, []
+                )
+            }
+        )
         # growing size slow adaptation windows
         n_window_iter = n_init_slow_window_iter
         slow_windows = []
         counter = 0
         n_slow_stage_iter = (
-            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
+            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+        )
         while counter &lt; n_slow_stage_iter:
             # check if iteration counter at end of next loop iteration will be
             # greater than total number of warm up iterations and if so set
             # number of iterations in current window to be equal to all
             # remaining warm up iterations
-            counter_next = (
-                counter + int((1 + self.slow_window_multiplier) * n_window_iter)
+            counter_next = counter + int(
+                (1 + self.slow_window_multiplier) * n_window_iter
             )
             if counter_next &gt; n_slow_stage_iter:
                 n_window_iter = n_slow_stage_iter - counter
@@ -769,14 +803,16 @@ by. Defaults to 2 such that each window doubles in size.</dd>
             n_window_iter = int(self.slow_window_multiplier * n_window_iter)
         for i, n_iter in enumerate(slow_windows):
             sampling_stages[
-                f&#39;Slow adaptive ({i + 1}/{len(slow_windows)})&#39;] = ChainStage(
-                    n_iter, adapters, [])
+                f&#34;Slow adaptive ({i + 1}/{len(slow_windows)})&#34;
+            ] = ChainStage(n_iter, adapters, [])
         # final fast adaptation stage
-        sampling_stages[&#39;Final fast adaptive&#39;] = ChainStage(
-            n_final_fast_stage_iter, fast_adapters, [])
+        sampling_stages[&#34;Final fast adaptive&#34;] = ChainStage(
+            n_final_fast_stage_iter, fast_adapters, []
+        )
         # main non-adaptive stage
-        sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-            n_main_iter, None, trace_funcs)
+        sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+            n_main_iter, None, trace_funcs
+        )
         return sampling_stages</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -840,40 +876,49 @@ change the same parameter(s) the order will matter.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/stagers.py#L149-L197" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/stagers.py#L155-L214" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def stages(self, n_warm_up_iter, n_main_iter, adapters, trace_funcs):
     fast_adapters = {
         trans_key: [adapter for adapter in adapter_list if adapter.is_fast]
-        for trans_key, adapter_list in adapters.items()}
-    if (self.n_init_fast_stage_iter + self.n_init_slow_window_iter +
-            self.n_final_fast_stage_iter) &gt; n_warm_up_iter:
+        for trans_key, adapter_list in adapters.items()
+    }
+    if (
+        self.n_init_fast_stage_iter
+        + self.n_init_slow_window_iter
+        + self.n_final_fast_stage_iter
+    ) &gt; n_warm_up_iter:
         n_init_fast_stage_iter = int(0.15 * n_warm_up_iter)
         n_final_fast_stage_iter = int(0.1 * n_warm_up_iter)
         n_init_slow_window_iter = (
-            n_warm_up_iter - n_init_fast_stage_iter -
-            n_final_fast_stage_iter)
+            n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+        )
     else:
         n_init_slow_window_iter = self.n_init_slow_window_iter
         n_init_fast_stage_iter = self.n_init_fast_stage_iter
         n_final_fast_stage_iter = self.n_final_fast_stage_iter
     # initial fast adaptation stage
     sampling_stages = OrderedDict(
-        {&#39;Initial fast adaptive&#39;:
-            ChainStage(n_init_fast_stage_iter, fast_adapters, [])})
+        {
+            &#34;Initial fast adaptive&#34;: ChainStage(
+                n_init_fast_stage_iter, fast_adapters, []
+            )
+        }
+    )
     # growing size slow adaptation windows
     n_window_iter = n_init_slow_window_iter
     slow_windows = []
     counter = 0
     n_slow_stage_iter = (
-        n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter)
+        n_warm_up_iter - n_init_fast_stage_iter - n_final_fast_stage_iter
+    )
     while counter &lt; n_slow_stage_iter:
         # check if iteration counter at end of next loop iteration will be
         # greater than total number of warm up iterations and if so set
         # number of iterations in current window to be equal to all
         # remaining warm up iterations
-        counter_next = (
-            counter + int((1 + self.slow_window_multiplier) * n_window_iter)
+        counter_next = counter + int(
+            (1 + self.slow_window_multiplier) * n_window_iter
         )
         if counter_next &gt; n_slow_stage_iter:
             n_window_iter = n_slow_stage_iter - counter
@@ -882,14 +927,16 @@ change the same parameter(s) the order will matter.</dd>
         n_window_iter = int(self.slow_window_multiplier * n_window_iter)
     for i, n_iter in enumerate(slow_windows):
         sampling_stages[
-            f&#39;Slow adaptive ({i + 1}/{len(slow_windows)})&#39;] = ChainStage(
-                n_iter, adapters, [])
+            f&#34;Slow adaptive ({i + 1}/{len(slow_windows)})&#34;
+        ] = ChainStage(n_iter, adapters, [])
     # final fast adaptation stage
-    sampling_stages[&#39;Final fast adaptive&#39;] = ChainStage(
-        n_final_fast_stage_iter, fast_adapters, [])
+    sampling_stages[&#34;Final fast adaptive&#34;] = ChainStage(
+        n_final_fast_stage_iter, fast_adapters, []
+    )
     # main non-adaptive stage
-    sampling_stages[&#39;Main non-adaptive&#39;] = ChainStage(
-        n_main_iter, None, trace_funcs)
+    sampling_stages[&#34;Main non-adaptive&#34;] = ChainStage(
+        n_main_iter, None, trace_funcs
+    )
     return sampling_stages</code></pre>
 </details>
 </dd>

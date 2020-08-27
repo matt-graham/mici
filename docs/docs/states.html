@@ -58,7 +58,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L0-L271" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/states.py#L0-L287" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Objects for recording state of a Markov chain and caching computations.&#34;&#34;&#34;
 
@@ -72,7 +72,7 @@ def _cache_key_func(system, method):
     &#34;&#34;&#34;Construct cache key for a given system and method pair.&#34;&#34;&#34;
     if not isinstance(method, str):
         method = method.__name__
-    return (f&#39;{type(system).__name__}.{method}&#39;, id(system))
+    return (f&#34;{type(system).__name__}.{method}&#34;, id(system))
 
 
 def cache_in_state(*depends_on):
@@ -96,6 +96,7 @@ def cache_in_state(*depends_on):
            when the value of any of these variables (attributes) of the state
            object changes.
     &#34;&#34;&#34;
+
     def cache_in_state_decorator(method):
         @wraps(method)
         def wrapper(self, state):
@@ -108,7 +109,9 @@ def cache_in_state(*depends_on):
                 if state._call_counts is not None:
                     state._call_counts[key] += 1
             return state._cache[key]
+
         return wrapper
+
     return cache_in_state_decorator
 
 
@@ -171,8 +174,7 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
         @wraps(method)
         def wrapper(self, state):
             prim_key = _cache_key_func(self, method)
-            keys = [prim_key] + [
-                _cache_key_func(self, a) for a in auxiliary_outputs]
+            keys = [prim_key] + [_cache_key_func(self, a) for a in auxiliary_outputs]
             for i, key in enumerate(keys):
                 if key not in state._cache:
                     for dep in depends_on:
@@ -187,6 +189,7 @@ def cache_in_state_with_aux(depends_on, auxiliary_outputs):
                 if state._call_counts is not None:
                     state._call_counts[prim_key] += 1
             return state._cache[prim_key]
+
         return wrapper
 
     return cache_in_state_with_aux_decorator
@@ -207,8 +210,15 @@ class ChainState(object):
     available).
     &#34;&#34;&#34;
 
-    def __init__(self, *, _call_counts=None, _read_only=False,
-                 _dependencies=None, _cache=None, **variables):
+    def __init__(
+        self,
+        *,
+        _call_counts=None,
+        _read_only=False,
+        _dependencies=None,
+        _cache=None,
+        **variables,
+    ):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor (with names not starting
@@ -257,28 +267,31 @@ class ChainState(object):
         &#34;&#34;&#34;
         # Set attributes by directly writing to __dict__ to ensure set before
         # any call to __setattr__
-        self.__dict__[&#39;_variables&#39;] = variables
+        self.__dict__[&#34;_variables&#34;] = variables
         if _dependencies is None:
             _dependencies = {name: set() for name in variables}
-        self.__dict__[&#39;_dependencies&#39;] = _dependencies
+        self.__dict__[&#34;_dependencies&#34;] = _dependencies
         if _cache is None:
             _cache = {}
-        self.__dict__[&#39;_cache&#39;] = _cache
-        self.__dict__[&#39;_call_counts&#39;] = (
-            Counter(_call_counts) if not isinstance(_call_counts, Counter)
-            else _call_counts)
-        self.__dict__[&#39;_read_only&#39;] = _read_only
+        self.__dict__[&#34;_cache&#34;] = _cache
+        self.__dict__[&#34;_call_counts&#34;] = (
+            Counter(_call_counts)
+            if not isinstance(_call_counts, Counter)
+            else _call_counts
+        )
+        self.__dict__[&#34;_read_only&#34;] = _read_only
 
     def __getattr__(self, name):
         if name in self._variables:
             return self._variables[name]
         else:
             raise AttributeError(
-                f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;)
+                f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;
+            )
 
     def __setattr__(self, name, value):
         if self._read_only:
-            raise ReadOnlyStateError(&#39;ChainState instance is read-only.&#39;)
+            raise ReadOnlyStateError(&#34;ChainState instance is read-only.&#34;)
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
@@ -302,15 +315,16 @@ class ChainState(object):
                 object&#39;s variables.
         &#34;&#34;&#34;
         return type(self)(
-            _dependencies=self._dependencies, _cache=self._cache.copy(),
-            _call_counts=self._call_counts, _read_only=read_only,
-            **{name: copy.copy(val) for name, val in self._variables.items()})
+            _dependencies=self._dependencies,
+            _cache=self._cache.copy(),
+            _call_counts=self._call_counts,
+            _read_only=read_only,
+            **{name: copy.copy(val) for name, val in self._variables.items()},
+        )
 
     def __str__(self):
         return (
-            &#39;(\n &#39; +
-            &#39;,\n &#39;.join([f&#39;{k}={v}&#39; for k, v in self._variables.items()]) +
-            &#39;)&#39;
+            &#34;(\n &#34; + &#34;,\n &#34;.join([f&#34;{k}={v}&#34; for k, v in self._variables.items()]) + &#34;)&#34;
         )
 
     def __repr__(self):
@@ -318,20 +332,21 @@ class ChainState(object):
 
     def __getstate__(self):
         return {
-            &#39;variables&#39;: self._variables,
-            &#39;dependencies&#39;: self._dependencies,
+            &#34;variables&#34;: self._variables,
+            &#34;dependencies&#34;: self._dependencies,
             # Don&#39;t pickle callable cached &#39;variables&#39; such as derivative
             # functions
-            &#39;cache&#39;: {k: v for k, v in self._cache.items() if not callable(v)},
-            &#39;call_counts&#39;: self._call_counts,
-            &#39;read_only&#39;: self._read_only}
+            &#34;cache&#34;: {k: v for k, v in self._cache.items() if not callable(v)},
+            &#34;call_counts&#34;: self._call_counts,
+            &#34;read_only&#34;: self._read_only,
+        }
 
     def __setstate__(self, state):
-        self.__dict__[&#39;_variables&#39;] = state[&#39;variables&#39;]
-        self.__dict__[&#39;_dependencies&#39;] = state[&#39;dependencies&#39;]
-        self.__dict__[&#39;_cache&#39;] = state[&#39;cache&#39;]
-        self.__dict__[&#39;_call_counts&#39;] = state[&#39;call_counts&#39;]
-        self.__dict__[&#39;_read_only&#39;] = state[&#39;read_only&#39;]</code></pre>
+        self.__dict__[&#34;_variables&#34;] = state[&#34;variables&#34;]
+        self.__dict__[&#34;_dependencies&#34;] = state[&#34;dependencies&#34;]
+        self.__dict__[&#34;_cache&#34;] = state[&#34;cache&#34;]
+        self.__dict__[&#34;_call_counts&#34;] = state[&#34;call_counts&#34;]
+        self.__dict__[&#34;_read_only&#34;] = state[&#34;read_only&#34;]</code></pre>
 </details>
 </section>
 <section>
@@ -367,7 +382,7 @@ object changes.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L16-L50" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/states.py#L16-L53" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state(*depends_on):
     &#34;&#34;&#34;Memoizing decorator for system methods.
@@ -390,6 +405,7 @@ object changes.</dd>
            when the value of any of these variables (attributes) of the state
            object changes.
     &#34;&#34;&#34;
+
     def cache_in_state_decorator(method):
         @wraps(method)
         def wrapper(self, state):
@@ -402,7 +418,9 @@ object changes.</dd>
                 if state._call_counts is not None:
                     state._call_counts[key] += 1
             return state._cache[key]
+
         return wrapper
+
     return cache_in_state_decorator</code></pre>
 </details>
 </dd>
@@ -461,7 +479,7 @@ tuple even when no auxiliary outputs are being returned.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L53-L130" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/states.py#L56-L133" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def cache_in_state_with_aux(depends_on, auxiliary_outputs):
     &#34;&#34;&#34;Memoizing decorator for system methods with possible auxiliary outputs.
@@ -522,8 +540,7 @@ tuple even when no auxiliary outputs are being returned.</dd>
         @wraps(method)
         def wrapper(self, state):
             prim_key = _cache_key_func(self, method)
-            keys = [prim_key] + [
-                _cache_key_func(self, a) for a in auxiliary_outputs]
+            keys = [prim_key] + [_cache_key_func(self, a) for a in auxiliary_outputs]
             for i, key in enumerate(keys):
                 if key not in state._cache:
                     for dep in depends_on:
@@ -538,6 +555,7 @@ tuple even when no auxiliary outputs are being returned.</dd>
                 if state._call_counts is not None:
                     state._call_counts[prim_key] += 1
             return state._cache[prim_key]
+
         return wrapper
 
     return cache_in_state_with_aux_decorator</code></pre>
@@ -614,7 +632,7 @@ a cached output is not available.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L133-L272" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/states.py#L136-L287" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ChainState(object):
     &#34;&#34;&#34;Markov chain state.
@@ -631,8 +649,15 @@ a cached output is not available.</dd>
     available).
     &#34;&#34;&#34;
 
-    def __init__(self, *, _call_counts=None, _read_only=False,
-                 _dependencies=None, _cache=None, **variables):
+    def __init__(
+        self,
+        *,
+        _call_counts=None,
+        _read_only=False,
+        _dependencies=None,
+        _cache=None,
+        **variables,
+    ):
         &#34;&#34;&#34;Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor (with names not starting
@@ -681,28 +706,31 @@ a cached output is not available.</dd>
         &#34;&#34;&#34;
         # Set attributes by directly writing to __dict__ to ensure set before
         # any call to __setattr__
-        self.__dict__[&#39;_variables&#39;] = variables
+        self.__dict__[&#34;_variables&#34;] = variables
         if _dependencies is None:
             _dependencies = {name: set() for name in variables}
-        self.__dict__[&#39;_dependencies&#39;] = _dependencies
+        self.__dict__[&#34;_dependencies&#34;] = _dependencies
         if _cache is None:
             _cache = {}
-        self.__dict__[&#39;_cache&#39;] = _cache
-        self.__dict__[&#39;_call_counts&#39;] = (
-            Counter(_call_counts) if not isinstance(_call_counts, Counter)
-            else _call_counts)
-        self.__dict__[&#39;_read_only&#39;] = _read_only
+        self.__dict__[&#34;_cache&#34;] = _cache
+        self.__dict__[&#34;_call_counts&#34;] = (
+            Counter(_call_counts)
+            if not isinstance(_call_counts, Counter)
+            else _call_counts
+        )
+        self.__dict__[&#34;_read_only&#34;] = _read_only
 
     def __getattr__(self, name):
         if name in self._variables:
             return self._variables[name]
         else:
             raise AttributeError(
-                f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;)
+                f&#34;&#39;{type(self).__name__}&#39; object has no attribute &#39;{name}&#39;&#34;
+            )
 
     def __setattr__(self, name, value):
         if self._read_only:
-            raise ReadOnlyStateError(&#39;ChainState instance is read-only.&#39;)
+            raise ReadOnlyStateError(&#34;ChainState instance is read-only.&#34;)
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
@@ -726,15 +754,16 @@ a cached output is not available.</dd>
                 object&#39;s variables.
         &#34;&#34;&#34;
         return type(self)(
-            _dependencies=self._dependencies, _cache=self._cache.copy(),
-            _call_counts=self._call_counts, _read_only=read_only,
-            **{name: copy.copy(val) for name, val in self._variables.items()})
+            _dependencies=self._dependencies,
+            _cache=self._cache.copy(),
+            _call_counts=self._call_counts,
+            _read_only=read_only,
+            **{name: copy.copy(val) for name, val in self._variables.items()},
+        )
 
     def __str__(self):
         return (
-            &#39;(\n &#39; +
-            &#39;,\n &#39;.join([f&#39;{k}={v}&#39; for k, v in self._variables.items()]) +
-            &#39;)&#39;
+            &#34;(\n &#34; + &#34;,\n &#34;.join([f&#34;{k}={v}&#34; for k, v in self._variables.items()]) + &#34;)&#34;
         )
 
     def __repr__(self):
@@ -742,20 +771,21 @@ a cached output is not available.</dd>
 
     def __getstate__(self):
         return {
-            &#39;variables&#39;: self._variables,
-            &#39;dependencies&#39;: self._dependencies,
+            &#34;variables&#34;: self._variables,
+            &#34;dependencies&#34;: self._dependencies,
             # Don&#39;t pickle callable cached &#39;variables&#39; such as derivative
             # functions
-            &#39;cache&#39;: {k: v for k, v in self._cache.items() if not callable(v)},
-            &#39;call_counts&#39;: self._call_counts,
-            &#39;read_only&#39;: self._read_only}
+            &#34;cache&#34;: {k: v for k, v in self._cache.items() if not callable(v)},
+            &#34;call_counts&#34;: self._call_counts,
+            &#34;read_only&#34;: self._read_only,
+        }
 
     def __setstate__(self, state):
-        self.__dict__[&#39;_variables&#39;] = state[&#39;variables&#39;]
-        self.__dict__[&#39;_dependencies&#39;] = state[&#39;dependencies&#39;]
-        self.__dict__[&#39;_cache&#39;] = state[&#39;cache&#39;]
-        self.__dict__[&#39;_call_counts&#39;] = state[&#39;call_counts&#39;]
-        self.__dict__[&#39;_read_only&#39;] = state[&#39;read_only&#39;]</code></pre>
+        self.__dict__[&#34;_variables&#34;] = state[&#34;variables&#34;]
+        self.__dict__[&#34;_dependencies&#34;] = state[&#34;dependencies&#34;]
+        self.__dict__[&#34;_cache&#34;] = state[&#34;cache&#34;]
+        self.__dict__[&#34;_call_counts&#34;] = state[&#34;call_counts&#34;]
+        self.__dict__[&#34;_read_only&#34;] = state[&#34;read_only&#34;]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -779,7 +809,7 @@ object's variables.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/states.py#L231-L245" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/states.py#L244-L261" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def copy(self, read_only=False):
     &#34;&#34;&#34;Create a deep copy of the state object.
@@ -793,9 +823,12 @@ object's variables.</dd>
             object&#39;s variables.
     &#34;&#34;&#34;
     return type(self)(
-        _dependencies=self._dependencies, _cache=self._cache.copy(),
-        _call_counts=self._call_counts, _read_only=read_only,
-        **{name: copy.copy(val) for name, val in self._variables.items()})</code></pre>
+        _dependencies=self._dependencies,
+        _cache=self._cache.copy(),
+        _call_counts=self._call_counts,
+        _read_only=read_only,
+        **{name: copy.copy(val) for name, val in self._variables.items()},
+    )</code></pre>
 </details>
 </dd>
 </dl>

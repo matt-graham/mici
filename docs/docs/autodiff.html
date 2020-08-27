@@ -47,7 +47,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/autodiff.py#L0-L58" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/autodiff.py#L0-L56" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Automatic differentation fallback for constructing derivative functions.&#34;&#34;&#34;
 
@@ -62,19 +62,19 @@ fully support all of the required derivative functions.
 &#34;&#34;&#34;
 DIFF_OPS = [
     # vector Jacobian product and value
-    &#39;vjp_and_value&#39;,
+    &#34;vjp_and_value&#34;,
     # gradient and value for scalar valued functions
-    &#39;grad_and_value&#39;,
+    &#34;grad_and_value&#34;,
     # Hessian matrix, gradient and value for scalar valued functions
-    &#39;hessian_grad_and_value&#39;,
+    &#34;hessian_grad_and_value&#34;,
     # matrix Tressian product, gradient and value for scalar valued
     # functions
-    &#39;mtp_hessian_grad_and_value&#39;,
+    &#34;mtp_hessian_grad_and_value&#34;,
     # Jacobian matrix and value for vector valued functions
-    &#39;jacobian_and_value&#39;,
+    &#34;jacobian_and_value&#34;,
     # matrix Hessian product, Jacobian matrix and value for vector valued
     # functions
-    &#39;mhp_jacobian_and_value&#39;,
+    &#34;mhp_jacobian_and_value&#34;,
 ]
 
 
@@ -101,13 +101,11 @@ def autodiff_fallback(diff_func, func, diff_op_name, name):
     if diff_func is not None:
         return diff_func
     elif diff_op_name not in DIFF_OPS:
-        raise ValueError(
-            f&#39;Differential operator {diff_op_name} is not defined.&#39;)
+        raise ValueError(f&#34;Differential operator {diff_op_name} is not defined.&#34;)
     elif autograd_wrapper.AUTOGRAD_AVAILABLE:
         return getattr(autograd_wrapper, diff_op_name)(func)
     elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
-        raise ValueError(
-            f&#39;Autograd not available therefore {name} must be provided.&#39;)</code></pre>
+        raise ValueError(f&#34;Autograd not available therefore {name} must be provided.&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -148,7 +146,7 @@ derivative of <code>func</code> by applying named differential operator.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/matt-graham/mici/blob/aaaad1aae5ce2d12baf95e59bc5ade40149c397b/mici/autodiff.py#L30-L59" class="git-link">Browse git</a>
+<a href="https://github.com/matt-graham/mici/blob/6015d755bbaec077b30609ff8d84b3126e7fcc7a/mici/autodiff.py#L30-L57" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def autodiff_fallback(diff_func, func, diff_op_name, name):
     &#34;&#34;&#34;Generate derivative function automatically if not provided.
@@ -173,13 +171,11 @@ derivative of <code>func</code> by applying named differential operator.</dd>
     if diff_func is not None:
         return diff_func
     elif diff_op_name not in DIFF_OPS:
-        raise ValueError(
-            f&#39;Differential operator {diff_op_name} is not defined.&#39;)
+        raise ValueError(f&#34;Differential operator {diff_op_name} is not defined.&#34;)
     elif autograd_wrapper.AUTOGRAD_AVAILABLE:
         return getattr(autograd_wrapper, diff_op_name)(func)
     elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
-        raise ValueError(
-            f&#39;Autograd not available therefore {name} must be provided.&#39;)</code></pre>
+        raise ValueError(f&#34;Autograd not available therefore {name} must be provided.&#34;)</code></pre>
 </details>
 </dd>
 </dl>
