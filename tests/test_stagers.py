@@ -5,10 +5,10 @@ N_MAIN_ITER = 1
 
 
 class StagerTests:
-
     def test_stages(self, stager, n_warm_up_iter, adapters):
         stages = stager.stages(
-            n_warm_up_iter, N_MAIN_ITER, adapters, [lambda state: None])
+            n_warm_up_iter, N_MAIN_ITER, adapters, [lambda state: None]
+        )
         assert isinstance(stages, dict)
         n_total_iter = 0
         for stage_key, stage in stages.items():
@@ -22,11 +22,11 @@ class StagerTests:
 
 
 class TestWarmUpStager(StagerTests):
-
     @pytest.fixture
     def adapters(self):
-        return {'integration_transition': [
-            mici.adapters.DualAveragingStepSizeAdapter()]}
+        return {
+            "integration_transition": [mici.adapters.DualAveragingStepSizeAdapter()]
+        }
 
     @pytest.fixture
     def stager(self):
@@ -38,12 +38,14 @@ class TestWarmUpStager(StagerTests):
 
 
 class TestWindowedWarmUpStager(StagerTests):
-
     @pytest.fixture
     def adapters(self):
-        return {'integration_transition': [
-            mici.adapters.DualAveragingStepSizeAdapter(),
-            mici.adapters.OnlineVarianceMetricAdapter()]}
+        return {
+            "integration_transition": [
+                mici.adapters.DualAveragingStepSizeAdapter(),
+                mici.adapters.OnlineVarianceMetricAdapter(),
+            ]
+        }
 
     @pytest.fixture(params=((), (125, 50, 25, 3)))
     def stager(self, request):

@@ -8,12 +8,14 @@ from timeit import default_timer as timer
 try:
     from IPython import get_ipython
     from IPython.display import display as ipython_display
+
     IPYTHON_AVAILABLE = True
 except ImportError:
     IPYTHON_AVAILABLE = False
 
 try:
     import google.colab
+
     ON_COLAB = True
 except ImportError:
     ON_COLAB = False
@@ -28,9 +30,9 @@ def _in_zmq_interactive_shell():
     else:
         try:
             shell = get_ipython().__class__.__name__
-            if shell == 'ZMQInteractiveShell':
+            if shell == "ZMQInteractiveShell":
                 return True
-            elif shell == 'TerminalInteractiveShell':
+            elif shell == "TerminalInteractiveShell":
                 return False
             else:
                 return False
@@ -62,9 +64,9 @@ def _format_time(total_seconds):
     total_mins, seconds = divmod(int(total_seconds), 60)
     hours, mins = divmod(total_mins, 60)
     if hours != 0:
-        return f'{hours:d}:{mins:02d}:{seconds:02d}'
+        return f"{hours:d}:{mins:02d}:{seconds:02d}"
     else:
-        return f'{mins:02d}:{seconds:02d}'
+        return f"{mins:02d}:{seconds:02d}"
 
 
 def _update_stats_running_means(iter, means, new_vals):
@@ -105,7 +107,7 @@ class BaseProgressBar(abc.ABC):
     @sequence.setter
     def sequence(self, value):
         if self._active:
-            raise RuntimeError('Cannot set sequence of active progress bar.')
+            raise RuntimeError("Cannot set sequence of active progress bar.")
         else:
             self._sequence = value
             self._n_iter = len(value)
@@ -160,11 +162,19 @@ class ProgressBar(BaseProgressBar):
     notebooks or interactive terminals.
     """
 
-    GLYPHS = ' ▏▎▍▌▋▊▉█'
+    GLYPHS = " ▏▎▍▌▋▊▉█"
     """Characters used to create string representation of progress bar."""
 
-    def __init__(self, sequence, description=None, position=(0, 1),
-                 displays=None, n_col=10, unit='it', min_refresh_time=0.25):
+    def __init__(
+        self,
+        sequence,
+        description=None,
+        position=(0, 1),
+        displays=None,
+        n_col=10,
+        unit="it",
+        min_refresh_time=0.25,
+    ):
         """
         Args:
             sequence (Sequence): Sequence to iterate over. Must be iterable AND
@@ -217,7 +227,7 @@ class ProgressBar(BaseProgressBar):
     @property
     def perc_complete(self):
         """Percentage complete formatted as string."""
-        return f'{int(self.prop_complete * 100):3d}%'
+        return f"{int(self.prop_complete * 100):3d}%"
 
     @property
     def elapsed_time(self):
@@ -228,21 +238,22 @@ class ProgressBar(BaseProgressBar):
     def iter_rate(self):
         """Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string."""
         if self.prop_complete == 0:
-            return '?'
+            return "?"
         else:
             mean_time = self._elapsed_time / self.counter
             return (
-                f'{mean_time:.2f}s/{self._unit}' if mean_time > 1
-                else f'{1/mean_time:.2f}{self._unit}/s')
+                f"{mean_time:.2f}s/{self._unit}"
+                if mean_time > 1
+                else f"{1/mean_time:.2f}{self._unit}/s"
+            )
 
     @property
     def est_remaining_time(self):
         """Estimated remaining time to completion formatted as string."""
         if self.prop_complete == 0:
-            return '?'
+            return "?"
         else:
-            return _format_time(
-                (1 / self.prop_complete - 1) * self._elapsed_time)
+            return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
 
     @property
     def n_block_filled(self):
@@ -276,51 +287,53 @@ class ProgressBar(BaseProgressBar):
     def partial_block(self):
         """Partial block character."""
         if self.prop_partial_block == 0:
-            return ''
+            return ""
         else:
             return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
 
     @property
     def progress_bar(self):
         """Progress bar string."""
-        return f'|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|'
+        return f"|{self.filled_blocks}{self.partial_block}{self.empty_blocks}|"
 
     @property
     def bar_color(self):
         """CSS color property for HTML progress bar."""
         if self.counter == self.n_iter:
-            return 'var(--jp-success-color1, #4caf50)'
+            return "var(--jp-success-color1, #4caf50)"
         elif self._active:
-            return 'var(--jp-brand-color1, #2196f3)'
+            return "var(--jp-brand-color1, #2196f3)"
         else:
-            return 'var(--jp-error-color1, #f44336)'
+            return "var(--jp-error-color1, #f44336)"
 
     @property
     def stats(self):
         """Comma-delimited string list of statistic key=value pairs."""
-        return ', '.join(f'{k}={v:#.3g}' for k, v in self._stats_dict.items())
+        return ", ".join(f"{k}={v:#.3g}" for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
         """Text to prefix progress bar with."""
         return (
             f'{self.description + ": "if self.description else ""}'
-            f'{self.perc_complete}')
+            f"{self.perc_complete}"
+        )
 
     @property
     def postfix(self):
         """Text to postfix progress bar with."""
         return (
-            f'{self.counter}/{self.n_iter} '
-            f'[{self.elapsed_time}<{self.est_remaining_time}, '
-            f'{self.iter_rate}'
-            f'{", " + self.stats if self._stats_dict else ""}]')
+            f"{self.counter}/{self.n_iter} "
+            f"[{self.elapsed_time}<{self.est_remaining_time}, "
+            f"{self.iter_rate}"
+            f'{", " + self.stats if self._stats_dict else ""}]'
+        )
 
     def reset(self):
         """Reset progress bar state."""
         self._counter = 0
         self._start_time = timer()
-        self._last_refresh_time = -float('inf')
+        self._last_refresh_time = -float("inf")
         self._stats_dict = {}
 
     def update(self, iter_count, iter_dict=None, refresh=True):
@@ -337,11 +350,13 @@ class ProgressBar(BaseProgressBar):
         else:
             self.counter = iter_count
             if iter_dict is not None:
-                _update_stats_running_means(
-                    iter_count, self._stats_dict, iter_dict)
+                _update_stats_running_means(iter_count, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
-        if refresh and iter_count == self.n_iter or (
-                timer() - self._last_refresh_time > self._min_refresh_time):
+        if (
+            refresh
+            and iter_count == self.n_iter
+            or (timer() - self._last_refresh_time > self._min_refresh_time)
+        ):
             self.refresh()
             self._last_refresh_time = timer()
 
@@ -351,13 +366,13 @@ class ProgressBar(BaseProgressBar):
             display.update(self)
 
     def __str__(self):
-        return f'{self.prefix}{self.progress_bar}{self.postfix}'
+        return f"{self.prefix}{self.progress_bar}{self.postfix}"
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        return f'''
+        return f"""
         <div style="line-height: 28px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;">
@@ -381,7 +396,7 @@ class ProgressBar(BaseProgressBar):
             {html.escape(self.postfix)}
           </div>
         </div>
-        '''
+        """
 
     def __enter__(self):
         super().__enter__()
@@ -400,8 +415,9 @@ class ProgressBar(BaseProgressBar):
 class LabelledSequenceProgressBar(BaseProgressBar):
     """Iterable object for tracking progress of a sequence of labelled tasks."""
 
-    def __init__(self, labelled_sequence, description=None, position=(0, 1),
-                 displays=None):
+    def __init__(
+        self, labelled_sequence, description=None, position=(0, 1), displays=None
+    ):
         """
         Args:
             labelled_sequence (OrderedDict[str, Any]): Ordered dictionary with
@@ -419,8 +435,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                 an `update` method which will be passed a single argument
                 corresponding to the current progress bar.
         """
-        super().__init__(
-            list(labelled_sequence.values()), description, position)
+        super().__init__(list(labelled_sequence.values()), description, position)
         self._labels = list(labelled_sequence.keys())
         self._description = description
         self._position = position
@@ -447,7 +462,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
     @property
     def stats(self):
         """Comma-delimited string list of statistic key=value pairs."""
-        return ', '.join(f'{k}={v:#.3g}' for k, v in self._stats_dict.items())
+        return ", ".join(f"{k}={v:#.3g}" for k, v in self._stats_dict.items())
 
     @property
     def prefix(self):
@@ -457,24 +472,27 @@ class LabelledSequenceProgressBar(BaseProgressBar):
     @property
     def postfix(self):
         """Text to postfix progress bar with."""
-        return f' [{self.stats}]' if self._stats_dict else ''
+        return f" [{self.stats}]" if self._stats_dict else ""
 
     @property
     def completed_labels(self):
         """Labels corresponding to completed iterations."""
         return [
-            f'{label} [{_format_time(time)}]' for label, time in
-            zip(self._labels[:self._counter], self._iter_times[:self._counter])]
+            f"{label} [{_format_time(time)}]"
+            for label, time in zip(
+                self._labels[: self._counter], self._iter_times[: self._counter]
+            )
+        ]
 
     @property
     def current_label(self):
         """Label corresponding to current iteration."""
-        return self._labels[self._counter] if self.counter < self.n_iter else ''
+        return self._labels[self._counter] if self.counter < self.n_iter else ""
 
     @property
     def unstarted_labels(self):
         """Labels corresponding to unstarted iterations."""
-        return self._labels[self._counter + 1:]
+        return self._labels[self._counter + 1 :]
 
     @property
     def progress_bar(self):
@@ -482,7 +500,7 @@ class LabelledSequenceProgressBar(BaseProgressBar):
         labels = self.completed_labels
         if self.counter < self.n_iter:
             labels.append(self.current_label)
-        return ' > '.join(labels)
+        return " > ".join(labels)
 
     def reset(self):
         """Reset progress bar state."""
@@ -518,13 +536,13 @@ class LabelledSequenceProgressBar(BaseProgressBar):
             display.update(self)
 
     def __str__(self):
-        return f'{self.prefix}{self.progress_bar}{self.postfix}'
+        return f"{self.prefix}{self.progress_bar}{self.postfix}"
 
     def __repr__(self):
         return self.__str__()
 
     def _repr_html_(self):
-        html_string = f'''
+        html_string = f"""
         <div style="line-height: 24px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
                     position: relative; margin: 2px;">
@@ -533,8 +551,8 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                         font-family: var(--jp-code-font-family, monospace);">
             {html.escape(self.prefix).replace(' ', '&nbsp;')}
           </label>
-        '''
-        template_string = '''
+        """
+        template_string = """
           <div style="position: relative; flex-grow: 1; align-self: stretch;
                       margin: 1px; padding: 0px; text-align: center;
                       height: initial; background-color: {background_color};
@@ -542,27 +560,30 @@ class LabelledSequenceProgressBar(BaseProgressBar):
                       border: 1px solid {foreground_color}; font-size: 90%;">
             {label}
           </div>
-        '''
+        """
         for label in self.completed_labels:
             html_string += template_string.format(
-                label=label, foreground_color='white',
-                background_color='#4caf50')
+                label=label, foreground_color="white", background_color="#4caf50"
+            )
         if self.counter != self.n_iter:
             html_string += template_string.format(
-                label=self.current_label, foreground_color='white',
-                background_color='#2196f3' if self._active else '#f44336')
+                label=self.current_label,
+                foreground_color="white",
+                background_color="#2196f3" if self._active else "#f44336",
+            )
         for label in self.unstarted_labels:
             html_string += template_string.format(
-                label=label, foreground_color='#aaa', background_color='white')
-        if self.postfix != '':
-            html_string += f'''
+                label=label, foreground_color="#aaa", background_color="white"
+            )
+        if self.postfix != "":
+            html_string += f"""
               <div style="margin-left: 8px; flex-shrink: 0;
                           font-family: var(--jp-code-font-family, monospace);
                           font-size: var(--jp-code-font-size, 13px);">
                 {html.escape(self.postfix)}
               </div>
-            '''
-        html_string += '</div>'
+            """
+        html_string += "</div>"
         return html_string
 
     def __enter__(self):
@@ -583,10 +604,10 @@ class LabelledSequenceProgressBar(BaseProgressBar):
 class FileDisplay:
     """Use file which supports ANSI escape sequences as an updatable display"""
 
-    CURSOR_UP = '\x1b[A'
+    CURSOR_UP = "\x1b[A"
     """ANSI escape sequence to move cursor up one line."""
 
-    CURSOR_DOWN = '\x1b[B'
+    CURSOR_DOWN = "\x1b[B"
     """ANSI escape sequence to move cursor down one line."""
 
     def __init__(self, position=(0, 1), file=None):
@@ -605,7 +626,7 @@ class FileDisplay:
         self._file = file if file is not None else sys.stdout
         self._last_string_length = 0
         if self._position[0] == 0:
-            self._file.write('\n' * self._position[1])
+            self._file.write("\n" * self._position[1])
         self._file.flush()
 
     def _move_line(self, offset):
@@ -615,7 +636,7 @@ class FileDisplay:
     def update(self, obj):
         self._move_line(self._position[0] - self._position[1])
         string = str(obj)
-        self._file.write(f'{string: <{self._last_string_length}}\r')
+        self._file.write(f"{string: <{self._last_string_length}}\r")
         self._last_string_length = len(string)
         self._move_line(self._position[1] - self._position[0])
         self._file.flush()

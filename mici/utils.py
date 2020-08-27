@@ -2,8 +2,10 @@
 
 import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
+
 try:
     import xxhash
+
     XXHASH_AVAILABLE = True
 except ImportError:
     XXHASH_AVAILABLE = False
@@ -26,19 +28,19 @@ def hash_array(array):
         h.update(array.view(np.byte).data)
         # Also update hash by array dtype, shape and strides to avoid clashes
         # between different views of same array
-        h.update(bytes(f'{array.dtype}{array.shape}{array.strides}', 'utf-8'))
+        h.update(bytes(f"{array.dtype}{array.shape}{array.strides}", "utf-8"))
         return h.intdigest()
     else:
         # Evaluate built-in hash function on *copy* of data as a byte sequence
         return hash(array.tobytes())
 
 
-LOG_2 = log(2.)
+LOG_2 = log(2.0)
 
 
 def log1p_exp(val):
     """Numerically stable implementation of `log(1 + exp(val))`."""
-    if val > 0.:
+    if val > 0.0:
         return val + log1p(exp(-val))
     else:
         return log1p(exp(val))
@@ -46,7 +48,7 @@ def log1p_exp(val):
 
 def log1m_exp(val):
     """Numerically stable implementation of `log(1 - exp(val))`."""
-    if val >= 0.:
+    if val >= 0.0:
         return nan
     elif val > LOG_2:
         return log(-expm1(val))
@@ -86,16 +88,16 @@ class LogRepFloat(object):
     def __init__(self, val=None, log_val=None):
         if log_val is None:
             if val is None:
-                raise ValueError('One of val or log_val must be specified.')
+                raise ValueError("One of val or log_val must be specified.")
             elif val > 0:
                 self.log_val = log(val)
-            elif val == 0.:
+            elif val == 0.0:
                 self.log_val = -inf
             else:
-                raise ValueError('val must be non-negative.')
+                raise ValueError("val must be non-negative.")
         else:
             if val is not None:
-                raise ValueError('Specify only one of val and log_val.')
+                raise ValueError("Specify only one of val and log_val.")
             else:
                 self.log_val = log_val
 
@@ -108,8 +110,7 @@ class LogRepFloat(object):
 
     def __add__(self, other):
         if isinstance(other, LogRepFloat):
-            return LogRepFloat(
-                log_val=log_sum_exp(self.log_val, other.log_val))
+            return LogRepFloat(log_val=log_sum_exp(self.log_val, other.log_val))
         else:
             return self.val + other
 
@@ -128,8 +129,7 @@ class LogRepFloat(object):
     def __sub__(self, other):
         if isinstance(other, LogRepFloat):
             if self.log_val >= other.log_val:
-                return LogRepFloat(
-                    log_val=log_diff_exp(self.log_val, other.log_val))
+                return LogRepFloat(log_val=log_diff_exp(self.log_val, other.log_val))
             else:
                 return self.val - other.val
         else:
@@ -199,4 +199,5 @@ class LogRepFloat(object):
         return str(self.val)
 
     def __repr__(self):
-        return 'LogRepFloat(val={0})'.format(self.val)
+        return "LogRepFloat(val={0})".format(self.val)
+

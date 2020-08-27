@@ -15,8 +15,12 @@ import numpy as np
 from numpy.random import default_rng
 import mici.transitions as trans
 from mici.states import ChainState
-from mici.progressbars import (ProgressBar, LabelledSequenceProgressBar,
-                               DummyProgressBar, _ProxyProgressBar)
+from mici.progressbars import (
+    ProgressBar,
+    LabelledSequenceProgressBar,
+    DummyProgressBar,
+    _ProxyProgressBar,
+)
 from mici.errors import AdaptationError
 from mici.adapters import DualAveragingStepSizeAdapter
 from mici.stagers import WarmUpStager, WindowedWarmUpStager
@@ -26,14 +30,17 @@ from mici.stagers import WarmUpStager, WindowedWarmUpStager
 try:
     from multiprocess import Pool
     from multiprocess.managers import SyncManager
+
     MULTIPROCESS_AVAILABLE = True
 except ImportError:
     from multiprocessing import Pool
     from multiprocessing.managers import SyncManager
+
     MULTIPROCESS_AVAILABLE = False
 
 try:
     from threadpoolctl import threadpool_limits
+
     THREADPOOLCTL_AVAILABLE = True
 except ImportError:
     THREADPOOLCTL_AVAILABLE = False
@@ -81,13 +88,13 @@ def _get_valid_filename(string):
     Returns:
         str: Generated file name.
     """
-    return ''.join(c for c in string if (c.isalnum() or c in '._- '))
+    return "".join(c for c in string if (c.isalnum() or c in "._- "))
 
 
 def _generate_memmap_filename(dir_path, prefix, key, index):
     """Generate a new memory-map filename."""
     key_str = _get_valid_filename(str(key))
-    return os.path.join(dir_path, f'{prefix}_{index}_{key_str}.npy')
+    return os.path.join(dir_path, f"{prefix}_{index}_{key_str}.npy")
 
 
 def _open_new_memmap(file_path, shape, default_val, dtype):
@@ -105,8 +112,7 @@ def _open_new_memmap(file_path, shape, default_val, dtype):
     """
     if isinstance(shape, int):
         shape = (shape,)
-    memmap = np.lib.format.open_memmap(
-        file_path, dtype=dtype, mode='w+', shape=shape)
+    memmap = np.lib.format.open_memmap(file_path, dtype=dtype, mode="w+", shape=shape)
     memmap[:] = default_val
     return memmap
 
@@ -139,16 +145,15 @@ def _check_and_process_init_state(state, transitions):
         for var_key in transition.state_variables:
             if var_key not in state:
                 raise ValueError(
-                    f'init_state does contain have {var_key} value required by'
-                    f' {trans_key} transition.')
+                    f"init_state does contain have {var_key} value required by"
+                    f" {trans_key} transition."
+                )
     if not isinstance(state, (ChainState, dict)):
-        raise TypeError(
-            'init_state should be a dictionary or ChainState.')
+        raise TypeError("init_state should be a dictionary or ChainState.")
     return ChainState(**state) if isinstance(state, dict) else state
 
 
-def _init_chain_stats(transitions, n_iter, memmap_enabled, memmap_path,
-                      chain_index):
+def _init_chain_stats(transitions, n_iter, memmap_enabled, memmap_path, chain_index):
     """Initialize dictionary of per-transition chain statistics array dicts."""
     chain_stats = {}
     for trans_key, transition in transitions.items():
@@ -157,17 +162,19 @@ def _init_chain_stats(transitions, n_iter, memmap_enabled, memmap_path,
             for key, (dtype, val) in transition.statistic_types.items():
                 if memmap_enabled:
                     filename = _generate_memmap_filename(
-                        memmap_path, 'stats', f'{trans_key}_{key}',
-                        chain_index)
+                        memmap_path, "stats", f"{trans_key}_{key}", chain_index
+                    )
                     chain_stats[trans_key][key] = _open_new_memmap(
-                        filename, n_iter, val, dtype)
+                        filename, n_iter, val, dtype
+                    )
                 else:
                     chain_stats[trans_key][key] = np.full(n_iter, val, dtype)
     return chain_stats
 
 
-def _init_traces(trace_funcs, init_state, n_iter, memmap_enabled,
-                 memmap_path, chain_index):
+def _init_traces(
+    trace_funcs, init_state, n_iter, memmap_enabled, memmap_path, chain_index
+):
     """Initialize dictionary of chain trace arrays."""
     traces = {}
     for trace_func in trace_funcs:
@@ -176,9 +183,11 @@ def _init_traces(trace_funcs, init_state, n_iter, memmap_enabled,
             init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
             if memmap_enabled:
                 filename = _generate_memmap_filename(
-                    memmap_path, 'trace', key, chain_index)
+                    memmap_path, "trace", key, chain_index
+                )
                 traces[key] = _open_new_memmap(
-                    filename, (n_iter,) + val.shape, init, val.dtype)
+                    filename, (n_iter,) + val.shape, init, val.dtype
+                )
             else:
                 traces[key] = np.full((n_iter,) + val.shape, init, val.dtype)
     return traces
@@ -209,52 +218,57 @@ def _get_obj_byte_size(obj, seen=None):
     # Important mark as seen *before* entering recursion to gracefully handle
     # self-referential objects
     seen.add(obj_id)
-    if hasattr(obj, '__dict__'):
+    if hasattr(obj, "__dict__"):
         for cls in obj.__class__.__mro__:
-            if '__dict__' in cls.__dict__:
-                d = cls.__dict__['__dict__']
-                if (inspect.isgetsetdescriptor(d) or
-                        inspect.ismemberdescriptor(d)):
+            if "__dict__" in cls.__dict__:
+                d = cls.__dict__["__dict__"]
+                if inspect.isgetsetdescriptor(d) or inspect.ismemberdescriptor(d):
                     size += _get_obj_byte_size(obj.__dict__, seen)
                 break
     if isinstance(obj, dict):
         size += sum((_get_obj_byte_size(v, seen) for v in obj.values()))
         size += sum((_get_obj_byte_size(k, seen) for k in obj.keys()))
-    elif (hasattr(obj, '__iter__') and not
-            isinstance(obj, (str, bytes, bytearray))):
+    elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes, bytearray)):
         size += sum((_get_obj_byte_size(i, seen) for i in obj))
 
-    if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
-        size += sum(_get_obj_byte_size(getattr(obj, s), seen)
-                    for s in obj.__slots__ if hasattr(obj, s))
+    if hasattr(obj, "__slots__"):  # can have __slots__ with __dict__
+        size += sum(
+            _get_obj_byte_size(getattr(obj, s), seen)
+            for s in obj.__slots__
+            if hasattr(obj, s)
+        )
 
     return size
 
 
 def _check_chain_data_size(traces, chain_stats):
     """Check that byte size of sample chain calls below pickle limit."""
-    total_return_nbytes = (
-        _get_obj_byte_size(traces) + _get_obj_byte_size(chain_stats))
+    total_return_nbytes = _get_obj_byte_size(traces) + _get_obj_byte_size(chain_stats)
     # Check if total number of bytes to be returned exceeds pickle limit
-    if total_return_nbytes > 2**31 - 1:
+    if total_return_nbytes > 2 ** 31 - 1:
         raise RuntimeError(
-            f'Total number of bytes allocated for chain data to be returned '
-            f'({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit for '
-            f'returning results of a process (2 GiB). Try rerunning with '
-            f' memory-mapping enabled (`memmap_enabled=True`).')
+            f"Total number of bytes allocated for chain data to be returned "
+            f"({total_return_nbytes / 2**30:.2f} GiB) exceeds size limit for "
+            f"returning results of a process (2 GiB). Try rerunning with "
+            f" memory-mapping enabled (`memmap_enabled=True`)."
+        )
 
 
 def _construct_chain_iterators(
-        n_iter, chain_iterator_class, n_chain=None, position_offset=0):
+    n_iter, chain_iterator_class, n_chain=None, position_offset=0
+):
     """Set up chain iterator progress bar object(s)."""
     if n_chain is None:
-        return chain_iterator_class(range(n_iter), description='Chain 1/1')
+        return chain_iterator_class(range(n_iter), description="Chain 1/1")
     else:
         return [
             chain_iterator_class(
-                range(n_iter), description=f'Chain {c+1}/{n_chain}',
-                position=(c + position_offset, n_chain + position_offset))
-            for c in range(n_chain)]
+                range(n_iter),
+                description=f"Chain {c+1}/{n_chain}",
+                position=(c + position_offset, n_chain + position_offset),
+            )
+            for c in range(n_chain)
+        ]
 
 
 def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
@@ -262,30 +276,33 @@ def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
     if trans_stats is not None:
         if sample_index == 0 and trans_key not in chain_stats:
             raise KeyError(
-                f'Transition {trans_key} returned statistics but has no '
-                f'statistic_types attribute.')
+                f"Transition {trans_key} returned statistics but has no "
+                f"statistic_types attribute."
+            )
         for key, val in trans_stats.items():
             if sample_index == 0 and key not in chain_stats[trans_key]:
                 raise KeyError(
-                    f'Transition {trans_key} returned {key} statistic but it '
-                    f'is not included in its statistic_types attribute.')
+                    f"Transition {trans_key} returned {key} statistic but it "
+                    f"is not included in its statistic_types attribute."
+                )
             chain_stats[trans_key][key][sample_index] = val
 
 
-def _update_monitor_stats(
-        sample_index, chain_stats, monitor_stats, monitor_dict):
+def _update_monitor_stats(sample_index, chain_stats, monitor_stats, monitor_dict):
     """Update dictionary of per-iteration monitored statistics."""
     for (trans_key, stats_key) in monitor_stats:
-        if sample_index == 0 and not (trans_key in chain_stats and
-                                      stats_key in chain_stats[trans_key]):
+        if sample_index == 0 and not (
+            trans_key in chain_stats and stats_key in chain_stats[trans_key]
+        ):
             raise KeyError(
-                f'Statistics key pair {(trans_key, stats_key)} to be monitored'
-                'is not present in chain statistics returned by transitions.')
+                f"Statistics key pair {(trans_key, stats_key)} to be monitored"
+                "is not present in chain statistics returned by transitions."
+            )
         val = chain_stats[trans_key][stats_key][sample_index]
         if stats_key not in monitor_dict:
             monitor_dict[stats_key] = val
         else:
-            monitor_dict[f'{trans_key}.{stats_key}'] = val
+            monitor_dict[f"{trans_key}.{stats_key}"] = val
 
 
 def _flush_memmap_chain_data(traces, chain_stats):
@@ -316,13 +333,22 @@ def _truncate_chain_data(sample_index, traces, chain_stats):
         traces[key] = _try_resize_dim_0_inplace(traces[key], sample_index)
     for trans_stats in chain_stats.values():
         for key in trans_stats:
-            trans_stats[key] = _try_resize_dim_0_inplace(
-                trans_stats[key], sample_index)
+            trans_stats[key] = _try_resize_dim_0_inplace(trans_stats[key], sample_index)
 
 
-def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
-                  chain_index=0, parallel_chains=False, memmap_enabled=False,
-                  memmap_path=None, monitor_stats=None, adapters=None):
+def _sample_chain(
+    init_state,
+    chain_iterator,
+    rng,
+    transitions,
+    trace_funcs,
+    chain_index=0,
+    parallel_chains=False,
+    memmap_enabled=False,
+    memmap_path=None,
+    monitor_stats=None,
+    adapters=None,
+):
     """Sample a chain by iteratively appyling a sequence of transition kernels.
 
     Args:
@@ -406,9 +432,11 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
     if memmap_enabled and memmap_path is None:
         memmap_path = tempfile.mkdtemp()
     chain_stats = _init_chain_stats(
-        transitions, n_iter, memmap_enabled, memmap_path, chain_index)
+        transitions, n_iter, memmap_enabled, memmap_path, chain_index
+    )
     traces = _init_traces(
-        trace_funcs, state, n_iter, memmap_enabled, memmap_path, chain_index)
+        trace_funcs, state, n_iter, memmap_enabled, memmap_path, chain_index
+    )
     adapter_states = {}
     try:
         if adapters is not None:
@@ -416,11 +444,13 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                 adapter_states[trans_key] = []
                 for adapter in adapter_list:
                     adapter_states[trans_key].append(
-                        adapter.initialize(state, transitions[trans_key]))
+                        adapter.initialize(state, transitions[trans_key])
+                    )
     except AdaptationError as exception:
         logger.error(
-            f'Initialisation of {type(adapter).__name__} for chain '
-            f'{chain_index + 1} failed: {exception}')
+            f"Initialisation of {type(adapter).__name__} for chain "
+            f"{chain_index + 1} failed: {exception}"
+        )
         return state, traces, chain_stats, adapter_states, exception
     try:
         sample_index = 0
@@ -432,23 +462,28 @@ def _sample_chain(init_state, chain_iterator, rng, transitions, trace_funcs,
                     state, trans_stats = transition.sample(state, rng)
                     if adapters is not None and trans_key in adapters:
                         for adapter, adapter_state in zip(
-                                adapters[trans_key], adapter_states[trans_key]):
+                            adapters[trans_key], adapter_states[trans_key]
+                        ):
                             adapter.update(
-                                adapter_state, state, trans_stats, transition)
+                                adapter_state, state, trans_stats, transition
+                            )
                     _update_chain_stats(
-                        sample_index, chain_stats, trans_key, trans_stats)
+                        sample_index, chain_stats, trans_key, trans_stats
+                    )
                 for trace_func in trace_funcs:
                     for key, val in trace_func(state).items():
                         traces[key][sample_index] = val
                 if monitor_stats is not None:
                     _update_monitor_stats(
-                        sample_index, chain_stats, monitor_stats, monitor_dict)
+                        sample_index, chain_stats, monitor_stats, monitor_dict
+                    )
     except KeyboardInterrupt as e:
         exception = e
         logger.error(
-            f'Sampling manually interrupted for chain {chain_index + 1} at'
-            f' iteration {sample_index}. Arrays containing chain traces and'
-            f' statistics computed before interruption will be returned.')
+            f"Sampling manually interrupted for chain {chain_index + 1} at"
+            f" iteration {sample_index}. Arrays containing chain traces and"
+            f" statistics computed before interruption will be returned."
+        )
         # Sampling interrupted therefore truncate returned arrays unless using
         # memory mapping with parallel chains as will only return file paths
         if not (parallel_chains and memmap_enabled):
@@ -474,8 +509,9 @@ def _collate_chain_outputs(chain_outputs):
     traces_stack = {}
     stats_stack = {}
     adapt_states_stack = {}
-    for chain_index, (final_state, traces,
-                      stats, adapt_states) in enumerate(chain_outputs):
+    for chain_index, (final_state, traces, stats, adapt_states) in enumerate(
+        chain_outputs
+    ):
         final_states_stack.append(final_state)
         for key, val in traces.items():
             # if value is string => file path to memory mapped array
@@ -513,20 +549,19 @@ def _get_per_chain_rngs(base_rng, n_chain):
     generator has a `_seed_seq` attribute this is used to spawn a sequence off
     generators.
     """
-    if hasattr(base_rng, 'bit_generator'):
+    if hasattr(base_rng, "bit_generator"):
         bit_generator = base_rng.bit_generator
-    elif hasattr(base_rng, '_bit_generator'):
+    elif hasattr(base_rng, "_bit_generator"):
         bit_generator = base_rng._bit_generator
     else:
         bit_generator = None
-    if bit_generator is not None and hasattr(bit_generator, 'jumped'):
+    if bit_generator is not None and hasattr(bit_generator, "jumped"):
         return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
-    elif bit_generator is not None and hasattr(bit_generator, '_seed_seq'):
+    elif bit_generator is not None and hasattr(bit_generator, "_seed_seq"):
         seed_sequence = bit_generator._seed_seq
         return [default_rng(seed) for seed in seed_sequence.spawn(n_chain)]
     else:
-        raise ValueError(
-            f'Unsupported random number generator type {type(base_rng)}.')
+        raise ValueError(f"Unsupported random number generator type {type(base_rng)}.")
 
 
 def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
@@ -534,10 +569,16 @@ def _sample_chains_sequential(init_states, rngs, chain_iterators, **kwargs):
     chain_outputs = []
     exception = None
     for chain_index, (init_state, rng, chain_iterator) in enumerate(
-            zip(init_states, rngs, chain_iterators)):
+        zip(init_states, rngs, chain_iterators)
+    ):
         *outputs, exception = _sample_chain(
-            chain_iterator=chain_iterator, init_state=init_state, rng=rng,
-            chain_index=chain_index, parallel_chains=False, **kwargs)
+            chain_iterator=chain_iterator,
+            init_state=init_state,
+            rng=rng,
+            chain_index=chain_index,
+            parallel_chains=False,
+            **kwargs,
+        )
         # Returned exception being AdaptationError indicates chain terminated
         # due to adapter initialisation failing therefore do not store returned
         # chain outputs
@@ -558,17 +599,24 @@ def _sample_chains_worker(chain_queue, iter_queue):
     chain_outputs = []
     while not chain_queue.empty():
         try:
-            chain_index, init_state, rng, n_iter, kwargs = chain_queue.get(
-                block=False)
-            max_threads = kwargs.pop('max_threads_per_process', None)
-            context = (threadpool_limits(limits=max_threads)
-                       if THREADPOOLCTL_AVAILABLE else nullcontext())
+            chain_index, init_state, rng, n_iter, kwargs = chain_queue.get(block=False)
+            max_threads = kwargs.pop("max_threads_per_process", None)
+            context = (
+                threadpool_limits(limits=max_threads)
+                if THREADPOOLCTL_AVAILABLE
+                else nullcontext()
+            )
             with context:
                 *outputs, exception = _sample_chain(
-                    init_state=init_state, rng=rng, chain_index=chain_index,
+                    init_state=init_state,
+                    rng=rng,
+                    chain_index=chain_index,
                     chain_iterator=_ProxyProgressBar(
-                        range(n_iter), chain_index, iter_queue),
-                    parallel_chains=True, **kwargs)
+                        range(n_iter), chain_index, iter_queue
+                    ),
+                    parallel_chains=True,
+                    **kwargs,
+                )
             # Returned exception being AdaptationError indicates chain
             # terminated due to adapter initialisation failing therefore do not
             # store returned chain outputs and put None value on iteration queue
@@ -586,8 +634,9 @@ def _sample_chains_worker(chain_queue, iter_queue):
             pass
         except Exception as exception:
             # Log exception here so that correct traceback is logged
-            logger.error('Exception encountered in chain worker process:',
-                         exc_info=exception)
+            logger.error(
+                "Exception encountered in chain worker process:", exc_info=exception
+            )
             # Put exception on iteration queue to be reraised in parent process
             iter_queue.put(exception)
     return chain_outputs
@@ -596,13 +645,11 @@ def _sample_chains_worker(chain_queue, iter_queue):
 def _finalize_adapters(adapter_states, adapters, transitions):
     """Finalize adapter updates to transitions based on final adapter states."""
     for trans_key, adapter_state_list in adapter_states.items():
-        for adapter_state, adapter in zip(
-                adapter_state_list, adapters[trans_key]):
+        for adapter_state, adapter in zip(adapter_state_list, adapters[trans_key]):
             adapter.finalize(adapter_state, transitions[trans_key])
 
 
-def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
-                            **kwargs):
+def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process, **kwargs):
     """Sample multiple chains in parallel over multiple processes."""
     n_iters = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
@@ -616,13 +663,15 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
             # from on initialising each chain
             chain_queue = manager.Queue()
             for c, (init_state, rng, n_iter) in enumerate(
-                    zip(init_states, rngs, n_iters)):
+                zip(init_states, rngs, n_iters)
+            ):
                 chain_queue.put((c, init_state, rng, n_iter, kwargs))
             # Start n_process worker processes which each have access to the
             # shared queues, returning results asynchronously
             results = pool.starmap_async(
                 _sample_chains_worker,
-                [(chain_queue, iter_queue) for p in range(n_process)])
+                [(chain_queue, iter_queue) for p in range(n_process)],
+            )
             # Start loop to use chain progress updates outputted to iter_queue
             # by worker processes to update progress bars, using an ExitStack
             # to ensure all progress bars are context managed so that they
@@ -653,7 +702,7 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                     # Re raise any other exception passed from worker processes
                     elif isinstance(iter_queue_item, Exception):
                         raise RuntimeError(
-                            'Unhandled exception in chain worker process.'
+                            "Unhandled exception in chain worker process."
                         ) from iter_queue_item
                     else:
                         # Otherwise unpack and update progress bar
@@ -663,20 +712,21 @@ def _sample_chains_parallel(init_states, rngs, chain_iterators, n_process,
                             chains_completed += 1
         except (PicklingError, AttributeError) as e:
             if not MULTIPROCESS_AVAILABLE and (
-                    isinstance(e, PicklingError) or 'pickle' in str(e)):
+                isinstance(e, PicklingError) or "pickle" in str(e)
+            ):
                 raise RuntimeError(
-                    'Error encountered while trying to run chains on multiple'
-                    'processes in parallel. The inbuilt multiprocessing module'
-                    ' uses pickle to communicate between processes and pickle '
-                    'does support pickling anonymous or nested functions. If '
-                    'you use anonymous or nested functions in your model '
-                    'functions or are using autograd to automatically compute '
-                    'derivatives (autograd uses anonymous and nested '
-                    'functions) then installing the Python package '
-                    'multiprocess, which is able to serialise anonymous and '
-                    'nested functions and will be used in preference to '
-                    'multiprocessing by this package when available, may '
-                    'resolve this error.'
+                    "Error encountered while trying to run chains on multiple"
+                    "processes in parallel. The inbuilt multiprocessing module"
+                    " uses pickle to communicate between processes and pickle "
+                    "does support pickling anonymous or nested functions. If "
+                    "you use anonymous or nested functions in your model "
+                    "functions or are using autograd to automatically compute "
+                    "derivatives (autograd uses anonymous and nested "
+                    "functions) then installing the Python package "
+                    "multiprocess, which is able to serialise anonymous and "
+                    "nested functions and will be used in preference to "
+                    "multiprocessing by this package when available, may "
+                    "resolve this error."
                 ) from e
             else:
                 raise e
@@ -710,24 +760,26 @@ class MarkovChainMonteCarloMethod(object):
                 chain iteration.
         """
         if isinstance(rng, np.random.RandomState):
-            warn('Use of numpy.random.RandomState random number generators is '
-                 'deprecated. Please use a numpy.random.Generator instance '
-                 'instead for example from a call to numpy.random.default_rng.',
-                 DeprecationWarning)
+            warn(
+                "Use of numpy.random.RandomState random number generators is "
+                "deprecated. Please use a numpy.random.Generator instance "
+                "instead for example from a call to numpy.random.default_rng.",
+                DeprecationWarning,
+            )
             rng = np.random.Generator(rng._bit_generator)
         self.rng = rng
         self.transitions = transitions
 
     def __set_sample_chain_kwargs_defaults(self, kwargs):
-        if 'memmap_enabled' not in kwargs:
-            kwargs['memmap_enabled'] = False
-        if kwargs['memmap_enabled'] and kwargs.get('memmap_path') is None:
-            kwargs['memmap_path'] = tempfile.mkdtemp()
-        display_progress = kwargs.pop('display_progress', True)
+        if "memmap_enabled" not in kwargs:
+            kwargs["memmap_enabled"] = False
+        if kwargs["memmap_enabled"] and kwargs.get("memmap_path") is None:
+            kwargs["memmap_path"] = tempfile.mkdtemp()
+        display_progress = kwargs.pop("display_progress", True)
         if not display_progress:
-            kwargs['progress_bar_class'] = DummyProgressBar
-        elif 'progress_bar_class' not in kwargs:
-            kwargs['progress_bar_class'] = ProgressBar
+            kwargs["progress_bar_class"] = DummyProgressBar
+        elif "progress_bar_class" not in kwargs:
+            kwargs["progress_bar_class"] = ProgressBar
 
     def sample_chain(self, n_iter, init_state, trace_funcs, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -813,19 +865,23 @@ class MarkovChainMonteCarloMethod(object):
         """
         self.__set_sample_chain_kwargs_defaults(kwargs)
         chain_iterator = _construct_chain_iterators(
-            n_iter, kwargs.pop('progress_bar_class'))
+            n_iter, kwargs.pop("progress_bar_class")
+        )
         final_state, traces, chain_stats, adapter_states, _ = _sample_chain(
-            init_state=init_state, chain_iterator=chain_iterator,
-            transitions=self.transitions, rng=self.rng,
-            trace_funcs=trace_funcs, parallel_chains=False, **kwargs)
+            init_state=init_state,
+            chain_iterator=chain_iterator,
+            transitions=self.transitions,
+            rng=self.rng,
+            trace_funcs=trace_funcs,
+            parallel_chains=False,
+            **kwargs,
+        )
         if len(adapter_states) > 0:
-            _finalize_adapters(
-                adapter_states, kwargs['adapters'], self.transitions)
+            _finalize_adapters(adapter_states, kwargs["adapters"], self.transitions)
 
         return final_state, traces, chain_stats
 
-    def sample_chains(self, n_iter, init_states, trace_funcs, n_process=1,
-                      **kwargs):
+    def sample_chains(self, n_iter, init_states, trace_funcs, n_process=1, **kwargs):
         """Sample one or more Markov chains from given initial states.
 
         Performs a specified number of chain iterations (each of which may be
@@ -931,28 +987,45 @@ class MarkovChainMonteCarloMethod(object):
         n_chain = len(init_states)
         rngs = _get_per_chain_rngs(self.rng, n_chain)
         chain_iterators = _construct_chain_iterators(
-            n_iter, kwargs.pop('progress_bar_class'), n_chain)
+            n_iter, kwargs.pop("progress_bar_class"), n_chain
+        )
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            kwargs.pop('max_threads_per_process', None)
+            kwargs.pop("max_threads_per_process", None)
             *states_traces_stats, adapter_states, _ = _sample_chains_sequential(
-                init_states=init_states, rngs=rngs,
-                chain_iterators=chain_iterators, transitions=self.transitions,
-                trace_funcs=trace_funcs, **kwargs)
+                init_states=init_states,
+                rngs=rngs,
+                chain_iterators=chain_iterators,
+                transitions=self.transitions,
+                trace_funcs=trace_funcs,
+                **kwargs,
+            )
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
             *states_traces_stats, adapter_states, _ = _sample_chains_parallel(
-                init_states=init_states, rngs=rngs,
-                chain_iterators=chain_iterators, transitions=self.transitions,
-                trace_funcs=trace_funcs, n_process=n_process, **kwargs)
+                init_states=init_states,
+                rngs=rngs,
+                chain_iterators=chain_iterators,
+                transitions=self.transitions,
+                trace_funcs=trace_funcs,
+                n_process=n_process,
+                **kwargs,
+            )
         if len(adapter_states) > 0:
-            _finalize_adapters(
-                adapter_states, kwargs['adapters'], self.transitions)
+            _finalize_adapters(adapter_states, kwargs["adapters"], self.transitions)
         return states_traces_stats
 
     def sample_chains_with_adaptive_warm_up(
-            self, n_warm_up_iter, n_main_iter, init_states, trace_funcs,
-            adapters, stager=None, n_process=1, **kwargs):
+        self,
+        n_warm_up_iter,
+        n_main_iter,
+        init_states,
+        trace_funcs,
+        adapters,
+        stager=None,
+        n_process=1,
+        **kwargs,
+    ):
         """Sample Markov chains from given initial states with adaptive warm up.
 
         One or more Markov chains are sampled, with each chain iteration
@@ -1080,40 +1153,51 @@ class MarkovChainMonteCarloMethod(object):
         self.__set_sample_chain_kwargs_defaults(kwargs)
         n_chain = len(init_states)
         rngs = _get_per_chain_rngs(self.rng, n_chain)
-        progress_bar_class = kwargs.pop('progress_bar_class')
+        progress_bar_class = kwargs.pop("progress_bar_class")
         common_sample_chains_kwargs = {
-            'rngs': rngs, 'transitions': self.transitions, **kwargs}
+            "rngs": rngs,
+            "transitions": self.transitions,
+            **kwargs,
+        }
         if n_process > 1:
             sample_chains_func = _sample_chains_parallel
-            common_sample_chains_kwargs['n_process'] = n_process
+            common_sample_chains_kwargs["n_process"] = n_process
         else:
             sample_chains_func = _sample_chains_sequential
-            common_sample_chains_kwargs.pop('max_threads_per_process', None)
+            common_sample_chains_kwargs.pop("max_threads_per_process", None)
         if stager is None:
             if all(a.is_fast for a_list in adapters.values() for a in a_list):
                 stager = WarmUpStager()
             else:
                 stager = WindowedWarmUpStager()
         sampling_stages = stager.stages(
-            n_warm_up_iter, n_main_iter, adapters, trace_funcs)
+            n_warm_up_iter, n_main_iter, adapters, trace_funcs
+        )
         chain_states = init_states
         with LabelledSequenceProgressBar(
-                    sampling_stages, 'Sampling stage', position=(0, n_chain + 1)
-                ) as sampling_stages_pb:
+            sampling_stages, "Sampling stage", position=(0, n_chain + 1)
+        ) as sampling_stages_pb:
             chain_iterators = _construct_chain_iterators(
-                n_warm_up_iter, progress_bar_class, n_chain, 1)
+                n_warm_up_iter, progress_bar_class, n_chain, 1
+            )
             for stage, _ in sampling_stages_pb:
                 for chain_it in chain_iterators:
                     chain_it.sequence = range(stage.n_iter)
-                chain_states, traces, stats, adapter_states, exception = (
-                    sample_chains_func(
-                        init_states=chain_states, trace_funcs=stage.trace_funcs,
-                        adapters=stage.adapters,
-                        chain_iterators=chain_iterators,
-                        **common_sample_chains_kwargs))
+                (
+                    chain_states,
+                    traces,
+                    stats,
+                    adapter_states,
+                    exception,
+                ) = sample_chains_func(
+                    init_states=chain_states,
+                    trace_funcs=stage.trace_funcs,
+                    adapters=stage.adapters,
+                    chain_iterators=chain_iterators,
+                    **common_sample_chains_kwargs,
+                )
                 if len(adapter_states) > 0:
-                    _finalize_adapters(
-                        adapter_states, stage.adapters, self.transitions)
+                    _finalize_adapters(adapter_states, stage.adapters, self.transitions)
                 if isinstance(exception, KeyboardInterrupt):
                     return chain_states, traces, stats
         return chain_states, traces, stats
@@ -1150,8 +1234,7 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
          Handbook of Markov Chain Monte Carlo, 2(11), p.2.
     """
 
-    def __init__(self, system, rng, integration_transition,
-                 momentum_transition=None):
+    def __init__(self, system, rng, integration_transition, momentum_transition=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1174,19 +1257,23 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         self.rng = rng
         if momentum_transition is None:
             momentum_transition = trans.IndependentMomentumTransition(system)
-        super().__init__(rng, OrderedDict(
-            momentum_transition=momentum_transition,
-            integration_transition=integration_transition))
+        super().__init__(
+            rng,
+            OrderedDict(
+                momentum_transition=momentum_transition,
+                integration_transition=integration_transition,
+            ),
+        )
 
     def _preprocess_init_state(self, init_state):
         """Make sure initial state is a ChainState and has momentum."""
         if isinstance(init_state, np.ndarray):
             # If array use to set position component of new ChainState
             init_state = ChainState(pos=init_state, mom=None, dir=1)
-        elif not isinstance(init_state, ChainState) or 'mom' not in init_state:
+        elif not isinstance(init_state, ChainState) or "mom" not in init_state:
             raise TypeError(
-                'init_state should be an array or `ChainState` with '
-                '`mom` attribute.')
+                "init_state should be an array or `ChainState` with " "`mom` attribute."
+            )
         if init_state.mom is None:
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
@@ -1197,25 +1284,25 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         # function in the __set_sample_chain_kwargs_defaults method to ensure
         # that it remains pickleable and so can be piped to a separate process
         # when running multiple chains using multiprocessing
-        return {'pos': state.pos, 'hamiltonian': self.system.h(state)}
+        return {"pos": state.pos, "hamiltonian": self.system.h(state)}
 
     def __set_sample_chain_kwargs_defaults(self, kwargs):
         # default to tracing position component of state and Hamiltonian
-        if 'trace_funcs' not in kwargs:
-            kwargs['trace_funcs'] = [self._default_trace_func]
+        if "trace_funcs" not in kwargs:
+            kwargs["trace_funcs"] = [self._default_trace_func]
         # if `monitor_stats` specified, expand all statistics keys to key pairs
         # with transition key set to `integration_transition`
-        if 'monitor_stats' in kwargs:
-            kwargs['monitor_stats'] = [
-                ('integration_transition', stats_key)
-                for stats_key in kwargs['monitor_stats']]
+        if "monitor_stats" in kwargs:
+            kwargs["monitor_stats"] = [
+                ("integration_transition", stats_key)
+                for stats_key in kwargs["monitor_stats"]
+            ]
         else:
-            kwargs['monitor_stats'] = [
-                ('integration_transition', 'accept_stat')]
+            kwargs["monitor_stats"] = [("integration_transition", "accept_stat")]
         # if adapters kwarg specified, wrap adapter list in dictionary with
         # adapters applied to integration transition
-        if 'adapters' in kwargs and kwargs['adapters'] is not None:
-            kwargs['adapters'] = {'integration_transition': kwargs['adapters']}
+        if "adapters" in kwargs and kwargs["adapters"] is not None:
+            kwargs["adapters"] = {"integration_transition": kwargs["adapters"]}
 
     def sample_chain(self, n_iter, init_state, **kwargs):
         """Sample a Markov chain from a given initial state.
@@ -1299,8 +1386,9 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         init_state = self._preprocess_init_state(init_state)
         self.__set_sample_chain_kwargs_defaults(kwargs)
         final_state, traces, chain_stats = super().sample_chain(
-            n_iter, init_state, **kwargs)
-        chain_stats = chain_stats.get('integration_transition', {})
+            n_iter, init_state, **kwargs
+        )
+        chain_stats = chain_stats.get("integration_transition", {})
         return final_state, traces, chain_stats
 
     def sample_chains(self, n_iter, init_states, **kwargs):
@@ -1405,12 +1493,14 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
         init_states = [self._preprocess_init_state(i) for i in init_states]
         self.__set_sample_chain_kwargs_defaults(kwargs)
         final_states, traces, chain_stats = super().sample_chains(
-            n_iter, init_states, **kwargs)
-        chain_stats = chain_stats.get('integration_transition', {})
+            n_iter, init_states, **kwargs
+        )
+        chain_stats = chain_stats.get("integration_transition", {})
         return final_states, traces, chain_stats
 
     def sample_chains_with_adaptive_warm_up(
-            self, n_warm_up_iter, n_main_iter, init_states, **kwargs):
+        self, n_warm_up_iter, n_main_iter, init_states, **kwargs
+    ):
         """Sample Markov chains from given initial states with adaptive warm up.
 
         One or more Markov chains are sampled, with each chain iteration
@@ -1540,13 +1630,13 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
-        if 'adapters' not in kwargs:
-            kwargs['adapters'] = [DualAveragingStepSizeAdapter()]
+        if "adapters" not in kwargs:
+            kwargs["adapters"] = [DualAveragingStepSizeAdapter()]
         self.__set_sample_chain_kwargs_defaults(kwargs)
-        final_states, traces, chain_stats = (
-            super().sample_chains_with_adaptive_warm_up(
-                n_warm_up_iter, n_main_iter, init_states, **kwargs))
-        chain_stats = chain_stats.get('integration_transition', {})
+        final_states, traces, chain_stats = super().sample_chains_with_adaptive_warm_up(
+            n_warm_up_iter, n_main_iter, init_states, **kwargs
+        )
+        chain_stats = chain_stats.get("integration_transition", {})
         return final_states, traces, chain_stats
 
 
@@ -1576,8 +1666,7 @@ class StaticMetropolisHMC(HamiltonianMCMC):
          Handbook of Markov Chain Monte Carlo, 2(11), p.2.
     """
 
-    def __init__(self, system, integrator, rng, n_step,
-                 momentum_transition=None):
+    def __init__(self, system, integrator, rng, n_step, momentum_transition=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1596,19 +1685,19 @@ class StaticMetropolisHMC(HamiltonianMCMC):
                 distribution.
         """
         integration_transition = trans.MetropolisStaticIntegrationTransition(
-            system, integrator, n_step)
-        super().__init__(system, rng, integration_transition,
-                         momentum_transition)
+            system, integrator, n_step
+        )
+        super().__init__(system, rng, integration_transition, momentum_transition)
 
     @property
     def n_step(self):
         """Number of integrator steps per integrator transition."""
-        return self.transitions['integration_transition'].n_step
+        return self.transitions["integration_transition"].n_step
 
     @n_step.setter
     def n_step(self, value):
-        assert value > 0, 'n_step must be non-negative'
-        self.transitions['integration_transition'].n_step = value
+        assert value > 0, "n_step must be non-negative"
+        self.transitions["integration_transition"].n_step = value
 
 
 class RandomMetropolisHMC(HamiltonianMCMC):
@@ -1639,8 +1728,7 @@ class RandomMetropolisHMC(HamiltonianMCMC):
          Physics Letters B, 226(3-4), pp.369-371.
     """
 
-    def __init__(self, system, integrator, rng, n_step_range,
-                 momentum_transition=None):
+    def __init__(self, system, integrator, rng, n_step_range, momentum_transition=None):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1663,21 +1751,22 @@ class RandomMetropolisHMC(HamiltonianMCMC):
                 distribution.
         """
         integration_transition = trans.MetropolisRandomIntegrationTransition(
-            system, integrator, n_step_range)
-        super().__init__(system, rng, integration_transition,
-                         momentum_transition)
+            system, integrator, n_step_range
+        )
+        super().__init__(system, rng, integration_transition, momentum_transition)
 
     @property
     def n_step_range(self):
         """Interval to uniformly draw number of integrator steps from."""
-        return self.transitions['integration_transition'].n_step_range
+        return self.transitions["integration_transition"].n_step_range
 
     @n_step_range.setter
     def n_step_range(self, value):
         n_step_lower, n_step_upper = value
-        assert n_step_lower > 0 and n_step_lower < n_step_upper, (
-            'Range bounds must be non-negative and first entry less than last')
-        self.transitions['integration_transition'].n_step_range = value
+        assert (
+            n_step_lower > 0 and n_step_lower < n_step_upper
+        ), "Range bounds must be non-negative and first entry less than last"
+        self.transitions["integration_transition"].n_step_range = value
 
 
 class DynamicMultinomialHMC(HamiltonianMCMC):
@@ -1705,10 +1794,17 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
          Carlo. arXiv preprint arXiv:1701.02434.
     """
 
-    def __init__(self, system, integrator, rng,
-                 max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=trans.riemannian_no_u_turn_criterion,
-                 do_extra_subtree_checks=True, momentum_transition=None):
+    def __init__(
+        self,
+        system,
+        integrator,
+        rng,
+        max_tree_depth=10,
+        max_delta_h=1000,
+        termination_criterion=trans.riemannian_no_u_turn_criterion,
+        do_extra_subtree_checks=True,
+        momentum_transition=None,
+    ):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1757,29 +1853,33 @@ class DynamicMultinomialHMC(HamiltonianMCMC):
                 distribution.
         """
         integration_transition = trans.MultinomialDynamicIntegrationTransition(
-            system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion, do_extra_subtree_checks)
-        super().__init__(system, rng, integration_transition,
-                         momentum_transition)
+            system,
+            integrator,
+            max_tree_depth,
+            max_delta_h,
+            termination_criterion,
+            do_extra_subtree_checks,
+        )
+        super().__init__(system, rng, integration_transition, momentum_transition)
 
     @property
     def max_tree_depth(self):
         """Maximum depth to expand trajectory binary tree to."""
-        return self.transitions['integration_transition'].max_tree_depth
+        return self.transitions["integration_transition"].max_tree_depth
 
     @max_tree_depth.setter
     def max_tree_depth(self, value):
-        assert value > 0, 'max_tree_depth must be non-negative'
-        self.transitions['integration_transition'].max_tree_depth = value
+        assert value > 0, "max_tree_depth must be non-negative"
+        self.transitions["integration_transition"].max_tree_depth = value
 
     @property
     def max_delta_h(self):
         """Change in Hamiltonian over trajectory to trigger divergence."""
-        return self.transitions['integration_transition'].max_delta_h
+        return self.transitions["integration_transition"].max_delta_h
 
     @max_delta_h.setter
     def max_delta_h(self, value):
-        self.transitions['integration_transition'].max_delta_h = value
+        self.transitions["integration_transition"].max_delta_h = value
 
 
 class DynamicSliceHMC(HamiltonianMCMC):
@@ -1805,10 +1905,17 @@ class DynamicSliceHMC(HamiltonianMCMC):
          Journal of Machine Learning Research, 15(1), pp.1593-1623.
     """
 
-    def __init__(self, system, integrator, rng,
-                 max_tree_depth=10, max_delta_h=1000,
-                 termination_criterion=trans.euclidean_no_u_turn_criterion,
-                 do_extra_subtree_checks=False, momentum_transition=None):
+    def __init__(
+        self,
+        system,
+        integrator,
+        rng,
+        max_tree_depth=10,
+        max_delta_h=1000,
+        termination_criterion=trans.euclidean_no_u_turn_criterion,
+        do_extra_subtree_checks=False,
+        momentum_transition=None,
+    ):
         """
         Args:
             system (mici.systems.System): Hamiltonian system to be simulated.
@@ -1857,26 +1964,31 @@ class DynamicSliceHMC(HamiltonianMCMC):
                 distribution.
         """
         integration_transition = trans.SliceDynamicIntegrationTransition(
-            system, integrator, max_tree_depth, max_delta_h,
-            termination_criterion, do_extra_subtree_checks)
-        super().__init__(system, rng, integration_transition,
-                         momentum_transition)
+            system,
+            integrator,
+            max_tree_depth,
+            max_delta_h,
+            termination_criterion,
+            do_extra_subtree_checks,
+        )
+        super().__init__(system, rng, integration_transition, momentum_transition)
 
     @property
     def max_tree_depth(self):
         """Maximum depth to expand trajectory binary tree to."""
-        return self.transitions['integration_transition'].max_tree_depth
+        return self.transitions["integration_transition"].max_tree_depth
 
     @max_tree_depth.setter
     def max_tree_depth(self, value):
-        assert value > 0, 'max_tree_depth must be non-negative'
-        self.transitions['integration_transition'].max_tree_depth = value
+        assert value > 0, "max_tree_depth must be non-negative"
+        self.transitions["integration_transition"].max_tree_depth = value
 
     @property
     def max_delta_h(self):
         """Change in Hamiltonian over trajectory to trigger divergence."""
-        return self.transitions['integration_transition'].max_delta_h
+        return self.transitions["integration_transition"].max_delta_h
 
     @max_delta_h.setter
     def max_delta_h(self, value):
-        self.transitions['integration_transition'].max_delta_h = value
+        self.transitions["integration_transition"].max_delta_h = value
+

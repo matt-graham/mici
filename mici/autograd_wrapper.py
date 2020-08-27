@@ -1,6 +1,7 @@
 """Additional autograd differential operators."""
 
 from functools import wraps
+
 AUTOGRAD_AVAILABLE = True
 try:
     from autograd import make_vjp as vjp_and_value
@@ -28,8 +29,9 @@ def grad_and_value(fun, x):
     """
     vjp, val = make_vjp(fun, x)
     if not vspace(val).size == 1:
-        raise TypeError("grad_and_value only applies to real scalar-output"
-                        " functions.")
+        raise TypeError(
+            "grad_and_value only applies to real scalar-output" " functions."
+        )
     return vjp(vspace(val).ones()), val
 
 
@@ -73,8 +75,7 @@ def mhp_jacobian_and_value(fun, x):
     input being differentiated with respect to such that a batch of outputs can
     be computed concurrently for a batch of inputs.
     """
-    mhp, (jacob, val) = make_vjp(
-        lambda x: atuple(jacobian_and_value(fun)(x)), x)
+    mhp, (jacob, val) = make_vjp(lambda x: atuple(jacobian_and_value(fun)(x)), x)
     return lambda m: mhp((m, vspace(val).zeros())), jacob, val
 
 
@@ -87,9 +88,11 @@ def hessian_grad_and_value(fun, x):
     input being differentiated with respect to such that a batch of outputs can
     be computed concurrently for a batch of inputs.
     """
+
     def grad_fun(x):
         vjp, val = make_vjp(fun, x)
         return vjp(vspace(val).ones()), val
+
     x_vspace = vspace(x)
     x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
     vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
@@ -119,7 +122,11 @@ def mtp_hessian_grad_and_value(fun, x):
     be computed concurrently for a batch of inputs.
     """
     mtp, (hessian, grad, val) = make_vjp(
-        lambda x: atuple(hessian_grad_and_value(fun)(x)), x)
+        lambda x: atuple(hessian_grad_and_value(fun)(x)), x
+    )
     return (
         lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
-        hessian, grad, val)
+        hessian,
+        grad,
+        val,
+    )

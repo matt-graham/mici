@@ -11,19 +11,19 @@ fully support all of the required derivative functions.
 """
 DIFF_OPS = [
     # vector Jacobian product and value
-    'vjp_and_value',
+    "vjp_and_value",
     # gradient and value for scalar valued functions
-    'grad_and_value',
+    "grad_and_value",
     # Hessian matrix, gradient and value for scalar valued functions
-    'hessian_grad_and_value',
+    "hessian_grad_and_value",
     # matrix Tressian product, gradient and value for scalar valued
     # functions
-    'mtp_hessian_grad_and_value',
+    "mtp_hessian_grad_and_value",
     # Jacobian matrix and value for vector valued functions
-    'jacobian_and_value',
+    "jacobian_and_value",
     # matrix Hessian product, Jacobian matrix and value for vector valued
     # functions
-    'mhp_jacobian_and_value',
+    "mhp_jacobian_and_value",
 ]
 
 
@@ -50,10 +50,8 @@ def autodiff_fallback(diff_func, func, diff_op_name, name):
     if diff_func is not None:
         return diff_func
     elif diff_op_name not in DIFF_OPS:
-        raise ValueError(
-            f'Differential operator {diff_op_name} is not defined.')
+        raise ValueError(f"Differential operator {diff_op_name} is not defined.")
     elif autograd_wrapper.AUTOGRAD_AVAILABLE:
         return getattr(autograd_wrapper, diff_op_name)(func)
     elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
-        raise ValueError(
-            f'Autograd not available therefore {name} must be provided.')
+        raise ValueError(f"Autograd not available therefore {name} must be provided.")

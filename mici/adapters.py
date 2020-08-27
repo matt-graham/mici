@@ -4,19 +4,18 @@ from abc import ABC, abstractmethod
 from math import exp, log
 import numpy as np
 from mici.errors import IntegratorError, AdaptationError
-from mici.matrices import (
-    PositiveDiagonalMatrix, DensePositiveDefiniteMatrix)
+from mici.matrices import PositiveDiagonalMatrix, DensePositiveDefiniteMatrix
 
 
 class Adapter(ABC):
     """Abstract adapter for implementing schemes to adapt transition parameters.
 
-    Adaptation schemes are assumed to be based on updating a collection of
-    adaptation variables (collectively termed the adapter state here) after
-    each chain transition based on the sampled chain state and/or statistics of
-    the transition such as an acceptance probability statistic. After completing
-    a chain of one or more adaptive transitions, the final adapter state may be
-    used to perform a final update to the transition parameters.
+    Adaptation schemes are assumed to be based on updating a collection of adaptation
+    variables (collectively termed the adapter state here) after each chain transition
+    based on the sampled chain state and/or statistics of the transition such as an
+    acceptance probability statistic. After completing a chain of one or more adaptive
+    transitions, the final adapter state may be used to perform a final update to the
+    transition parameters.
     """
 
     @abstractmethod
@@ -106,10 +105,16 @@ class DualAveragingStepSizeAdapter(Adapter):
 
     is_fast = True
 
-    def __init__(self, adapt_stat_target=0.8, adapt_stat_func=None,
-                 log_step_size_reg_target=None,
-                 log_step_size_reg_coefficient=0.05, iter_decay_coeff=0.75,
-                 iter_offset=10, max_init_step_size_iters=100):
+    def __init__(
+        self,
+        adapt_stat_target=0.8,
+        adapt_stat_func=None,
+        log_step_size_reg_target=None,
+        log_step_size_reg_coefficient=0.05,
+        iter_decay_coeff=0.75,
+        iter_offset=10,
+        max_init_step_size_iters=100,
+    ):
         """
         Args:
             adapt_stat_target (float): Target value for the transition statistic
@@ -152,7 +157,10 @@ class DualAveragingStepSizeAdapter(Adapter):
         """
         self.adapt_stat_target = adapt_stat_target
         if adapt_stat_func is None:
-            def adapt_stat_func(stats): return stats['accept_stat']
+
+            def adapt_stat_func(stats):
+                return stats["accept_stat"]
+
         self.adapt_stat_func = adapt_stat_func
         self.log_step_size_reg_target = log_step_size_reg_target
         self.log_step_size_reg_coefficient = log_step_size_reg_coefficient
@@ -164,18 +172,17 @@ class DualAveragingStepSizeAdapter(Adapter):
         integrator = transition.integrator
         system = transition.system
         adapt_state = {
-            'iter': 0,
-            'smoothed_log_step_size': 0.,
-            'adapt_stat_error': 0.,
+            "iter": 0,
+            "smoothed_log_step_size": 0.0,
+            "adapt_stat_error": 0.0,
         }
-        init_step_size = (
-            self._find_and_set_init_step_size(chain_state, system, integrator)
+        init_step_size = self._find_and_set_init_step_size(
+            chain_state, system, integrator
         )
         if self.log_step_size_reg_target is None:
-            adapt_state['log_step_size_reg_target'] = log(10 * init_step_size)
+            adapt_state["log_step_size_reg_target"] = log(10 * init_step_size)
         else:
-            adapt_state['log_step_size_reg_target'] = (
-                self.log_step_size_reg_target)
+            adapt_state["log_step_size_reg_target"] = self.log_step_size_reg_target
         return adapt_state
 
     def _find_and_set_init_step_size(self, state, system, integrator):
@@ -212,7 +219,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         init_state = state.copy()
         h_init = system.h(init_state)
         if np.isnan(h_init):
-            raise AdaptationError('Hamiltonian evaluating to NaN at initial state.')
+            raise AdaptationError("Hamiltonian evaluating to NaN at initial state.")
         integrator.step_size = 1
         delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
@@ -220,10 +227,10 @@ class DualAveragingStepSizeAdapter(Adapter):
                 state = integrator.step(init_state)
                 delta_h = abs(h_init - system.h(state))
                 if s == 0 or np.isnan(delta_h):
-                    step_size_too_big = (
-                        np.isnan(delta_h) or delta_h > delta_h_threshold)
+                    step_size_too_big = np.isnan(delta_h) or delta_h > delta_h_threshold
                 if (step_size_too_big and delta_h <= delta_h_threshold) or (
-                        not step_size_too_big and delta_h > delta_h_threshold):
+                    not step_size_too_big and delta_h > delta_h_threshold
+                ):
                     return integrator.step_size
                 elif step_size_too_big:
                     integrator.step_size /= 2
@@ -233,37 +240,39 @@ class DualAveragingStepSizeAdapter(Adapter):
                 step_size_too_big = True
                 integrator.step_size /= 2
         raise AdaptationError(
-            f'Could not find reasonable initial step size in '
-            f'{self.max_init_step_size_iters} iterations (final step size '
-            f'{integrator.step_size}). A very large final step size may '
-            f'indicate that the target distribution is improper such that the '
-            f'negative log density is flat in one or more directions while a '
-            f'very small final step size may indicate that the density function'
-            f' is insufficiently smooth at the point initialized at.')
+            f"Could not find reasonable initial step size in "
+            f"{self.max_init_step_size_iters} iterations (final step size "
+            f"{integrator.step_size}). A very large final step size may "
+            f"indicate that the target distribution is improper such that the "
+            f"negative log density is flat in one or more directions while a "
+            f"very small final step size may indicate that the density function"
+            f" is insufficiently smooth at the point initialized at."
+        )
 
     def update(self, adapt_state, chain_state, trans_stats, transition):
-        adapt_state['iter'] += 1
-        error_weight = 1 / (self.iter_offset + adapt_state['iter'])
-        adapt_state['adapt_stat_error'] *= (1 - error_weight)
-        adapt_state['adapt_stat_error'] += error_weight * (
-            self.adapt_stat_target - self.adapt_stat_func(trans_stats))
-        smoothing_weight = (1 / adapt_state['iter'])**self.iter_decay_coeff
-        log_step_size = adapt_state['log_step_size_reg_target'] - (
-            adapt_state['adapt_stat_error'] * adapt_state['iter']**0.5 /
-            self.log_step_size_reg_coefficient)
-        adapt_state['smoothed_log_step_size'] *= (1 - smoothing_weight)
-        adapt_state['smoothed_log_step_size'] += (
-            smoothing_weight * log_step_size)
+        adapt_state["iter"] += 1
+        error_weight = 1 / (self.iter_offset + adapt_state["iter"])
+        adapt_state["adapt_stat_error"] *= 1 - error_weight
+        adapt_state["adapt_stat_error"] += error_weight * (
+            self.adapt_stat_target - self.adapt_stat_func(trans_stats)
+        )
+        smoothing_weight = (1 / adapt_state["iter"]) ** self.iter_decay_coeff
+        log_step_size = adapt_state["log_step_size_reg_target"] - (
+            adapt_state["adapt_stat_error"]
+            * adapt_state["iter"] ** 0.5
+            / self.log_step_size_reg_coefficient
+        )
+        adapt_state["smoothed_log_step_size"] *= 1 - smoothing_weight
+        adapt_state["smoothed_log_step_size"] += smoothing_weight * log_step_size
         transition.integrator.step_size = exp(log_step_size)
 
     def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
-            transition.integrator.step_size = exp(
-                adapt_state['smoothed_log_step_size'])
+            transition.integrator.step_size = exp(adapt_state["smoothed_log_step_size"])
         else:
             transition.integrator.step_size = sum(
-                exp(a['smoothed_log_step_size'])
-                for a in adapt_state) / len(adapt_state)
+                exp(a["smoothed_log_step_size"]) for a in adapt_state
+            ) / len(adapt_state)
 
 
 class OnlineVarianceMetricAdapter(Adapter):
@@ -313,9 +322,9 @@ class OnlineVarianceMetricAdapter(Adapter):
 
     def initialize(self, chain_state, transition):
         return {
-            'iter': 0,
-            'mean': np.zeros_like(chain_state.pos),
-            'sum_diff_sq': np.zeros_like(chain_state.pos)
+            "iter": 0,
+            "mean": np.zeros_like(chain_state.pos),
+            "sum_diff_sq": np.zeros_like(chain_state.pos),
         }
 
     def update(self, adapt_state, chain_state, trans_stats, transition):
@@ -323,11 +332,12 @@ class OnlineVarianceMetricAdapter(Adapter):
         # calculate online variance estimate
         # https://en.wikipedia.org/wiki/
         #   Algorithms_for_calculating_variance#Welford's_online_algorithm
-        adapt_state['iter'] += 1
-        pos_minus_mean = chain_state.pos - adapt_state['mean']
-        adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
-        adapt_state['sum_diff_sq'] += pos_minus_mean * (
-            chain_state.pos - adapt_state['mean'])
+        adapt_state["iter"] += 1
+        pos_minus_mean = chain_state.pos - adapt_state["mean"]
+        adapt_state["mean"] += pos_minus_mean / adapt_state["iter"]
+        adapt_state["sum_diff_sq"] += pos_minus_mean * (
+            chain_state.pos - adapt_state["mean"]
+        )
 
     def _regularize_var_est(self, var_est, n_iter):
         """Update variance estimates by regularizing towards common scalar.
@@ -337,12 +347,13 @@ class OnlineVarianceMetricAdapter(Adapter):
         if self.reg_iter_offset is not None and self.reg_iter_offset != 0:
             var_est *= n_iter / (self.reg_iter_offset + n_iter)
             var_est += self.reg_scale * (
-                self.reg_iter_offset / (self.reg_iter_offset + n_iter))
+                self.reg_iter_offset / (self.reg_iter_offset + n_iter)
+            )
 
     def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
-            n_iter = adapt_state['iter']
-            var_est = adapt_state.pop('sum_diff_sq')
+            n_iter = adapt_state["iter"]
+            var_est = adapt_state.pop("sum_diff_sq")
         else:
             # Use Chan et al. (1979) parallel variance estimation algorithm
             # to combine per-chain statistics
@@ -350,23 +361,24 @@ class OnlineVarianceMetricAdapter(Adapter):
             #    Algorithms_for_calculating_variance#Parallel_algorithm
             for i, a in enumerate(adapt_state):
                 if i == 0:
-                    n_iter = a['iter']
-                    mean_est = a.pop('mean')
-                    var_est = a.pop('sum_diff_sq')
+                    n_iter = a["iter"]
+                    mean_est = a.pop("mean")
+                    var_est = a.pop("sum_diff_sq")
                 else:
                     n_iter_prev = n_iter
-                    n_iter += a['iter']
-                    mean_diff = mean_est - a['mean']
+                    n_iter += a["iter"]
+                    mean_diff = mean_est - a["mean"]
                     mean_est *= n_iter_prev
-                    mean_est += a['iter'] * a['mean']
+                    mean_est += a["iter"] * a["mean"]
                     mean_est /= n_iter
-                    var_est += a['sum_diff_sq']
-                    var_est += mean_diff**2 * (a['iter'] * n_iter_prev) / n_iter
+                    var_est += a["sum_diff_sq"]
+                    var_est += mean_diff ** 2 * (a["iter"] * n_iter_prev) / n_iter
         if n_iter < 2:
             raise AdaptationError(
-                'At least two chain samples required to compute a variance '
-                'estimates.')
-        var_est /= (n_iter - 1)
+                "At least two chain samples required to compute a variance "
+                "estimates."
+            )
+        var_est /= n_iter - 1
         self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
 
@@ -374,16 +386,15 @@ class OnlineVarianceMetricAdapter(Adapter):
 class OnlineCovarianceMetricAdapter(Adapter):
     """Dense metric adapter using online covariance estimates.
 
-    Uses Welford's algorithm [1] to stably compute an online estimate of the
-    sample covariance matrix of the chain state position components during
-    sampling. If online estimates are available from multiple independent
-    chains, the final covariance matrix estimate is calculated from the
-    per-chain statistics using a covariance variant due to Schubert and Gertz
-    [2] of the parallel / batched incremental variance algorithm described by
-    Chan et al. [3]. The covariance matrix estimates are optionally regularized
-    towards a scaled identity matrix, with increasing weight for small number of
-    samples, to decrease the effect of noisy estimates for small sample sizes,
-    following the approach in Stan [4]. The metric matrix representation is set
+    Uses Welford's algorithm [1] to stably compute an online estimate of the sample
+    covariance matrix of the chain state position components during sampling. If online
+    estimates are available from multiple independent chains, the final covariance
+    matrix estimate is calculated from the per-chain statistics using a covariance
+    variant due to Schubert and Gertz [2] of the parallel / batched incremental variance
+    algorithm described by Chan et al. [3]. The covariance matrix estimates are
+    optionally regularized towards a scaled identity matrix, with increasing weight for
+    small number of samples, to decrease the effect of noisy estimates for small sample
+    sizes, following the approach in Stan [4]. The metric matrix representation is set
     to a dense positive definite matrix corresponding to the inverse of the
     (regularized) covariance matrix estimate.
 
@@ -422,9 +433,9 @@ class OnlineCovarianceMetricAdapter(Adapter):
         dim_pos = chain_state.pos.shape[0]
         dtype = chain_state.pos.dtype
         return {
-            'iter': 0,
-            'mean': np.zeros(shape=(dim_pos,), dtype=dtype),
-            'sum_diff_outer': np.zeros(shape=(dim_pos, dim_pos), dtype=dtype)
+            "iter": 0,
+            "mean": np.zeros(shape=(dim_pos,), dtype=dtype),
+            "sum_diff_outer": np.zeros(shape=(dim_pos, dim_pos), dtype=dtype),
         }
 
     def update(self, adapt_state, chain_state, trans_stats, transition):
@@ -432,48 +443,54 @@ class OnlineCovarianceMetricAdapter(Adapter):
         # calculate online covariance estimate
         # https://en.wikipedia.org/wiki/
         #  Algorithms_for_calculating_variance#Online
-        adapt_state['iter'] += 1
-        pos_minus_mean = chain_state.pos - adapt_state['mean']
-        adapt_state['mean'] += pos_minus_mean / adapt_state['iter']
-        adapt_state['sum_diff_outer'] += pos_minus_mean[None, :] * (
-            chain_state.pos - adapt_state['mean'])[:, None]
+        adapt_state["iter"] += 1
+        pos_minus_mean = chain_state.pos - adapt_state["mean"]
+        adapt_state["mean"] += pos_minus_mean / adapt_state["iter"]
+        adapt_state["sum_diff_outer"] += (
+            pos_minus_mean[None, :] * (chain_state.pos - adapt_state["mean"])[:, None]
+        )
 
     def _regularize_covar_est(self, covar_est, n_iter):
         """Update covariance estimate by regularising towards identity.
 
         Performed in place to prevent further array allocations.
         """
-        covar_est *= (n_iter / (self.reg_iter_offset + n_iter))
-        covar_est_diagonal = np.einsum('ii->i', covar_est)
+        covar_est *= n_iter / (self.reg_iter_offset + n_iter)
+        covar_est_diagonal = np.einsum("ii->i", covar_est)
         covar_est_diagonal += self.reg_scale * (
-            self.reg_iter_offset / (self.reg_iter_offset + n_iter))
+            self.reg_iter_offset / (self.reg_iter_offset + n_iter)
+        )
 
     def finalize(self, adapt_state, transition):
         if isinstance(adapt_state, dict):
-            n_iter = adapt_state['iter']
-            covar_est = adapt_state.pop('sum_diff_outer')
+            n_iter = adapt_state["iter"]
+            covar_est = adapt_state.pop("sum_diff_outer")
         else:
             # Use Schubert and Gertz (2018) parallel covariance estimation
             # algorithm to combine per-chain statistics
             for i, a in enumerate(adapt_state):
                 if i == 0:
-                    n_iter = a['iter']
-                    mean_est = a.pop('mean')
-                    covar_est = a.pop('sum_diff_outer')
+                    n_iter = a["iter"]
+                    mean_est = a.pop("mean")
+                    covar_est = a.pop("sum_diff_outer")
                 else:
                     n_iter_prev = n_iter
-                    n_iter += a['iter']
-                    mean_diff = mean_est - a['mean']
+                    n_iter += a["iter"]
+                    mean_diff = mean_est - a["mean"]
                     mean_est *= n_iter_prev
-                    mean_est += a['iter'] * a['mean']
+                    mean_est += a["iter"] * a["mean"]
                     mean_est /= n_iter
-                    covar_est += a['sum_diff_outer']
-                    covar_est += np.outer(mean_diff, mean_diff) * (
-                        a['iter'] * n_iter_prev) / n_iter
+                    covar_est += a["sum_diff_outer"]
+                    covar_est += (
+                        np.outer(mean_diff, mean_diff)
+                        * (a["iter"] * n_iter_prev)
+                        / n_iter
+                    )
         if n_iter < 2:
             raise AdaptationError(
-                'At least two chain samples required to compute a variance '
-                'estimates.')
-        covar_est /= (n_iter - 1)
+                "At least two chain samples required to compute a variance "
+                "estimates."
+            )
+        covar_est /= n_iter - 1
         self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv

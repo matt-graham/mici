@@ -18,8 +18,7 @@ def rng():
 
 @pytest.fixture
 def transition(system, integrator):
-    return mici.transitions.MultinomialDynamicIntegrationTransition(
-        system, integrator)
+    return mici.transitions.MultinomialDynamicIntegrationTransition(system, integrator)
 
 
 @pytest.fixture
@@ -28,7 +27,6 @@ def momentum_transition(system):
 
 
 class GenericAdapterTests:
-
     def test_initialize_generic(self, adapter, chain_state, transition):
         """Generic checks of initialize method.
 
@@ -52,8 +50,9 @@ class GenericAdapterTests:
         chain_state, trans_stats = transition.sample(chain_state, rng)
         chain_state_read_only = chain_state.copy(read_only=True)
         trans_stats_read_only = MappingProxyType(trans_stats)
-        adapter.update(adapter_state, chain_state_read_only,
-                       trans_stats_read_only, transition)
+        adapter.update(
+            adapter_state, chain_state_read_only, trans_stats_read_only, transition
+        )
 
     def test_finalize_generic(self, adapter, chain_state, transition, rng):
         """Generic checks of finalize method.
@@ -66,19 +65,17 @@ class GenericAdapterTests:
             chain_state, trans_stats = transition.sample(chain_state, rng)
             adapter.update(adapter_state, chain_state, trans_stats, transition)
         adapter.finalize(adapter_state.copy(), transition)
-        adapter.finalize(
-            [copy.deepcopy(adapter_state) for i in range(4)], transition)
+        adapter.finalize([copy.deepcopy(adapter_state) for i in range(4)], transition)
 
 
 class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
-
     def test_initialize(self, adapter, chain_state, transition):
         adapter_state = adapter.initialize(chain_state, transition)
         assert transition.integrator.step_size is not None
         assert transition.integrator.step_size > 0
-        assert adapter_state['iter'] == 0
-        assert adapter_state['smoothed_log_step_size'] == 0
-        assert adapter_state['adapt_stat_error'] == 0
+        assert adapter_state["iter"] == 0
+        assert adapter_state["smoothed_log_step_size"] == 0
+        assert adapter_state["adapt_stat_error"] == 0
 
     def test_initialize_nan_raises_error(self, adapter, chain_state, transition):
         chain_state.pos += np.nan
@@ -90,31 +87,32 @@ class DualAveragingStepSizeAdapterTests(GenericAdapterTests):
         adapter.finalize(adapter_state, transition)
         assert np.isclose(
             transition.integrator.step_size,
-            exp(adapter_state['smoothed_log_step_size']))
+            exp(adapter_state["smoothed_log_step_size"]),
+        )
 
     def test_adaptation(
-            self, adapter, chain_state, transition, momentum_transition, rng):
+        self, adapter, chain_state, transition, momentum_transition, rng
+    ):
         n_transition = 500
         adapter_state = adapter.initialize(chain_state, transition)
         for _ in range(n_transition):
             chain_state, _ = momentum_transition.sample(chain_state, rng)
             chain_state, trans_stats = transition.sample(chain_state, rng)
-            adapter.update(
-                adapter_state, chain_state, trans_stats, transition)
+            adapter.update(adapter_state, chain_state, trans_stats, transition)
         adapter.finalize(adapter_state, transition)
-        assert abs(adapter_state['adapt_stat_error']) < 0.02
+        assert abs(adapter_state["adapt_stat_error"]) < 0.02
         sum_accept_stat = 0
         for _ in range(n_transition):
             chain_state, _ = momentum_transition.sample(chain_state, rng)
             chain_state, trans_stats = transition.sample(chain_state, rng)
-            sum_accept_stat += trans_stats['accept_stat']
+            sum_accept_stat += trans_stats["accept_stat"]
         av_accept_stat = sum_accept_stat / n_transition
         assert abs(adapter.adapt_stat_target - av_accept_stat) < 0.05
 
 
 class TestDualAveragingStepSizeAdapterWithEuclideanMetricSystem(
-        DualAveragingStepSizeAdapterTests):
-
+    DualAveragingStepSizeAdapterTests
+):
     @pytest.fixture
     def chain_state(self, rng):
         pos, mom = rng.standard_normal((2, STATE_DIM))
@@ -123,8 +121,9 @@ class TestDualAveragingStepSizeAdapterWithEuclideanMetricSystem(
     @pytest.fixture
     def system(self):
         return mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos**2) / 2,
-            grad_neg_log_dens=lambda pos: pos)
+            neg_log_dens=lambda pos: np.sum(pos ** 2) / 2,
+            grad_neg_log_dens=lambda pos: pos,
+        )
 
     @pytest.fixture
     def integrator(self, system):
@@ -136,36 +135,36 @@ class TestDualAveragingStepSizeAdapterWithEuclideanMetricSystem(
 
 
 class TestDualAveragingStepSizeAdapterWithConstrainedEuclideanMetricSystem(
-        DualAveragingStepSizeAdapterTests):
-
+    DualAveragingStepSizeAdapterTests
+):
     @pytest.fixture
     def adapter(self):
         return mici.adapters.DualAveragingStepSizeAdapter(
-            log_step_size_reg_coefficient=0.1)
+            log_step_size_reg_coefficient=0.1
+        )
 
     @pytest.fixture
     def chain_state(self, rng):
         pos, mom = rng.standard_normal((2, STATE_DIM))
-        pos /= np.sum(pos**2)**0.5
+        pos /= np.sum(pos ** 2) ** 0.5
         mom -= (mom @ pos) * pos
         return mici.states.ChainState(pos=pos, mom=mom, dir=1)
 
     @pytest.fixture
     def system(self):
         return mici.systems.DenseConstrainedEuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos**2) / 2,
+            neg_log_dens=lambda pos: np.sum(pos ** 2) / 2,
             grad_neg_log_dens=lambda pos: pos,
-            constr=lambda pos: np.sum(pos**2)[None] - 1,
-            jacob_constr=lambda pos: 2 * pos[None])
+            constr=lambda pos: np.sum(pos ** 2)[None] - 1,
+            jacob_constr=lambda pos: 2 * pos[None],
+        )
 
     @pytest.fixture
     def integrator(self, system):
-        return mici.integrators.ConstrainedLeapfrogIntegrator(
-            system, step_size=None)
+        return mici.integrators.ConstrainedLeapfrogIntegrator(system, step_size=None)
 
 
 class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
-
     @pytest.fixture
     def adapter(self):
         return mici.adapters.OnlineVarianceMetricAdapter()
@@ -174,8 +173,9 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
     def system(self, rng):
         var = np.exp(rng.standard_normal(STATE_DIM))
         return mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos**2 / var) / 2,
-            grad_neg_log_dens=lambda pos: pos / var)
+            neg_log_dens=lambda pos: np.sum(pos ** 2 / var) / 2,
+            grad_neg_log_dens=lambda pos: pos / var,
+        )
 
     @pytest.fixture
     def integrator(self, system):
@@ -187,7 +187,8 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
         return mici.states.ChainState(pos=pos, mom=mom, dir=1)
 
     def test_adaptation(
-            self, adapter, chain_state, transition, momentum_transition, rng):
+        self, adapter, chain_state, transition, momentum_transition, rng
+    ):
         adapter_state = adapter.initialize(chain_state, transition)
         n_transition = 10
         pos_samples = np.full((n_transition, STATE_DIM), np.nan)
@@ -196,22 +197,22 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
             chain_state, trans_stats = transition.sample(chain_state, rng)
             pos_samples[i] = chain_state.pos
             adapter.update(adapter_state, chain_state, trans_stats, transition)
-        assert adapter_state['iter'] == n_transition
-        assert np.allclose(adapter_state['mean'], pos_samples.mean(0))
-        assert np.allclose(adapter_state['sum_diff_sq'],
-                           np.sum((pos_samples - pos_samples.mean(0))**2, 0))
+        assert adapter_state["iter"] == n_transition
+        assert np.allclose(adapter_state["mean"], pos_samples.mean(0))
+        assert np.allclose(
+            adapter_state["sum_diff_sq"],
+            np.sum((pos_samples - pos_samples.mean(0)) ** 2, 0),
+        )
         adapter.finalize(adapter_state, transition)
         metric = transition.system.metric
         assert isinstance(metric, mici.matrices.PositiveDiagonalMatrix)
         var_est = pos_samples.var(axis=0, ddof=1)
         weight = n_transition / (adapter.reg_iter_offset + n_transition)
-        regularized_var_est = (
-            weight * var_est + (1 - weight) * adapter.reg_scale)
+        regularized_var_est = weight * var_est + (1 - weight) * adapter.reg_scale
         assert np.allclose(metric.diagonal, 1 / regularized_var_est)
 
 
 class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
-
     @pytest.fixture
     def adapter(self):
         return mici.adapters.OnlineCovarianceMetricAdapter()
@@ -222,7 +223,8 @@ class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
         prec = prec @ prec.T
         return mici.systems.EuclideanMetricSystem(
             neg_log_dens=lambda pos: (pos @ prec @ pos) / 2,
-            grad_neg_log_dens=lambda pos: prec @ pos)
+            grad_neg_log_dens=lambda pos: prec @ pos,
+        )
 
     @pytest.fixture
     def integrator(self, system):
@@ -234,7 +236,8 @@ class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
         return mici.states.ChainState(pos=pos, mom=mom, dir=1)
 
     def test_adaptation(
-            self, adapter, chain_state, transition, momentum_transition, rng):
+        self, adapter, chain_state, transition, momentum_transition, rng
+    ):
         adapter_state = adapter.initialize(chain_state, transition)
         n_transition = 10
         pos_samples = np.full((n_transition, STATE_DIM), np.nan)
@@ -243,18 +246,19 @@ class TestOnlineCovarianceMetricAdapter(GenericAdapterTests):
             chain_state, trans_stats = transition.sample(chain_state, rng)
             pos_samples[i] = chain_state.pos
             adapter.update(adapter_state, chain_state, trans_stats, transition)
-        assert adapter_state['iter'] == n_transition
-        assert np.allclose(adapter_state['mean'], pos_samples.mean(0))
+        assert adapter_state["iter"] == n_transition
+        assert np.allclose(adapter_state["mean"], pos_samples.mean(0))
         pos_minus_mean_samples = pos_samples - pos_samples.mean(0)
-        assert np.allclose(adapter_state['sum_diff_outer'],
-                           np.einsum('ij,ik->jk', pos_minus_mean_samples,
-                                     pos_minus_mean_samples))
+        assert np.allclose(
+            adapter_state["sum_diff_outer"],
+            np.einsum("ij,ik->jk", pos_minus_mean_samples, pos_minus_mean_samples),
+        )
         adapter.finalize(adapter_state, transition)
         metric = transition.system.metric
         assert isinstance(metric, mici.matrices.PositiveDefiniteMatrix)
         covar_est = np.cov(pos_samples, rowvar=False, ddof=1)
         weight = n_transition / (adapter.reg_iter_offset + n_transition)
-        regularized_covar_est = (
-            weight * covar_est +
-            (1 - weight) * adapter.reg_scale * np.identity(STATE_DIM))
+        regularized_covar_est = weight * covar_est + (
+            1 - weight
+        ) * adapter.reg_scale * np.identity(STATE_DIM)
         assert np.allclose(metric.inv.array, regularized_covar_est)

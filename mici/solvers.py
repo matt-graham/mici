@@ -6,7 +6,7 @@ import numpy as np
 
 def euclidean_norm(vct):
     """Calculate the Euclidean (L-2) norm of a vector."""
-    return np.sum(vct**2)**0.5
+    return np.sum(vct ** 2) ** 0.5
 
 
 def maximum_norm(vct):
@@ -15,8 +15,13 @@ def maximum_norm(vct):
 
 
 def solve_fixed_point_direct(
-        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
-        norm=maximum_norm):
+    func,
+    x0,
+    convergence_tol=1e-9,
+    divergence_tol=1e10,
+    max_iters=100,
+    norm=maximum_norm,
+):
     """Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
@@ -44,22 +49,30 @@ def solve_fixed_point_direct(
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    f'Fixed point iteration diverged on iteration {i}.'
-                    f'Last error={error:.1e}.')
+                    f"Fixed point iteration diverged on iteration {i}."
+                    f"Last error={error:.1e}."
+                )
             if error < convergence_tol:
                 return x
             x0 = x
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'{type(e)} at iteration {i} of fixed point solver ({e}).')
+                f"{type(e)} at iteration {i} of fixed point solver ({e})."
+            )
     raise ConvergenceError(
-        f'Fixed point iteration did not converge. Last error={error:.1e}.')
+        f"Fixed point iteration did not converge. Last error={error:.1e}."
+    )
 
 
 def solve_fixed_point_steffensen(
-        func, x0, convergence_tol=1e-9, divergence_tol=1e10, max_iters=100,
-        norm=maximum_norm):
+    func,
+    x0,
+    convergence_tol=1e-9,
+    divergence_tol=1e10,
+    max_iters=100,
+    norm=maximum_norm,
+):
     """Solve fixed point equation `func(x) = x` using Steffensen's method.
 
     Steffennsen's method [1] achieves quadratic convergence but at the cost of
@@ -95,27 +108,38 @@ def solve_fixed_point_steffensen(
             denom = x2 - 2 * x1 + x0
             # Set any zero values in denominator of update term to smalllest
             # floating point value to prevent divide-by-zero errors
-            denom[abs(denom) == 0.] = np.finfo(x0.dtype).eps
-            x = x0 - (x1 - x0)**2 / denom
+            denom[abs(denom) == 0.0] = np.finfo(x0.dtype).eps
+            x = x0 - (x1 - x0) ** 2 / denom
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    f'Fixed point iteration diverged on iteration {i}.'
-                    f'Last error={error:.1e}.')
+                    f"Fixed point iteration diverged on iteration {i}."
+                    f"Last error={error:.1e}."
+                )
             if error < convergence_tol:
                 return x
             x0 = x
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'{type(e)} at iteration {i} of fixed point solver ({e}).')
+                f"{type(e)} at iteration {i} of fixed point solver ({e})."
+            )
     raise ConvergenceError(
-        f'Fixed point iteration did not converge. Last error={error:.1e}.')
+        f"Fixed point iteration did not converge. Last error={error:.1e}."
+    )
 
 
 def solve_projection_onto_manifold_quasi_newton(
-        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
-        divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    state,
+    state_prev,
+    dt,
+    system,
+    constraint_tol=1e-9,
+    position_tol=1e-8,
+    divergence_tol=1e10,
+    max_iters=50,
+    norm=maximum_norm,
+):
     """Solve constraint equation using quasi-Newton method.
 
     Uses a quasi-Newton iteration to solve the non-linear system of equations
@@ -175,19 +199,20 @@ def solve_projection_onto_manifold_quasi_newton(
     # Use absolute value of dt and adjust for sign of dt in mom update below
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
-        jacob_constr_prev, dh2_flow_pos_dmom).inv
+        jacob_constr_prev, dh2_flow_pos_dmom
+    ).inv
     for i in range(max_iters):
         try:
             constr = system.constr(state)
             error = norm(constr)
-            delta_mu = jacob_constr_prev.T @ (
-                inv_jacob_constr_inner_product @ constr)
+            delta_mu = jacob_constr_prev.T @ (inv_jacob_constr_inner_product @ constr)
             delta_pos = dh2_flow_pos_dmom @ delta_mu
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    f'Quasi-Newton solver diverged on iteration {i}. '
-                    f'Last |constr|={error:.1e}, '
-                    f'|delta_pos|={norm(delta_pos):.1e}.')
+                    f"Quasi-Newton solver diverged on iteration {i}. "
+                    f"Last |constr|={error:.1e}, "
+                    f"|delta_pos|={norm(delta_pos):.1e}."
+                )
             elif error < constraint_tol and norm(delta_pos) < position_tol:
                 state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
@@ -196,15 +221,25 @@ def solve_projection_onto_manifold_quasi_newton(
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'{type(e)} at iteration {i} of quasi-Newton solver ({e}).')
+                f"{type(e)} at iteration {i} of quasi-Newton solver ({e})."
+            )
     raise ConvergenceError(
-        f'Quasi-Newton solver did not converge with {max_iters} iterations. '
-        f'Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.')
+        f"Quasi-Newton solver did not converge with {max_iters} iterations. "
+        f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
+    )
 
 
 def solve_projection_onto_manifold_newton(
-        state, state_prev, dt, system, constraint_tol=1e-9, position_tol=1e-8,
-        divergence_tol=1e10, max_iters=50, norm=maximum_norm):
+    state,
+    state_prev,
+    dt,
+    system,
+    constraint_tol=1e-9,
+    position_tol=1e-8,
+    divergence_tol=1e10,
+    max_iters=50,
+    norm=maximum_norm,
+):
     """Solve constraint equation using Newton method.
 
     Uses a Newton iteration to solve the non-linear system of equations in `λ`
@@ -270,14 +305,17 @@ def solve_projection_onto_manifold_newton(
             error = norm(constr)
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(
-                    jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev).inv @
-                constr)
+                    jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev
+                ).inv
+                @ constr
+            )
             delta_pos = dh2_flow_pos_dmom @ delta_mu
             if error > divergence_tol or np.isnan(error):
                 raise ConvergenceError(
-                    f'Newton solver diverged at iteration {i}. '
-                    f'Last |constr|={error:.1e}, '
-                    f'|delta_pos|={norm(delta_pos):.1e}.')
+                    f"Newton solver diverged at iteration {i}. "
+                    f"Last |constr|={error:.1e}, "
+                    f"|delta_pos|={norm(delta_pos):.1e}."
+                )
             if error < constraint_tol and norm(delta_pos) < position_tol:
                 state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
                 return state
@@ -286,7 +324,10 @@ def solve_projection_onto_manifold_newton(
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
             raise ConvergenceError(
-                f'{type(e)} at iteration {i} of Newton solver ({e}).')
+                f"{type(e)} at iteration {i} of Newton solver ({e})."
+            )
     raise ConvergenceError(
-        f'Newton solver did not converge in {max_iters} iterations. '
-        f'Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}.')
+        f"Newton solver did not converge in {max_iters} iterations. "
+        f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
+    )
+
