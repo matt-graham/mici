@@ -719,4 +719,3 @@ class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
     def _check_divergence(self, h, aux_vars):
         if h + aux_vars["log_u"] > self.max_delta_h:
             raise HamiltonianDivergenceError(f'delta_h = {h + aux_vars["log_u"]}')
-

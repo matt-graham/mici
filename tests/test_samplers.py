@@ -494,4 +494,3 @@ class TestDynamicDynamicSliceHMC(DynamicHMCTests):
             max_tree_depth=self.max_tree_depth,
             max_delta_h=self.max_delta_h,
         )
-

@@ -200,4 +200,3 @@ class LogRepFloat(object):
 
     def __repr__(self):
         return "LogRepFloat(val={0})".format(self.val)
-

@@ -285,4 +285,3 @@ class ChainState(object):
         self.__dict__["_cache"] = state["cache"]
         self.__dict__["_call_counts"] = state["call_counts"]
         self.__dict__["_read_only"] = state["read_only"]
-

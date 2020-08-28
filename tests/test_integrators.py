@@ -395,4 +395,3 @@ class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
         return integrators.ConstrainedLeapfrogIntegrator(
             system, 0.05, projection_solver=request.param
         )
-

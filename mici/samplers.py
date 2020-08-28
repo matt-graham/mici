@@ -2005,4 +2005,3 @@ class DynamicSliceHMC(HamiltonianMCMC):
     @max_delta_h.setter
     def max_delta_h(self, value):
         self.transitions["integration_transition"].max_delta_h = value
-

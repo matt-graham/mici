@@ -327,4 +327,3 @@ def test_cache_in_state_with_aux(state_vars):
         assert np.all(
             ret_val_3 == prim_func(state)
         ), "return value of memoized method should be same as unmemoized"
-

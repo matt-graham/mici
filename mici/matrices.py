@@ -2321,4 +2321,3 @@ class PositiveDefiniteLowRankUpdateMatrix(
             inv_matrix_vector,
             self.inner_pos_def_matrix @ (self.factor_matrix.T @ inv_matrix_vector),
         )
-

@@ -330,4 +330,3 @@ def solve_projection_onto_manifold_newton(
         f"Newton solver did not converge in {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
     )
-
