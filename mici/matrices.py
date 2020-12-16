@@ -197,7 +197,10 @@ class ExplicitArrayMatrix(Matrix):
         if "_array" not in kwargs:
             raise ValueError("_array must be specified in kwargs")
         else:
-            kwargs["_array"] = np.asarray_chkfinite(kwargs["_array"])
+            try:
+                kwargs["_array"] = np.asarray_chkfinite(kwargs["_array"])
+            except ValueError as e:
+                raise LinAlgError("Array is not finite.")
         super().__init__(shape, **kwargs)
 
     @property
