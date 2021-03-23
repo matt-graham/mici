@@ -91,6 +91,54 @@ class Adapter(ABC):
         """
 
 
+def arithmetic_mean_log_step_size_reducer(log_step_sizes):
+    """Compute arithmetic mean of step sizes from their logs.
+
+    Args:
+        log_step_sizes (Sequence[float]): Logarithms of per-chain estimated step sizes.
+
+    Returns
+        Arithmetic mean of estimated step sizes.
+    """
+    return sum(exp(x) for x in log_step_sizes) / len(log_step_sizes)
+
+
+def geometric_mean_log_step_size_reducer(log_step_sizes):
+    """Compute geometric mean of step sizes from their logs.
+
+    Args:
+        log_step_sizes (Sequence[float]): Logarithms of per-chain estimated step sizes.
+
+    Returns
+        Geometric mean of estimated step sizes.
+    """
+    return exp(sum(x for x in log_step_sizes) / len(log_step_sizes))
+
+
+def min_log_step_size_reducer(log_step_sizes):
+    """Compute minimum of step sizes from their logs.
+
+    Args:
+        log_step_sizes (Sequence[float]): Logarithms of per-chain estimated step sizes.
+
+    Returns
+        Minimum of estimated step sizes.
+    """
+    return exp(min(log_step_sizes))
+
+
+def default_adapt_stat_func(stats):
+    """Function to extract default accept_stat statistic used for step-size adaptation.
+
+    Args:
+        stats (Dict[str, numeric]): Dictionary of transition statistics.
+
+    Returns:
+        Acceptance statistic.
+    """
+    return stats["accept_stat"]
+
+
 class DualAveragingStepSizeAdapter(Adapter):
     """Dual averaging integrator step size adapter.
 
@@ -121,6 +169,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         iter_decay_coeff=0.75,
         iter_offset=10,
         max_init_step_size_iters=100,
+        log_step_size_reducer=None,
     ):
         """
         Args:
@@ -158,19 +207,28 @@ class DualAveragingStepSizeAdapter(Adapter):
                 initial search for a reasonable step size with an `AdaptationError`
                 exception raised if a suitable step size is not found within this many
                 iterations.
+            log_step_size_reducer (callable): Reduction to apply to final per-chain step
+                sizes estimates to produce overall integrator step size for main chain
+                stages. The specified function should accept a sequence of logarithms
+                of estimated step sizes and output a non-negative step size to use. If
+                `None`, the default, a function which computes the arithmetic mean of
+                the step sizes is used.
+
         """
         self.adapt_stat_target = adapt_stat_target
-        if adapt_stat_func is None:
-
-            def adapt_stat_func(stats):
-                return stats["accept_stat"]
-
-        self.adapt_stat_func = adapt_stat_func
+        self.adapt_stat_func = (
+            default_adapt_stat_func if adapt_stat_func is None else adapt_stat_func
+        )
         self.log_step_size_reg_target = log_step_size_reg_target
         self.log_step_size_reg_coefficient = log_step_size_reg_coefficient
         self.iter_decay_coeff = iter_decay_coeff
         self.iter_offset = iter_offset
         self.max_init_step_size_iters = max_init_step_size_iters
+        self.log_step_size_reducer = (
+            arithmetic_mean_log_step_size_reducer
+            if log_step_size_reducer is None
+            else log_step_size_reducer
+        )
 
     def initialize(self, chain_state, transition):
         integrator = transition.integrator
@@ -272,10 +330,9 @@ class DualAveragingStepSizeAdapter(Adapter):
                 adapt_states["smoothed_log_step_size"]
             )
         else:
-            transition.integrator.step_size = sum(
-                exp(adapt_state["smoothed_log_step_size"])
-                for adapt_state in adapt_states
-            ) / len(adapt_states)
+            transition.integrator.step_size = self.log_step_size_reducer(
+                [adapt_state["smoothed_log_step_size"] for adapt_state in adapt_states]
+            )
 
 
 class OnlineVarianceMetricAdapter(Adapter):
