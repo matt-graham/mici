@@ -16,7 +16,7 @@ class StagerTests:
             assert isinstance(stage, mici.stagers.ChainStage)
             assert stage.n_iter >= 0
             assert stage.adapters is None or isinstance(stage.adapters, dict)
-            assert isinstance(stage.trace_funcs, list)
+            assert stage.trace_funcs is None or isinstance(stage.trace_funcs, list)
             n_total_iter += stage.n_iter
         assert n_total_iter == n_warm_up_iter + N_MAIN_ITER
 

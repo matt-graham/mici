@@ -243,15 +243,16 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         h_init = self.system.h(state)
         state_p = state
         integration_error = False
+        stats = {"convergence_error": False, "non_reversible_step": False}
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
         except IntegratorError as e:
             integration_error = True
-            stats = {"n_step": s}
+            stats["n_step"] = s
             _process_integrator_error(e, stats)
         else:
-            stats = {"n_step": n_step}
+            stats["n_step"] = n_step
             # Reverse integration direction of proposal to form an involution
             state_p.dir *= -1
         if state_p is not state:
@@ -604,7 +605,14 @@ class DynamicIntegrationTransition(IntegrationTransition):
         return terminate, tree, proposal
 
     def sample(self, state, rng):
-        stats = {"n_step": 0, "sum_metrop_accept_prob": 0.0, "reject_prob": 1.0}
+        stats = {
+            "n_step": 0,
+            "sum_metrop_accept_prob": 0.0,
+            "reject_prob": 1.0,
+            "diverging": False,
+            "convergence_error": False,
+            "non_reversible_step": False,
+        }
         aux_vars = self._init_aux_vars(state, rng)
         tree = self._new_leave(state, aux_vars["h_init"], aux_vars)
         next_state = state
@@ -642,7 +650,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         else:
             stats["av_metrop_accept_prob"] = 0.0
         if any(
-            stats.get(key, False)
+            stats[key]
             for key in ["diverging", "convergence_error", "non_reversible_step"]
         ):
             stats["accept_stat"] = 0.0

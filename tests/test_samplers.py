@@ -45,29 +45,6 @@ def test_memmaps_to_file_paths(tmp_path):
     assert filename_obj == {key: [(filename,)]}
 
 
-def test_get_obj_size():
-    obj = {"a": np.empty(1000, dtype=np.complex128), "b": np.empty(100, dtype=np.int8)}
-    byte_size = mici.samplers._get_obj_byte_size(obj)
-    array_byte_size = obj["a"].nbytes + obj["b"].nbytes
-    assert byte_size > array_byte_size
-    assert byte_size > (
-        mici.samplers._get_obj_byte_size(obj["a"])
-        + mici.samplers._get_obj_byte_size(obj["b"])
-    )
-    assert byte_size < mici.samplers._get_obj_byte_size((obj,))
-
-
-def test_check_chain_data_size_raises():
-    class MockLarge:
-        def __sizeof__(self):
-            return 2 ** 32
-
-    traces = {"pos": [MockLarge() for i in range(32)]}
-    stats = {"integration": {"accept_prob": [MockLarge() for i in range(32)]}}
-    with pytest.raises(RuntimeError, match="Total number of bytes allocated"):
-        mici.samplers._check_chain_data_size(traces, stats)
-
-
 @pytest.fixture(params=("Generator(PCG64)", "Generator(SFC64)", "RandomState"))
 def base_rng(request):
     if request.param == "Generator(PCG64)":
