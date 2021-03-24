@@ -85,12 +85,13 @@ class WarmUpStager(Stager):
                 record_stats=trace_warm_up,
             )
         # main non-adaptive stage
-        sampling_stages["Main non-adaptive"] = ChainStage(
-            n_iter=n_main_iter,
-            adapters=None,
-            trace_funcs=trace_funcs,
-            record_stats=True,
-        )
+        if n_main_iter > 0:
+            sampling_stages["Main non-adaptive"] = ChainStage(
+                n_iter=n_main_iter,
+                adapters=None,
+                trace_funcs=trace_funcs,
+                record_stats=True,
+            )
         return sampling_stages
 
 
@@ -232,10 +233,11 @@ class WindowedWarmUpStager(Stager):
                 record_stats=record_stats,
             )
         # main non-adaptive stage
-        sampling_stages["Main non-adaptive"] = ChainStage(
-            n_iter=n_main_iter,
-            adapters=None,
-            trace_funcs=trace_funcs,
-            record_stats=True,
-        )
+        if n_main_iter > 0:
+            sampling_stages["Main non-adaptive"] = ChainStage(
+                n_iter=n_main_iter,
+                adapters=None,
+                trace_funcs=trace_funcs,
+                record_stats=True,
+            )
         return sampling_stages

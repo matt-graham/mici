@@ -133,14 +133,14 @@ def _memmaps_to_file_paths(obj):
     """
     if isinstance(obj, np.memmap):
         return obj.filename
-    elif isinstance(obj, np.ndarray):
-        return obj
     elif isinstance(obj, dict):
         return {k: _memmaps_to_file_paths(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [_memmaps_to_file_paths(v) for v in obj]
     elif isinstance(obj, tuple):
         return tuple(_memmaps_to_file_paths(v) for v in obj)
+    else:
+        return obj
 
 
 def _file_paths_to_memmaps(obj):
@@ -157,14 +157,14 @@ def _file_paths_to_memmaps(obj):
     """
     if isinstance(obj, str):
         return np.lib.format.open_memmap(obj)
-    elif isinstance(obj, np.ndarray):
-        return obj
     elif isinstance(obj, dict):
         return {k: _file_paths_to_memmaps(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [_file_paths_to_memmaps(v) for v in obj]
     elif isinstance(obj, tuple):
         return tuple(_file_paths_to_memmaps(v) for v in obj)
+    else:
+        return obj
 
 
 def _zip_dict(**kwargs):
@@ -627,6 +627,15 @@ def _sample_chains_parallel(
             # from on initialising each chain
             chain_queue = manager.Queue()
             for c, (chain_kwargs, n_iter) in enumerate(zip(per_chain_kwargs, n_iters)):
+                # Convert memmaps to filepaths prior to putting on argument queue to
+                # avoid serializing potentially large memory mapped arrays
+                if common_kwargs["memmap_enabled"]:
+                    chain_kwargs["chain_stats"] = _memmaps_to_file_paths(
+                        chain_kwargs["chain_stats"]
+                    )
+                    chain_kwargs["chain_traces"] = _memmaps_to_file_paths(
+                        chain_kwargs["chain_traces"]
+                    )
                 chain_queue.put((c, n_iter, chain_kwargs))
             # Start n_process worker processes which each have access to the
             # shared queues, returning results asynchronously
@@ -732,306 +741,7 @@ class MarkovChainMonteCarloMethod(object):
         self.rng = rng
         self.transitions = transitions
 
-    def __set_sample_chain_kwargs_defaults(self, kwargs):
-        if "memmap_enabled" not in kwargs:
-            kwargs["memmap_enabled"] = False
-        if kwargs["memmap_enabled"] and kwargs.get("memmap_path") is None:
-            kwargs["memmap_path"] = tempfile.mkdtemp()
-        display_progress = kwargs.pop("display_progress", True)
-        if not display_progress:
-            kwargs["progress_bar_class"] = DummyProgressBar
-        elif "progress_bar_class" not in kwargs:
-            kwargs["progress_bar_class"] = ProgressBar
-
-    def sample_chain(self, n_iter, init_state, trace_funcs, **kwargs):
-        """Sample a Markov chain from a given initial state.
-
-        Performs a specified number of chain iterations (each of which may be
-        composed of multiple individual Markov transitions), recording the
-        outputs of functions of the sampled chain state after each iteration.
-
-        Args:
-            n_iter (int): Number of iterations (samples to draw) per chain.
-            init_state (mici.states.ChainState or Dict[str, object]): Initial
-                chain state. Either a `mici.states.ChainState` object or a
-                dictionary with entries specifying initial values for all state
-                variables used by chain transition `sample` methods.
-            trace_funcs (Sequence[Callable[[ChainState], Dict[str, array]]]):
-                Sequence of functions which compute the variables to be recorded at
-                each chain iteration, with each trace function being passed the
-                current state and returning a dictionary of scalar or array
-                values corresponding to the variable(s) to be stored. The keys
-                in the returned dictionaries are used to index the trace arrays
-                in the returned traces dictionary. If a key appears in multiple
-                dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored.
-
-        Kwargs:
-            memmap_enabled (bool): Whether to memory-map arrays used to store
-                chain data to files on disk to avoid excessive system memory
-                usage for long chains and/or large chain states. The chain data
-                is written to `.npy` files in the directory specified by
-                `memmap_path` (or a temporary directory if not provided). These
-                files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is to
-                for memory mapping to be disabled.
-            memmap_path (str): Path to directory to write memory-mapped chain
-                data to. If not provided, a temporary directory will be created
-                and the chain data written to files there.
-            monitor_stats (Sequence[Tuple[str, str]]): Sequence of tuples of string
-                key pairs, with first entry the key of a Markov transition in
-                the `transitions` dict passed to the the `__init__` method and
-                the second entry the key of a chain statistic that will be
-                returned in the `chain_stats` dictionary. The mean over samples
-                computed so far of the chain statistics associated with any
-                valid key-pairs will be monitored during sampling by printing
-                as postfix to progress bar.
-            display_progress (bool): Whether to display a progress bar to
-                track the completed chain sampling iterations. Default value
-                is `True`, i.e. to display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
-                factory function for progress bar to use to show chain
-                progress if enabled (`display_progress=True`). Defaults to
-                `mici.progressbars.ProgressBar`.
-            adapters (Dict[str, Sequence[Adapter]): Dictionary of sequences of
-                `mici.adapters.Adapter` instances keyed by strings corresponding
-                to the key of the transition in the `transitions` dictionary to
-                apply the adapters to. Each adapter is able to adaptatively set
-                the parameters of a transition while sampling a chain. Note that
-                the adapter updates for each transition are applied in the order
-                the adapters appear in the iterable and so if multiple adapters
-                change the same parameter(s) the order will matter. Adaptation
-                based on the chain state history breaks the Markov property and
-                so any chain samples while adaptation is active should not be
-                used in estimates of expectations.
-
-        Returns:
-            final_state (mici.states.ChainState): State of chain after final
-                iteration. May be used to resume sampling a chain by passing as
-                the initial state to a new `sample_chain` call.
-            traces (Dict[str, array]): Dictionary of chain trace arrays. Values
-                in dictionary are arrays of variables outputted by trace
-                functions in `trace_funcs` with leading dimension of array
-                corresponding to the sampling (draw) index. The key for each
-                value is the corresponding key in the dictionary returned by
-                the trace function which computed the traced value.
-            chain_stats (Dict[str, Dict[str, array]]): Dictionary of chain
-                transition statistic dictionaries. Values in outer dictionary
-                are dictionaries of statistics for each chain transition, keyed
-                by the string key for the transition. The values in each inner
-                transition dictionary are arrays of chain statistic values with
-                the leading dimension of each array corresponding to the
-                sampling (draw) index. The key for each value is a string
-                description of the corresponding integration transition
-                statistic.
-        """
-        self.__set_sample_chain_kwargs_defaults(kwargs)
-        init_state = _check_and_process_init_state(init_state, self.transitions)
-        chain_iterator = _construct_chain_iterators(
-            n_iter, kwargs.pop("progress_bar_class")
-        )
-        (chain_traces,) = _zip_dict(
-            **_init_traces(
-                trace_funcs,
-                [init_state],
-                n_iter,
-                kwargs["memmap_enabled"],
-                kwargs.get("memmap_path"),
-            )
-        )
-        chain_stats = {
-            k: next(_zip_dict(**v), None)
-            for k, v in _init_stats(
-                self.transitions,
-                1,
-                n_iter,
-                kwargs["memmap_enabled"],
-                kwargs.get("memmap_path"),
-            ).items()
-        }
-        final_state, adapter_states, _ = _sample_chain(
-            init_state=init_state,
-            chain_iterator=chain_iterator,
-            transitions=self.transitions,
-            rng=self.rng,
-            trace_funcs=trace_funcs,
-            chain_traces=chain_traces,
-            chain_stats=chain_stats,
-            parallel_chains=False,
-            **kwargs,
-        )
-        if len(adapter_states) > 0:
-            _finalize_adapters(
-                adapter_states,
-                final_state,
-                kwargs["adapters"],
-                self.transitions,
-                self.rng,
-            )
-
-        return final_state, chain_traces, chain_stats
-
-    def sample_chains(self, n_iter, init_states, trace_funcs, n_process=1, **kwargs):
-        """Sample one or more Markov chains from given initial states.
-
-        Performs a specified number of chain iterations (each of which may be
-        composed of multiple individual Markov transitions), recording the
-        outputs of functions of the sampled chain state after each iteration.
-        The chains may be run in parallel across multiple independent processes
-        or sequentially. In all cases all chains use independent random draws.
-
-        Args:
-            n_iter (int): Number of iterations (samples to draw) per chain.
-            init_states (Iterable[ChainState] or Iterable[Dict[str, object]]):
-                Initial chain states. Each entry can be either a `ChainState`
-                object or a dictionary with entries specifying initial values
-                for all state variables used by chain transition `sample`
-                methods.
-            trace_funcs (Sequence[Callable[[ChainState], Dict[str, array]]]):
-                Sequence of functions which compute the variables to be recorded at
-                each chain iteration, with each trace function being passed the
-                current state and returning a dictionary of scalar or array
-                values corresponding to the variable(s) to be stored. The keys
-                in the returned dictionaries are used to index the trace arrays
-                in the returned traces dictionary. If a key appears in multiple
-                dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored.
-
-        Kwargs:
-            n_process (int or None): Number of parallel processes to run chains
-                over. If set to 1 (the default) then chains will be run sequentially in
-                otherwise a `multiprocessing.Pool` object will be used to
-                dynamically assign the chains across multiple processes. If
-                set to `None` then the number of processes will default to the
-                output of `os.cpu_count()`.
-            max_threads_per_process (int or None): If `threadpoolctl` is
-                available this argument may be used to limit the maximum number
-                of threads that can be used in thread pools used in libraries
-                supported by `threadpoolctl`, which include BLAS and OpenMP
-                implementations. This argument will only have an effect if
-                `n_process > 1` such that chains are being run on multiple
-                processes and only if `threadpoolctl` is installed in the
-                current Python environment. If set to `None` (the default) no
-                limits are set.
-            memmap_enabled (bool): Whether to memory-map arrays used to store
-                chain data to files on disk to avoid excessive system memory
-                usage for long chains and/or large chain states. The chain data
-                is written to `.npy` files in the directory specified by
-                `memmap_path` (or a temporary directory if not provided). These
-                files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is to
-                for memory mapping to be disabled.
-            memmap_path (str): Path to directory to write memory-mapped chain
-                data to. If not provided, a temporary directory will be created
-                and the chain data written to files there.
-            monitor_stats (Sequence[Tuple[str, str]]): Sequence of tuples of string
-                key pairs, with first entry the key of a Markov transition in
-                the `transitions` dict passed to the the `__init__` method and
-                the second entry the key of a chain statistic that will be
-                returned in the `chain_stats` dictionary. The mean over samples
-                computed so far of the chain statistics associated with any
-                valid key-pairs will be monitored during sampling by printing
-                as postfix to progress bar.
-            display_progress (bool): Whether to display a progress bar to
-                track the completed chain sampling iterations. Default value
-                is `True`, i.e. to display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
-                factory function for progress bar to use to show chain
-                progress if enabled (`display_progress=True`). Defaults to
-                `mici.progressbars.ProgressBar`.
-            adapters (Dict[str, Sequence[Adapter]): Dictionary of sequence of
-                `mici.adapters.Adapter` instances keyed by strings corresponding
-                to the key of the transition in the `transitions` dictionary to
-                apply the adapters to. Each adapter is able to adaptatively set
-                the parameters of a transition while sampling a chain. Note that
-                the adapter updates for each transition are applied in the order
-                the adapters appear in the iterable and so if multiple adapters
-                change the same parameter(s) the order will matter. Adaptation
-                based on the chain state history breaks the Markov property and
-                so any chain samples while adaptation is active should not be
-                used in estimates of expectations.
-
-        Returns:
-            final_states (List[ChainState]): States of chains after final
-                iteration. May be used to resume sampling a chain by passing as
-                the initial states to a new `sample_chains` call.
-            traces (Dict[str, List[array]]): Dictionary of chain trace arrays.
-                Values in dictionary are list of arrays of variables outputted
-                by trace functions in `trace_funcs` with each array in the list
-                corresponding to a single chain and the leading dimension of
-                each array corresponding to the sampling (draw) index. The key
-                for each value is the corresponding key in the dictionary
-                returned by the trace function which computed the traced value.
-            chain_stats (Dict[str, Dict[str, List[array]]]): Dictionary of
-                chain transition statistic dictionaries. Values in outer
-                dictionary are dictionaries of statistics for each chain
-                transition, keyed by the string key for the transition. The
-                values in each inner transition dictionary are lists of arrays
-                of chain statistic values with each array in the list
-                corresponding to a single chain and the leading dimension of
-                each array corresponding to the sampling (draw) index. The key
-                for each value is a string description of the corresponding
-                integration transition statistic.
-        """
-        self.__set_sample_chain_kwargs_defaults(kwargs)
-        n_chain = len(init_states)
-        chain_iterators = _construct_chain_iterators(
-            n_iter, kwargs.pop("progress_bar_class"), n_chain
-        )
-        init_states = [
-            _check_and_process_init_state(state, self.transitions)
-            for state in init_states
-        ]
-        traces = _init_traces(
-            trace_funcs,
-            init_states,
-            n_iter,
-            kwargs["memmap_enabled"],
-            kwargs.get("memmap_path"),
-        )
-        stats = _init_stats(
-            self.transitions,
-            n_chain,
-            n_iter,
-            kwargs["memmap_enabled"],
-            kwargs.get("memmap_path"),
-        )
-        per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
-        per_chain_stats = _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
-        per_chain_traces = _zip_dict(**traces)
-        if n_process == 1:
-            # Using single process therefore run chains sequentially
-            kwargs.pop("max_threads_per_process", None)
-            sample_chains_func = _sample_chains_sequential
-        else:
-            # Run chains in parallel using a multiprocess(ing).Pool
-            kwargs["n_process"] = 1
-            per_chain_stats = _memmaps_to_file_paths(list(per_chain_stats))
-            per_chain_traces = _memmaps_to_file_paths(list(per_chain_traces))
-            sample_chains_func = _sample_chains_parallel
-        final_states, adapter_states, _ = sample_chains_func(
-            chain_iterators=chain_iterators,
-            per_chain_kwargs=_zip_dict(
-                init_state=init_states,
-                rng=per_chain_rngs,
-                chain_traces=per_chain_traces,
-                chain_stats=per_chain_stats,
-            ),
-            transitions=self.transitions,
-            trace_funcs=trace_funcs,
-            **kwargs,
-        )
-        if len(adapter_states) > 0:
-            _finalize_adapters(
-                adapter_states,
-                final_states,
-                kwargs["adapters"],
-                self.transitions,
-                per_chain_rngs,
-            )
-        return final_states, traces, stats
-
-    def sample_chains_with_adaptive_warm_up(
+    def sample_chains(
         self,
         n_warm_up_iter,
         n_main_iter,
@@ -1041,7 +751,12 @@ class MarkovChainMonteCarloMethod(object):
         stager=None,
         n_process=1,
         trace_warm_up=False,
-        **kwargs,
+        max_threads_per_process=None,
+        memmap_enabled=False,
+        memmap_path=None,
+        monitor_stats=None,
+        display_progress=True,
+        progress_bar_class=None,
     ):
         """Sample Markov chains from given initial states with optional adaptive warm up
 
@@ -1104,6 +819,9 @@ class MarkovChainMonteCarloMethod(object):
                 chains across multiple processes. If set to `None` then the number of
                 processes will be set to the output of `os.cpu_count()`. Default is
                 `n_process=1`.
+            trace_warm_up (bool): Whether to record chain traces and statistics during
+                warm-up stage iterations (True) or only record traces and statistics in
+                the iterations of the final non-adaptive stage (True, the default).
             max_threads_per_process (Optional[int]): If `threadpoolctl` is available
                 this argument may be used to limit the maximum number of threads that
                 can be used in thread pools used in libraries supported by
@@ -1122,20 +840,21 @@ class MarkovChainMonteCarloMethod(object):
             memmap_path (Optional[str]): Path to directory to write memory-mapped chain
                 data to. If `None` (the default), a temporary directory will be created
                 and the chain data written to files there.
-            monitor_stats (Dict[str, List[str]]): String-keyed dictionary of lists of
-                strings, with dictionary key the key of a Markov transition in the
-                `transitions` dict passed to the the `__init__` method and the
+            monitor_stats (Optional[Dict[str, List[str]]]): String-keyed dictionary of
+                lists of strings, with dictionary key the key of a Markov transition in
+                the `transitions` dict passed to the the `__init__` method and the
                 corresponding list, the keys of statistics returned by the transition
                 (as defined by the `statistics_type` attribute of transition). The mean
                 over samples computed so far of the statistics associated with any valid
                 key-pairs will be monitored during sampling by printing as postfix to
-                progress bar.
+                progress bar. If `None` no statistics are monitored.
             display_progress (bool): Whether to display a progress bar to track the
                 completed chain sampling iterations. Default value is `True`, i.e. to
                 display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or factory
-                function for progress bar to use to show chain progress if enabled
-                (`display_progress=True`). Defaults to `mici.progressbars.ProgressBar`.
+            progress_bar_class (Optional[mici.progressbars.BaseProgressBar]): Class or
+                factory function for progress bar to use to show chain progress if
+                enabled (`display_progress=True`). Defaults to
+                `mici.progressbars.ProgressBar` if `None` and `display_progress=True`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final iteration. May
@@ -1158,7 +877,12 @@ class MarkovChainMonteCarloMethod(object):
                 non-adaptive sampling stage. The key for each value is a string
                 description of the corresponding integration transition statistic.
         """
-        self.__set_sample_chain_kwargs_defaults(kwargs)
+        if memmap_enabled and memmap_path is None:
+            memmap_path = tempfile.mkdtemp()
+        if not display_progress:
+            progress_bar_class = DummyProgressBar
+        elif progress_bar_class is None:
+            progress_bar_class = ProgressBar
         n_chain = len(init_states)
         n_trace_iter = n_warm_up_iter + n_main_iter if trace_warm_up else n_main_iter
         init_states = [
@@ -1169,33 +893,32 @@ class MarkovChainMonteCarloMethod(object):
             None
             if trace_funcs is None or len(trace_funcs) == 0
             else _init_traces(
-                trace_funcs,
-                init_states,
-                n_trace_iter,
-                kwargs["memmap_enabled"],
-                kwargs.get("memmap_path"),
+                trace_funcs, init_states, n_trace_iter, memmap_enabled, memmap_path
             )
         )
         stats = _init_stats(
-            self.transitions,
-            n_chain,
-            n_trace_iter,
-            kwargs["memmap_enabled"],
-            kwargs.get("memmap_path"),
+            self.transitions, n_chain, n_trace_iter, memmap_enabled, memmap_path,
         )
         per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
-        per_chain_traces = [None] * n_chain if traces is None else _zip_dict(**traces)
-        per_chain_stats = _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
-        progress_bar_class = kwargs.pop("progress_bar_class")
+        per_chain_traces = (
+            [None] * n_chain if traces is None else list(_zip_dict(**traces))
+        )
+        per_chain_stats = list(
+            _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
+        )
+        common_kwargs = {
+            "transitions": self.transitions,
+            "memmap_enabled": memmap_enabled,
+            "memmap_path": memmap_path,
+            "monitor_stats": monitor_stats,
+        }
         if n_process == 1:
             # Using single process therefore run chains sequentially
-            kwargs.pop("max_threads_per_process", None)
             sample_chains_func = _sample_chains_sequential
         else:
             # Run chains in parallel using a multiprocess(ing).Pool
-            kwargs["n_process"] = n_process
-            per_chain_stats = _memmaps_to_file_paths(list(per_chain_stats))
-            per_chain_traces = _memmaps_to_file_paths(list(per_chain_traces))
+            common_kwargs["n_process"] = n_process
+            common_kwargs["max_threads_per_process"] = max_threads_per_process
             sample_chains_func = _sample_chains_parallel
         if stager is None:
             if adapters is None or all(
@@ -1233,8 +956,7 @@ class MarkovChainMonteCarloMethod(object):
                     sampling_index_offset=sampling_index_offset,
                     trace_funcs=stage.trace_funcs,
                     adapters=stage.adapters,
-                    transitions=self.transitions,
-                    **kwargs,
+                    **common_kwargs,
                 )
                 if len(adapter_states) > 0:
                     _finalize_adapters(
@@ -1325,224 +1047,12 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
     def _default_trace_func(self, state):
         """Default function of the chain state traced while sampling."""
         # This needs to be a method rather than for example a local nested
-        # function in the __set_sample_chain_kwargs_defaults method to ensure
+        # function in the __set_sample_chains_kwargs_defaults method to ensure
         # that it remains pickleable and so can be piped to a separate process
         # when running multiple chains using multiprocessing
         return {"pos": state.pos, "hamiltonian": self.system.h(state)}
 
-    def __set_sample_chain_kwargs_defaults(self, kwargs):
-        # default to tracing position component of state and Hamiltonian
-        if "trace_funcs" not in kwargs:
-            kwargs["trace_funcs"] = [self._default_trace_func]
-        # if `monitor_stats` specified, expand all statistics keys to key pairs
-        # with transition key set to `integration_transition`
-        if "monitor_stats" in kwargs:
-            if kwargs["monitor_stats"] is not None:
-                kwargs["monitor_stats"] = {
-                    "integration_transition": kwargs["monitor_stats"]
-                }
-        else:
-            kwargs["monitor_stats"] = {"integration_transition": ["accept_stat"]}
-        # if adapters kwarg specified, wrap adapter list in dictionary with
-        # adapters applied to integration transition
-        if "adapters" in kwargs and kwargs["adapters"] is not None:
-            kwargs["adapters"] = {"integration_transition": kwargs["adapters"]}
-
-    def sample_chain(self, n_iter, init_state, **kwargs):
-        """Sample a Markov chain from a given initial state.
-
-        Performs a specified number of chain iterations (each of which may be
-        composed of multiple individual Markov transitions), recording the
-        outputs of functions of the sampled chain state after each iteration.
-
-        Args:
-            n_iter (int): Number of iterations (samples to draw) per chain.
-            init_state (mici.states.ChainState or array): Initial chain state.
-                The state can be either an array specifying the state position
-                component or a `mici.states.ChainState` instance. If an array
-                is passed or the `mom` attribute of the state is not set, a
-                momentum component will be independently sampled from its
-                conditional distribution.
-
-        Kwargs:
-            trace_funcs (Sequence[Callable[[ChainState], Dict[str, array]]]):
-                List of functions which compute the variables to be recorded at
-                each chain iteration, with each trace function being passed the
-                current state and returning a dictionary of scalar or array
-                values corresponding to the variable(s) to be stored. The keys
-                in the returned dictionaries are used to index the trace arrays
-                in the returned traces dictionary. If a key appears in multiple
-                dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored. Default is to use a
-                single function which recordes the position component of the
-                state under the key `pos` and the Hamiltonian at the state
-                under the key `hamiltonian`.
-            memmap_enabled (bool): Whether to memory-map arrays used to store
-                chain data to files on disk to avoid excessive system memory
-                usage for long chains and/or large chain states. The chain data
-                is written to `.npy` files in the directory specified by
-                `memmap_path` (or a temporary directory if not provided). These
-                files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is for
-                memory mapping to be disabled.
-            memmap_path (str): Path to directory to write memory-mapped chain
-                data to. If not provided, a temporary directory will be created
-                and the chain data written to files there.
-            monitor_stats (Sequence[str]): Sequence of string keys of chain
-                statistics to monitor mean of over samples computed so far
-                during sampling by printing as postfix to progress bar. Default
-                is to print only the mean `accept_stat` statistic.
-            display_progress (bool): Whether to display a progress bar to
-                track the completed chain sampling iterations. Default value
-                is `True`, i.e. to display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
-                factory function for progress bar to use to show chain
-                progress if enabled (`display_progress=True`). Defaults to
-                `mici.progressbars.ProgressBar`.
-            adapters (Sequence[Adapter]): Sequence of `mici.adapters.Adapter`
-                instances to use to adaptatively set parameters of the
-                integration transition such as the step size while sampling a
-                chain. Note that the adapter updates are applied in the order
-                the adapters appear in the iterable and so if multiple adapters
-                change the same parameter(s) the order will matter. Adaptation
-                based on the chain state history breaks the Markov property and
-                so any chain samples while adaptation is active should not be
-                used in estimates of expectations. Default is to use no
-                adapters.
-
-        Returns:
-            final_state (mici.states.ChainState): State of chain after final
-                iteration. May be used to resume sampling a chain by passing as
-                the initial state to a new `sample_chain` call.
-            traces (Dict[str, array]): Dictionary of chain trace arrays. Values
-                in dictionary are arrays of variables outputted by trace
-                functions in `trace_funcs` with leading dimension of array
-                corresponding to the sampling (draw) index. The key for each
-                value is the corresponding key in the dictionary returned by
-                the trace function which computed the traced value.
-            stats (Dict[str, array]): Dictionary of chain integration
-                transition statistics. Values in dictionary are arrays of chain
-                statistic values with the leading dimension of each array
-                corresponding to the sampling (draw) index. The key for each
-                value is a string description of the corresponding integration
-                transition statistic.
-        """
-        init_state = self._preprocess_init_state(init_state)
-        self.__set_sample_chain_kwargs_defaults(kwargs)
-        final_state, traces, stats = super().sample_chain(n_iter, init_state, **kwargs)
-        stats = stats.get("integration_transition", {})
-        return final_state, traces, stats
-
-    def sample_chains(self, n_iter, init_states, **kwargs):
-        """Sample one or more Markov chains from given initial states.
-
-        Performs a specified number of chain iterations, each of consisting of a
-        momentum transition followed by an integration transition, recording the
-        outputs of functions of the sampled chain state after each iteration.
-        The chains may be run in parallel across multiple independent processes
-        or sequentially. In all cases all chains use independent random draws.
-
-        Args:
-            n_iter (int): Number of iterations (samples to draw) per chain.
-            init_states (Iterable[ChainState] or Iterable[array]): Initial
-                chain states. Each state can be either an array specifying the
-                state position component or a `mici.states.ChainState`
-                instance. If an array is passed or the `mom` attribute of the
-                state is not set, a momentum component will be independently
-                sampled from its conditional distribution. One chain will be
-                run for each state in the iterable sequence.
-
-        Kwargs:
-            n_process (int or None): Number of parallel processes to run chains
-                over. If `n_process=1` then chains will be run sequentially
-                otherwise a `multiprocessing.Pool` object will be used to
-                dynamically assign the chains across multiple processes. If set
-                to `None` then the number of processes will be set to the
-                output of `os.cpu_count()`. Default is `n_process=1`.
-            max_threads_per_process (int or None): If `threadpoolctl` is
-                available this argument may be used to limit the maximum number
-                of threads that can be used in thread pools used in libraries
-                supported by `threadpoolctl`, which include BLAS and OpenMP
-                implementations. This argument will only have an effect if
-                `n_process > 1` such that chains are being run on multiple
-                processes and only if `threadpoolctl` is installed in the
-                current Python environment. If set to `None` (the default) no
-                limits are set.
-            trace_funcs (Sequence[Callable[[ChainState], Dict[str, array]]]):
-                Sequence of functions which compute the variables to be recorded at
-                each chain iteration, with each trace function being passed the
-                current state and returning a dictionary of scalar or array
-                values corresponding to the variable(s) to be stored. The keys
-                in the returned dictionaries are used to index the trace arrays
-                in the returned traces dictionary. If a key appears in multiple
-                dictionaries only the the value corresponding to the last trace
-                function to return that key will be stored.  Default is to use a
-                single function which recordes the position component of the
-                state under the key `pos` and the Hamiltonian at the state
-                under the key `hamiltonian`.
-            memmap_enabled (bool): Whether to memory-map arrays used to store
-                chain data to files on disk to avoid excessive system memory
-                usage for long chains and/or large chain states. The chain data
-                is written to `.npy` files in the directory specified by
-                `memmap_path` (or a temporary directory if not provided). These
-                files persist after the termination of the function so should
-                be manually deleted when no longer required. Default is for
-                memory mapping to be disabled.
-            memmap_path (str): Path to directory to write memory-mapped chain
-                data to. If not provided (the default), a temporary directory
-                will be created and the chain data written to files there.
-            monitor_stats (Sequence[str]): Sequence of string keys of chain
-                statistics to monitor mean of over samples computed so far
-                during sampling by printing as postfix to progress bar. Default
-                is to print only the mean `accept_stat` statistic.
-            display_progress (bool): Whether to display a progress bar to
-                track the completed chain sampling iterations. Default value
-                is `True`, i.e. to display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or
-                factory function for progress bar to use to show chain
-                progress if enabled (`display_progress=True`). Defaults to
-                `mici.progressbars.ProgressBar`.
-            adapters (Sequence[Adapter]): Sequence of `mici.adapters.Adapter`
-                instances to use to adaptatively set parameters of the
-                integration transition such as the step size while sampling a
-                chain. Note that the adapter updates are applied in the order
-                the adapters appear in the iterable and so if multiple adapters
-                change the same parameter(s) the order will matter. Adaptation
-                based on the chain state history breaks the Markov property and
-                so any chain samples while adaptation is active should not be
-                used in estimates of expectations. Default is to use no
-                adapters.
-
-        Returns:
-            final_states (List[ChainState]): States of chains after final
-                iteration. May be used to resume sampling a chain by passing as
-                the initial states to a new `sample_chains` call.
-            traces (Dict[str, List[array]]): Dictionary of chain trace arrays.
-                Values in dictionary are list of arrays of variables outputted
-                by trace functions in `trace_funcs` with each array in the list
-                corresponding to a single chain and the leading dimension of
-                each array corresponding to the iteration (draw) index. The key
-                for each value is the corresponding key in the dictionary
-                returned by the trace function which computed the traced value.
-            stats (Dict[str, List[array]]): Dictionary of chain
-                integration transition statistics. Values in dictionary are
-                lists of arrays of chain statistic values with each array in
-                the list corresponding to a single chain and the leading
-                dimension of each array corresponding to the iteration (draw)
-                index. The key for each value is a string description of the
-                corresponding integration transition statistic.
-        """
-        init_states = [self._preprocess_init_state(i) for i in init_states]
-        self.__set_sample_chain_kwargs_defaults(kwargs)
-        final_states, traces, stats = super().sample_chains(
-            n_iter, init_states, **kwargs
-        )
-        stats = stats.get("integration_transition", {})
-        return final_states, traces, stats
-
-    def sample_chains_with_adaptive_warm_up(
-        self, n_warm_up_iter, n_main_iter, init_states, **kwargs
-    ):
+    def sample_chains(self, n_warm_up_iter, n_main_iter, init_states, **kwargs):
         """Sample Markov chains from given initial states with adaptive warm up.
 
         One or more Markov chains are sampled, with each chain iteration consisting of a
@@ -1664,10 +1174,26 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 transition statistic.
         """
         init_states = [self._preprocess_init_state(i) for i in init_states]
+        # default to single dual-averaging step size adapter
         if "adapters" not in kwargs:
             kwargs["adapters"] = [DualAveragingStepSizeAdapter()]
-        self.__set_sample_chain_kwargs_defaults(kwargs)
-        final_states, traces, stats = super().sample_chains_with_adaptive_warm_up(
+        # default to tracing position component of state and Hamiltonian
+        if "trace_funcs" not in kwargs:
+            kwargs["trace_funcs"] = [self._default_trace_func]
+        # if `monitor_stats` specified, expand all statistics keys to key pairs
+        # with transition key set to `integration_transition`
+        if "monitor_stats" in kwargs:
+            if kwargs["monitor_stats"] is not None:
+                kwargs["monitor_stats"] = {
+                    "integration_transition": kwargs["monitor_stats"]
+                }
+        else:
+            kwargs["monitor_stats"] = {"integration_transition": ["accept_stat"]}
+        # if adapters kwarg specified, wrap adapter list in dictionary with
+        # adapters applied to integration transition
+        if "adapters" in kwargs and kwargs["adapters"] is not None:
+            kwargs["adapters"] = {"integration_transition": kwargs["adapters"]}
+        final_states, traces, stats = super().sample_chains(
             n_warm_up_iter, n_main_iter, init_states, **kwargs
         )
         stats = stats.get("integration_transition", {})
