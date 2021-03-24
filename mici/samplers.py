@@ -304,28 +304,6 @@ def _flush_memmap_chain_data(chain_traces, chain_stats):
                 stat.flush()
 
 
-def _try_resize_dim_0_inplace(array, new_shape_0):
-    """Try to resize 0-axis of array in-place or return a view otherwise."""
-    if new_shape_0 >= array.shape[0]:
-        return array
-    try:
-        # Try to truncate arrays by resizing in place
-        array.resize((new_shape_0,) + array.shape[1:])
-        return array
-    except ValueError:
-        # In place resize not possible therefore return truncated view
-        return array[:new_shape_0]
-
-
-def _truncate_chain_data(sample_index, chain_traces, chain_stats):
-    """Truncate first dimension of chain arrays to sample_index < n_iter."""
-    for key in chain_traces:
-        chain_traces[key] = _try_resize_dim_0_inplace(chain_traces[key], sample_index)
-    for trans_stats in chain_stats.values():
-        for key in trans_stats:
-            trans_stats[key] = _try_resize_dim_0_inplace(trans_stats[key], sample_index)
-
-
 def _sample_chain(
     init_state,
     chain_iterator,
@@ -479,10 +457,6 @@ def _sample_chain(
             f" iteration {sample_index}. Arrays containing chain traces and"
             f" statistics computed before interruption will be returned."
         )
-        # Sampling interrupted therefore truncate returned arrays unless using
-        # memory mapping with parallel chains as will only return file paths
-        if not (parallel_chains and memmap_enabled):
-            _truncate_chain_data(sample_index, chain_traces, chain_stats)
     else:
         exception = None
     if memmap_enabled:
@@ -921,6 +895,7 @@ class MarkovChainMonteCarloMethod(object):
             common_kwargs["max_threads_per_process"] = max_threads_per_process
             sample_chains_func = _sample_chains_parallel
         if stager is None:
+            # use single warm-up stage stager if no adapters or all fast type
             if adapters is None or all(
                 a.is_fast for a_list in adapters.values() for a in a_list
             ):

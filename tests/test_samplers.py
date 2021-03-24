@@ -106,21 +106,6 @@ def test_get_per_chain_rngs_raises():
         mici.samplers._get_per_chain_rngs(None, 4)
 
 
-@pytest.mark.parametrize("offset", (-1, 0, 1))
-@pytest.mark.parametrize("read_only", (True, False))
-def test_truncate_chain_data(offset, read_only):
-    n_iter = 5
-    pos_trace = np.empty((n_iter, 2))
-    accept_prob_array = np.empty(n_iter)
-    if read_only:
-        pos_trace.flags.writeable = False
-    traces = {"pos": pos_trace}
-    stats = {"i": {"accept_prob": accept_prob_array}}
-    mici.samplers._truncate_chain_data(n_iter + offset, traces, stats)
-    assert traces["pos"].shape[0] == min(n_iter, n_iter + offset)
-    assert stats["i"]["accept_prob"].shape[0] == min(n_iter, n_iter + offset)
-
-
 class MarkovChainMonteCarloMethodTests:
     def test_sampler_attributes(self, sampler, rng):
         assert sampler.rng is rng
