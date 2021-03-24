@@ -188,6 +188,7 @@ class IntegrationTransition(Transition):
         "accept_stat": (np.float64, np.nan),
         "non_reversible_step": (np.bool, False),
         "convergence_error": (np.bool, False),
+        "step_size": (np.float64, np.nan),
     }
 
     def __init__(self, system, integrator):
@@ -243,7 +244,11 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         h_init = self.system.h(state)
         state_p = state
         integration_error = False
-        stats = {"convergence_error": False, "non_reversible_step": False}
+        stats = {
+            "convergence_error": False,
+            "non_reversible_step": False,
+            "step_size": self.integrator.step_size,
+        }
         try:
             for s in range(n_step):
                 state_p = self.integrator.step(state_p)
@@ -612,6 +617,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
             "diverging": False,
             "convergence_error": False,
             "non_reversible_step": False,
+            "step_size": self.integrator.step_size,
         }
         aux_vars = self._init_aux_vars(state, rng)
         tree = self._new_leave(state, aux_vars["h_init"], aux_vars)
