@@ -949,7 +949,7 @@ class MarkovChainMonteCarloMethod(object):
                             self.transitions,
                             per_chain_rngs,
                         )
-                    if stage.trace_funcs is not None:
+                    if stage.trace_funcs is not None or stage.record_stats:
                         sampling_index_offset += stage.n_iter
                     if isinstance(exception, KeyboardInterrupt):
                         return chain_states, traces, stats
