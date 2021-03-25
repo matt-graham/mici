@@ -5,6 +5,7 @@ import sys
 import inspect
 import queue
 from contextlib import ExitStack, contextmanager
+from pathlib import Path
 from pickle import PicklingError
 import logging
 import tempfile
@@ -51,8 +52,8 @@ except ImportError:
     # Fallback for nullcontext context manager for Python 3.6
     # https://stackoverflow.com/a/55902915
     @contextmanager
-    def nullcontext():
-        yield None
+    def nullcontext(enter_result=None):
+        yield enter_result
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,24 @@ def _ignore_sigint_manager():
         yield manager
     finally:
         manager.shutdown()
+
+
+@contextmanager
+def _pool_context_manager(n_process):
+    """Context-manager for process pool that ensures clean exiting.
+
+    Compared to built-in context-manager protocol implementation on Pool object which
+    calls the `terminate` method on exit which immediately stops the worker processes,
+    this manager instead ensures a clean exit by calling `close` to prevent any
+    additional jobs being submitted to pool, and then `join` to wait for processes to
+    exit.
+    """
+    pool = Pool(n_process)
+    try:
+        yield pool
+    finally:
+        pool.close()
+        pool.join()
 
 
 def _get_valid_filename(string):
@@ -119,52 +138,52 @@ def _open_new_memmap(file_path, shape, default_val, dtype):
     return memmap
 
 
-def _memmaps_to_file_paths(obj):
-    """Convert pytree of memmaps to corresponding file paths.
+def _memmaps_to_file_paths(pytree):
+    """Convert any memmaps in pytree to corresponding file paths.
 
-    Acts recursively on arbitrary 'pytrees' of nested dict/tuple/lists with
-    memmap leaves.
-
-    Arg:
-        obj: NumPy memmap object or pytree of memmap objects to convert.
-
-    Returns:
-        File path string or pytree of file path strings.
-    """
-    if isinstance(obj, np.memmap):
-        return obj.filename
-    elif isinstance(obj, dict):
-        return {k: _memmaps_to_file_paths(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [_memmaps_to_file_paths(v) for v in obj]
-    elif isinstance(obj, tuple):
-        return tuple(_memmaps_to_file_paths(v) for v in obj)
-    else:
-        return obj
-
-
-def _file_paths_to_memmaps(obj):
-    """Convert pytree of file paths to memmaps to corresponding memmaps.
-
-    Acts recursively on arbitrary 'pytrees' of nested dict/tuple/lists with
-    string leaves corresponding to memmap file paths.
+    Acts recursively on arbitrary 'pytrees' of nested dict/tuple/lists with any object
+    which is none of a memory map, dictionary, tuple or list returned as is.
 
     Arg:
-        obj: String path or pytree of string paths to convert.
+        pytree: Pytree of objects to convert.
 
     Returns:
-        Memmap object or pytree of memmaps
+        Pytree with same structure as `pytree` and any memory maps converted to paths.
     """
-    if isinstance(obj, str):
-        return np.lib.format.open_memmap(obj)
-    elif isinstance(obj, dict):
-        return {k: _file_paths_to_memmaps(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [_file_paths_to_memmaps(v) for v in obj]
-    elif isinstance(obj, tuple):
-        return tuple(_file_paths_to_memmaps(v) for v in obj)
+    if isinstance(pytree, np.memmap):
+        return Path(pytree.filename)
+    elif isinstance(pytree, dict):
+        return {k: _memmaps_to_file_paths(v) for k, v in pytree.items()}
+    elif isinstance(pytree, list):
+        return [_memmaps_to_file_paths(v) for v in pytree]
+    elif isinstance(pytree, tuple):
+        return tuple(_memmaps_to_file_paths(v) for v in pytree)
     else:
-        return obj
+        return pytree
+
+
+def _file_paths_to_memmaps(pytree):
+    """Convert any paths in pytree to corresponding memory-mapped arrays.
+
+    Acts recursively on arbitrary 'pytrees' of nested dict/tuple/lists with any object
+    which is none of a path, dictionary, tuple or list returned as is.
+
+    Arg:
+        pytree: Pytree of objects to convert.
+
+    Returns:
+        Pytree with same structure as `pytree` and any paths converted to memory maps.
+    """
+    if isinstance(pytree, Path):
+        return np.lib.format.open_memmap(pytree)
+    elif isinstance(pytree, dict):
+        return {k: _file_paths_to_memmaps(v) for k, v in pytree.items()}
+    elif isinstance(pytree, list):
+        return [_file_paths_to_memmaps(v) for v in pytree]
+    elif isinstance(pytree, tuple):
+        return tuple(_file_paths_to_memmaps(v) for v in pytree)
+    else:
+        return pytree
 
 
 def _zip_dict(**kwargs):
@@ -201,14 +220,14 @@ def _check_and_process_init_state(state, transitions):
     return ChainState(**state) if isinstance(state, dict) else state
 
 
-def _init_stats(transitions, n_chain, n_iter, memmap_enabled, memmap_path):
+def _init_stats(transitions, n_chain, n_iter, use_memmap, memmap_path):
     """Initialize dictionary of per-transition chain statistics array dicts."""
     stats = {}
     for trans_key, transition in transitions.items():
         if transition.statistic_types is not None:
             stats[trans_key] = {}
             for key, (dtype, val) in transition.statistic_types.items():
-                if memmap_enabled:
+                if use_memmap:
                     stats[trans_key][key] = [
                         _open_new_memmap(filename, n_iter, val, dtype)
                         for filename in _generate_memmap_filenames(
@@ -220,7 +239,7 @@ def _init_stats(transitions, n_chain, n_iter, memmap_enabled, memmap_path):
     return stats
 
 
-def _init_traces(trace_funcs, init_states, n_iter, memmap_enabled, memmap_path):
+def _init_traces(trace_funcs, init_states, n_iter, use_memmap, memmap_path):
     """Initialize dictionary of chain trace arrays."""
     traces = {}
     n_chain = len(init_states)
@@ -228,7 +247,7 @@ def _init_traces(trace_funcs, init_states, n_iter, memmap_enabled, memmap_path):
         for key, val in trace_func(init_states[0]).items():
             val = np.array(val) if np.isscalar(val) else val
             init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
-            if memmap_enabled:
+            if use_memmap:
                 traces[key] = [
                     _open_new_memmap(filename, (n_iter,) + val.shape, init, val.dtype)
                     for filename in _generate_memmap_filenames(
@@ -297,11 +316,13 @@ def _flush_memmap_chain_data(chain_traces, chain_stats):
     """Flush all pending writes to memory-mapped chain data arrays to disk."""
     if chain_traces is not None:
         for trace in chain_traces.values():
-            trace.flush()
+            if hasattr(trace, "flush"):
+                trace.flush()
     if chain_stats is not None:
         for trans_stats in chain_stats.values():
             for stat in trans_stats.values():
-                stat.flush()
+                if hasattr(stat, "flush"):
+                    stat.flush()
 
 
 def _sample_chain(
@@ -312,11 +333,9 @@ def _sample_chain(
     trace_funcs=None,
     chain_traces=None,
     chain_stats=None,
+    load_memmaps=False,
     chain_index=0,
     sampling_index_offset=0,
-    parallel_chains=False,
-    memmap_enabled=False,
-    memmap_path=None,
     monitor_stats=None,
     adapters=None,
 ):
@@ -341,36 +360,31 @@ def _sample_chain(
             index the trace arrays in the returned traces dictionary. If a key appears
             in multiple dictionaries only the the value corresponding to the last trace
             function to return that key will be stored.
-        chain_traces (Dict[str, array]): Dictionary of chain trace arrays to record
-            traced output in. Values in dictionary are arrays which variables outputted
-            by trace functions in `trace_funcs` are recorded in. The leading dimension
-            of each array corresponds to the sampling (draw) index and must be of size
-            greater than `sampling_index_offset + n_iter` where `n_iter` is the number
-            of chain iterations. The key for each value is the corresponding key in the
+        chain_traces (Dict[str, Union[array, str]]): Dictionary of chain trace arrays
+            (or string file paths to memory-mapped stores of those arrays if
+            `load_memmaps=True`) , to record traced output in. Values in dictionary are
+            arrays (or paths to memmaped arrays) which variables outputted by trace
+            functions in `trace_funcs` are recorded in. The leading dimension of each
+            array corresponds to the sampling (draw) index and must be of size greater
+            than `sampling_index_offset + n_iter` where `n_iter` is the number of chain
+            iterations. The key for each value is the corresponding key in the
             dictionary returned by the trace function which computes the traced value.
-        chain_stats (Dict[str, Dict[str, array]]): Dictionary of chain transition
-            statistic dictionaries to record chain statistics in. Values in outer
-            dictionary are dictionaries of statistics for each chain transition, keyed
-            by the string key for the transition. The values in each inner transition
-            dictionary are arrays which chain statistic values will be recorded in. The
+        chain_stats (Dict[str, Dict[str, Union[array, str]]]): Dictionary of chain
+            transition statistic dictionaries to record chain statistics in. Values in
+            outer dictionary are dictionaries of statistics for each chain transition,
+            keyed by the string key for the transition. The values in each inner
+            transition dictionary are arrays (or paths to memmaped arrays if
+            `load_memmaps=True`) which chain statistic values will be recorded in. The
             leading dimension of each array corresponds to the sampling (draw) index and
             must be of size greater than `sampling_index_offset + n_iter` where `n_iter`
             is the number of chain iterations. The key for each value is a string
             description of the corresponding transition statistic.
+        load_memmaps (bool): Flag indicating whether `chain_traces` and `chain_stats`
+            dictionary contain file paths to saved memory-mapped arrays which must be
+            loaded before writing chain data.
         chain_index (int): Identifier for chain when sampling multiple chains.
         sampling_index_offset (int): Non-negative integer specifying sampling (draw)
             index in trace and statistic arrays to begin recording values at.
-        parallel_chains (bool): Whether multiple chains are being sampled in parallel.
-        memmap_enabled (bool): Whether to memory-map arrays used to store chain data to
-            files on disk to avoid excessive system memory usage for long chains and/or
-            large chain states. The chain data is written to `.npy` files in the
-            directory specified by `memmap_path` (or a temporary directory if not
-            provided). These files persist after the termination of the function so
-            should be manually deleted when no longer required. Default is to for memory
-            mapping to be disabled.
-        memmap_path (str): Path to directory to write memory-mapped chain data to. If
-            not provided and `memmap_enabled` is True, a temporary directory will be
-            created and the chain data written to files there.
         monitor_stats (Dict[str, Sequence[str]]): String-keyed dictionary of sequences
             of strings, with dictionary key the key of a Markov transition in the
             `transitions` dict passed to the the `__init__` method and the corresponding
@@ -402,7 +416,7 @@ def _sample_chain(
             returned outputs are processed by the caller.
     """
     state = _check_and_process_init_state(init_state, transitions)
-    if parallel_chains and memmap_enabled:
+    if load_memmaps:
         chain_traces = _file_paths_to_memmaps(chain_traces)
         chain_stats = _file_paths_to_memmaps(chain_stats)
     adapter_states = {}
@@ -459,7 +473,8 @@ def _sample_chain(
         )
     else:
         exception = None
-    if memmap_enabled:
+    finally:
+        # flush any updates to memory-mapped chain data to disk before exiting
         _flush_memmap_chain_data(chain_traces, chain_stats)
     return state, adapter_states, exception
 
@@ -512,7 +527,6 @@ def _sample_chains_sequential(chain_iterators, per_chain_kwargs, **common_kwargs
         *outputs, exception = _sample_chain(
             chain_iterator=chain_iterator,
             chain_index=chain_index,
-            parallel_chains=False,
             **chain_kwargs,
             **common_kwargs,
         )
@@ -549,7 +563,7 @@ def _sample_chains_worker(chain_queue, iter_queue, common_kwargs):
                     chain_iterator=_ProxyProgressBar(
                         range(n_iter), chain_index, iter_queue
                     ),
-                    parallel_chains=True,
+                    load_memmaps=True,
                     **chain_kwargs,
                     **common_kwargs,
                 )
@@ -591,7 +605,7 @@ def _sample_chains_parallel(
     """Sample multiple chains in parallel over multiple processes."""
     n_iters = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
-    with _ignore_sigint_manager() as manager, Pool(n_process) as pool:
+    with _ignore_sigint_manager() as manager, _pool_context_manager(n_process) as pool:
         results = None
         exception = None
         try:
@@ -601,15 +615,14 @@ def _sample_chains_parallel(
             # from on initialising each chain
             chain_queue = manager.Queue()
             for c, (chain_kwargs, n_iter) in enumerate(zip(per_chain_kwargs, n_iters)):
-                # Convert memmaps to filepaths prior to putting on argument queue to
+                # Map memmaps to their filepaths prior to putting on argument queue to
                 # avoid serializing potentially large memory mapped arrays
-                if common_kwargs["memmap_enabled"]:
-                    chain_kwargs["chain_stats"] = _memmaps_to_file_paths(
-                        chain_kwargs["chain_stats"]
-                    )
-                    chain_kwargs["chain_traces"] = _memmaps_to_file_paths(
-                        chain_kwargs["chain_traces"]
-                    )
+                chain_kwargs["chain_stats"] = _memmaps_to_file_paths(
+                    chain_kwargs["chain_stats"]
+                )
+                chain_kwargs["chain_traces"] = _memmaps_to_file_paths(
+                    chain_kwargs["chain_traces"]
+                )
                 chain_queue.put((c, n_iter, chain_kwargs))
             # Start n_process worker processes which each have access to the
             # shared queues, returning results asynchronously
@@ -726,7 +739,7 @@ class MarkovChainMonteCarloMethod(object):
         n_process=1,
         trace_warm_up=False,
         max_threads_per_process=None,
-        memmap_enabled=False,
+        force_memmap=False,
         memmap_path=None,
         monitor_stats=None,
         display_progress=True,
@@ -804,16 +817,17 @@ class MarkovChainMonteCarloMethod(object):
                 are being run on multiple processes and only if `threadpoolctl` is
                 installed in the current Python environment. If set to `None` (the
                 default) no limits are set.
-            memmap_enabled (bool): Whether to memory-map arrays used to store chain data
-                to files on disk to avoid excessive system memory usage for long chains
-                and/or large chain states. The chain data is written to `.npy` files in
-                the directory specified by `memmap_path` (or a temporary directory if
-                not provided). These files persist after the termination of the function
-                so should be manually deleted when no longer required. Default is for
-                memory mapping to be disabled.
+            force_memmap (bool): Whether to force arrays used to store chain data to be
+                memory-mapped to files on disk to avoid excessive system memory usage
+                for long chains and/or large chain states. The chain data is written to
+                `.npy` files in the directory specified by `memmap_path` (or a temporary
+                directory if `memmap_path` is `None`). Chain data is always memory
+                mapped when sampling chains in parallel on multiple processes.
             memmap_path (Optional[str]): Path to directory to write memory-mapped chain
-                data to. If `None` (the default), a temporary directory will be created
-                and the chain data written to files there.
+                data to. If `None` (the default) and memory-mapping is enabled then a
+                temporary directory will be created and the chain data written to files
+                there, with the created files being deleted in this case once the last
+                reference to them is closed.
             monitor_stats (Optional[Dict[str, List[str]]]): String-keyed dictionary of
                 lists of strings, with dictionary key the key of a Markov transition in
                 the `transitions` dict passed to the the `__init__` method and the
@@ -851,8 +865,6 @@ class MarkovChainMonteCarloMethod(object):
                 non-adaptive sampling stage. The key for each value is a string
                 description of the corresponding integration transition statistic.
         """
-        if memmap_enabled and memmap_path is None:
-            memmap_path = tempfile.mkdtemp()
         if not display_progress:
             progress_bar_class = DummyProgressBar
         elif progress_bar_class is None:
@@ -863,88 +875,96 @@ class MarkovChainMonteCarloMethod(object):
             _check_and_process_init_state(state, self.transitions)
             for state in init_states
         ]
-        traces = (
-            None
-            if trace_funcs is None or len(trace_funcs) == 0
-            else _init_traces(
-                trace_funcs, init_states, n_trace_iter, memmap_enabled, memmap_path
-            )
-        )
-        stats = _init_stats(
-            self.transitions, n_chain, n_trace_iter, memmap_enabled, memmap_path,
-        )
-        per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
-        per_chain_traces = (
-            [None] * n_chain if traces is None else list(_zip_dict(**traces))
-        )
-        per_chain_stats = list(
-            _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
-        )
-        common_kwargs = {
-            "transitions": self.transitions,
-            "memmap_enabled": memmap_enabled,
-            "memmap_path": memmap_path,
-            "monitor_stats": monitor_stats,
-        }
-        if n_process == 1:
-            # Using single process therefore run chains sequentially
-            sample_chains_func = _sample_chains_sequential
+        # memory-mapping of chain data used if force_memmap flag set or sampling chains
+        # in parallel
+        use_memmap = force_memmap or n_process > 1
+        # use context-manager to ensure any temporary directory created for memory-maps
+        # deleted before exiting
+        if use_memmap and memmap_path is None:
+            memmap_path_context = tempfile.TemporaryDirectory()
         else:
-            # Run chains in parallel using a multiprocess(ing).Pool
-            common_kwargs["n_process"] = n_process
-            common_kwargs["max_threads_per_process"] = max_threads_per_process
-            sample_chains_func = _sample_chains_parallel
-        if stager is None:
-            # use single warm-up stage stager if no adapters or all fast type
-            if adapters is None or all(
-                a.is_fast for a_list in adapters.values() for a in a_list
-            ):
-                stager = WarmUpStager()
-            else:
-                stager = WindowedWarmUpStager()
-        sampling_stages = stager.stages(
-            n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up
-        )
-        chain_states = init_states
-        sampling_index_offset = 0
-        with LabelledSequenceProgressBar(
-            sampling_stages, "Sampling stage", position=(0, n_chain + 1)
-        ) as sampling_stages_pb:
-            chain_iterators = _construct_chain_iterators(
-                1, progress_bar_class, n_chain, 1
-            )
-            for stage, _ in sampling_stages_pb:
-                for chain_it in chain_iterators:
-                    chain_it.sequence = range(stage.n_iter)
-                chain_states, adapter_states, exception = sample_chains_func(
-                    chain_iterators=chain_iterators,
-                    per_chain_kwargs=_zip_dict(
-                        init_state=chain_states,
-                        rng=per_chain_rngs,
-                        chain_traces=per_chain_traces
-                        if stage.trace_funcs is not None
-                        else [None] * n_chain,
-                        chain_stats=per_chain_stats
-                        if stage.record_stats
-                        else [None] * n_chain,
-                    ),
-                    sampling_index_offset=sampling_index_offset,
-                    trace_funcs=stage.trace_funcs,
-                    adapters=stage.adapters,
-                    **common_kwargs,
+            memmap_path_context = nullcontext(memmap_path)
+        with memmap_path_context as memmap_path:
+            traces = (
+                None
+                if trace_funcs is None or len(trace_funcs) == 0
+                else _init_traces(
+                    trace_funcs, init_states, n_trace_iter, use_memmap, memmap_path
                 )
-                if len(adapter_states) > 0:
-                    _finalize_adapters(
-                        adapter_states,
-                        chain_states,
-                        stage.adapters,
-                        self.transitions,
-                        per_chain_rngs,
+            )
+            stats = _init_stats(
+                self.transitions, n_chain, n_trace_iter, use_memmap, memmap_path,
+            )
+            per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
+            per_chain_traces = (
+                [None] * n_chain if traces is None else list(_zip_dict(**traces))
+            )
+            per_chain_stats = list(
+                _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
+            )
+            common_kwargs = {
+                "transitions": self.transitions,
+                "monitor_stats": monitor_stats,
+            }
+            if n_process == 1:
+                # Using single process therefore run chains sequentially
+                sample_chains_func = _sample_chains_sequential
+            else:
+                # Run chains in parallel using a multiprocess(ing).Pool
+                common_kwargs["n_process"] = n_process
+                common_kwargs["max_threads_per_process"] = max_threads_per_process
+                sample_chains_func = _sample_chains_parallel
+            if stager is None:
+                # use single warm-up stage stager if no adapters or all fast type
+                if adapters is None or all(
+                    a.is_fast for a_list in adapters.values() for a in a_list
+                ):
+                    stager = WarmUpStager()
+                else:
+                    stager = WindowedWarmUpStager()
+            sampling_stages = stager.stages(
+                n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up
+            )
+            chain_states = init_states
+            sampling_index_offset = 0
+            with LabelledSequenceProgressBar(
+                sampling_stages, "Sampling stage", position=(0, n_chain + 1)
+            ) as sampling_stages_pb:
+                chain_iterators = _construct_chain_iterators(
+                    1, progress_bar_class, n_chain, 1
+                )
+                for stage, _ in sampling_stages_pb:
+                    for chain_it in chain_iterators:
+                        chain_it.sequence = range(stage.n_iter)
+                    chain_states, adapter_states, exception = sample_chains_func(
+                        chain_iterators=chain_iterators,
+                        per_chain_kwargs=_zip_dict(
+                            init_state=chain_states,
+                            rng=per_chain_rngs,
+                            chain_traces=per_chain_traces
+                            if stage.trace_funcs is not None
+                            else [None] * n_chain,
+                            chain_stats=per_chain_stats
+                            if stage.record_stats
+                            else [None] * n_chain,
+                        ),
+                        sampling_index_offset=sampling_index_offset,
+                        trace_funcs=stage.trace_funcs,
+                        adapters=stage.adapters,
+                        **common_kwargs,
                     )
-                if stage.trace_funcs is not None:
-                    sampling_index_offset += stage.n_iter
-                if isinstance(exception, KeyboardInterrupt):
-                    return chain_states, traces, stats
+                    if len(adapter_states) > 0:
+                        _finalize_adapters(
+                            adapter_states,
+                            chain_states,
+                            stage.adapters,
+                            self.transitions,
+                            per_chain_rngs,
+                        )
+                    if stage.trace_funcs is not None:
+                        sampling_index_offset += stage.n_iter
+                    if isinstance(exception, KeyboardInterrupt):
+                        return chain_states, traces, stats
         return chain_states, traces, stats
 
 
@@ -1107,16 +1127,17 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
                 are being run on multiple processes and only if `threadpoolctl` is
                 installed in the current Python environment. If set to `None` (the
                 default) no limits are set.
-            memmap_enabled (bool): Whether to memory-map arrays used to store chain data
-                to files on disk to avoid excessive system memory usage for long chains
-                and/or large chain states. The chain data is written to `.npy` files in
-                the directory specified by `memmap_path` (or a temporary directory if
-                not provided). These files persist after the termination of the function
-                so should be manually deleted when no longer required. Default is for
-                memory mapping to be disabled.
+            force_memmap (bool): Whether to force arrays used to store chain data to be
+                memory-mapped to files on disk to avoid excessive system memory usage
+                for long chains and/or large chain states. The chain data is written to
+                `.npy` files in the directory specified by `memmap_path` (or a temporary
+                directory if `memmap_path` is `None`). Chain data is always memory
+                mapped when sampling chains in parallel on multiple processes.
             memmap_path (Optional[str]): Path to directory to write memory-mapped chain
-                data to. If `None` (the default), a temporary directory will be created
-                and the chain data written to files there.
+                data to. If `None` (the default) and memory-mapping is enabled then a
+                temporary directory will be created and the chain data written to files
+                there, with the created files being deleted in this case once the last
+                reference to them is closed.
             monitor_stats (Sequence[str]): Sequence of string keys of (integration)
                 transition statistics to monitor mean of over samples computed so far
                 during sampling by printing as postfix to progress bar. Default is to

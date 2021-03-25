@@ -35,7 +35,7 @@ def integrator(system):
 
 @pytest.fixture(params=("dict", "list", "tuple", "nested"))
 def memmap_obj_and_filename_obj(request, tmp_path):
-    filename = str(tmp_path / "mm.npy")
+    filename = tmp_path / "mm.npy"
     mm = np.lib.format.open_memmap(filename, dtype=np.float64, mode="w+", shape=(1,))
     mm[:] = np.arange(mm.size)
     if request.param == "dict":
@@ -219,11 +219,11 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
             raise ValueError(f"Invalid param {request.param}")
 
     @pytest.fixture(params=((True, None), (True, "tmp"), (False, None)))
-    def memmap_enabled_and_path(self, request, tmp_path_factory):
-        memmap_enabled, memmap_path = request.param
+    def force_memmap_and_memmap_path(self, request, tmp_path_factory):
+        force_memmap, memmap_path = request.param
         if memmap_path == "tmp":
             memmap_path = tmp_path_factory.mktemp("traces-and-stats")
-        return memmap_enabled, memmap_path
+        return force_memmap, memmap_path
 
     @pytest.fixture(params=(True, False))
     def display_progress(self, request):
@@ -231,14 +231,19 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
 
     @pytest.fixture
     def kwargs(
-        self, monitor_stats, adapters, stager, memmap_enabled_and_path, display_progress
+        self,
+        monitor_stats,
+        adapters,
+        stager,
+        force_memmap_and_memmap_path,
+        display_progress,
     ):
-        memmap_enabled, memmap_path = memmap_enabled_and_path
+        force_memmap, memmap_path = force_memmap_and_memmap_path
         return {
             "monitor_stats": monitor_stats,
             "adapters": adapters,
             "stager": stager,
-            "memmap_enabled": memmap_enabled,
+            "force_memmap": force_memmap,
             "memmap_path": memmap_path,
             "display_progress": display_progress,
         }
