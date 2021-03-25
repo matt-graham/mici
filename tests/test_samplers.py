@@ -163,6 +163,7 @@ class MarkovChainMonteCarloMethodTests:
             assert len(trace_array_list) == n_chain
             for trace_array in trace_array_list:
                 assert isinstance(trace_array, np.ndarray)
+                assert not np.any(np.isnan(trace_array))
                 assert trace_array.shape[0] == n_iter
                 assert trace_array.shape[1:] == np.shape(trace_vars[trace_key])
 
@@ -170,6 +171,7 @@ class MarkovChainMonteCarloMethodTests:
         for stat_key, stat_array_list in trans_stats.items():
             for stat_array in stat_array_list:
                 assert stat_array.shape[0] == n_iter
+                assert not np.any(np.isnan(stat_array))
                 assert stat_array.dtype == statistic_types[stat_key][0]
 
     def check_stats_dict(self, stats, n_iter, n_chain, transitions):
