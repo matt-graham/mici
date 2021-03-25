@@ -106,6 +106,12 @@ def test_get_per_chain_rngs_raises():
         mici.samplers._get_per_chain_rngs(None, 4)
 
 
+def test_random_state_raises_deprecation_warning(integrator, system):
+    rng = np.random.RandomState(SEED)
+    with pytest.deprecated_call():
+        mici.samplers.MarkovChainMonteCarloMethod(rng=rng, transitions={})
+
+
 class MarkovChainMonteCarloMethodTests:
     def test_sampler_attributes(self, sampler, rng):
         assert sampler.rng is rng

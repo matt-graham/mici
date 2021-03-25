@@ -265,33 +265,20 @@ def _construct_chain_iterators(
     n_iter, chain_iterator_class, n_chain=None, position_offset=0
 ):
     """Set up chain iterator progress bar object(s)."""
-    if n_chain is None:
-        return chain_iterator_class(range(n_iter), description="Chain 1/1")
-    else:
-        return [
-            chain_iterator_class(
-                range(n_iter),
-                description=f"Chain {c+1}/{n_chain}",
-                position=(c + position_offset, n_chain + position_offset),
-            )
-            for c in range(n_chain)
-        ]
+    return [
+        chain_iterator_class(
+            range(n_iter),
+            description=f"Chain {c+1}/{n_chain}",
+            position=(c + position_offset, n_chain + position_offset),
+        )
+        for c in range(n_chain)
+    ]
 
 
 def _update_chain_stats(sample_index, chain_stats, trans_key, trans_stats):
     """Update chain statistics arrays for current chain iteration."""
     if trans_stats is not None:
-        if sample_index == 0 and trans_key not in chain_stats:
-            raise KeyError(
-                f"Transition {trans_key} returned statistics but has no "
-                f"statistic_types attribute."
-            )
         for key, val in trans_stats.items():
-            if sample_index == 0 and key not in chain_stats[trans_key]:
-                raise KeyError(
-                    f"Transition {trans_key} returned {key} statistic but it "
-                    f"is not included in its statistic_types attribute."
-                )
             chain_stats[trans_key][key][sample_index] = val
 
 
