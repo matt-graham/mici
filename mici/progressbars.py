@@ -78,7 +78,7 @@ def _update_stats_running_means(iter, means, new_vals):
             means[key] += (float(val) - means[key]) / iter
 
 
-class BaseProgressBar(abc.ABC):
+class ProgressBar(abc.ABC):
     """Base class defining expected interface for progress bars."""
 
     def __init__(self, sequence, description, position=(0, 1)):
@@ -147,14 +147,14 @@ class BaseProgressBar(abc.ABC):
         return False
 
 
-class DummyProgressBar(BaseProgressBar):
+class DummyProgressBar(ProgressBar):
     """Placeholder progress bar which does not display progress updates."""
 
     def update(self, iter_count, iter_dict, refresh=True):
         pass
 
 
-class ProgressBar(BaseProgressBar):
+class SequenceProgressBar(ProgressBar):
     """Iterable object for tracking progress of an iterative task.
 
     Implements both string and HTML representations to allow richer
@@ -412,7 +412,7 @@ class ProgressBar(BaseProgressBar):
         return ret_val
 
 
-class LabelledSequenceProgressBar(BaseProgressBar):
+class LabelledSequenceProgressBar(ProgressBar):
     """Iterable object for tracking progress of a sequence of labelled tasks."""
 
     def __init__(
@@ -642,7 +642,7 @@ class FileDisplay:
         self._file.flush()
 
 
-class _ProxyProgressBar:
+class _ProxySequenceProgressBar:
     """Proxy progress bar that outputs progress updates to a queue.
 
     Intended for communicating progress updates from a child to parent process

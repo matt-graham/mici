@@ -17,10 +17,10 @@ from numpy.random import default_rng
 import mici.transitions as trans
 from mici.states import ChainState
 from mici.progressbars import (
-    ProgressBar,
+    SequenceProgressBar,
     LabelledSequenceProgressBar,
     DummyProgressBar,
-    _ProxyProgressBar,
+    _ProxySequenceProgressBar,
 )
 from mici.errors import AdaptationError
 from mici.adapters import DualAveragingStepSizeAdapter
@@ -547,7 +547,7 @@ def _sample_chains_worker(chain_queue, iter_queue, common_kwargs):
             with context:
                 *outputs, exception = _sample_chain(
                     chain_index=chain_index,
-                    chain_iterator=_ProxyProgressBar(
+                    chain_iterator=_ProxySequenceProgressBar(
                         range(n_iter), chain_index, iter_queue
                     ),
                     load_memmaps=True,
@@ -826,10 +826,11 @@ class MarkovChainMonteCarloMethod(object):
             display_progress (bool): Whether to display a progress bar to track the
                 completed chain sampling iterations. Default value is `True`, i.e. to
                 display progress bar.
-            progress_bar_class (Optional[mici.progressbars.BaseProgressBar]): Class or
+            progress_bar_class (Optional[mici.progressbars.ProgressBar]): Class or
                 factory function for progress bar to use to show chain progress if
                 enabled (`display_progress=True`). Defaults to
-                `mici.progressbars.ProgressBar` if `None` and `display_progress=True`.
+                `mici.progressbars.SequenceProgressBar` if `None` and
+                `display_progress=True`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final iteration. May
@@ -855,7 +856,7 @@ class MarkovChainMonteCarloMethod(object):
         if not display_progress:
             progress_bar_class = DummyProgressBar
         elif progress_bar_class is None:
-            progress_bar_class = ProgressBar
+            progress_bar_class = SequenceProgressBar
         n_chain = len(init_states)
         n_trace_iter = n_warm_up_iter + n_main_iter if trace_warm_up else n_main_iter
         init_states = [
@@ -1132,9 +1133,10 @@ class HamiltonianMCMC(MarkovChainMonteCarloMethod):
             display_progress (bool): Whether to display a progress bar to track the
                 completed chain sampling iterations. Default value is `True`, i.e. to
                 display progress bar.
-            progress_bar_class (mici.progressbars.BaseProgressBar): Class or factory
+            progress_bar_class (mici.progressbars.ProgressBar): Class or factory
                 function for progress bar to use to show chain progress if enabled
-                (`display_progress=True`). Defaults to `mici.progressbars.ProgressBar`.
+                (`display_progress=True`). Defaults to
+                `mici.progressbars.SequenceProgressBar`.
 
         Returns:
             final_states (List[ChainState]): States of chains after final iteration. May
