@@ -262,10 +262,10 @@ class MetropolisIntegrationTransition(IntegrationTransition):
             state_p.dir *= -1
         if state_p is not state:
             h_final = self.system.h(state_p)
-            metrop_ratio = np.exp(h_init - h_final)
-            accept_prob = 0 if np.isnan(metrop_ratio) else min(1, metrop_ratio)
+            accept_prob = np.exp(min(0, h_init - h_final))
+            accept_prob = 0 if np.isnan(accept_prob) else accept_prob
         else:
-            accept_prob = 0.0
+            accept_prob = 0
         stats["metrop_accept_prob"] = accept_prob
         stats["accept_stat"] = accept_prob if not integration_error else 0
         if not integration_error and rng.uniform() < accept_prob:
@@ -572,8 +572,8 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 tree = self._new_leave(state, h, aux_vars)
                 proposal = state
                 # accumulate stats
-                stats["sum_metrop_accept_prob"] += min(
-                    1, np.exp(aux_vars["h_init"] - h)
+                stats["sum_metrop_accept_prob"] += np.exp(
+                    min(0, aux_vars["h_init"] - h)
                 )
                 stats["n_step"] += 1
                 # default to assuming valid and then check for divergence
