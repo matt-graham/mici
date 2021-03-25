@@ -122,6 +122,17 @@ class System(ABC):
         """
 
     @abstractmethod
+    def dh2_dpos(self, state):
+        """Derivative of `h2` Hamiltonian component with respect to position.
+
+        Args:
+            state (mici.states.ChainState): State to compute value at.
+
+        Returns:
+            array: Value of `h2(state)` derivative with respect to `state.pos`.
+        """
+
+    @abstractmethod
     def dh2_dmom(self, state):
         """Derivative of `h2` Hamiltonian component with respect to momentum.
 
@@ -129,7 +140,7 @@ class System(ABC):
             state (mici.states.ChainState): State to compute value at.
 
         Returns:
-            array: Value of `h2(state)` derivative with respect to `state.pos`.
+            array: Value of `h2(state)` derivative with respect to `state.mom`.
         """
 
     def h(self, state):
@@ -152,10 +163,8 @@ class System(ABC):
         Returns:
             array: Value of `h(state)` derivative with respect to `state.pos`.
         """
-        if hasattr(self, "dh2_dpos"):
-            return self.dh1_dpos(state) + self.dh2_dpos(state)
-        else:
-            return self.dh1_dpos(state)
+
+        return self.dh1_dpos(state) + self.dh2_dpos(state)
 
     def dh_dmom(self, state):
         """Derivative of Hamiltonian with respect to momentum.
@@ -259,6 +268,12 @@ class EuclideanMetricSystem(System):
     @cache_in_state("mom")
     def dh2_dmom(self, state):
         return self.metric.inv @ state.mom
+
+    def dh2_dpos(self, state):
+        return np.zeros_like(state.pos)
+
+    def dh_dpos(self, state):
+        return self.dh1_dpos(state)
 
     def h2_flow(self, state, dt):
         """Apply exact flow map corresponding to `h2` Hamiltonian component.
