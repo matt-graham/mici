@@ -183,13 +183,6 @@ class IntegrationTransition(Transition):
     """
 
     state_variables = {"pos", "mom", "dir"}
-    statistic_types = {
-        "n_step": (np.int64, -1),
-        "accept_stat": (np.float64, np.nan),
-        "non_reversible_step": (np.bool, False),
-        "convergence_error": (np.bool, False),
-        "step_size": (np.float64, np.nan),
-    }
 
     def __init__(self, system, integrator):
         """
@@ -200,6 +193,17 @@ class IntegrationTransition(Transition):
         """
         self.system = system
         self.integrator = integrator
+        self._statistic_types = {
+            "n_step": (np.int64, -1),
+            "accept_stat": (np.float64, np.nan),
+            "non_reversible_step": (np.bool, False),
+            "convergence_error": (np.bool, False),
+            "step_size": (np.float64, np.nan),
+        }
+
+    @property
+    def statistic_types(self):
+        return self._statistic_types
 
     @abstractmethod
     def sample(self, state, rng):
