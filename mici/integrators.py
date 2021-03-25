@@ -1,6 +1,7 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
 from abc import ABC, abstractmethod
+import numpy as np
 from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (
     maximum_norm,
@@ -60,16 +61,16 @@ class LeapfrogIntegrator(Integrator):
     r"""
     Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
-    The Hamiltonian function is assumed to be expressible as the sum of two
-    analytically tractable components for which the corresponding Hamiltonian
-    flows can be exactly simulated. Specifically it is assumed that the
-    Hamiltonian function \(h\) takes the form
+    The Hamiltonian function is assumed to be expressible as the sum of two analytically
+    tractable components for which the corresponding Hamiltonian flows can be exactly
+    simulated. Specifically it is assumed that the Hamiltonian function \(h\) takes the
+    form
 
     \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively,
-    and \(h_1\) and \(h_2\) are Hamiltonian component functions for which the
-    exact flows can be computed.
+    where \(q\) and \(p\) are the position and momentum variables respectively, and
+    \(h_1\) and \(h_2\) are Hamiltonian component functions for which the exact flows
+    can be computed.
     """
 
     def __init__(self, system, step_size=None):
@@ -96,14 +97,13 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively,
-    \(h_1\) is a Hamiltonian component function for which the exact flow can be
-    computed and \(h_2\) is a non-separable Hamiltonian component function of
-    the position and momentum variables and for which exact simulation of the
-    correspond Hamiltonian flow is not possible. A pair of implicit component
-    updates are used to approximate the flow due to the \(h_2\) Hamiltonian
-    component, with a fixed-point iteration used to solve the non-linear system
-    of equations.
+    where \(q\) and \(p\) are the position and momentum variables respectively, \(h_1\)
+    is a Hamiltonian component function for which the exact flow can be computed and
+    \(h_2\) is a non-separable Hamiltonian component function of the position and
+    momentum variables and for which exact simulation of the correspond Hamiltonian flow
+    is not possible. A pair of implicit component updates are used to approximate the
+    flow due to the \(h_2\) Hamiltonian component, with a fixed-point iteration used to
+    solve the non-linear system of equations.
     """
 
     def __init__(
@@ -211,47 +211,135 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self._step_a(state, dt)
 
 
+class ImplicitMidpointIntegrator(Integrator):
+    """Implicit midpoint integrator for general Hamiltonians."""
+
+    def __init__(
+        self,
+        system,
+        step_size=None,
+        reverse_check_tol=1e-8,
+        reverse_check_norm=maximum_norm,
+        fixed_point_solver=solve_fixed_point_direct,
+        fixed_point_solver_kwargs=None,
+    ):
+        """
+        Args:
+            system (mici.systems.System): Hamiltonian system to integrate the
+                dynamics of.
+            step_size (float or None): Integrator time step. If set to `None`
+                (the default) it is assumed that a step size adapter will be
+                used to set the step size before calling the `step` method.
+            reverse_check_tol (float): Tolerance for check of reversibility of
+                implicit sub-steps which involve iterative solving of a
+                non-linear system of equations. The step is assumed to be
+                reversible if sequentially applying the forward and adjoint
+                updates to a state returns to a state with a position component
+                within a distance (defined by the `reverse_check_norm`
+                argument) of `reverse_check_tol` of the original state position
+                component. If this condition is not met a
+                `mici.errors.NonReversibleStepError` exception is raised.
+            reverse_check_norm (Callable[[array], float]): Norm function
+                accepting a single one-dimensional array input and returning a
+                non-negative floating point value defining the distance to use
+                in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            fixed_point_solver (Callable[[Callable[array], array], array]):
+                Function which given a function `func` and initial guess `x0`
+                iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or
+                raising a `mici.errors.ConvergenceError` otherwise. Defaults to
+                `mici.solvers.solve_fixed_point_direct`.
+            fixed_point_solver_kwargs (None or Dict[str, object]): Dictionary
+                of any keyword arguments to `fixed_point_solver`.
+        """
+        super().__init__(system, step_size)
+        self.reverse_check_tol = reverse_check_tol
+        self.reverse_check_norm = maximum_norm
+        self.fixed_point_solver = fixed_point_solver
+        if fixed_point_solver_kwargs is None:
+            fixed_point_solver_kwargs = {}
+        self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
+
+    def _solve_fixed_point(self, fixed_point_func, x_init):
+        return self.fixed_point_solver(
+            fixed_point_func, x_init, **self.fixed_point_solver_kwargs
+        )
+
+    def _step_a_fwd(self, state, dt):
+        pos_mom_init = np.concatenate([state.pos, state.mom])
+
+        def fixed_point_func(pos_mom):
+            state.pos, state.mom = np.split(pos_mom, 2)
+            return pos_mom_init + np.concatenate(
+                [dt * self.system.dh_dmom(state), -dt * self.system.dh_dpos(state)]
+            )
+
+        state.pos, state.mom = np.split(
+            self._solve_fixed_point(fixed_point_func, pos_mom_init), 2
+        )
+
+    def _step_a_adj(self, state, dt):
+        state_prev = state.copy()
+        state.pos += dt * self.system.dh_dmom(state_prev)
+        state.mom -= dt * self.system.dh_dpos(state_prev)
+        state_back = state.copy()
+        self._step_a_fwd(state_back, -dt)
+        rev_diff = self.reverse_check_norm(
+            np.concatenate(
+                [state_back.pos - state_prev.pos, state_back.mom - state_prev.mom]
+            )
+        )
+        if rev_diff > self.reverse_check_tol:
+            raise NonReversibleStepError(
+                f"Non-reversible step. Distance between initial and "
+                f"forward-backward integrated (pos, mom) pairs = {rev_diff:.1e}."
+            )
+
+    def _step(self, state, dt):
+        self._step_a_fwd(state, dt / 2)
+        self._step_a_adj(state, dt / 2)
+
+
 class ConstrainedLeapfrogIntegrator(Integrator):
     r"""
     Leapfrog integrator for constrained Hamiltonian systems.
 
-    The Hamiltonian function is assumed to be expressible as the sum of two
-    components for which the corresponding (unconstrained) Hamiltonian flows
-    can be exactly simulated. Specifically it is assumed that the Hamiltonian
-    function \(h\) takes the form
+    The Hamiltonian function is assumed to be expressible as the sum of two components
+    for which the corresponding (unconstrained) Hamiltonian flows can be exactly
+    simulated. Specifically it is assumed that the Hamiltonian function \(h\) takes the
+    form
 
     \[ h(q, p) = h_1(q) + h_2(q, p) \]
 
-    where \(q\) and \(p\) are the position and momentum variables respectively,
-    and \(h_1\) and \(h_2\) Hamiltonian component functions for which the exact
-    flows can be computed.
+    where \(q\) and \(p\) are the position and momentum variables respectively, and
+    \(h_1\) and \(h_2\) Hamiltonian component functions for which the exact flows can be
+    computed.
 
-    The system is assumed to be additionally subject to a set of holonomic
-    constraints on the position component of the state i.e. that all valid
-    states must satisfy
+    The system is assumed to be additionally subject to a set of holonomic constraints
+    on the position component of the state i.e. that all valid states must satisfy
 
     \[ c(q) = 0. \]
 
-    for some differentiable and surjective vector constraint function \(c\) and
-    the set of positions satisfying the constraints implicitly defining a
-    manifold. There is also a corresponding constraint implied on the momentum
-    variables which can be derived by differentiating the above with respect to
-    time and using that under the Hamiltonian dynamics the time derivative of
-    the position is equal to the negative derivative of the Hamiltonian
-    function with respect to the momentum
+    for some differentiable and surjective vector constraint function \(c\) and the set
+    of positions satisfying the constraints implicitly defining a manifold. There is
+    also a corresponding constraint implied on the momentum variables which can be
+    derived by differentiating the above with respect to time and using that under the
+    Hamiltonian dynamics the time derivative of the position is equal to the negative
+    derivative of the Hamiltonian function with respect to the momentum
 
     \[ \partial c(q) \nabla_2 h(q, p) = 0. \]
 
-    The set of momentum variables satisfying the above for given position
-    variables is termed the cotangent space of the manifold (at a position),
-    and the set of (position, momentum) pairs for which the position is on the
-    constraint manifold and the momentum in the corresponding cotangent space
-    is termed the cotangent bundle.
+    The set of momentum variables satisfying the above for given position variables is
+    termed the cotangent space of the manifold (at a position), and the set of
+    (position, momentum) pairs for which the position is on the constraint manifold and
+    the momentum in the corresponding cotangent space is termed the cotangent bundle.
 
-    The integrator exactly preserves these constraints at all steps, such that
-    if an initial position momentum pair \((q, p)\) are in the cotangent
-    bundle, the corresponding pair after calling the `step` method of the
-    integrator will also be in the cotangent bundle.
+    The integrator exactly preserves these constraints at all steps, such that if an
+    initial position momentum pair \((q, p)\) are in the cotangent bundle, the
+    corresponding pair after calling the `step` method of the integrator will also be in
+    the cotangent bundle.
     """
 
     def __init__(

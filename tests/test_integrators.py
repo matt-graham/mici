@@ -230,73 +230,171 @@ class ConstrainedNonLinearSystemIntegratorTests(ConstrainedSystemIntegratorTests
         return init_state_list
 
 
-class TestLeapfrogIntegratorLinearSystem(LinearSystemIntegratorTests):
-
-    h_diff_tol = 2e-3
-
+class LinearEuclideanMetricSystemTests(LinearSystemIntegratorTests):
     @pytest.fixture
-    def integrator(self, metric):
-        system = systems.EuclideanMetricSystem(
+    def system(self, metric):
+        return systems.EuclideanMetricSystem(
             neg_log_dens=lambda q: 0.5 * np.sum(q ** 2),
             metric=metric,
             grad_neg_log_dens=lambda q: q,
         )
-        return integrators.LeapfrogIntegrator(system, 0.25)
 
 
-class TestLeapfrogIntegratorNonLinearSystem(IntegratorTests):
-
-    h_diff_tol = 1e-3
-
+class NonLinearEuclideanMetricSystemTests(IntegratorTests):
     @pytest.fixture
-    def integrator(self, metric):
-        system = systems.EuclideanMetricSystem(
+    def system(self, metric):
+        return systems.EuclideanMetricSystem(
             neg_log_dens=lambda q: 0.25 * np.sum(q ** 4),
             metric=metric,
             grad_neg_log_dens=lambda q: q ** 3,
         )
-        return integrators.LeapfrogIntegrator(system, 0.05)
 
 
-class TestLeapfrogIntegratorGaussianLinearSystem(LinearSystemIntegratorTests):
-
-    h_diff_tol = 1e-10
-
+class LinearGaussianEuclideanMetricSystem(LinearSystemIntegratorTests):
     @pytest.fixture
-    def integrator(self, metric):
-        system = systems.GaussianEuclideanMetricSystem(
+    def system(self, metric):
+        return systems.GaussianEuclideanMetricSystem(
             neg_log_dens=lambda q: 0, metric=metric, grad_neg_log_dens=lambda q: 0 * q
         )
-        return integrators.LeapfrogIntegrator(system, 0.5)
 
 
-class TestLeapfrogIntegratorGaussianNonLinearSystem(IntegratorTests):
-
-    h_diff_tol = 2e-3
-
+class NonLinearGaussianEuclideanMetricSystem(IntegratorTests):
     @pytest.fixture
-    def integrator(self, metric):
-        system = systems.GaussianEuclideanMetricSystem(
+    def system(self, metric):
+        return systems.GaussianEuclideanMetricSystem(
             neg_log_dens=lambda q: 0.125 * np.sum(q ** 4),
             metric=metric,
             grad_neg_log_dens=lambda q: 0.5 * q ** 3,
         )
-        return integrators.LeapfrogIntegrator(system, 0.1)
 
 
-class TestImplicitLeapfrogIntegratorLinearSystem(LinearSystemIntegratorTests):
+class LeapfrogIntegratorTests:
+    @pytest.fixture
+    def integrator(self, system):
+        return integrators.LeapfrogIntegrator(system, self.step_size)
 
-    h_diff_tol = 5e-3
+
+class TestLeapfrogIntegratorLinearEuclideanMetricSystem(
+    LeapfrogIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 2e-3
+    step_size = 0.25
+
+
+class TestLeapfrogIntegratorNonLinearEuclideanMetricSystem(
+    LeapfrogIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 1e-3
+    step_size = 0.05
+
+
+class TestLeapfrogIntegratorLinearGaussianEuclideanMetricSystem(
+    LeapfrogIntegratorTests, LinearGaussianEuclideanMetricSystem
+):
+
+    h_diff_tol = 1e-10
+    step_size = 0.5
+
+
+class TestLeapfrogIntegratorNonLinearGaussianEuclideanMetricSystem(
+    LeapfrogIntegratorTests, NonLinearGaussianEuclideanMetricSystem
+):
+
+    h_diff_tol = 2e-3
+    step_size = 0.1
+
+
+class ImplicitIntegratorTests:
+    @pytest.fixture
+    def fixed_point_solver(self):
+        return solvers.solve_fixed_point_direct
 
     @pytest.fixture
-    def integrator(self):
-        system = systems.DenseRiemannianMetricSystem(
-            lambda q: 0.5 * np.sum(q ** 2),
-            grad_neg_log_dens=lambda q: q,
-            metric_func=lambda q: np.identity(q.shape[0]),
-            vjp_metric_func=lambda q: lambda m: np.zeros_like(q),
+    def reverse_check_norm(self):
+        return solvers.maximum_norm
+
+
+class ImplicitLeapfrogIntegratorTests(ImplicitIntegratorTests):
+    @pytest.fixture
+    def integrator(self, system, fixed_point_solver, reverse_check_norm):
+        return integrators.ImplicitLeapfrogIntegrator(
+            system,
+            self.step_size,
+            fixed_point_solver=fixed_point_solver,
+            reverse_check_norm=reverse_check_norm,
         )
-        return integrators.ImplicitLeapfrogIntegrator(system, 0.25)
+
+
+class ImplicitMidpointIntegratorTests(ImplicitIntegratorTests):
+    @pytest.fixture
+    def integrator(self, system, fixed_point_solver, reverse_check_norm):
+        return integrators.ImplicitMidpointIntegrator(
+            system,
+            self.step_size,
+            fixed_point_solver=fixed_point_solver,
+            reverse_check_norm=reverse_check_norm,
+        )
+
+
+class TestImplicitLeapfrogIntegratorLinearEuclideanMetricSystem(
+    ImplicitLeapfrogIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 5e-3
+    step_size = 0.25
+
+
+class TestImplicitMidpointIntegratorLinearEuclideanMetricSystem(
+    ImplicitMidpointIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 1e-7
+    step_size = 0.25
+
+
+class TestImplicitLeapfrogIntegratorNonLinearEuclideanMetricSystem(
+    ImplicitLeapfrogIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 6e-3
+    step_size = 0.1
+
+
+class TestImplicitMidpointIntegratorNonLinearEuclideanMetricSystem(
+    ImplicitMidpointIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 5e-3
+    step_size = 0.1
+
+
+class NonLinearDiagonalRiemannianMetricSystemTests(IntegratorTests):
+    @pytest.fixture
+    def system(self):
+        return systems.DiagonalRiemannianMetricSystem(
+            lambda q: np.sum(q ** 2) / 2 + np.sum(q ** 4) / 12,
+            grad_neg_log_dens=lambda q: q + q ** 3 / 3,
+            metric_diagonal_func=lambda q: 1 + q ** 2,
+            vjp_metric_diagonal_func=lambda q: lambda m: 2 * m * q,
+        )
+
+
+class TestImplicitLeapfrogIntegratorNonLinearDiagonalRiemannianMetricSystem(
+    ImplicitLeapfrogIntegratorTests, NonLinearDiagonalRiemannianMetricSystemTests
+):
+
+    h_diff_tol = 1e-3
+    step_size = 0.1
+
+
+class TestImplicitMidpointIntegratorNonLinearDiagonalRiemannianMetricSystem(
+    ImplicitMidpointIntegratorTests, NonLinearDiagonalRiemannianMetricSystemTests
+):
+
+    h_diff_tol = 2e-4
+    step_size = 0.1
 
 
 class TestConstrainedLeapfrogIntegratorLinearSystem(
