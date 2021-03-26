@@ -5,7 +5,7 @@
     <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
   </a>
   <a href="https://matt-graham.github.io/mici/docs">
-    <img src="https://img.shields.io/badge/API_docs-grey.svg" 
+    <img src="https://img.shields.io/badge/API_docs-grey.svg"
          alt="API documentation"/>
   </a>
   <a href="https://zenodo.org/badge/latestdoi/52494384">
@@ -24,8 +24,8 @@ manifold.
 
 Key features include
 
-  * a modular design allowing use of a wide range of inference algorithms by 
-    mixing and matching different components, and making it easy to 
+  * a modular design allowing use of a wide range of inference algorithms by
+    mixing and matching different components, and making it easy to
     extend the package,
   * a pure Python code base with minimal dependencies,
     allowing easy integration within other code,
@@ -33,9 +33,9 @@ Key features include
     manifolds implicitly-defined by a constraint equation and distributions on
     Riemannian manifolds with a user-specified metric,
   * computationally efficient inference via transparent caching of the results
-    of expensive operations and intermediate results calculated in derivative 
-    computations allowing later reuse without recalculation,  
-  * memory efficient inference for large models by memory-mapping chains to 
+    of expensive operations and intermediate results calculated in derivative
+    computations allowing later reuse without recalculation,
+  * memory efficient inference for large models by memory-mapping chains to
     disk, allowing long runs on large models without hitting memory issues.
 
 ## Installation
@@ -43,13 +43,13 @@ Key features include
 To install and use Mici the minimal requirements are a Python 3.6+ environment
 with [NumPy](http://www.numpy.org/) and [SciPy](https://www.scipy.org)
 installed. The latest Mici release on PyPI (and its dependencies) can be
-installed in the current Python environment by running 
+installed in the current Python environment by running
 
 ```sh
 pip install mici
-``` 
+```
 
-To instead install the latest development version from the `master` branch on Github run 
+To instead install the latest development version from the `master` branch on Github run
 
 ```sh
 pip install git+https://github.com/matt-graham/mici
@@ -58,7 +58,7 @@ pip install git+https://github.com/matt-graham/mici
 If available in the installed Python environment the following additional
 packages provide extra functionality and features
 
-  * [Autograd](https://github.com/HIPS/autograd): if available Autograd will 
+  * [Autograd](https://github.com/HIPS/autograd): if available Autograd will
     be used to automatically compute the required derivatives of the model
     functions (providing they are specified using functions from the
     `autograd.numpy` and `autograd.scipy` interfaces). To sample chains in
@@ -70,13 +70,13 @@ packages provide extra functionality and features
     wider range of types, including of Autograd generated functions. Both
     Autograd and multiprocess can be installed alongside Mici by running `pip
     install mici[autodiff]`.
-  * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is 
+  * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is
     available the traces (dictionary) output of a sampling run can be directly
     converted to an `arviz.InferenceData` container object using
     `arviz.convert_to_inference_data` or implicitly converted by passing the
-    traces dictionary as the `data` argument 
-    [to ArviZ API functions](https://arviz-devs.github.io/arviz/api.html), 
-    allowing straightforward use of the ArviZ's extensive visualisation and 
+    traces dictionary as the `data` argument
+    [to ArviZ API functions](https://arviz-devs.github.io/arviz/api.html),
+    allowing straightforward use of the ArviZ's extensive visualisation and
     diagnostic functions.
 
 ## Why Mici?
@@ -87,7 +87,7 @@ Teller](https://en.wikipedia.org/wiki/Augusta_H._Teller), who along with
 developed the code for the [MANIAC I](https://en.wikipedia.org/wiki/MANIAC_I)
 computer used in the seminal paper [*Equations of State Calculations by Fast
 Computing Machines*](https://doi.org/10.1063%2F1.1699114) which introduced the
-first example of a Markov chain Monte Carlo method. 
+first example of a Markov chain Monte Carlo method.
 
 ## Related projects
 
@@ -105,7 +105,7 @@ probabilistic programming frameworks including functionality for definining a
 probabilistic model / program, but like emcee and Sampyl, Mici is solely
 focussed on providing implementations of inference algorithms, with the user
 expected to be able to define at a minimum a function specifying the negative
-log (unnormalized) density of the distribution of interest. 
+log (unnormalized) density of the distribution of interest.
 
 Further while PyStan, (Num)Pyro and TensorFlow Probability all push the
 sampling loop into external compiled non-Python code, in Mici the sampling loop
@@ -117,54 +117,60 @@ slower than packages which outsource the sampling loop to a efficient compiled
 implementation.
 
  ## Overview of package
- 
+
 API documentation for the package is available
 [here](https://matt-graham.github.io/mici/docs). The three main user-facing
 modules within the `mici` package are the `systems`, `integrators` and
 `samplers` modules and you will generally need to create an instance of one
 class from each module.
- 
+
  [`mici.systems`](https://matt-graham.github.io/mici/docs/systems.html) -
  Hamiltonian systems encapsulating model functions and their derivatives
 
    * `EuclideanMetricSystem` - systems with a metric on the position space with
       a constant matrix representation,
    * `GaussianEuclideanMetricSystem` - systems in which the target distribution
-     is defined by a density with respect to the standard Gaussian measure on 
-     the position space allowing analytically solving for flow corresponding to 
-     the quadratic components of Hamiltonian 
+     is defined by a density with respect to the standard Gaussian measure on
+     the position space allowing analytically solving for flow corresponding to
+     the quadratic components of Hamiltonian
      ([Shahbaba et al., 2014](#shababa2014split)),
-   * `RiemannianMetricSystem` - systems with a metric on the position space 
-     with a position-dependent matrix representation 
+   * `RiemannianMetricSystem` - systems with a metric on the position space
+     with a position-dependent matrix representation
      ([Girolami and Calderhead, 2011](#girolami2011riemann)),
-   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs* 
-     eigenvalue-regularized Hessian of negative log target density as metric 
+   * `SoftAbsRiemannianMetricSystem`  - system with *SoftAbs*
+     eigenvalue-regularized Hessian of negative log target density as metric
      matrix representation ([Betancourt, 2013](#betancourt2013general)),
-   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject 
-     to holonomic constraints 
-     ([Hartmann and Schütte, 2005](#hartmann2005constrained); 
-      [Brubaker, Salzmann and Urtasun, 2012](#brubaker2012family); 
-      [Lelièvre, Rousset and Stoltz, 2019](#lelievre2019hybrid)) 
+   * `DenseConstrainedEuclideanMetricSystem` - Euclidean-metric system subject
+     to holonomic constraints
+     ([Hartmann and Schütte, 2005](#hartmann2005constrained);
+      [Brubaker, Salzmann and Urtasun, 2012](#brubaker2012family);
+      [Lelièvre, Rousset and Stoltz, 2019](#lelievre2019hybrid))
      with a dense constraint function Jacobian matrix,
 
-[`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) - 
+[`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) -
 symplectic integrators for Hamiltonian dynamics
 
-  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for 
-    separable Hamiltonian systems 
+  * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for
+    separable Hamiltonian systems
     ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
-  * `ImplicitLeapfrogIntegrator` - implicit (or generalized) leapfrog 
-    integrator for non-separable Hamiltonian systems 
+  * `ImplicitLeapfrogIntegrator` - implicit (or generalized) leapfrog
+    integrator for Hamiltonian systems with non-separable component
     ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
-  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for 
-     Hamiltonian systems subject to holonomic constraints 
-     ([Andersen, 1983](#andersen1983rattle); 
+  * `ImplicitMidpointIntegrator` - implicit midpoint
+    integrator for general Hamiltonian systems
+    ([Leimkulher and Reich, 2004](#leimkuhler2004simulating)),
+  * `SymmetricCompositionIntegrator` - family of symplectic integrators for Hamiltonians
+     that can be split in to components with tractable flow maps, with specific
+     two-, three- and four-stage instantations due to [Blanes, Casas and Sanz-Serna (2014)](#blanes2014numerical),
+  * `ConstrainedLeapfrogIntegrator` - constrained leapfrog integrator for
+     Hamiltonian systems subject to holonomic constraints
+     ([Andersen, 1983](#andersen1983rattle);
      [Leimkuhler and Reich, 1994](#leimkuhler1994symplectic)).
 
 [`mici.samplers`](https://matt-graham.github.io/mici/docs/samplers.html) - MCMC
 samplers for peforming inference
 
-  * `StaticMetropolisHMC` - static integration time Hamiltonian Monte Carlo 
+  * `StaticMetropolisHMC` - static integration time Hamiltonian Monte Carlo
      with Metropolis accept step ([Duane et al., 1987](duane1987hybrid)),
   * `RandomMetropolisHMC` - random integration time Hamiltonian Monte Carlo
     with Metropolis accept step ([Mackenzie, 1989](#mackenzie1989improved)),
@@ -172,18 +178,18 @@ samplers for peforming inference
     with slice sampling from trajectory, equivalent to the original 'NUTS' algorithm
     ([Hoffman and Gelman, 2014](#hoffman2014nouturn)).
   * `DynamicMultinomialHMC` - dynamic integration time Hamiltonian Monte Carlo
-    with multinomial sampling from trajectory, equivalent to the current default 
+    with multinomial sampling from trajectory, equivalent to the current default
     MCMC algorithm in [Stan](https://mc-stan.org/)
-    ([Hoffman and Gelman, 2014](#hoffman2014nouturn); 
+    ([Hoffman and Gelman, 2014](#hoffman2014nouturn);
     [Betancourt, 2017](#betancourt2017conceptual)).
-    
+
 ## Notebooks
 
 The manifold MCMC methods implemented in Mici have been used in several research projects. Below links are provided to a selection of Jupyter notebooks associated with these projects as demonstrations of how to use Mici and to illustrate some of the settings in which manifold MCMC methods can be computationally advantageous.
 
 <table>
   <tr>
-    <th colspan="2"><img src='https://raw.githubusercontent.com/jupyter/design/master/logos/Favicon/favicon.svg?sanitize=true' width="15" style="vertical-align:text-bottom; margin-right: 5px;"/> <a href="https://github.com/thiery-lab/manifold_lifting">Manifold lifting: MCMC in the vanishing noise regime</a></th>
+    <th colspan="2"><a href="https://github.com/thiery-lab/manifold_lifting">Manifold lifting: MCMC in the vanishing noise regime</a></th>
   </tr>
   <tr>
     <td>Open non-interactive version with nbviewer</td>
@@ -206,14 +212,14 @@ The manifold MCMC methods implemented in Mici have been used in several research
     <td>
       <a href="https://colab.research.google.com/github/thiery-lab/manifold_lifting/blob/master/notebooks/Two-dimensional_example.ipynb">
         <img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" style="vertical-align:text-bottom">
-       </a> 
+       </a>
     </td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <th colspan="2"><img src='https://raw.githubusercontent.com/jupyter/design/master/logos/Favicon/favicon.svg?sanitize=true' width="15" style="vertical-align:text-bottom; margin-right: 5px;"/><a href="https://github.com/thiery-lab/manifold-mcmc-for-diffusions">Manifold MCMC methods for inference in diffusion models</a></th>
+    <th colspan="2"><a href="https://github.com/thiery-lab/manifold-mcmc-for-diffusions">Manifold MCMC methods for inference in diffusion models</a></th>
   </tr>
   <tr>
     <td>Open non-interactive version with nbviewer</td>
@@ -236,7 +242,7 @@ The manifold MCMC methods implemented in Mici have been used in several research
     <td>
       <a href="https://colab.research.google.com/github/thiery-lab/manifold-mcmc-for-diffusions/blob/master/FitzHugh-Nagumo_example.ipynb">
         <img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" style="vertical-align:text-bottom">
-       </a> 
+       </a>
     </td>
   </tr>
 </table>
@@ -251,7 +257,7 @@ space is given below. The computed samples are visualized in the animation
 above. Here we use `autograd` to automatically construct functions to calculate
 the required derivatives (gradient of negative log density of target
 distribution and Jacobian of constraint function), sample four chains in
-parallel using `multiprocess`, use `arviz` to calculate diagnostics and use 
+parallel using `multiprocess`, use `arviz` to calculate diagnostics and use
 `matplotlib` to plot the samples.
 
 ```Python
@@ -308,8 +314,8 @@ def trace_func(state):
 
 # Sample 4 chains in parallel with 500 adaptive warm up iterations in which the
 # integrator step size is tuned, followed by 2000 non-adaptive iterations
-final_states, traces, stats = sampler.sample_chains_with_adaptive_warm_up(
-    n_warm_up_iter=500, n_main_iter=2000, init_states=q_init, n_process=4, 
+final_states, traces, stats = sampler.sample_chains(
+    n_warm_up_iter=500, n_main_iter=2000, init_states=q_init, n_process=4,
     trace_funcs=[trace_func])
 
 # Print average accept probability and number of integrator steps per chain
@@ -317,11 +323,11 @@ for c in range(n_chain):
     print(f"Chain {c}:")
     print(f"  Average accept prob. = {stats['accept_stat'][c].mean():.2f}")
     print(f"  Average number steps = {stats['n_step'][c].mean():.1f}")
-    
+
 # Print summary statistics and diagnostics computed using ArviZ
 print(arviz.summary(traces))
 
-# Visualize concatentated chain samples as animated 3D scatter plot   
+# Visualize concatentated chain samples as animated 3D scatter plot
 fig = plt.figure(figsize=(4, 4))
 ax = Axes3D(fig, [0., 0., 1., 1.], proj_type='ortho')
 points_3d, = ax.plot(*(np.concatenate(traces[k]) for k in 'xyz'), '.', ms=0.5)
@@ -339,61 +345,66 @@ anim = animation.FuncAnimation(fig, update, frames=60, interval=100, blit=True)
 
 ## References
 
-  1. <a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity” 
-     version of the SHAKE algorithm for molecular dynamics calculations. 
+  1. <a id='andersen1983rattle'></a> Andersen, H.C., 1983. RATTLE: A “velocity”
+     version of the SHAKE algorithm for molecular dynamics calculations.
      *Journal of Computational Physics*, 52(1), pp.24-34.
      [![DOI:10.1016/0021-9991(83)90014-1](https://zenodo.org/badge/DOI/10.1016/0021-9991(83)90014-1.svg)](https://doi.org/10.1016/0021-9991(83)90014-1)
-  2. <a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and 
-     Roweth, D., 1987. Hybrid Monte Carlo. *Physics letters B*, 195(2), 
+  2. <a id='duane1987hybrid'></a> Duane, S., Kennedy, A.D., Pendleton, B.J. and
+     Roweth, D., 1987. Hybrid Monte Carlo. *Physics letters B*, 195(2),
      pp.216-222.
      [![DOI:10.1016/0370-2693(87)91197-X](https://zenodo.org/badge/DOI/10.1016/0370-2693(87)91197-X.svg)](https://doi.org/10.1016/0370-2693(87)91197-X)
-  3. <a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved 
+  3. <a id='mackenzie1989improved'></a> Mackenzie, P.B., 1989. An improved
      hybrid Monte Carlo method. *Physics Letters B*, 226(3-4), pp.369-371.
      [![DOI:10.1016/0370-2693(89)91212-4](https://zenodo.org/badge/DOI/10.1016/0370-2693(89)91212-4.svg)](https://doi.org/10.1016/0370-2693(89)91212-4)
-  4. <a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized 
-     guided Monte Carlo algorithm. *Physics Letters  B*, 268(CERN-TH-6172-91), 
+  4. <a id='horowitz1991generalized'></a> Horowitz, A.M., 1991. A generalized
+     guided Monte Carlo algorithm. *Physics Letters  B*, 268(CERN-TH-6172-91),
      pp.247-252.
      [![DOI:10.1016/0370-2693(91)90812-5](https://zenodo.org/badge/DOI/10.1016/0370-2693(91)90812-5.svg)](https://doi.org/10.1016/0370-2693(91)90812-5)
-  5. <a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994. 
-     Symplectic integration of constrained Hamiltonian systems. *Mathematics of 
+  5. <a id='leimkuhler1994symplectic'></a> Leimkuhler, B. and Reich, S., 1994.
+     Symplectic integration of constrained Hamiltonian systems. *Mathematics of
      Computation*, 63(208), pp.589-605.
      [![DOI:10.2307/2153284](https://zenodo.org/badge/DOI/10.2307/2153284.svg)](https://doi.org/10.2307/2153284)
-  6. <a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004. 
+  6. <a id='leimkuhler2004simulating'></a> Leimkuhler, B. and Reich, S., 2004.
      Simulating Hamiltonian dynamics (Vol. 14). *Cambridge University Press*.
      [![DOI:10.1017/CBO9780511614118](https://zenodo.org/badge/DOI/10.1017/CBO9780511614118.svg)](https://doi.org/10.1017/CBO9780511614118)
-  7. <a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A 
-     constrained hybrid Monte‐Carlo algorithm and the problem of calculating the 
-     free energy in several variables. *ZAMM ‐ Journal of Applied Mathematics and 
+  7. <a id='hartmann2005constrained'></a> Hartmann, C. and Schütte, C., 2005. A
+     constrained hybrid Monte‐Carlo algorithm and the problem of calculating the
+     free energy in several variables. *ZAMM ‐ Journal of Applied Mathematics and
      Mechanics*, 85(10), pp.700-710.
      [![DOI:10.1002/zamm.200410218](https://zenodo.org/badge/DOI/10.1002/zamm.200410218.svg)](https://doi.org/10.1002/zamm.200410218)
-  8. <a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011. 
-     Riemann manifold Langevin and Hamiltonian Monte Carlo methods. *Journal of 
+  8. <a id='girolami2011riemann'></a> Girolami, M. and Calderhead, B., 2011.
+     Riemann manifold Langevin and Hamiltonian Monte Carlo methods. *Journal of
      the Royal Statistical Society: Series B (Statistical Methodology)*, 73(2), pp.123-214.
      [![DOI:10.1111/j.1467-9868.2010.00765.x](https://zenodo.org/badge/DOI/10.1111/j.1467-9868.2010.00765.x.svg)](https://doi.org/10.1111/j.1467-9868.2010.00765.x)
-  9. <a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and 
-     Urtasun, R., 2012. A family of MCMC methods on implicitly defined 
+  9. <a id='brubaker2012family'></a> Brubaker, M., Salzmann, M. and
+     Urtasun, R., 2012. A family of MCMC methods on implicitly defined
      manifolds. In *Artificial intelligence and statistics* (pp. 161-172).
      [![CiteSeerX:10.1.1.417.6111](http://img.shields.io/badge/CiteSeerX-10.1.1.417.6111-blue.svg)](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.417.6111)
- 10. <a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric 
-     for Riemannian manifold Hamiltonian Monte Carlo. In *Geometric science of 
+ 10. <a id='betancourt2013general'></a> Betancourt, M., 2013. A general metric
+     for Riemannian manifold Hamiltonian Monte Carlo. In *Geometric science of
      information* (pp. 327-334).
      [![DOI:10.1007/978-3-642-40020-9_35](https://zenodo.org/badge/DOI/10.1007/978-3-642-40020-9_35.svg)](https://doi.org/10.1007/978-3-642-40020-9_35)
      [![arXiv:1212.4693](http://img.shields.io/badge/arXiv-1212.4693-B31B1B.svg)](https://arxiv.org/abs/1212.4693)
- 11. <a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The 
-     No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte 
+ 11. <a id='hoffman2014nouturn'></a> Hoffman, M.D. and Gelman, A., 2014. The
+     No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte
      Carlo. *Journal of Machine Learning Research*, 15(1), pp.1593-1623.
      [![CiteSeerX:10.1.1.220.8395](http://img.shields.io/badge/CiteSeerX-10.1.1.220.8395-blue.svg)](https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.220.8395)
      [![arXiv:1111.4246](http://img.shields.io/badge/arXiv-1111.4246-B31B1B.svg)](https://arxiv.org/abs/1111.4246)
- 12. <a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and 
-     Neal, R.M., 2014. Split Hamiltonian Monte Carlo. *Statistics and 
+ 12. <a id='shababa2014split'></a> Shahbaba, B., Lan, S., Johnson, W.O. and
+     Neal, R.M., 2014. Split Hamiltonian Monte Carlo. *Statistics and
      Computing*, 24(3), pp.339-349.
      [![DOI:10.1007/s11222-012-9373-1](https://zenodo.org/badge/DOI/10.1007/s11222-012-9373-1.svg)](https://doi.org/10.1007/s11222-012-9373-1)
      [![arXiv:1106.5941](http://img.shields.io/badge/arXiv-1106.5941-B31B1B.svg)](https://arxiv.org/abs/1106.5941)
- 13. <a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual 
+ 13. <a id='blanes2014numerical'></a> Blanes, S., Casas, F., & Sanz-Serna, J. M., 2014.
+     Numerical integrators for the Hybrid Monte Carlo method.
+     *SIAM Journal on Scientific Computing*, 36(4), A1556-A1580.
+     [![DOI:10.1137/130932740](https://zenodo.org/badge/DOI/10.1137/130932740.svg)](https://doi.org/10.1137/130932740)
+     [![arXiv:1405.3153](http://img.shields.io/badge/arXiv-1405.3153-B31B1B.svg)](https://arxiv.org/abs/1405.3153)
+ 14. <a id='betancourt2017conceptual'></a> Betancourt, M., 2017. A conceptual
      introduction to Hamiltonian Monte Carlo.
      [![arXiv:1701.02434](http://img.shields.io/badge/arXiv-1701.02434-B31B1B.svg)](https://arxiv.org/abs/1701.02434)
- 14. <a id='lelievre2019hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G., 
-     2019. Hybrid Monte Carlo methods for sampling probability measures on 
+ 15. <a id='lelievre2019hybrid'></a> Lelièvre, T., Rousset, M. and Stoltz, G.,
+     2019. Hybrid Monte Carlo methods for sampling probability measures on
      submanifolds. In *Numerische Mathematik*, 143(2), (pp.379-421).
      [![DOI:10.1007/s00211-019-01056-4](https://zenodo.org/badge/DOI/10.1007/s00211-019-01056-4.svg)](https://doi.org/10.1007/s00211-019-01056-4)
      [![arXiv:1807.02356](http://img.shields.io/badge/arXiv-1807.02356-B31B1B.svg)](https://arxiv.org/abs/1807.02356)
