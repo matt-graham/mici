@@ -6,12 +6,12 @@ import numpy as np
 
 def euclidean_norm(vct):
     """Calculate the Euclidean (L-2) norm of a vector."""
-    return np.sum(vct ** 2) ** 0.5
+    return (vct ** 2).sum() ** 0.5
 
 
 def maximum_norm(vct):
     """Calculate the maximum (L-infinity) norm of a vector."""
-    return np.max(abs(vct))
+    return (abs(vct)).max()
 
 
 def solve_fixed_point_direct(
