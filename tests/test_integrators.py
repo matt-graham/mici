@@ -306,6 +306,120 @@ class TestLeapfrogIntegratorNonLinearGaussianEuclideanMetricSystem(
     step_size = 0.1
 
 
+class BCSSTwoStageIntegratorTests:
+    @pytest.fixture
+    def integrator(self, system):
+        return integrators.BCSSTwoStageIntegrator(system, self.step_size)
+
+
+class TestBCSSTwoStageIntegratorLinearEuclideanMetricSystem(
+    BCSSTwoStageIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 2e-4
+    step_size = 0.25
+
+
+class TestBCSSTwoStageIntegratorNonLinearEuclideanMetricSystem(
+    BCSSTwoStageIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 1e-3
+    step_size = 0.05
+
+
+class TestBCSSTwoStageIntegratorLinearGaussianEuclideanMetricSystem(
+    BCSSTwoStageIntegratorTests, LinearGaussianEuclideanMetricSystem
+):
+
+    h_diff_tol = 1e-10
+    step_size = 0.5
+
+
+class TestBCSSTwoStageIntegratorNonLinearGaussianEuclideanMetricSystem(
+    BCSSTwoStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+):
+
+    h_diff_tol = 2e-3
+    step_size = 0.1
+
+
+class BCSSThreeStageIntegratorTests:
+    @pytest.fixture
+    def integrator(self, system):
+        return integrators.BCSSThreeStageIntegrator(system, self.step_size)
+
+
+class TestBCSSThreeStageIntegratorLinearEuclideanMetricSystem(
+    BCSSThreeStageIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 5e-5
+    step_size = 0.25
+
+
+class TestBCSSThreeStageIntegratorNonLinearEuclideanMetricSystem(
+    BCSSThreeStageIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 5e-4
+    step_size = 0.25
+
+
+class TestBCSSThreeStageIntegratorLinearGaussianEuclideanMetricSystem(
+    BCSSThreeStageIntegratorTests, LinearGaussianEuclideanMetricSystem
+):
+
+    h_diff_tol = 1e-10
+    step_size = 0.5
+
+
+class TestBCSSThreeStageIntegratorNonLinearGaussianEuclideanMetricSystem(
+    BCSSThreeStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+):
+
+    h_diff_tol = 5e-4
+    step_size = 0.5
+
+
+class BCSSFourStageIntegratorTests:
+    @pytest.fixture
+    def integrator(self, system):
+        return integrators.BCSSFourStageIntegrator(system, self.step_size)
+
+
+class TestBCSSFourStageIntegratorLinearEuclideanMetricSystem(
+    BCSSFourStageIntegratorTests, LinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 2e-5
+    step_size = 1.
+
+
+class TestBCSSFourStageIntegratorNonLinearEuclideanMetricSystem(
+    BCSSFourStageIntegratorTests, NonLinearEuclideanMetricSystemTests
+):
+
+    h_diff_tol = 1e-3
+    step_size = 0.25
+
+
+class TestBCSSFourStageIntegratorLinearGaussianEuclideanMetricSystem(
+    BCSSFourStageIntegratorTests, LinearGaussianEuclideanMetricSystem
+):
+
+    h_diff_tol = 1e-10
+    step_size = 1.
+
+
+class TestBCSSFourStageIntegratorNonLinearGaussianEuclideanMetricSystem(
+    BCSSFourStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+):
+
+    h_diff_tol = 5e-4
+    step_size = 0.5
+
+
 class ImplicitIntegratorTests:
     @pytest.fixture
     def fixed_point_solver(self):
