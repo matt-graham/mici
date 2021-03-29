@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="mici",
-    version="0.1.10",
+    version="0.2.0",
     author="Matt Graham",
     description=(
         "MCMC samplers based on simulating Hamiltonian dynamics on a manifold"
@@ -29,6 +29,6 @@ setuptools.setup(
     license="MIT",
     license_file="LICENSE",
     install_requires=["numpy>=1.17", "scipy>=1.1"],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     extras_require={"autodiff": ["autograd>=1.3", "multiprocess>=0.70"]},
 )
