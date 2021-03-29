@@ -4,7 +4,7 @@ import os
 import sys
 import inspect
 import queue
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from pickle import PicklingError
 import logging
@@ -45,15 +45,6 @@ try:
     THREADPOOLCTL_AVAILABLE = True
 except ImportError:
     THREADPOOLCTL_AVAILABLE = False
-
-try:
-    from contextlib import nullcontext
-except ImportError:
-    # Fallback for nullcontext context manager for Python 3.6
-    # https://stackoverflow.com/a/55902915
-    @contextmanager
-    def nullcontext(enter_result=None):
-        yield enter_result
 
 
 logger = logging.getLogger(__name__)
