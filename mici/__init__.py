@@ -7,6 +7,7 @@ __license__ = "MIT"
 import mici.adapters
 import mici.autodiff
 import mici.integrators
+import mici.interop
 import mici.matrices
 import mici.samplers
 import mici.solvers
