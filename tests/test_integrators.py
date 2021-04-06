@@ -393,7 +393,7 @@ class TestBCSSFourStageIntegratorLinearEuclideanMetricSystem(
 ):
 
     h_diff_tol = 2e-5
-    step_size = 1.
+    step_size = 1.0
 
 
 class TestBCSSFourStageIntegratorNonLinearEuclideanMetricSystem(
@@ -409,7 +409,7 @@ class TestBCSSFourStageIntegratorLinearGaussianEuclideanMetricSystem(
 ):
 
     h_diff_tol = 1e-10
-    step_size = 1.
+    step_size = 1.0
 
 
 class TestBCSSFourStageIntegratorNonLinearGaussianEuclideanMetricSystem(
@@ -551,6 +551,7 @@ class TestConstrainedLeapfrogIntegratorNonLinearSystem(
         params=[
             solvers.solve_projection_onto_manifold_quasi_newton,
             solvers.solve_projection_onto_manifold_newton,
+            solvers.solve_projection_onto_manifold_newton_with_line_search,
         ]
     )
     def integrator(self, system, request):
