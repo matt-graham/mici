@@ -13,7 +13,7 @@ try:
     import pymc3
 
     PYMC3_AVAILABLE = True
-except:
+except ImportError:
     PYMC3_AVAILABLE = False
 
 
@@ -83,6 +83,7 @@ if PYMC3_AVAILABLE:
             random_seed=SEED,
             init=init,
             progressbar=progressbar,
+            cores=1,
         )
         assert isinstance(traces, dict)
         for var in pymc3_model.unobserved_RVs:
@@ -99,6 +100,7 @@ if PYMC3_AVAILABLE:
                 draws=NUM_SAMPLE,
                 random_seed=SEED,
                 return_inferencedata=True,
+                cores=1,
             )
             assert isinstance(inference_data, arviz.InferenceData)
             for var in pymc3_model.unobserved_RVs:
