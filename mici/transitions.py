@@ -164,7 +164,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(self, state, rng):
-        if self.mom_resample_coeff == 1:
+        if state.mom is None or self.mom_resample_coeff == 1:
             state.mom = self.system.sample_momentum(state, rng)
         elif self.mom_resample_coeff != 0:
             mom_ind = self.system.sample_momentum(state, rng)
