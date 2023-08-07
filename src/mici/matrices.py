@@ -1931,8 +1931,10 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
                 `(dim_inner, dim_inner)` specifying inner term in matrix product
                 defining low-rank update. If `None` an identity matrix is used.
             capacitance_matrix: Square matrix equal to
+
                     inner_square_matrix.inv
                     + right_factor_matrix @ square_matrix.inv @ left_factor_matrix
+
                 and with shape `(dim_inner, dim_inner)` which is used in constructing
                 inverse and computation of determinant of the low-rank updated matrix,
                 with this argument optional and typically only passed when this matrix
@@ -2122,8 +2124,10 @@ class SymmetricLowRankUpdateMatrix(
                 `(dim_inner, dim_inner)` specifying inner term in matrix product
                 defining low-rank update. If `None` an identity matrix is used.
             capacitance_matrix: Symmetric matrix  equal to
+
                     inner_symmetric_matrix.inv
                     + factor_matrix.T @  symmetric_matrix.inv @ factor_matrix
+
                 and with shape `(dim_inner, dim_inner)` which is used in constructing
                 inverse and computation of determinant of the low-rank updated matrix,
                 with this argument optional and typically only passed when this matrix
@@ -2240,9 +2244,11 @@ class PositiveDefiniteLowRankUpdateMatrix(
             inner_pos_def_matrix: Optional positive definite matrix with shape
                 `(dim_inner, dim_inner)` specifying inner term in matrix product
                 defining low-rank update. If `None` an identity matrix is used.
-            capacitance_matrix: Positive- definite matrix equal to
+            capacitance_matrix: Positive-definite matrix equal to
+
                     inner_pos_def_matrix.inv
                     + factor_matrix.T @ pos_def_matrix.inv @ factor_matrix
+
                 and with shape `(dim_inner, dim_inner)` which is used in constructing
                 inverse and computation of determinant of the low-rank updated matrix,
                 with this argument optional and typically only passed when this matrix

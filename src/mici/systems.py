@@ -532,6 +532,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                 the ratio of the prior density (specified by `neg_log_dens`) and the
                 square-root of the determinant of the Gram matrix defined by
 
+                .. code-block::
+
                     gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
 
                 where `jacob_constr` is the Jacobian of the constraint function `constr`
@@ -573,6 +575,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
                 (matrix / 2D array of partial derivatives) of the output of the
                 constraint function `c = constr(q)` with respect to the position array
                 argument `q`, returning the computed Jacobian as a 2D array `jacob` with
+
+               .. code-block::
 
                     jacob[i, j] = ∂c[i] / ∂q[j]
 
@@ -648,6 +652,8 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         """Gram matrix at current position.
 
         The Gram matrix as a position `q` is defined as
+
+        .. code-block::
 
             gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
 
@@ -763,6 +769,8 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 with respect to the Hausdorff measure on the manifold corresponding to
                 the ratio of the prior density (specified by `neg_log_dens`) and the
                 square-root of the determinant of the Gram matrix defined by
+                
+               .. code-block::
 
                     gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
 
@@ -805,6 +813,8 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 (matrix / 2D array of partial derivatives) of the output of the
                 constraint function `c = constr(q)` with respect to the position array
                 argument `q`, returning the computed Jacobian as a 2D array `jacob` with
+                
+               .. code-block::
 
                     jacob[i, j] = ∂c[i] / ∂q[j]
 
@@ -819,12 +829,16 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 *matrix-Hessian-product* (MHP) of the constraint function `constr` with
                 respect to the position array argument. The MHP is here defined as a
                 function of a `(dim_constr, dim_pos)` shaped 2D array `m`
+                
+               .. code-block::
 
                     mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
 
                 where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped
                 vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of
                 second-order partial derivatives of such that
+                
+               .. code-block::
 
                     hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
 
@@ -911,6 +925,8 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 manifold corresponding to the ratio of the prior density (specified by
                 `neg_log_dens`) and the square-root of the determinant of the Gram
                 matrix defined by
+                
+                .. code-block::
 
                     gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
 
@@ -943,6 +959,8 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 constraint function `c = constr(q)` with respect to the position array
                 argument `q`, returning the computed Jacobian as a 2D array `jacob` with
 
+                .. code-block::
+
                     jacob[i, j] = ∂c[i] / ∂q[j]
 
                 Optionally the function may instead return a 2-tuple of values with the
@@ -956,12 +974,16 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 *matrix-Hessian-product* (MHP) of the constraint function `constr` with
                 respect to the position array argument. The MHP is here defined as a
                 function of a `(dim_constr, dim_pos)` shaped 2D array `m`
+                
+                .. code-block::
 
                     mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
 
                 where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped
                 vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of
                 second-order partial derivatives of such that
+
+                .. code-block::
 
                     hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
 
@@ -1068,6 +1090,8 @@ class RiemannianMetricSystem(System):
                 argument used to specify the value of these, if any. Together this means
                 the metric matrix representation at a position `pos` is constructed as
 
+                .. code-block::
+
                     metric = metric_matrix_class(metric_func(pos), **metric_kwargs)
 
                 The `mici.matrices.PositiveDefiniteMatrix` subclass should as a minimum
@@ -1082,15 +1106,19 @@ class RiemannianMetricSystem(System):
                 initializer.
             vjp_metric_func: Function which given a position array returns another
                 function which takes an array as an argument and returns the
-                *vector-Jacobian-product* (VJP) of `metric_func` with respect to the
+                **vector-Jacobian-product** (VJP) of `metric_func` with respect to the
                 position array argument. The VJP is here defined as a function of an
                 array `v` (of the same shape as the output of `metric_func`)
                 corresponding to
+
+                .. code-block::
 
                     vjp(v) = sum(v[..., None] * jacob, tuple(range(v.ndim))
 
                 where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q` i.e. the
                 array of partial derivatives of the function such that
+
+                .. code-block::
 
                     jacob[..., i] = ∂m[...] / ∂q[i]
 
@@ -1140,10 +1168,14 @@ class RiemannianMetricSystem(System):
         The vector-Jacobian-product is here defined as a function of an array `v` (of
         the same shape as the output of `metric_func`) corresponding to
 
+        .. code-block::
+
             vjp(v) = sum(v[..., None] * jacob, axis=tuple(range(v.ndim))
 
         where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q` i.e. the array of
         partial derivatives of the function such that
+
+        .. code-block::
 
             jacob[..., i] = ∂m[...] / ∂q[i]
 
@@ -1237,11 +1269,15 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
                 the position array argument. The VJP is here defined as a function of a
                 scalar `v`
 
+                .. code-block::
+
                     vjp(v) = v @ grad
 
                 where `grad` is the `(dim_pos,)` shaped Jacobian (gradient) of `s =
                 metric_scalar_func(q)` with respect to `q` i.e. the array of partial
                 derivatives of the function such that
+
+                .. code-block::
 
                     grad[i] = ∂s / ∂q[i]
 
@@ -1313,11 +1349,15 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 to the position array argument. The VJP is here defined as a function of
                 a 1D array `v`
 
+                .. code-block::
+
                     vjp(v) = sum(v[:, None] * jacob[:, :], axis=0)
 
                 where `jacob` is the `(dim_pos, dim_pos)` shaped Jacobian of `d =
                 metric_diagonal_func(q)` with respect to `q` i.e. the array of partial
                 derivatives of the function such that
+
+                .. code-block::
 
                     jacob[i, j] = ∂d[i] / ∂q[j]
 
@@ -1382,11 +1422,15 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 the position array argument. The VJP is here defined as a function of a
                 2D array `v`
 
+                .. code-block::
+
                     vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))
 
                 where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `L
                 = metric_chol_func(q)` with respect to `q` i.e. the array of partial
                 derivatives of the function such that
+
+                .. code-block::
 
                     jacob[i, j, k] = ∂L[i, j] / ∂q[k]
 
@@ -1452,12 +1496,16 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 *vector-Jacobian-product* (VJP) of `metric_func` with respect to the
                 position array argument. The VJP is here defined as a function of a 2D
                 array `v`
+                
+                .. code-block::
 
                     vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))
 
                 where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `M
                 = metric_func(q)` with respect to `q` i.e. the array of partial
                 derivatives of the function such that
+                
+                .. code-block::
 
                     jacob[i, j, k] = ∂M[i, j] / ∂q[k]
 
@@ -1503,6 +1551,8 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     1D array of real eigenvalues, and `eigvec` the corresponding 2D array (orthogonal
     matrix) with eigenvectors as columns, then the resulting positive-definite metric
     matrix representation `M` is computed as
+    
+    .. code-block::
 
         M = eigvec @ diag(softabs(eigval, softabs_coeff)) @ eigvec.T
 
@@ -1560,12 +1610,16 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the
                 position array argument. The MTP is here defined as a function of a
                 matrix `m` corresponding to
+                
+                .. code-block::
 
                     mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))
 
                 where `tress` is the 'Tressian' of `f = neg_log_dens(q)` wrt `q` i.e.
                 the 3D array of third-order partial derivatives of the scalar-valued
                 function such that
+                
+                .. code-block::
 
                     tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
 
@@ -1628,12 +1682,16 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
 
         The matrix-Tressian-product (MTP) is here defined as a function of a matrix `m`
         corresponding to
+        
+        .. code-block::
 
             mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))
 
         where `tress` is the 'Tressian' of `f = neg_log_dens(q)` with respect to `q =
         state.pos` i.e. the 3D array of third-order partial derivatives of the
         scalar-valued function such that
+        
+        .. code-block::
 
             tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
 

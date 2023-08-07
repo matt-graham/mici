@@ -198,8 +198,8 @@ class SequenceProgressBar(ProgressBar):
     ):
         """
         Args:
-            sequence: Sequence to iterate over. Must be iterable _and_ have a defined
-            length such that `len(sequence)` is valid.
+            sequence: Sequence to iterate over. Must be iterable **and** have a defined
+                length such that `len(sequence)` is valid.
             description: Description of task to prefix progress bar with.
             position: Tuple specifying position of progress bar within a sequence with
                 first entry corresponding to zero-indexed position and the second entry

@@ -20,14 +20,15 @@ def convert_to_inference_data(
     energy_key: Optional[str] = "energy",
     lp_key: Optional[str] = "lp",
 ) -> arviz.InferenceData:
-    """Convert Mici `sample_chains` output to ArviZ `InferenceData` object.
+    """Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData` object.
 
     Args:
-        traces: Traces output from Mici `sample_chains` call. A dictionary of variables
-            traced over sampled chains with the dictionary keys the variable names and
-            the values a list of arrays, one array per sampled chain, with the first
-            array dimension corresponding to the draw index and any remaining
-            dimensions, the variable dimensions.
+        traces: Traces output from Mici 
+            :py:meth:`mici.samplers.MarkovChainMonteCarloMethod.sample_chains` call. A
+            dictionary of variables traced over sampled chains with the dictionary keys
+            the variable names and the values a list of arrays, one array per sampled
+            chain, with the first array dimension corresponding to the draw index and
+            any remaining dimensions, the variable dimensions.
         stats: Statistics output from Mici `sample_chains` call. A dictionary of chain
             statistics traced over sampled chains with the dictionary keys the
             statistics names and the values a list of arrays, one array per sampled
@@ -72,7 +73,7 @@ def sample_pymc3_model(
     jitter_max_retries: int = 10,
     trace: Optional[list] = None,
     return_inferencedata: bool = False,
-    model: Optional[pymc3.Model] = None,
+    model: Optional[pymc3.model.Model] = None,
     target_accept: float = 0.8,
     max_treedepth: int = 10,
 ) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
@@ -80,59 +81,65 @@ def sample_pymc3_model(
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
 
-    This function replicates the interface of the `pymc3.sample` function to allow using
-    as a (partial) drop-in replacement.
+    This function replicates the interface of the :py:func:`pymc3.sampling.sample`
+    function to allow using as a (partial) drop-in replacement.
 
     Args:
         draws: The number of samples to draw.
         tune: Number of iterations to tune, defaults to 1000. Samplers adjust the step
-            sizes, scalings or  similar during tuning. Tuning samples will be drawn in
+            sizes, scalings or similar during tuning. Tuning samples will be drawn in
             addition to the number specified in the `draws` argument, and will be
             discarded.
         chains: The number of chains to sample. Running independent chains is important
             for some convergence statistics and can also reveal multiple modes in the
-            posterior. If `None`, then set to either `cores` or 2, whichever is larger.
-        cores: The number of chains to run in parallel. If `None`, set to the number of
-            CPUs in the system, but at most 4.
-        random_seed: Seed for Numpy random number generator used for generating random
-            variables while sampling chains. If `None` then generator will be seeded
-            with entropy from operating system.
+            posterior. If :code::`None`, then set to either :code:`cores` or 2,
+            whichever is larger.
+        cores: The number of chains to run in parallel. If :code:`None`, set to the
+            number of CPU cores in the system, but at most 4.
+        random_seed: Seed for NumPy random number generator used for generating random
+            variables while sampling chains. If :code:`None` then generator will be
+            seeded with entropy from operating system.
         progressbar: Whether or not to display a progress bar.
         init: Initialization method to use. One of:
 
-            1. adapt_diag: Start with a identity mass matrix and then adapt a
-                diagonal based on the variance of the tuning samples. All chains use the
-                test value (usually the prior mean) as starting point.
-            2. jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in
-                [-1, 1] to the starting point in each chain. Also chosen if
-                `init=="auto"`.
-            3.  adapt_full: Adapt a dense mass matrix using the sample covariances
+            * :code:`"adapt_diag"`: Start with a identity mass matrix and then adapt a
+              diagonal based on the variance of the tuning samples. All chains use the
+              test value (usually the prior mean) as starting point.
+            * :code:`jitter+adapt_diag`: Same as :code:`"adapt_diag"`, but add uniform
+              jitter in [-1, 1] to the starting point in each chain. Also chosen if
+              :code:`init="auto"`.
+            * :code:`"adapt_full"`: Adapt a dense mass matrix using the sample
+              covariances.
 
         jitter_max_retries: Maximum number of repeated attempts (per chain) at creating
-            an initial matrix with uniform jitter that yields a finite probability.
-            This applies to `jitter+adapt_diag` and `jitter+adapt_full` init methods.
-        trace: A list of variables to track. If `None`, `model.unobserved_RVs` is used.
-        return_inferencedata: Whether to return the traces as an `arviz.InferenceData`
-            (`True`) object or a dict (`False`).
-        model: PyMC3 model defining posterior distribution to sample from. May be `None`
-            if function is called from within model context manager.
+            an initial matrix with uniform jitter that yields a finite probability. This
+            applies to `"jitter+adapt_diag"` and :code:`"jitter+adapt_full"`
+            :py:obj:`init` methods.
+        trace: A list of variables to track. If :code`None`, then
+            :code:`model.unobserved_RVs` is used.
+        return_inferencedata: Whether to return the traces as an
+            :py:class:`arviz.InferenceData` (:code:`True`) object or a
+            :py:class:`dict` (:code:`False`).
+        model: PyMC3 model defining posterior distribution to sample from. May be 
+            :code:`None` if function is called from within model context manager.
         target_accept: Target value for the acceptance statistic being controlled during
             adaptive warm-up.
         max_treedepth: Maximum depth to expand trajectory binary tree to in integrator
             transition. The maximum number of integrator steps corresponds to
-            `2**max_treedepth`.
+            :code:`2**max_treedepth`.
 
     Returns:
-        A dictionary or ArviZ `InferenceData` object containing the sampled chain
-        output. Dictionary output (when `return_inferencedata=False`) has string keys
-        corresponding to the name of each traced variable in the model, with the values
-        being the corresponding values of the variables traced across the chains as
-        NumPy arrays, with the first dimension the chain index  (of size equal to
-        `chains`), the second dimension the draw index (of size equal to `draws`) and
-        any remaining dimensions corresponding to the dimensions of the traced variable.
-        If `return_inferencedata=True` an ArviZ `InferenceData` object is instead
-        returned with traced chain data stored in the `posterior` group and additional
-        chain statistics in the `sample_stats` group.
+        A dictionary or :py:class:`arviz.InferenceData` object containing the sampled
+        chain output. Dictionary output (when :code:`return_inferencedata=False`) has
+        string keys corresponding to the name of each traced variable in the model, with
+        the values being the corresponding values of the variables traced across the
+        chains as NumPy arrays, with the first dimension the chain index  (of size equal
+        to :code:`chains`), the second dimension the draw index (of size equal to
+        :code:`draws`) and any remaining dimensions corresponding to the dimensions of
+        the traced variable. If :code:`return_inferencedata=True` an
+        :py:class:`arviz.InferenceData` object is instead returned with traced chain
+        data stored in the :code:`posterior` group and additional chain statistics in
+        the :code:`sample_stats` group.
     """
 
     import pymc3
@@ -282,8 +289,8 @@ def sample_stan_model(
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
 
     This function follows a similar argument naming scheme to the PyStan
-    `stan.Model.sample` method (which itself follows CmdStan) to allow using as a
-    (partial) drop-in replacement.
+    :py:meth:`stan.model.Model.sample` method (which itself follows CmdStan) to allow
+    using as a (partial) drop-in replacement.
 
     Args:
         model_code: Stan program code describing a Stan model.

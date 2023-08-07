@@ -10,22 +10,23 @@ if TYPE_CHECKING:
     from numpy.typing import ArrayLike
     from mici.adapters import Adapter
     from mici.states import ChainState
+    from mici.types import TraceFunction
 
 
 class ChainStage(NamedTuple):
-    """Parameters of chain stage."""
+    """Parameters of chain stage.
+    
+    Parameters:
+        n_iter: Number of iterations in chain stage.
+        adapters: Dictionary of adapters to apply to each transition in chain stage.
+        trace_funcs: Functions defining chain variables to trace during chain stage.
+        record_stats: Whether to record statistics and traces during chain stage.
+    """
 
     n_iter: int
-    """Number of iterations in chain stage."""
-
     adapters: dict[str, Iterable[Adapter]]
-    """Dictionary of adapters to apply to each transition in chain stage."""
-
-    trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]]
-    """"""
-
+    trace_funcs: tuple[TraceFunction]
     record_stats: bool
-    """Whether to record statistics and traces during chain stage."""
 
 
 class Stager(abc.ABC):
@@ -37,7 +38,7 @@ class Stager(abc.ABC):
         n_warm_up_iter: int,
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
-        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_funcs: Iterable[TraceFunction],
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
         """Create dictionary specifying labels and parameters of chain sampling stages.
@@ -106,7 +107,7 @@ class WarmUpStager(Stager):
             sampling_stages["Adaptive warm up"] = ChainStage(
                 n_iter=n_warm_up_iter,
                 adapters=adapters,
-                trace_funcs=warm_up_trace_funcs,
+                trace_funcs=tuple(warm_up_trace_funcs),
                 record_stats=trace_warm_up,
             )
         # main non-adaptive stage
@@ -114,7 +115,7 @@ class WarmUpStager(Stager):
             sampling_stages["Main non-adaptive"] = ChainStage(
                 n_iter=n_main_iter,
                 adapters=None,
-                trace_funcs=trace_funcs,
+                trace_funcs=tuple(trace_funcs),
                 record_stats=True,
             )
         return sampling_stages
@@ -191,7 +192,7 @@ class WindowedWarmUpStager(Stager):
         n_warm_up_iter: int,
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
-        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_funcs: Iterable[TraceFunction],
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
         fast_adapters = {
@@ -221,7 +222,7 @@ class WindowedWarmUpStager(Stager):
             sampling_stages["Initial fast adaptive"] = ChainStage(
                 n_iter=n_init_fast_stage_iter,
                 adapters=fast_adapters,
-                trace_funcs=warm_up_trace_funcs,
+                trace_funcs=tuple(warm_up_trace_funcs),
                 record_stats=record_stats,
             )
             # growing size slow adaptation windows
@@ -250,14 +251,14 @@ class WindowedWarmUpStager(Stager):
                 ] = ChainStage(
                     n_iter=n_iter,
                     adapters=adapters,
-                    trace_funcs=warm_up_trace_funcs,
+                    trace_funcs=tuple(warm_up_trace_funcs),
                     record_stats=record_stats,
                 )
             # final fast adaptation stage
             sampling_stages["Final fast adaptive"] = ChainStage(
                 n_iter=n_final_fast_stage_iter,
                 adapters=fast_adapters,
-                trace_funcs=warm_up_trace_funcs,
+                trace_funcs=tuple(warm_up_trace_funcs),
                 record_stats=record_stats,
             )
         # main non-adaptive stage
@@ -265,7 +266,7 @@ class WindowedWarmUpStager(Stager):
             sampling_stages["Main non-adaptive"] = ChainStage(
                 n_iter=n_main_iter,
                 adapters=None,
-                trace_funcs=trace_funcs,
+                trace_funcs=tuple(trace_funcs),
                 record_stats=True,
             )
         return sampling_stages

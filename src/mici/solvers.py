@@ -26,7 +26,15 @@ class FixedPointSolver(Protocol):
     """Solver for fixed point equation, returning `x` such that `func(x) = x`."""
 
     def __call__(self, func: ArrayFunction, x0: ArrayLike, **kwargs) -> ArrayLike:
-        ...
+        """Solve fixed point equation.
+
+        Args:
+            func: Function to solve for fixed point of.
+            x0: Point to initialize solver at.
+
+        Returns:
+            Fixed point solved for.
+        """
 
 
 def solve_fixed_point_direct(
@@ -53,8 +61,8 @@ def solve_fixed_point_direct(
         Solution to fixed point equation with `norm(func(x) - x) < convergence_tol`.
 
     Raises:
-        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`
-        iterations, diverges or encounters a `ValueError` during the iteration.
+        mici.errors.ConvergenceError: If solver does not converge within `max_iters`
+            iterations, diverges or encounters a `ValueError` during the iteration.
     """
     for i in range(max_iters):
         try:
@@ -108,8 +116,8 @@ def solve_fixed_point_steffensen(
         Solution to fixed point equation with `norm(func(x) - x) < convergence_tol`.
 
     Raises:
-        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`
-        iterations, diverges or encounters a `ValueError` during the iteration.
+        mici.errors.ConvergenceError: If solver does not converge within `max_iters`
+            iterations, diverges or encounters a `ValueError` during the iteration.
     """
     for i in range(max_iters):
         try:
@@ -144,6 +152,8 @@ class ProjectionSolver(Protocol):
 
     Solves an equation of the form
 
+    .. code::
+
         r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0
 
     for the vector of Lagrange multipliers `λ` to project a point on to the manifold
@@ -160,6 +170,17 @@ class ProjectionSolver(Protocol):
         system: System,
         **kwargs,
     ) -> ChainState:
+        """Solve for projection on to manifold step.
+
+        Args:
+            state: Current chain state after unconstrained step.
+            state_prev: Previous chain state on manifold.
+            time_step: Integrator time step for unconstrained step.
+            system: Hamiltonian system dynamics are being simulated for.
+
+        Returns:
+            Chain state after projection on to manifold.
+        """
         ...
 
 
@@ -181,6 +202,8 @@ def solve_projection_onto_manifold_quasi_newton(
 
     Solves an equation of the form
 
+    .. code::
+
         r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0
 
     for the vector of Lagrange multipliers `λ` to project a point on to the manifold
@@ -190,10 +213,14 @@ def solve_projection_onto_manifold_quasi_newton(
 
     The Jacobian of the residual function `r` is
 
+    .. code::
+
         ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ
 
     where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the
     second (momentum argument), such that the full Newton update is
+
+    .. code::
 
         λ_(α) = λ - ∂r(λ)⁻¹ r(λ)
 
@@ -202,9 +229,13 @@ def solve_projection_onto_manifold_quasi_newton(
 
     The symmetric quasi-Newton iteration instead uses the approximation
 
+    .. code::
+
         ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ ≈ ∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ
 
     with the corresponding update
+
+    .. code::
 
         λ = λ - (∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ)⁻¹ r(λ)
 
@@ -237,8 +268,8 @@ def solve_projection_onto_manifold_quasi_newton(
         within `constraint_tol`, i.e. `norm(system.constr(state.pos)) < constraint_tol`.
 
     Raises:
-        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`
-        iterations, diverges or encounters a `ValueError` during the iteration.
+        mici.errors.ConvergenceError: If solver does not converge within `max_iters`
+            iterations, diverges or encounters a `ValueError` during the iteration.
     """
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
@@ -294,6 +325,8 @@ def solve_projection_onto_manifold_newton(
 
     Solves an equation of the form
 
+    .. code::
+
         r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0
 
     for the vector of Lagrange multipliers `λ` to project a point on to the manifold
@@ -303,10 +336,14 @@ def solve_projection_onto_manifold_newton(
 
     The Jacobian of the residual function `r` is
 
+    .. code::
+
         ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ
 
     where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the
     second (momentum argument), such that the Newton update is
+
+    .. code::
 
         λ = λ - ∂r(λ)⁻¹ r(λ)
 
@@ -338,8 +375,8 @@ def solve_projection_onto_manifold_newton(
         within `constraint_tol`, i.e. `norm(system.constr(state.pos)) < constraint_tol`.
 
     Raises:
-        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`
-        iterations, diverges or encounters a `ValueError` during the iteration.
+        mici.errors.ConvergenceError: If solver does not converge within `max_iters`
+            iterations, diverges or encounters a `ValueError` during the iteration.
     """
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
@@ -399,6 +436,8 @@ def solve_projection_onto_manifold_newton_with_line_search(
 
     Solves an equation of the form
 
+    .. code::
+
         r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0
 
     for the vector of Lagrange multipliers `λ` to project a point on to the manifold
@@ -408,10 +447,14 @@ def solve_projection_onto_manifold_newton_with_line_search(
 
     The Jacobian of the residual function `r` is
 
+    .. code::
+
         ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ
 
     where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the
     second (momentum argument), such that the scaled Newton update is
+
+    .. code::
 
         λ_(α) = λ - α * ∂r(λ)⁻¹ r(λ)
 
@@ -449,8 +492,8 @@ def solve_projection_onto_manifold_newton_with_line_search(
         within `constraint_tol`, i.e. `norm(system.constr(state.pos)) < constraint_tol`.
 
     Raises:
-        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`
-        iterations, diverges or encounters a `ValueError` during the iteration.
+        mici.errors.ConvergenceError: If solver does not converge within `max_iters`
+            iterations, diverges or encounters a `ValueError` during the iteration.
     """
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
