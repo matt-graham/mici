@@ -105,15 +105,16 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.interop.convert_to_inference_data">
 <span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">convert_to_inference_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'energy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lp_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lp'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#convert_to_inference_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.convert_to_inference_data" title="Permalink to this definition"></a></dt>
-<dd><p>Convert Mici <cite>sample_chains</cite> output to ArviZ <cite>InferenceData</cite> object.</p>
+<dd><p>Convert Mici <code class="code docutils literal notranslate"><span class="pre">sample_chains</span></code> output to <a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>traces</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>ArrayLike</em><em>]</em><em>]</em>) – Traces output from Mici <cite>sample_chains</cite> call. A dictionary of variables
-traced over sampled chains with the dictionary keys the variable names and
-the values a list of arrays, one array per sampled chain, with the first
-array dimension corresponding to the draw index and any remaining
-dimensions, the variable dimensions.</p></li>
+<li><p><strong>traces</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>ArrayLike</em><em>]</em><em>]</em>) – Traces output from Mici
+<a class="reference internal" href="mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="mici.samplers.MarkovChainMonteCarloMethod.sample_chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mici.samplers.MarkovChainMonteCarloMethod.sample_chains()</span></code></a> call. A
+dictionary of variables traced over sampled chains with the dictionary keys
+the variable names and the values a list of arrays, one array per sampled
+chain, with the first array dimension corresponding to the draw index and
+any remaining dimensions, the variable dimensions.</p></li>
 <li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>ArrayLike</em><em>]</em><em>]</em>) – Statistics output from Mici <cite>sample_chains</cite> call. A dictionary of chain
 statistics traced over sampled chains with the dictionary keys the
 statistics names and the values a list of arrays, one array per sampled
@@ -133,7 +134,7 @@ constant). If present the corresponding values will be added to the
 group and additional chain statistics in the <cite>sample_stats</cite> group.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>arviz.InferenceData</p>
+<dd class="field-odd"><p><a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><em>InferenceData</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -143,71 +144,71 @@ group and additional chain statistics in the <cite>sample_stats</cite> group.</p
 <span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">sample_pymc3_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inferencedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_accept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_treedepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#sample_pymc3_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.sample_pymc3_model" title="Permalink to this definition"></a></dt>
 <dd><p>Generate approximate samples from posterior defined by a PyMC3 model.</p>
 <p>Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</p>
-<p>This function replicates the interface of the <cite>pymc3.sample</cite> function to allow using
-as a (partial) drop-in replacement.</p>
+<p>This function replicates the interface of the <a class="reference external" href="https://www.pymc.io/projects/docs/en/v3/api/inference.html#pymc3.sampling.sample" title="(in PyMC3 v3.11.5)"><code class="xref py py-func docutils literal notranslate"><span class="pre">pymc3.sampling.sample()</span></code></a>
+function to allow using as a (partial) drop-in replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>draws</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The number of samples to draw.</p></li>
 <li><p><strong>tune</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations to tune, defaults to 1000. Samplers adjust the step
-sizes, scalings or  similar during tuning. Tuning samples will be drawn in
+sizes, scalings or similar during tuning. Tuning samples will be drawn in
 addition to the number specified in the <cite>draws</cite> argument, and will be
 discarded.</p></li>
 <li><p><strong>chains</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The number of chains to sample. Running independent chains is important
 for some convergence statistics and can also reveal multiple modes in the
-posterior. If <cite>None</cite>, then set to either <cite>cores</cite> or 2, whichever is larger.</p></li>
-<li><p><strong>cores</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The number of chains to run in parallel. If <cite>None</cite>, set to the number of
-CPUs in the system, but at most 4.</p></li>
-<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Seed for Numpy random number generator used for generating random
-variables while sampling chains. If <cite>None</cite> then generator will be seeded
-with entropy from operating system.</p></li>
+posterior. If :code::<cite>None</cite>, then set to either <code class="code docutils literal notranslate"><span class="pre">cores</span></code> or 2,
+whichever is larger.</p></li>
+<li><p><strong>cores</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The number of chains to run in parallel. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, set to the
+number of CPU cores in the system, but at most 4.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Seed for NumPy random number generator used for generating random
+variables while sampling chains. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> then generator will be
+seeded with entropy from operating system.</p></li>
 <li><p><strong>progressbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether or not to display a progress bar.</p></li>
 <li><p><strong>init</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'adapt_diag'</em><em>, </em><em>'jitter+adapt_diag'</em><em>, </em><em>'adapt_full'</em><em>]</em>) – <p>Initialization method to use. One of:</p>
-<ol class="arabic simple">
-<li><dl class="simple">
-<dt>adapt_diag: Start with a identity mass matrix and then adapt a</dt><dd><p>diagonal based on the variance of the tuning samples. All chains use the
-test value (usually the prior mean) as starting point.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>jitter+adapt_diag: Same as <code class="docutils literal notranslate"><span class="pre">adapt_diag</span></code>, but add uniform jitter in</dt><dd><p>[-1, 1] to the starting point in each chain. Also chosen if
-<cite>init==”auto”</cite>.</p>
-</dd>
-</dl>
-</li>
-<li><p>adapt_full: Adapt a dense mass matrix using the sample covariances</p></li>
-</ol>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;adapt_diag&quot;</span></code>: Start with a identity mass matrix and then adapt a
+diagonal based on the variance of the tuning samples. All chains use the
+test value (usually the prior mean) as starting point.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">jitter+adapt_diag</span></code>: Same as <code class="code docutils literal notranslate"><span class="pre">&quot;adapt_diag&quot;</span></code>, but add uniform
+jitter in [-1, 1] to the starting point in each chain. Also chosen if
+<code class="code docutils literal notranslate"><span class="pre">init=&quot;auto&quot;</span></code>.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&quot;adapt_full&quot;</span></code>: Adapt a dense mass matrix using the sample
+covariances.</p></li>
+</ul>
 </p></li>
 <li><p><strong>jitter_max_retries</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of repeated attempts (per chain) at creating
-an initial matrix with uniform jitter that yields a finite probability.
-This applies to <cite>jitter+adapt_diag</cite> and <cite>jitter+adapt_full</cite> init methods.</p></li>
-<li><p><strong>trace</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>]</em>) – A list of variables to track. If <cite>None</cite>, <cite>model.unobserved_RVs</cite> is used.</p></li>
-<li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to return the traces as an <cite>arviz.InferenceData</cite>
-(<cite>True</cite>) object or a dict (<cite>False</cite>).</p></li>
-<li><p><strong>model</strong> (<em>Optional</em><em>[</em><em>pymc3.Model</em><em>]</em>) – PyMC3 model defining posterior distribution to sample from. May be <cite>None</cite>
-if function is called from within model context manager.</p></li>
+an initial matrix with uniform jitter that yields a finite probability. This
+applies to <cite>“jitter+adapt_diag”</cite> and <code class="code docutils literal notranslate"><span class="pre">&quot;jitter+adapt_full&quot;</span></code>
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code> methods.</p></li>
+<li><p><strong>trace</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>]</em>) – A list of variables to track. If :code`None`, then
+<code class="code docutils literal notranslate"><span class="pre">model.unobserved_RVs</span></code> is used.</p></li>
+<li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to return the traces as an
+<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) object or a
+<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>model</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://www.pymc.io/projects/docs/en/v3/api/model.html#pymc3.model.Model" title="(in PyMC3 v3.11.5)"><em>Model</em></a><em>]</em>) – PyMC3 model defining posterior distribution to sample from. May be
+<code class="code docutils literal notranslate"><span class="pre">None</span></code> if function is called from within model context manager.</p></li>
 <li><p><strong>target_accept</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Target value for the acceptance statistic being controlled during
 adaptive warm-up.</p></li>
 <li><p><strong>max_treedepth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to in integrator
 transition. The maximum number of integrator steps corresponds to
-<cite>2**max_treedepth</cite>.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">2**max_treedepth</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A dictionary or ArviZ <cite>InferenceData</cite> object containing the sampled chain
-output. Dictionary output (when <cite>return_inferencedata=False</cite>) has string keys
-corresponding to the name of each traced variable in the model, with the values
-being the corresponding values of the variables traced across the chains as
-NumPy arrays, with the first dimension the chain index  (of size equal to
-<cite>chains</cite>), the second dimension the draw index (of size equal to <cite>draws</cite>) and
-any remaining dimensions corresponding to the dimensions of the traced variable.
-If <cite>return_inferencedata=True</cite> an ArviZ <cite>InferenceData</cite> object is instead
-returned with traced chain data stored in the <cite>posterior</cite> group and additional
-chain statistics in the <cite>sample_stats</cite> group.</p>
+<dd class="field-even"><p>A dictionary or <a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> object containing the sampled
+chain output. Dictionary output (when <code class="code docutils literal notranslate"><span class="pre">return_inferencedata=False</span></code>) has
+string keys corresponding to the name of each traced variable in the model, with
+the values being the corresponding values of the variables traced across the
+chains as NumPy arrays, with the first dimension the chain index  (of size equal
+to <code class="code docutils literal notranslate"><span class="pre">chains</span></code>), the second dimension the draw index (of size equal to
+<code class="code docutils literal notranslate"><span class="pre">draws</span></code>) and any remaining dimensions corresponding to the dimensions of
+the traced variable. If <code class="code docutils literal notranslate"><span class="pre">return_inferencedata=True</span></code> an
+<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> object is instead returned with traced chain
+data stored in the <code class="code docutils literal notranslate"><span class="pre">posterior</span></code> group and additional chain statistics in
+the <code class="code docutils literal notranslate"><span class="pre">sample_stats</span></code> group.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[arviz.InferenceData, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
+<dd class="field-odd"><p><em>Union</em>[<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><em>InferenceData</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -218,8 +219,8 @@ chain statistics in the <cite>sample_stats</cite> group.</p>
 <dd><p>Generate approximate samples from posterior defined by a Stan model.</p>
 <p>Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</p>
 <p>This function follows a similar argument naming scheme to the PyStan
-<cite>stan.Model.sample</cite> method (which itself follows CmdStan) to allow using as a
-(partial) drop-in replacement.</p>
+<a class="reference external" href="https://pystan.readthedocs.io/en/latest/reference.html#stan.model.Model.sample" title="(in pystan v3.7.0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">stan.model.Model.sample()</span></code></a> method (which itself follows CmdStan) to allow
+using as a (partial) drop-in replacement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -267,7 +268,7 @@ with traced chain data stored in the <cite>posterior</cite> group and additional
 statistics in the <cite>sample_stats</cite> group.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[arviz.InferenceData, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
+<dd class="field-odd"><p><em>Union</em>[<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><em>InferenceData</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
 </dd>
 </dl>
 </dd></dl>

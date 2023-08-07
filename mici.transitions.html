@@ -143,8 +143,10 @@ B, 268(CERN-TH-6172-91), pp.247-252.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>mom_resample_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining conditional distribution on momentum to
+leave invariant.</p></li>
+<li><p><strong>mom_resample_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Scalar value in [0, 1] defining the momentum resampling
+coefficient.</p></li>
 </ul>
 </dd>
 </dl>
@@ -214,12 +216,34 @@ arXiv preprint arXiv:1701.02434.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
-<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
-<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
+maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
+trajectory before signalling a divergence.</p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
+to terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states corresponding
+to the two edge nodes in the trajectory (sub-)tree being checked and an
+array containing the sum of the momentums over the trajectory
+(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
+checks on overlapping subtrees of the current tree to improve robustness
+in systems with dynamics which are well approximated by independent
+system of simple harmonic oscillators. In such systems (corresponding to
+e.g. a standard normal target distribution and identity metric matrix
+representation) at certain step sizes a ‘resonant’ behaviour is seen by
+which the termination criterion fails to detect that the trajectory has
+expanded past a half-period i.e. has ‘U-turned’ resulting in
+trajectories continuing to expand, potentially up until the
+<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
+discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
+<cite>True</cite> additional termination criterion checks are performed on
+overlapping subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some correlated
+models and some overhead from additional checks.</p></li>
 </ul>
 </dd>
 </dl>
@@ -276,7 +300,8 @@ value to initialize this array with.</p>
 distribution given the remaining state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining conditional distribution on momentum to
+leave invariant.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -334,8 +359,9 @@ Hamiltonian dynamics of the system to propose new values for the state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
 </ul>
 </dd>
 </dl>
@@ -400,8 +426,9 @@ integration direction will be the negation of its initial value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
 </ul>
 </dd>
 </dl>
@@ -469,9 +496,13 @@ B, 226(3-4), pp.369-371.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
-<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
+<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Tuple <cite>(lower, upper)</cite> with two positive integer entries
+<cite>lower</cite> and <cite>upper</cite> (with <cite>upper &gt; lower</cite>) specifying respectively the
+lower and upper bounds (inclusive) of integer interval to uniformly draw
+random number integrator steps to simulate in each transition.</p></li>
 </ul>
 </dd>
 </dl>
@@ -537,9 +568,10 @@ Monte Carlo, 2(11), p.2.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
-<li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
+<li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of integrator steps to simulate in each transition.</p></li>
 </ul>
 </dd>
 </dl>
@@ -597,7 +629,8 @@ under the canonical distribution invariant, updating only the momentum component
 the chain state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining conditional distribution on momentum to
+leave invariant.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -667,12 +700,34 @@ arXiv preprint arXiv:1701.02434.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
-<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
-<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
+maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
+trajectory before signalling a divergence.</p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
+to terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states corresponding
+to the two edge nodes in the trajectory (sub-)tree being checked and an
+array containing the sum of the momentums over the trajectory
+(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
+checks on overlapping subtrees of the current tree to improve robustness
+in systems with dynamics which are well approximated by independent
+system of simple harmonic oscillators. In such systems (corresponding to
+e.g. a standard normal target distribution and identity metric matrix
+representation) at certain step sizes a ‘resonant’ behaviour is seen by
+which the termination criterion fails to detect that the trajectory has
+expanded past a half-period i.e. has ‘U-turned’ resulting in
+trajectories continuing to expand, potentially up until the
+<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
+discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
+<cite>True</cite> additional termination criterion checks are performed on
+overlapping subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some correlated
+models and some overhead from additional checks.</p></li>
 </ul>
 </dd>
 </dl>
@@ -742,12 +797,34 @@ path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
-<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
-<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
+system.</p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
+maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
+trajectory before signalling a divergence.</p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
+to terminate trajectory tree expansion. The function should take a
+Hamiltonian system as its first argument, a pair of states corresponding
+to the two edge nodes in the trajectory (sub-)tree being checked and an
+array containing the sum of the momentums over the trajectory
+(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
+checks on overlapping subtrees of the current tree to improve robustness
+in systems with dynamics which are well approximated by independent
+system of simple harmonic oscillators. In such systems (corresponding to
+e.g. a standard normal target distribution and identity metric matrix
+representation) at certain step sizes a ‘resonant’ behaviour is seen by
+which the termination criterion fails to detect that the trajectory has
+expanded past a half-period i.e. has ‘U-turned’ resulting in
+trajectories continuing to expand, potentially up until the
+<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
+discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
+<cite>True</cite> additional termination criterion checks are performed on
+overlapping subtrees which help to reduce this resonant behaviour at the
+cost of more conservative trajectory termination in some correlated
+models and some overhead from additional checks.</p></li>
 </ul>
 </dd>
 </dl>

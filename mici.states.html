@@ -115,14 +115,47 @@ dictionary, any memoized system methods (i.e. those decorated with <cite>cache_i
 or <cite>cache_in_state_with_aux</cite>) will update a counter for the method in the state
 <cite>_call_counts</cite> dictionary attribute every time the decorated method is called (i.e.
 when there isn’t a valid cached value available).</p>
+<p>Create a new <cite>ChainState</cite> instance.</p>
+<p>Any keyword arguments passed to the constructor (with names not starting with an
+underscore) will be used to set state variable attributes of state object for
+example</p>
+<blockquote>
+<div><p>state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)</p>
+</div></blockquote>
+<p>will return a <cite>ChainState</cite> instance <cite>state</cite> with variable attributes
+<cite>state.pos</cite>, <cite>state.mom</cite> and <cite>state.dir</cite> with initial values set to <cite>pos_val</cite>,
+<cite>mom_val</cite> and <cite>dir_val</cite> respectively.</p>
+<p>Keyword arguments with a leading underscore in the name are reserved for
+additional arguments to the constructor not corresponding to state variables.
+Additionally the name <cite>copy</cite> should not be used as attribute access to this name
+will be blocked by the <cite>copy</cite> method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>_call_counts</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>_read_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
-<li><p><strong>_dependencies</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><em>set</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>_cache</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>variables</strong> (<em>ArrayLike</em>) – </p></li>
+<li><p><strong>**variables</strong> (<em>ArrayLike</em>) – Keyword arguments corresponding to state variables. All names
+must not begin with an underscore and no name can be <cite>copy</cite>. See
+description above for details.</p></li>
+<li><p><strong>_call_counts</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>]</em>) – If a dictionary (or <cite>Counter</cite>) is passed this will be used to
+store counts of the number of calls of system methods decorated with
+<cite>cache_in_state</cite> or <cite>cache_in_state_with_aux</cite> when called on this state
+object and when no cached value for the method is available so that the
+wrapped method is called. The <cite>_call_counts</cite> attribute persists between
+all copies of a state so will count any decorated method calls on copies
+of the state as well - e.g. all copies of a state in a sampled Markov
+chain, allowing the <cite>_call_counts</cite> attribute to be used to monitor the
+number of method call while sampling a chain.</p></li>
+<li><p><strong>_read_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – If <cite>True</cite> a <cite>mici.errors.ReadOnlyStateError</cite> exception will be
+raised when attempting to set any attributes of the state object after
+construction. Defaults to <cite>False</cite>.</p></li>
+<li><p><strong>_dependencies</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><em>set</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – Intended for internal use only. If not <cite>None</cite> this should be
+a dictionary with string keys corresponding to the state variable names
+and values which are sets of strings indicating any dependencies of the
+relevant state variable in the cache.</p></li>
+<li><p><strong>_cache</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – Intended for internal use only. If not <cite>None</cite> this should be a
+dictionary with keys corresponding to unique identifiers for methods
+decorated with the <cite>cache_in_state</cite> or <cite>cache_in_state_with_aux</cite>
+decorators and values corresponding to cached computed outputs of these
+methods or <cite>None</cite> for when a cached output is not available.</p></li>
 </ul>
 </dd>
 </dl>

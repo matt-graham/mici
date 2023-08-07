@@ -97,8 +97,16 @@
 <div class="viewcode-block" id="FixedPointSolver"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver">[docs]</a><span class="k">class</span> <span class="nc">FixedPointSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver for fixed point equation, returning `x` such that `func(x) = x`.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-        <span class="o">...</span></div>
+<div class="viewcode-block" id="FixedPointSolver.__call__"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            func: Function to solve for fixed point of.</span>
+<span class="sd">            x0: Point to initialize solver at.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Fixed point solved for.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
 
 
 <div class="viewcode-block" id="solve_fixed_point_direct"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_fixed_point_direct">[docs]</a><span class="k">def</span> <span class="nf">solve_fixed_point_direct</span><span class="p">(</span>
@@ -125,8 +133,8 @@
 <span class="sd">        Solution to fixed point equation with `norm(func(x) - x) &lt; convergence_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`</span>
-<span class="sd">        iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
+<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -180,8 +188,8 @@
 <span class="sd">        Solution to fixed point equation with `norm(func(x) - x) &lt; convergence_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`</span>
-<span class="sd">        iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
+<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -216,6 +224,8 @@
 
 <span class="sd">    Solves an equation of the form</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
 
 <span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
@@ -224,7 +234,7 @@
 <span class="sd">    the system (i.e. `system.h2_flow`).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+<div class="viewcode-block" id="ProjectionSolver.__call__"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
@@ -232,7 +242,18 @@
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
-        <span class="o">...</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve for projection on to manifold step.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current chain state after unconstrained step.</span>
+<span class="sd">            state_prev: Previous chain state on manifold.</span>
+<span class="sd">            time_step: Integrator time step for unconstrained step.</span>
+<span class="sd">            system: Hamiltonian system dynamics are being simulated for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Chain state after projection on to manifold.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span></div></div>
 
 
 <div class="viewcode-block" id="solve_projection_onto_manifold_quasi_newton"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_projection_onto_manifold_quasi_newton">[docs]</a><span class="k">def</span> <span class="nf">solve_projection_onto_manifold_quasi_newton</span><span class="p">(</span>
@@ -253,6 +274,8 @@
 
 <span class="sd">    Solves an equation of the form</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
 
 <span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
@@ -262,10 +285,14 @@
 
 <span class="sd">    The Jacobian of the residual function `r` is</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
 
 <span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
 <span class="sd">    second (momentum argument), such that the full Newton update is</span>
+
+<span class="sd">    .. code::</span>
 
 <span class="sd">        λ_(α) = λ - ∂r(λ)⁻¹ r(λ)</span>
 
@@ -274,9 +301,13 @@
 
 <span class="sd">    The symmetric quasi-Newton iteration instead uses the approximation</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ ≈ ∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
 
 <span class="sd">    with the corresponding update</span>
+
+<span class="sd">    .. code::</span>
 
 <span class="sd">        λ = λ - (∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ)⁻¹ r(λ)</span>
 
@@ -309,8 +340,8 @@
 <span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`</span>
-<span class="sd">        iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
+<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
@@ -366,6 +397,8 @@
 
 <span class="sd">    Solves an equation of the form</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
 
 <span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
@@ -375,10 +408,14 @@
 
 <span class="sd">    The Jacobian of the residual function `r` is</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
 
 <span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
 <span class="sd">    second (momentum argument), such that the Newton update is</span>
+
+<span class="sd">    .. code::</span>
 
 <span class="sd">        λ = λ - ∂r(λ)⁻¹ r(λ)</span>
 
@@ -410,8 +447,8 @@
 <span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`</span>
-<span class="sd">        iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
+<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
@@ -471,6 +508,8 @@
 
 <span class="sd">    Solves an equation of the form</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
 
 <span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
@@ -480,10 +519,14 @@
 
 <span class="sd">    The Jacobian of the residual function `r` is</span>
 
+<span class="sd">    .. code::</span>
+
 <span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
 
 <span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
 <span class="sd">    second (momentum argument), such that the scaled Newton update is</span>
+
+<span class="sd">    .. code::</span>
 
 <span class="sd">        λ_(α) = λ - α * ∂r(λ)⁻¹ r(λ)</span>
 
@@ -521,8 +564,8 @@
 <span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        `mici.errors.ConvergenceError` if solver does not converge within `max_iters`</span>
-<span class="sd">        iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
+<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>

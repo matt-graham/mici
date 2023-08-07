@@ -122,8 +122,10 @@ SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics  of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -159,8 +161,10 @@ SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics  of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -196,8 +200,10 @@ SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics  of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -321,13 +327,56 @@ Cambridge University Press.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>n_inner_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
-<li><p><strong>projection_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.ProjectionSolver" title="mici.solvers.ProjectionSolver"><em>ProjectionSolver</em></a>) – </p></li>
-<li><p><strong>projection_solver_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
+<li><p><strong>n_inner_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Positive integer specifying number of ‘inner’ constrained
+<cite>system.h2_flow</cite> steps to take within each overall step. As the
+derivative <cite>system.dh1_dpos</cite> is not evaluated during the
+<cite>system.h2_flow</cite> steps, if this derivative is relatively expensive to
+compute compared to evaluating <cite>system.h2_flow</cite> then compared to using
+<cite>n_inner_step = 1</cite> (the default) for a given <cite>step_size</cite> it can be more
+computationally efficient to use <cite>n_inner_step &gt; 1</cite> in combination
+within a larger <cite>step_size</cite>, thus reducing the number of
+<cite>system.dh1_dpos</cite> evaluations to simulate forward a given time while
+still controlling the effective time step used for the constrained
+<cite>system.h2_flow</cite> steps which involve solving a non-linear system of
+equations to retract the position component of the updated state back on
+to the manifold, with the iterative solver typically diverging if the
+time step used is too large.</p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Tolerance for check of reversibility of implicit
+sub-steps which involve iterative solving of a non-linear system of
+equations. The step is assumed to be reversible if sequentially applying
+the forward and adjoint updates to a state returns to a state with a
+position component within a distance (defined by the
+<cite>reverse_check_norm</cite> argument) of <cite>reverse_check_tol</cite> of the original
+state position component. If this condition is not met a
+<cite>mici.errors.NonReversibleStepError</cite> exception is raised.</p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – Norm function accepting a single one-dimensional array
+input and returning a non-negative floating point value defining the
+distance to use in the reversibility check. Defaults to
+<cite>mici.solvers.maximum_norm</cite>.</p></li>
+<li><p><strong>projection_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.ProjectionSolver" title="mici.solvers.ProjectionSolver"><em>ProjectionSolver</em></a>) – <p>Function which given two states <cite>state</cite> and <cite>state_prev</cite>,
+floating point time step <cite>time_step</cite> and a Hamiltonian system object
+<cite>system</cite> solves the non-linear system of equations in <cite>λ</cite></p>
+<blockquote>
+<div><dl class="simple">
+<dt>system.constr(</dt><dd><dl class="simple">
+<dt>state.pos + dh2_flow_pos_dmom &#64;</dt><dd><p>system.jacob_constr(state_prev).T &#64; λ) == 0</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p>where <cite>dh2_flow_pos_dmom = system.dh2_flow_dmom(time_step)[0]</cite> is the
+derivative of the action of the (linear) <cite>system.h2_flow</cite> map on the
+state momentum component with respect to the position component. This is
+used to project the state position component back on to the manifold
+after an unconstrained <cite>system.h2_flow</cite> update.</p>
+</p></li>
+<li><p><strong>projection_solver_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – Dictionary of any keyword arguments to
+<cite>projection_solver</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -377,12 +426,30 @@ Cambridge University Press.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
-<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – </p></li>
-<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Tolerance for check of reversibility of implicit
+sub-steps which involve iterative solving of a non-linear system of
+equations. The step is assumed to be reversible if sequentially applying
+the forward and adjoint updates to a state returns to a state with a
+position component within a distance (defined by the
+<cite>reverse_check_norm</cite> argument) of <cite>reverse_check_tol</cite> of the original
+state position component. If this condition is not met a
+<cite>mici.errors.NonReversibleStepError</cite> exception is raised.</p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – Norm function accepting a single one-dimensional array
+input and returning a non-negative floating point value defining the
+distance to use in the reversibility check. Defaults to
+<cite>mici.solvers.maximum_norm</cite>.</p></li>
+<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – Function which given a function <cite>func</cite> and initial
+guess <cite>x0</cite> iteratively solves the fixed point equation <cite>func(x) = x</cite>
+initialising the iteration with <cite>x0</cite> and returning an array
+corresponding to the solution if the iteration converges or raising a
+<cite>mici.errors.ConvergenceError</cite> otherwise. Defaults to
+<cite>mici.solvers.solve_fixed_point_direct</cite>.</p></li>
+<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Dictionary of any keyword arguments to
+<cite>fixed_point_solver</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -423,12 +490,30 @@ Cambridge University Press.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
-<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – </p></li>
-<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Tolerance for check of reversibility of implicit
+sub-steps which involve iterative solving of a non-linear system of
+equations. The step is assumed to be reversible if sequentially applying
+the forward and adjoint updates to a state returns to a state with a
+position component within a distance (defined by the
+<cite>reverse_check_norm</cite> argument) of <cite>reverse_check_tol</cite> of the original
+state position component. If this condition is not met a
+<cite>mici.errors.NonReversibleStepError</cite> exception is raised.</p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – Norm function accepting a single one-dimensional array
+input and returning a non-negative floating point value defining the
+distance to use in the reversibility check. Defaults to
+<cite>mici.solvers.maximum_norm</cite>.</p></li>
+<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – Function which given a function <cite>func</cite> and initial
+guess <cite>x0</cite> iteratively solves the fixed point equation <cite>func(x) = x</cite>
+initialising the iteration with <cite>x0</cite> and returning an array
+corresponding to the solution if the iteration converges or raising a
+<cite>mici.errors.ConvergenceError</cite> otherwise. Defaults to
+<cite>mici.solvers.solve_fixed_point_direct</cite>.</p></li>
+<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Dictionary of any keyword arguments to
+<cite>fixed_point_solver</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -472,8 +557,10 @@ time-discretised trajectories of the Hamiltonian dynamics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -519,8 +606,11 @@ Cambridge University Press.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of. Must define both
+<cite>h1_flow</cite> and <cite>h2_flow</cite> methods.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>
@@ -587,10 +677,17 @@ Cambridge University Press.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>free_coefficients</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>initial_h1_flow_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>free_coefficients</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Sequence of <cite>s - 1</cite> scalar values, where <cite>s</cite> is the
+number of stages in the symmetric composition, specifying the free
+coefficients <cite>(a₀, b₁, a₁, ⋯, aₖ, bₖ)</cite> with <cite>k = (s - 1) / 2</cite> if <cite>s</cite> is
+odd or <cite>(a₀, b₁, a₁, ⋯, aₖ)</cite> with <cite>k = (s - 2) / 2</cite> if <cite>s</cite> is even.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
+<li><p><strong>initial_h1_flow_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the initial ‘A’ flow in the composition should
+correspond to the flow of the <cite>h₁</cite> Hamiltonian component (<cite>True</cite>) or to
+the flow of the <cite>h₂</cite> component (<cite>False</cite>).</p></li>
 </ul>
 </dd>
 </dl>
@@ -630,8 +727,11 @@ form</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
-<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of. Must define both
+<cite>h1_flow</cite> and <cite>h2_flow</cite> methods.</p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <cite>None</cite> it is assumed that a step
+size adapter will be used to set the step size before calling the <cite>step</cite>
+method.</p></li>
 </ul>
 </dd>
 </dl>

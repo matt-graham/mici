@@ -126,10 +126,45 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric_chol_func</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>vjp_metric_chol_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric_chol_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 2D array
+with zeros above the diagonal corresponding to the lower-triangular
+Cholesky-factor of the positive definite metric matrix representation.</p></li>
+<li><p><strong>vjp_metric_chol_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+function which takes a lower-triangular 2D array as an argument (any
+values in the array above the diagonal are ignored) and returns the
+<em>vector-Jacobian-product</em> (VJP) of <cite>metric_chol_func</cite> with respect to
+the position array argument. The VJP is here defined as a function of a
+2D array <cite>v</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <cite>jacob</cite> is the <cite>(dim_pos, dim_pos, dim_pos)</cite> shaped Jacobian of <cite>L
+= metric_chol_func(q)</cite> with respect to <cite>q</cite> i.e. the array of partial
+derivatives of the function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[i, j, k] = ∂L[i, j] / ∂q[k]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first a function to compute a VJP of <cite>metric_chol_func</cite> and the second a
+2D array containing the value of <cite>metric_chol_func</cite>, both evaluated at
+the passed position array. If <cite>None</cite> is passed (the default) an
+automatic differentiation fallback will be used to attempt to construct
+a function which calculates the VJP (and value) of <cite>metric_chol_func</cite>
+automatically.</p>
+</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -380,14 +415,14 @@ Riemannian-metric Hamiltonian systems.</p>
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -457,12 +492,79 @@ pp.5105-5164.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – </p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <p>Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the constrained
+position space with respect to the Hausdorff measure on the constraint
+manifold (if <cite>dens_wrt_hausdorff == True</cite>) or alternatively the negative
+logarithm of an unnormalized probability density on the unconstrained
+(ambient) position space with respect to the Lebesgue measure. In the
+former case the target distribution it is wished to draw approximate
+samples from is assumed to be directly specified by the density function
+on the manifold. In the latter case the density function is instead
+taken to specify a prior distribution on the ambient space with the
+target distribution then corresponding to the posterior distribution
+when conditioning on the (zero Lebesgue measure) event <cite>constr(pos) ==
+0</cite>. This target posterior distribution has support on the differentiable
+manifold implicitly defined by the constraint equation, with density
+with respect to the Hausdorff measure on the manifold corresponding to
+the ratio of the prior density (specified by <cite>neg_log_dens</cite>) and the
+square-root of the determinant of the Gram matrix defined by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
+<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite>
+and <cite>metric</cite> is the matrix representation of the metric on the ambient
+space.</p>
+</p></li>
+<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position rray return as a 1D array the value
+of the (vector-valued) constraint function, the zero level-set of which
+implicitly defines the manifold the dynamic is simulated on.</p></li>
+<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<em>unconstrained</em> position space and covariance of Gaussian marginal
+distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
+(the default), the identity matrix will be used. If a 1D array is passed
+then this is assumed to specify a metric with positive diagonal matrix
+representation and the array the matrix diagonal. If a 2D array is
+passed then this is assumed to specify a metric with a dense positive
+definite matrix representation specified by the array. Otherwise if the
+value is a <cite>mici.matrices.PositiveDefiniteMatrix</cite> subclass it is assumed
+to directly specify the metric matrix representation.</p></li>
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <cite>neg_log_dens</cite> function specifies the
+(negative logarithm) of the density of the target distribution with
+respect to the Hausdorff measure on the manifold directly (True) or
+alternatively the negative logarithm of a density of a prior
+distriubtion on the unconstrained (ambient) position space with respect
+to the Lebesgue measure, with the target distribution then corresponding
+to the posterior distribution when conditioning on the event <cite>const(pos)
+== 0</cite> (False). Note that in the former case the base Hausdorff measure
+on the manifold depends on the metric defined on the ambient space, with
+the Hausdorff measure being defined with respect to the metric induced
+on the manifold from this ambient metric.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct a function
+to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
+<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <dl class="simple">
+<dt>Function which given a position array computes the Jacobian</dt><dd><p>(matrix / 2D array of partial derivatives) of the output of the
+constraint function <cite>c = constr(q)</cite> with respect to the position array
+argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    jacob[i, j] = ∂c[i] / ∂q[j]
+
+Optionally the function may instead return a 2-tuple of values with the
+first being the array corresponding to the Jacobian and the second being
+the value of `constr` evaluated at the passed position array. If `None`
+is passed (the default) an automatic differentiation fallback will be
+used to attempt to construct a function to compute the Jacobian (and
+value) of `constr` automatically.
+</pre></div>
+</div>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -632,9 +734,9 @@ initial input state.</p>
 <span class="sig-name descname"><span class="pre">gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.gram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.gram" title="Permalink to this definition"></a></dt>
 <dd><p>Gram matrix at current position.</p>
 <p>The Gram matrix as a position <cite>q</cite> is defined as</p>
-<blockquote>
-<div><p>gram(q) = jacob_constr(q) &#64; inv(metric) &#64; jacob_constr(q).T</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
 <p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
 <cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
 <dl class="field-list simple">
@@ -876,13 +978,108 @@ co-tangent space of.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – </p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – </p></li>
-<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <dl class="simple">
+<dt>Function which given a position array returns the negative</dt><dd><p>logarithm of an unnormalized probability density on the constrained
+position space with respect to the Hausdorff measure on the constraint
+manifold (if <cite>dens_wrt_hausdorff == True</cite>) or alternatively the negative
+logarithm of an unnormalized probability density on the unconstrained
+(ambient) position space with respect to the Lebesgue measure. In the
+former case the target distribution it is wished to draw approximate
+samples from is assumed to be directly specified by the density function
+on the manifold. In the latter case the density function is instead
+taken to specify a prior distribution on the ambient space with the
+target distribution then corresponding to the posterior distribution
+when conditioning on the (zero Lebesgue measure) event <cite>constr(pos) ==
+0</cite>. This target posterior distribution has support on the differentiable
+manifold implicitly defined by the constraint equation, with density
+with respect to the Hausdorff measure on the manifold corresponding to
+the ratio of the prior density (specified by <cite>neg_log_dens</cite>) and the
+square-root of the determinant of the Gram matrix defined by</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
+
+where `jacob_constr` is the Jacobian of the constraint function `constr`
+and `metric` is the matrix representation of the metric on the ambient
+space.
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+of the (vector-valued) constraint function, the zero level-set of which
+implicitly defines the manifold the dynamic is simulated on.</p></li>
+<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<em>unconstrained</em> position space and covariance of Gaussian marginal
+distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
+(the default), the identity matrix will be used. If a 1D array is passed
+then this is assumed to specify a metric with positive diagonal matrix
+representation and the array the matrix diagonal. If a 2D array is
+passed then this is assumed to specify a metric with a dense positive
+definite matrix representation specified by the array. Otherwise if the
+value is a <cite>mici.matrices.PositiveDefiniteMatrix</cite> subclass it is assumed
+to directly specify the metric matrix representation.</p></li>
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <cite>neg_log_dens</cite> function specifies the
+(negative logarithm) of the density of the target distribution with
+respect to the Hausdorff measure on the manifold directly (True) or
+alternatively the negative logarithm of a density of a prior
+distriubtion on the unconstrained (ambient) position space with respect
+to the Lebesgue measure, with the target distribution then corresponding
+to the posterior distribution when conditioning on the event <cite>const(pos)
+== 0</cite> (False). Note that in the former case the base Hausdorff measure
+on the manifold depends on the metric defined on the ambient space, with
+the Hausdorff measure being defined with respect to the metric induced
+on the manifold from this ambient metric.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct a function
+to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
+<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <dl class="simple">
+<dt>Function which given a position array computes the Jacobian</dt><dd><p>(matrix / 2D array of partial derivatives) of the output of the
+constraint function <cite>c = constr(q)</cite> with respect to the position array
+argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    jacob[i, j] = ∂c[i] / ∂q[j]
+
+Optionally the function may instead return a 2-tuple of values with the
+first being the array corresponding to the Jacobian and the second being
+the value of `constr` evaluated at the passed position array. If `None`
+is passed (the default) an automatic differentiation fallback will be
+used to attempt to construct a function to compute the Jacobian (and
+value) of `neg_log_dens` automatically.
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – <dl class="simple">
+<dt>Function which given a position array returns another function</dt><dd><p>which takes a 2D array as an argument and returns the
+<em>matrix-Hessian-product</em> (MHP) of the constraint function <cite>constr</cite> with
+respect to the position array argument. The MHP is here defined as a
+function of a <cite>(dim_constr, dim_pos)</cite> shaped 2D array <cite>m</cite></p>
+</dd>
+</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
+
+where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped
+vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of
+second-order partial derivatives of such that
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
+
+Optionally the function may instead return a 3-tuple of values with the
+first a function to compute a MHP of `constr`, the second a 2D array
+corresponding to the Jacobian of `constr`, and the third the value of
+`constr`, all evaluated at the passed position array. If `None` is
+passed (the default) an automatic differentiation fallback will be used
+to attempt to construct a function which calculates the MHP (and
+Jacobian and value) of `constr` automatically.
+</pre></div>
+</div>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -1052,9 +1249,9 @@ initial input state.</p>
 <span class="sig-name descname"><span class="pre">gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.gram" title="Permalink to this definition"></a></dt>
 <dd><p>Gram matrix at current position.</p>
 <p>The Gram matrix as a position <cite>q</cite> is defined as</p>
-<blockquote>
-<div><p>gram(q) = jacob_constr(q) &#64; inv(metric) &#64; jacob_constr(q).T</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
 <p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
 <cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
 <dl class="field-list simple">
@@ -1314,10 +1511,45 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 2D array
+corresponding to the positive definite metric matrix representation. The
+returned matrices (2D arrays) are assumed to be positive-definite for
+all input positions and a <cite>LinAlgError</cite> exception may be raised if this
+fails to be the case.</p></li>
+<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+function which takes a 2D array as an argument and returns the
+<em>vector-Jacobian-product</em> (VJP) of <cite>metric_func</cite> with respect to the
+position array argument. The VJP is here defined as a function of a 2D
+array <cite>v</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <cite>jacob</cite> is the <cite>(dim_pos, dim_pos, dim_pos)</cite> shaped Jacobian of <cite>M
+= metric_func(q)</cite> with respect to <cite>q</cite> i.e. the array of partial
+derivatives of the function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[i, j, k] = ∂M[i, j] / ∂q[k]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first a function to compute a VJP of <cite>metric_func</cite> and the second a 2D
+array containing the value of <cite>metric_func</cite>, both evaluated at the
+passed position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct a function
+which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
+</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1568,14 +1800,14 @@ Riemannian-metric Hamiltonian systems.</p>
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -1606,10 +1838,44 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric_diagonal_func</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>vjp_metric_diagonal_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric_diagonal_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 1D
+array with strictly positive values corresponding to the diagonal values
+(left-to-right) of the diagonal metric matrix representation.</p></li>
+<li><p><strong>vjp_metric_diagonal_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns
+another function which takes a 1D array as an argument and returns the
+<em>vector-Jacobian-product</em> (VJP) of <cite>metric_diagonal_func</cite> with respect
+to the position array argument. The VJP is here defined as a function of
+a 1D array <cite>v</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <cite>jacob</cite> is the <cite>(dim_pos, dim_pos)</cite> shaped Jacobian of <cite>d =
+metric_diagonal_func(q)</cite> with respect to <cite>q</cite> i.e. the array of partial
+derivatives of the function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[i, j] = ∂d[i] / ∂q[j]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first a function to compute a VJP of <cite>metric_diagonal_func</cite> and the
+second a 1D array containing the value of <cite>metric_diagonal_func</cite>, both
+evaluated at the passed position array. If <cite>None</cite> is passed (the
+default) an automatic differentiation fallback will be used to attempt
+to construct a function which calculates the VJP (and value) of
+<cite>metric_diagonal_func</cite> automatically.</p>
+</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1860,14 +2126,14 @@ Riemannian-metric Hamiltonian systems.</p>
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -1903,9 +2169,29 @@ distribution with respect to the Lebesgue measure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+position space and covariance of Gaussian marginal distribution on
+momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to specify a
+metric with positive diagonal matrix representation and the array the
+matrix diagonal. If a 2D array is passed then this is assumed to specify
+a metric with a dense positive definite matrix representation specified
+by the array. Otherwise if the value is a subclass of
+<cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
+the metric matrix representation.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2167,12 +2453,82 @@ systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – </p></li>
-<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <p>Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the unconstrained
+(ambient) position space with respect to the standard Gaussian measure.
+The density function is taken to specify a prior distribution on the
+ambient space with the target distribution then corresponding to the
+posterior distribution when conditioning on the (zero Lebesgue measure)
+event <cite>constr(pos) == 0</cite>. This target posterior distribution has support
+on the differentiable manifold implicitly defined by the constraint
+equation, with density with respect to the Hausdorff measure on the
+manifold corresponding to the ratio of the prior density (specified by
+<cite>neg_log_dens</cite>) and the square-root of the determinant of the Gram
+matrix defined by</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
+<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite>
+and <cite>metric</cite> is the matrix representation of the metric on the ambient
+space.</p>
+</p></li>
+<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+of the (vector-valued) constraint function, the zero level-set of which
+implicitly defines the manifold the dynamic is simulated on.</p></li>
+<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<em>unconstrained</em> position space and covariance of Gaussian marginal
+distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
+(the default), the identity matrix will be used. If a 1D array is passed
+then this is assumed to specify a metric with positive diagonal matrix
+representation and the array the matrix diagonal. If a 2D array is
+passed then this is assumed to specify a metric with a dense positive
+definite matrix representation specified by the array. Otherwise if a
+subclass of <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to
+directly specify the metric matrix representation.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct a function
+to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
+<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <p>Function which given a position array computes the Jacobian
+(matrix / 2D array of partial derivatives) of the output of the
+constraint function <cite>c = constr(q)</cite> with respect to the position array
+argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[i, j] = ∂c[i] / ∂q[j]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first being the array corresponding to the Jacobian and the second being
+the value of <cite>constr</cite> evaluated at the passed position array. If <cite>None</cite>
+is passed (the default) an automatic differentiation fallback will be
+used to attempt to construct a function to compute the Jacobian (and
+value) of <cite>neg_log_dens</cite> automatically.</p>
+</p></li>
+<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another function
+which takes a 2D array as an argument and returns the
+<em>matrix-Hessian-product</em> (MHP) of the constraint function <cite>constr</cite> with
+respect to the position array argument. The MHP is here defined as a
+function of a <cite>(dim_constr, dim_pos)</cite> shaped 2D array <cite>m</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mhp</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">m</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">hess</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <cite>hess</cite> is the <cite>(dim_constr, dim_pos, dim_pos)</cite> shaped
+vector-Hessian of <cite>c = constr(q)</cite> with respect to <cite>q</cite> i.e. the array of
+second-order partial derivatives of such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 3-tuple of values with the
+first a function to compute a MHP of <cite>constr</cite>, the second a 2D array
+corresponding to the Jacobian of <cite>constr</cite>, and the third the value of
+<cite>constr</cite>, all evaluated at the passed position array. If <cite>None</cite> is
+passed (the default) an automatic differentiation fallback will be used
+to attempt to construct a function which calculates the MHP (and
+Jacobian and value) of <cite>constr</cite> automatically.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -2342,9 +2698,9 @@ initial input state.</p>
 <span class="sig-name descname"><span class="pre">gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.gram" title="Permalink to this definition"></a></dt>
 <dd><p>Gram matrix at current position.</p>
 <p>The Gram matrix as a position <cite>q</cite> is defined as</p>
-<blockquote>
-<div><p>gram(q) = jacob_constr(q) &#64; inv(metric) &#64; jacob_constr(q).T</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
 <p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
 <cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
 <dl class="field-list simple">
@@ -2623,9 +2979,29 @@ Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the standard Gaussian measure on the position space,
+with the corresponding distribution on the position space being the
+target distribution it is wished to draw approximate samples from.</p></li>
+<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+position space and covariance of Gaussian marginal distribution on
+momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
+will be used. If a 1D array is passed then this is assumed to specify a
+metric with positive diagonal matrix representation and the array the
+matrix diagonal. If a 2D array is passed then this is assumed to specify
+a metric with a dense positive definite matrix representation specified
+by the array. Otherwise if the value is a subclass of
+<cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
+the metric matrix representation.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2913,12 +3289,65 @@ Series B (Statistical Methodology), 73(2), pp.123-214.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric_matrix_class</strong> (<em>Type</em><em>[</em><a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – </p></li>
-<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – </p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
-<li><p><strong>metric_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric_matrix_class</strong> (<em>Type</em><em>[</em><a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – <p>Class (or factory function returning an instance of the
+class) which defines type of matrix representation of metric. The class
+initializer should take a single positional argument which will be
+passed the array outputted by <cite>metric_func</cite>, and which is assumed to be
+a parameter which fully defines the resulting matrix (e.g. the diagonal
+of a <cite>mici.matrices.DiagonalMatrix</cite>). The class initializer may also
+optionally take one or more keyword arguments, with the <cite>metric_kwargs</cite>
+argument used to specify the value of these, if any. Together this means
+the metric matrix representation at a position <cite>pos</cite> is constructed as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric_matrix_class</span><span class="p">(</span><span class="n">metric_func</span><span class="p">(</span><span class="n">pos</span><span class="p">),</span> <span class="o">**</span><span class="n">metric_kwargs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <cite>mici.matrices.PositiveDefiniteMatrix</cite> subclass should as a minimum
+define <cite>inv</cite>, <cite>log_abs_det</cite>, <cite>grad_log_abs_det</cite>,
+<cite>grad_quadratic_form_inv</cite>, <cite>__matmul__</cite> and <cite>__rmatmul__</cite> methods /
+properties (see documentation of <cite>mici.matrices.PositiveDefiniteMatrix</cite>
+and <cite>mici.matrices.DifferentiableMatrix</cite> for definitions of the expected
+behaviour of these methods).</p>
+</p></li>
+<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns an array
+containing the parameter value of the metric matrix representation
+passed as the single positional argument to the <cite>metric_matrix_class</cite>
+initializer.</p></li>
+<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+function which takes an array as an argument and returns the
+<strong>vector-Jacobian-product</strong> (VJP) of <cite>metric_func</cite> with respect to the
+position array argument. The VJP is here defined as a function of an
+array <cite>v</cite> (of the same shape as the output of <cite>metric_func</cite>)
+corresponding to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the
+array of partial derivatives of the function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first a function to compute a VJP of <cite>metric_func</cite> and the second an
+array containing the value of <cite>metric_func</cite>, both evaluated at the
+passed position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct a function
+which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
+</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
+<li><p><strong>metric_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – An optional dictionary of any additional keyword arguments to
+the initializer of <cite>metric_matrix_class</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3169,14 +3598,14 @@ Series B (Statistical Methodology), 73(2), pp.123-214.</p></li>
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -3207,10 +3636,44 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>metric_scalar_func</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>vjp_metric_scalar_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>metric_scalar_func</strong> (<em>ScalarFunction</em>) – Function which given a position array returns a strictly
+positive scalar corresponding to the parameter value of the scaled
+identity metric matrix representation.</p></li>
+<li><p><strong>vjp_metric_scalar_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns
+another function which takes a scalar as an argument and returns the
+<em>vector-Jacobian-product</em> (VJP) of <cite>metric_scalar_func</cite> with respect to
+the position array argument. The VJP is here defined as a function of a
+scalar <cite>v</cite></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="n">v</span> <span class="o">@</span> <span class="n">grad</span>
+</pre></div>
+</div>
+<p>where <cite>grad</cite> is the <cite>(dim_pos,)</cite> shaped Jacobian (gradient) of <cite>s =
+metric_scalar_func(q)</cite> with respect to <cite>q</cite> i.e. the array of partial
+derivatives of the function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>grad[i] = ∂s / ∂q[i]
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 2-tuple of values with the
+first a function to compute a VJP of <cite>metric_scalar_func</cite> and the second
+a float containing the value of <cite>metric_scalar_func</cite>, both evaluated at
+the passed position array. If <cite>None</cite> is passed (the default) an
+automatic differentiation fallback will be used to attempt to construct
+a function which calculates the VJP (and value) of <cite>metric_scalar_func</cite>
+automatically.</p>
+</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3461,14 +3924,14 @@ Riemannian-metric Hamiltonian systems.</p>
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -3503,9 +3966,9 @@ decomposition of <cite>H</cite> is computed, i.e. <cite>eigval, eigvec = eigh(H)
 1D array of real eigenvalues, and <cite>eigvec</cite> the corresponding 2D array (orthogonal
 matrix) with eigenvectors as columns, then the resulting positive-definite metric
 matrix representation <cite>M</cite> is computed as</p>
-<blockquote>
-<div><p>M = eigvec &#64; diag(softabs(eigval, softabs_coeff)) &#64; eigvec.T</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">eigvec</span> <span class="o">@</span> <span class="n">diag</span><span class="p">(</span><span class="n">softabs</span><span class="p">(</span><span class="n">eigval</span><span class="p">,</span> <span class="n">softabs_coeff</span><span class="p">))</span> <span class="o">@</span> <span class="n">eigvec</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
 <p>with <cite>softabs(x, softabs_coeff) = x / tanh(x * softabs_coeff)</cite> an elementwise
 function which acts as a smooth approximation to the absolute function (ensuring all
 the eigenvalues of <cite>M</cite> are strictly positive) with the additional scalar parameter
@@ -3522,11 +3985,56 @@ Monte Carlo. In Geometric science of information (pp. 327-334).</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
-<li><p><strong>hess_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>HessianFunction</em><em>]</em>) – </p></li>
-<li><p><strong>mtp_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>MatrixTressianProductFunction</em><em>]</em>) – </p></li>
-<li><p><strong>softabs_coeff</strong> (<em>ScalarLike</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
+<li><p><strong>hess_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>HessianFunction</em><em>]</em>) – Function which given a position array returns the Hessian
+of <cite>neg_log_dens</cite> with respect to the position array argument as a 2D
+array. Optionally the function may instead return a 3-tuple of values
+with the first a 2D array containting the Hessian of <cite>neg_log_dens</cite>, the
+second a 1D array containing the gradient of <cite>neg_log_dens</cite> and the
+third the value of <cite>neg_log_dens</cite>, all evaluated at the passed position
+array. If <cite>None</cite> is passed (the default) an automatic differentiation
+fallback will be used to attempt to construct a function which
+calculates the Hessian (and gradient and value) of <cite>neg_log_dens</cite>
+automatically.</p></li>
+<li><p><strong>mtp_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>MatrixTressianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+function which takes a 2D array (matrix) as an argument and returns the
+<em>matrix-Tressian-product</em> (MTP) of <cite>neg_log_dens</cite> with respect to the
+position array argument. The MTP is here defined as a function of a
+matrix <cite>m</cite> corresponding to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mtp</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">m</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">tress</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>where <cite>tress</cite> is the ‘Tressian’ of <cite>f = neg_log_dens(q)</cite> wrt <cite>q</cite> i.e.
+the 3D array of third-order partial derivatives of the scalar-valued
+function such that</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
+</pre></div>
+</div>
+<p>Optionally the function may instead return a 4-tuple of values with the
+first a function to compute a MTP of <cite>neg_log_dens</cite>, the second a 2D
+array containing the Hessian of <cite>neg_log_dens</cite>, the third a 1D array
+containing the gradient of <cite>neg_log_dens</cite> and the fourth the value of
+<cite>neg_log_dens</cite>, all evaluated at the passed position array. If <cite>None</cite> is
+passed (the default) an automatic differentiation fallback will be used
+to attempt to construct a function which calculates the MTP (and Hesisan
+and gradient and value) of <cite>neg_log_dens</cite> automatically.</p>
+</p></li>
+<li><p><strong>softabs_coeff</strong> (<em>ScalarLike</em>) – Positive regularisation coefficient for smooth approximation
+to absolute value used to regularize Hessian eigenvalues in metric
+matrix representation. As the value tends to infinity the approximation
+becomes increasingly close to the absolute function.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3759,15 +4267,15 @@ Monte Carlo. In Geometric science of information (pp. 327-334).</p></li>
 <dd><p>Generate MTP of negative log density with respect to position.</p>
 <p>The matrix-Tressian-product (MTP) is here defined as a function of a matrix <cite>m</cite>
 corresponding to</p>
-<blockquote>
-<div><p>mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mtp</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">m</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">tress</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>tress</cite> is the ‘Tressian’ of <cite>f = neg_log_dens(q)</cite> with respect to <cite>q =
 state.pos</cite> i.e. the 3D array of third-order partial derivatives of the
 scalar-valued function such that</p>
-<blockquote>
-<div><p>tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
@@ -3826,14 +4334,14 @@ array of shape <cite>state.pos.shape</cite> containing the computed MTP value.</
 <dd><p>Function constructing a vector-Jacobian-product for <cite>metric_func</cite>.</p>
 <p>The vector-Jacobian-product is here defined as a function of an array <cite>v</cite> (of
 the same shape as the output of <cite>metric_func</cite>) corresponding to</p>
-<blockquote>
-<div><p>vjp(v) = sum(v[…, None] * jacob, axis=tuple(range(v.ndim))</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vjp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+</pre></div>
+</div>
 <p>where <cite>jacob</cite> is the Jacobian of <cite>m = metric_func(q)</cite> wrt <cite>q</cite> i.e. the array of
 partial derivatives of the function such that</p>
-<blockquote>
-<div><p>jacob[…, i] = ∂m[…] / ∂q[i]</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>jacob[..., i] = ∂m[...] / ∂q[i]
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute VJP at.</p>
@@ -3869,8 +4377,19 @@ distribution it is wished to draw approximate samples from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – </p></li>
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to the Lebesgue measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </ul>
 </dd>
 </dl>

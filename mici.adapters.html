@@ -223,14 +223,44 @@ Mathematical programming 120(1), pp.221-259.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>adapt_stat_func</strong> (<em>Optional</em><em>[</em><em>AdaptationStatisticFunction</em><em>]</em>) – </p></li>
-<li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
-<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
-<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>log_step_size_reducer</strong> (<em>Optional</em><em>[</em><em>ReducerFunction</em><em>]</em>) – </p></li>
+<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Target value for the transition statistic
+being controlled during adaptation.</p></li>
+<li><p><strong>adapt_stat_func</strong> (<em>Optional</em><em>[</em><em>AdaptationStatisticFunction</em><em>]</em>) – Function which given a dictionary of transition statistics
+outputs the value of the statistic to control during adaptation. By
+default this is set to a function which simply selects the ‘accept_stat’
+value in the statistics dictionary.</p></li>
+<li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Value to regularize the controlled output
+(logarithm of the integrator step size) towards. If <cite>None</cite> set to
+<cite>log(10 * init_step_size)</cite> where <cite>init_step_size</cite> is the initial
+‘reasonable’ step size found by a coarse search as recommended in
+Hoffman and Gelman (2014). This has the effect of giving the dual
+averaging algorithm a tendency towards testing step sizes larger than
+the initial value, with typically integrating with a larger step size
+having a lower computational cost.</p></li>
+<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling amount of
+regularisation of controlled output (logarithm of the integrator step
+size) towards <cite>log_step_size_reg_target</cite>. Defaults to 0.05 as
+recommended in Hoffman and Gelman (2014).</p></li>
+<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
+weighting stochastic updates to smoothed log step size estimate. Should
+be in the interval (0.5, 1] to ensure asymptotic convergence of
+adaptation. A value of 1 gives equal weight to the whole history of
+updates while setting to a smaller value increasingly highly weights
+recent updates, giving a tendency to ‘forget’ early updates.
+Defaults to 0.75 as recommended in Hoffman and Gelman (2014).</p></li>
+<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Offset used for the iteration based weighting of the adaptation
+statistic error estimate. Should be set to a non-negative value. A value
+&gt; 0 has the effect of stabilising early iterations. Defaults to the
+value of 10 as recommended in Hoffman and Gelman (2014).</p></li>
+<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to use in initial
+search for a reasonable step size with an <cite>AdaptationError</cite> exception
+raised if a suitable step size is not found within this many iterations.</p></li>
+<li><p><strong>log_step_size_reducer</strong> (<em>Optional</em><em>[</em><em>ReducerFunction</em><em>]</em>) – Reduction to apply to final per-chain step sizes
+estimates to produce overall integrator step size for main chain stages.
+The specified function should accept a sequence of logarithms of
+estimated step sizes and output a non-negative step size to use. If
+<cite>None</cite>, the default, a function which computes the arithmetic mean of
+the step sizes is used.</p></li>
 </ul>
 </dd>
 </dl>
@@ -345,8 +375,12 @@ programming language. Journal of Statistical Software, 76(1).</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Iteration offset used for calculating iteration
+dependent weighting between regularisation target and current covariance
+estimate. Higher values cause stronger regularisation during initial
+iterations.</p></li>
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Positive scalar defining value variance estimates are
+regularized towards.</p></li>
 </ul>
 </dd>
 </dl>
@@ -458,8 +492,13 @@ programming language. Journal of Statistical Software, 76(1).</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Iteration offset used for calculating iteration dependent
+weighting between regularisation target and current covariance estimate.
+Higher values cause stronger regularisation during initial iterations. A
+value of zero corresponds to no regularisation; this should only be used
+if the sample covariance is guaranteed to be positive definite.</p></li>
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Positive scalar defining value variance estimates are regularized
+towards.</p></li>
 </ul>
 </dd>
 </dl>

@@ -604,6 +604,8 @@
 <span class="sd">                the ratio of the prior density (specified by `neg_log_dens`) and the</span>
 <span class="sd">                square-root of the determinant of the Gram matrix defined by</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
 
 <span class="sd">                where `jacob_constr` is the Jacobian of the constraint function `constr`</span>
@@ -645,6 +647,8 @@
 <span class="sd">                (matrix / 2D array of partial derivatives) of the output of the</span>
 <span class="sd">                constraint function `c = constr(q)` with respect to the position array</span>
 <span class="sd">                argument `q`, returning the computed Jacobian as a 2D array `jacob` with</span>
+
+<span class="sd">               .. code-block::</span>
 
 <span class="sd">                    jacob[i, j] = ∂c[i] / ∂q[j]</span>
 
@@ -720,6 +724,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Gram matrix at current position.</span>
 
 <span class="sd">        The Gram matrix as a position `q` is defined as</span>
+
+<span class="sd">        .. code-block::</span>
 
 <span class="sd">            gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
 
@@ -835,6 +841,8 @@
 <span class="sd">                with respect to the Hausdorff measure on the manifold corresponding to</span>
 <span class="sd">                the ratio of the prior density (specified by `neg_log_dens`) and the</span>
 <span class="sd">                square-root of the determinant of the Gram matrix defined by</span>
+<span class="sd">                </span>
+<span class="sd">               .. code-block::</span>
 
 <span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
 
@@ -877,6 +885,8 @@
 <span class="sd">                (matrix / 2D array of partial derivatives) of the output of the</span>
 <span class="sd">                constraint function `c = constr(q)` with respect to the position array</span>
 <span class="sd">                argument `q`, returning the computed Jacobian as a 2D array `jacob` with</span>
+<span class="sd">                </span>
+<span class="sd">               .. code-block::</span>
 
 <span class="sd">                    jacob[i, j] = ∂c[i] / ∂q[j]</span>
 
@@ -891,12 +901,16 @@
 <span class="sd">                *matrix-Hessian-product* (MHP) of the constraint function `constr` with</span>
 <span class="sd">                respect to the position array argument. The MHP is here defined as a</span>
 <span class="sd">                function of a `(dim_constr, dim_pos)` shaped 2D array `m`</span>
+<span class="sd">                </span>
+<span class="sd">               .. code-block::</span>
 
 <span class="sd">                    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">                where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped</span>
 <span class="sd">                vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of</span>
 <span class="sd">                second-order partial derivatives of such that</span>
+<span class="sd">                </span>
+<span class="sd">               .. code-block::</span>
 
 <span class="sd">                    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])</span>
 
@@ -983,6 +997,8 @@
 <span class="sd">                manifold corresponding to the ratio of the prior density (specified by</span>
 <span class="sd">                `neg_log_dens`) and the square-root of the determinant of the Gram</span>
 <span class="sd">                matrix defined by</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
 
@@ -1015,6 +1031,8 @@
 <span class="sd">                constraint function `c = constr(q)` with respect to the position array</span>
 <span class="sd">                argument `q`, returning the computed Jacobian as a 2D array `jacob` with</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    jacob[i, j] = ∂c[i] / ∂q[j]</span>
 
 <span class="sd">                Optionally the function may instead return a 2-tuple of values with the</span>
@@ -1028,12 +1046,16 @@
 <span class="sd">                *matrix-Hessian-product* (MHP) of the constraint function `constr` with</span>
 <span class="sd">                respect to the position array argument. The MHP is here defined as a</span>
 <span class="sd">                function of a `(dim_constr, dim_pos)` shaped 2D array `m`</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">                where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped</span>
 <span class="sd">                vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of</span>
 <span class="sd">                second-order partial derivatives of such that</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])</span>
 
@@ -1140,6 +1162,8 @@
 <span class="sd">                argument used to specify the value of these, if any. Together this means</span>
 <span class="sd">                the metric matrix representation at a position `pos` is constructed as</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    metric = metric_matrix_class(metric_func(pos), **metric_kwargs)</span>
 
 <span class="sd">                The `mici.matrices.PositiveDefiniteMatrix` subclass should as a minimum</span>
@@ -1154,15 +1178,19 @@
 <span class="sd">                initializer.</span>
 <span class="sd">            vjp_metric_func: Function which given a position array returns another</span>
 <span class="sd">                function which takes an array as an argument and returns the</span>
-<span class="sd">                *vector-Jacobian-product* (VJP) of `metric_func` with respect to the</span>
+<span class="sd">                **vector-Jacobian-product** (VJP) of `metric_func` with respect to the</span>
 <span class="sd">                position array argument. The VJP is here defined as a function of an</span>
 <span class="sd">                array `v` (of the same shape as the output of `metric_func`)</span>
 <span class="sd">                corresponding to</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    vjp(v) = sum(v[..., None] * jacob, tuple(range(v.ndim))</span>
 
 <span class="sd">                where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q` i.e. the</span>
 <span class="sd">                array of partial derivatives of the function such that</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    jacob[..., i] = ∂m[...] / ∂q[i]</span>
 
@@ -1212,10 +1240,14 @@
 <span class="sd">        The vector-Jacobian-product is here defined as a function of an array `v` (of</span>
 <span class="sd">        the same shape as the output of `metric_func`) corresponding to</span>
 
+<span class="sd">        .. code-block::</span>
+
 <span class="sd">            vjp(v) = sum(v[..., None] * jacob, axis=tuple(range(v.ndim))</span>
 
 <span class="sd">        where `jacob` is the Jacobian of `m = metric_func(q)` wrt `q` i.e. the array of</span>
 <span class="sd">        partial derivatives of the function such that</span>
+
+<span class="sd">        .. code-block::</span>
 
 <span class="sd">            jacob[..., i] = ∂m[...] / ∂q[i]</span>
 
@@ -1309,11 +1341,15 @@
 <span class="sd">                the position array argument. The VJP is here defined as a function of a</span>
 <span class="sd">                scalar `v`</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    vjp(v) = v @ grad</span>
 
 <span class="sd">                where `grad` is the `(dim_pos,)` shaped Jacobian (gradient) of `s =</span>
 <span class="sd">                metric_scalar_func(q)` with respect to `q` i.e. the array of partial</span>
 <span class="sd">                derivatives of the function such that</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    grad[i] = ∂s / ∂q[i]</span>
 
@@ -1385,11 +1421,15 @@
 <span class="sd">                to the position array argument. The VJP is here defined as a function of</span>
 <span class="sd">                a 1D array `v`</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    vjp(v) = sum(v[:, None] * jacob[:, :], axis=0)</span>
 
 <span class="sd">                where `jacob` is the `(dim_pos, dim_pos)` shaped Jacobian of `d =</span>
 <span class="sd">                metric_diagonal_func(q)` with respect to `q` i.e. the array of partial</span>
 <span class="sd">                derivatives of the function such that</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    jacob[i, j] = ∂d[i] / ∂q[j]</span>
 
@@ -1454,11 +1494,15 @@
 <span class="sd">                the position array argument. The VJP is here defined as a function of a</span>
 <span class="sd">                2D array `v`</span>
 
+<span class="sd">                .. code-block::</span>
+
 <span class="sd">                    vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">                where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `L</span>
 <span class="sd">                = metric_chol_func(q)` with respect to `q` i.e. the array of partial</span>
 <span class="sd">                derivatives of the function such that</span>
+
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    jacob[i, j, k] = ∂L[i, j] / ∂q[k]</span>
 
@@ -1524,12 +1568,16 @@
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_func` with respect to the</span>
 <span class="sd">                position array argument. The VJP is here defined as a function of a 2D</span>
 <span class="sd">                array `v`</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">                where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `M</span>
 <span class="sd">                = metric_func(q)` with respect to `q` i.e. the array of partial</span>
 <span class="sd">                derivatives of the function such that</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    jacob[i, j, k] = ∂M[i, j] / ∂q[k]</span>
 
@@ -1575,6 +1623,8 @@
 <span class="sd">    1D array of real eigenvalues, and `eigvec` the corresponding 2D array (orthogonal</span>
 <span class="sd">    matrix) with eigenvectors as columns, then the resulting positive-definite metric</span>
 <span class="sd">    matrix representation `M` is computed as</span>
+<span class="sd">    </span>
+<span class="sd">    .. code-block::</span>
 
 <span class="sd">        M = eigvec @ diag(softabs(eigval, softabs_coeff)) @ eigvec.T</span>
 
@@ -1632,12 +1682,16 @@
 <span class="sd">                *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the</span>
 <span class="sd">                position array argument. The MTP is here defined as a function of a</span>
 <span class="sd">                matrix `m` corresponding to</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">                where `tress` is the &#39;Tressian&#39; of `f = neg_log_dens(q)` wrt `q` i.e.</span>
 <span class="sd">                the 3D array of third-order partial derivatives of the scalar-valued</span>
 <span class="sd">                function such that</span>
+<span class="sd">                </span>
+<span class="sd">                .. code-block::</span>
 
 <span class="sd">                    tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])</span>
 
@@ -1700,12 +1754,16 @@
 
 <span class="sd">        The matrix-Tressian-product (MTP) is here defined as a function of a matrix `m`</span>
 <span class="sd">        corresponding to</span>
+<span class="sd">        </span>
+<span class="sd">        .. code-block::</span>
 
 <span class="sd">            mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))</span>
 
 <span class="sd">        where `tress` is the &#39;Tressian&#39; of `f = neg_log_dens(q)` with respect to `q =</span>
 <span class="sd">        state.pos` i.e. the 3D array of third-order partial derivatives of the</span>
 <span class="sd">        scalar-valued function such that</span>
+<span class="sd">        </span>
+<span class="sd">        .. code-block::</span>
 
 <span class="sd">            tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])</span>
 

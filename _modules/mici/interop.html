@@ -92,14 +92,15 @@
     <span class="n">energy_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
     <span class="n">lp_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lp&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert Mici `sample_chains` output to ArviZ `InferenceData` object.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData` object.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        traces: Traces output from Mici `sample_chains` call. A dictionary of variables</span>
-<span class="sd">            traced over sampled chains with the dictionary keys the variable names and</span>
-<span class="sd">            the values a list of arrays, one array per sampled chain, with the first</span>
-<span class="sd">            array dimension corresponding to the draw index and any remaining</span>
-<span class="sd">            dimensions, the variable dimensions.</span>
+<span class="sd">        traces: Traces output from Mici </span>
+<span class="sd">            :py:meth:`mici.samplers.MarkovChainMonteCarloMethod.sample_chains` call. A</span>
+<span class="sd">            dictionary of variables traced over sampled chains with the dictionary keys</span>
+<span class="sd">            the variable names and the values a list of arrays, one array per sampled</span>
+<span class="sd">            chain, with the first array dimension corresponding to the draw index and</span>
+<span class="sd">            any remaining dimensions, the variable dimensions.</span>
 <span class="sd">        stats: Statistics output from Mici `sample_chains` call. A dictionary of chain</span>
 <span class="sd">            statistics traced over sampled chains with the dictionary keys the</span>
 <span class="sd">            statistics names and the values a list of arrays, one array per sampled</span>
@@ -144,7 +145,7 @@
     <span class="n">jitter_max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="n">trace</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">return_inferencedata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pymc3</span><span class="o">.</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pymc3</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">target_accept</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
     <span class="n">max_treedepth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]:</span>
@@ -152,59 +153,65 @@
 
 <span class="sd">    Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</span>
 
-<span class="sd">    This function replicates the interface of the `pymc3.sample` function to allow using</span>
-<span class="sd">    as a (partial) drop-in replacement.</span>
+<span class="sd">    This function replicates the interface of the :py:func:`pymc3.sampling.sample`</span>
+<span class="sd">    function to allow using as a (partial) drop-in replacement.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        draws: The number of samples to draw.</span>
 <span class="sd">        tune: Number of iterations to tune, defaults to 1000. Samplers adjust the step</span>
-<span class="sd">            sizes, scalings or  similar during tuning. Tuning samples will be drawn in</span>
+<span class="sd">            sizes, scalings or similar during tuning. Tuning samples will be drawn in</span>
 <span class="sd">            addition to the number specified in the `draws` argument, and will be</span>
 <span class="sd">            discarded.</span>
 <span class="sd">        chains: The number of chains to sample. Running independent chains is important</span>
 <span class="sd">            for some convergence statistics and can also reveal multiple modes in the</span>
-<span class="sd">            posterior. If `None`, then set to either `cores` or 2, whichever is larger.</span>
-<span class="sd">        cores: The number of chains to run in parallel. If `None`, set to the number of</span>
-<span class="sd">            CPUs in the system, but at most 4.</span>
-<span class="sd">        random_seed: Seed for Numpy random number generator used for generating random</span>
-<span class="sd">            variables while sampling chains. If `None` then generator will be seeded</span>
-<span class="sd">            with entropy from operating system.</span>
+<span class="sd">            posterior. If :code::`None`, then set to either :code:`cores` or 2,</span>
+<span class="sd">            whichever is larger.</span>
+<span class="sd">        cores: The number of chains to run in parallel. If :code:`None`, set to the</span>
+<span class="sd">            number of CPU cores in the system, but at most 4.</span>
+<span class="sd">        random_seed: Seed for NumPy random number generator used for generating random</span>
+<span class="sd">            variables while sampling chains. If :code:`None` then generator will be</span>
+<span class="sd">            seeded with entropy from operating system.</span>
 <span class="sd">        progressbar: Whether or not to display a progress bar.</span>
 <span class="sd">        init: Initialization method to use. One of:</span>
 
-<span class="sd">            1. adapt_diag: Start with a identity mass matrix and then adapt a</span>
-<span class="sd">                diagonal based on the variance of the tuning samples. All chains use the</span>
-<span class="sd">                test value (usually the prior mean) as starting point.</span>
-<span class="sd">            2. jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in</span>
-<span class="sd">                [-1, 1] to the starting point in each chain. Also chosen if</span>
-<span class="sd">                `init==&quot;auto&quot;`.</span>
-<span class="sd">            3.  adapt_full: Adapt a dense mass matrix using the sample covariances</span>
+<span class="sd">            * :code:`&quot;adapt_diag&quot;`: Start with a identity mass matrix and then adapt a</span>
+<span class="sd">              diagonal based on the variance of the tuning samples. All chains use the</span>
+<span class="sd">              test value (usually the prior mean) as starting point.</span>
+<span class="sd">            * :code:`jitter+adapt_diag`: Same as :code:`&quot;adapt_diag&quot;`, but add uniform</span>
+<span class="sd">              jitter in [-1, 1] to the starting point in each chain. Also chosen if</span>
+<span class="sd">              :code:`init=&quot;auto&quot;`.</span>
+<span class="sd">            * :code:`&quot;adapt_full&quot;`: Adapt a dense mass matrix using the sample</span>
+<span class="sd">              covariances.</span>
 
 <span class="sd">        jitter_max_retries: Maximum number of repeated attempts (per chain) at creating</span>
-<span class="sd">            an initial matrix with uniform jitter that yields a finite probability.</span>
-<span class="sd">            This applies to `jitter+adapt_diag` and `jitter+adapt_full` init methods.</span>
-<span class="sd">        trace: A list of variables to track. If `None`, `model.unobserved_RVs` is used.</span>
-<span class="sd">        return_inferencedata: Whether to return the traces as an `arviz.InferenceData`</span>
-<span class="sd">            (`True`) object or a dict (`False`).</span>
-<span class="sd">        model: PyMC3 model defining posterior distribution to sample from. May be `None`</span>
-<span class="sd">            if function is called from within model context manager.</span>
+<span class="sd">            an initial matrix with uniform jitter that yields a finite probability. This</span>
+<span class="sd">            applies to `&quot;jitter+adapt_diag&quot;` and :code:`&quot;jitter+adapt_full&quot;`</span>
+<span class="sd">            :py:obj:`init` methods.</span>
+<span class="sd">        trace: A list of variables to track. If :code`None`, then</span>
+<span class="sd">            :code:`model.unobserved_RVs` is used.</span>
+<span class="sd">        return_inferencedata: Whether to return the traces as an</span>
+<span class="sd">            :py:class:`arviz.InferenceData` (:code:`True`) object or a</span>
+<span class="sd">            :py:class:`dict` (:code:`False`).</span>
+<span class="sd">        model: PyMC3 model defining posterior distribution to sample from. May be </span>
+<span class="sd">            :code:`None` if function is called from within model context manager.</span>
 <span class="sd">        target_accept: Target value for the acceptance statistic being controlled during</span>
 <span class="sd">            adaptive warm-up.</span>
 <span class="sd">        max_treedepth: Maximum depth to expand trajectory binary tree to in integrator</span>
 <span class="sd">            transition. The maximum number of integrator steps corresponds to</span>
-<span class="sd">            `2**max_treedepth`.</span>
+<span class="sd">            :code:`2**max_treedepth`.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary or ArviZ `InferenceData` object containing the sampled chain</span>
-<span class="sd">        output. Dictionary output (when `return_inferencedata=False`) has string keys</span>
-<span class="sd">        corresponding to the name of each traced variable in the model, with the values</span>
-<span class="sd">        being the corresponding values of the variables traced across the chains as</span>
-<span class="sd">        NumPy arrays, with the first dimension the chain index  (of size equal to</span>
-<span class="sd">        `chains`), the second dimension the draw index (of size equal to `draws`) and</span>
-<span class="sd">        any remaining dimensions corresponding to the dimensions of the traced variable.</span>
-<span class="sd">        If `return_inferencedata=True` an ArviZ `InferenceData` object is instead</span>
-<span class="sd">        returned with traced chain data stored in the `posterior` group and additional</span>
-<span class="sd">        chain statistics in the `sample_stats` group.</span>
+<span class="sd">        A dictionary or :py:class:`arviz.InferenceData` object containing the sampled</span>
+<span class="sd">        chain output. Dictionary output (when :code:`return_inferencedata=False`) has</span>
+<span class="sd">        string keys corresponding to the name of each traced variable in the model, with</span>
+<span class="sd">        the values being the corresponding values of the variables traced across the</span>
+<span class="sd">        chains as NumPy arrays, with the first dimension the chain index  (of size equal</span>
+<span class="sd">        to :code:`chains`), the second dimension the draw index (of size equal to</span>
+<span class="sd">        :code:`draws`) and any remaining dimensions corresponding to the dimensions of</span>
+<span class="sd">        the traced variable. If :code:`return_inferencedata=True` an</span>
+<span class="sd">        :py:class:`arviz.InferenceData` object is instead returned with traced chain</span>
+<span class="sd">        data stored in the :code:`posterior` group and additional chain statistics in</span>
+<span class="sd">        the :code:`sample_stats` group.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="kn">import</span> <span class="nn">pymc3</span>
@@ -354,8 +361,8 @@
 <span class="sd">    Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</span>
 
 <span class="sd">    This function follows a similar argument naming scheme to the PyStan</span>
-<span class="sd">    `stan.Model.sample` method (which itself follows CmdStan) to allow using as a</span>
-<span class="sd">    (partial) drop-in replacement.</span>
+<span class="sd">    :py:meth:`stan.model.Model.sample` method (which itself follows CmdStan) to allow</span>
+<span class="sd">    using as a (partial) drop-in replacement.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        model_code: Stan program code describing a Stan model.</span>
