@@ -4,7 +4,7 @@
   <a href="https://badge.fury.io/py/mici">
     <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
   </a>
-  <a href="https://matt-graham.github.io/mici/docs">
+  <a href="https://matt-graham.github.io/mici">
     <img src="https://img.shields.io/badge/API_docs-grey.svg"
          alt="API documentation"/>
   </a>
