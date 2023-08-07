@@ -11,7 +11,6 @@
   <a href="https://zenodo.org/badge/latestdoi/52494384">
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
-  <img src="images/coverage.svg" alt="Coverage"/>
   <img src="https://github.com/matt-graham/mici/workflows/Tests/badge.svg" alt="Test status" />
 </p>
 
@@ -49,7 +48,7 @@ installed in the current Python environment by running
 pip install mici
 ```
 
-To instead install the latest development version from the `master` branch on Github run
+To instead install the latest development version from the `main` branch on Github run
 
 ```sh
 pip install git+https://github.com/matt-graham/mici
