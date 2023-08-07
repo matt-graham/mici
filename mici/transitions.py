@@ -522,7 +522,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         self._statistic_types["av_metrop_accept_prob"] = (np.float64, np.nan)
         self._statistic_types["reject_prob"] = (np.float64, np.nan)
         self._statistic_types["tree_depth"] = (np.int64, -1)
-        self._statistic_types["diverging"] = (np.bool, False)
+        self._statistic_types["diverging"] = (bool, False)
 
     def _termination_criterion(
         self, tree: _SubTree, neg_subtree: _SubTree, pos_subtree: _SubTree
