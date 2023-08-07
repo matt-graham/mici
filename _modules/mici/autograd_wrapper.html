@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.autograd_wrapper &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.autograd_wrapper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.autograd_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Additional autograd differential operators.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="n">AUTOGRAD_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">autograd.wrap_util</span> <span class="kn">import</span> <span class="n">unary_to_nary</span>
+    <span class="kn">from</span> <span class="nn">autograd.builtins</span> <span class="kn">import</span> <span class="nb">tuple</span> <span class="k">as</span> <span class="n">atuple</span>
+    <span class="kn">from</span> <span class="nn">autograd.core</span> <span class="kn">import</span> <span class="n">make_vjp</span>
+    <span class="kn">from</span> <span class="nn">autograd.extend</span> <span class="kn">import</span> <span class="n">vspace</span>
+    <span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">AUTOGRAD_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
+        <span class="n">MatrixTressianProduct</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_wrapped_unary_to_nary</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use functools.wraps with unary_to_nary decorator.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">AUTOGRAD_AVAILABLE</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">unary_to_nary</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+
+<div class="viewcode-block" id="grad_and_value"><a class="viewcode-back" href="../../mici.autograd_wrapper.html#mici.autograd_wrapper.grad_and_value">[docs]</a><span class="nd">@_wrapped_unary_to_nary</span>
+<span class="k">def</span> <span class="nf">grad_and_value</span><span class="p">(</span><span class="n">fun</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a function that returns both gradient and value of a function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vjp</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;grad_and_value only applies to real scalar-output&quot;</span> <span class="s2">&quot; functions.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">vjp</span><span class="p">(</span><span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">ones</span><span class="p">()),</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="jacobian_and_value"><a class="viewcode-back" href="../../mici.autograd_wrapper.html#mici.autograd_wrapper.jacobian_and_value">[docs]</a><span class="nd">@_wrapped_unary_to_nary</span>
+<span class="k">def</span> <span class="nf">jacobian_and_value</span><span class="p">(</span><span class="n">fun</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a function that returns both the Jacobian and value of a function.</span>
+
+<span class="sd">    Assumes that the function `fun` broadcasts along the first dimension of the</span>
+<span class="sd">    input being differentiated with respect to such that a batch of outputs can</span>
+<span class="sd">    be computed concurrently for a batch of inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">fun</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">v_vspace</span> <span class="o">=</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+    <span class="n">x_vspace</span> <span class="o">=</span> <span class="n">vspace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">v_vspace</span><span class="o">.</span><span class="n">size</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">vjp_rep</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">x_rep</span><span class="p">)</span>
+    <span class="n">jacobian_shape</span> <span class="o">=</span> <span class="n">v_vspace</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">basis_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">v_vspace</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">()])</span>
+    <span class="n">jacobian</span> <span class="o">=</span> <span class="n">vjp_rep</span><span class="p">(</span><span class="n">basis_vectors</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">jacobian</span><span class="p">,</span> <span class="n">jacobian_shape</span><span class="p">),</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="mhp_jacobian_and_value"><a class="viewcode-back" href="../../mici.autograd_wrapper.html#mici.autograd_wrapper.mhp_jacobian_and_value">[docs]</a><span class="nd">@_wrapped_unary_to_nary</span>
+<span class="k">def</span> <span class="nf">mhp_jacobian_and_value</span><span class="p">(</span>
+    <span class="n">fun</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a function that returns MHP, Jacobian and value of a function.</span>
+
+<span class="sd">    For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here</span>
+<span class="sd">    defined as a function of a matrix `m` corresponding to</span>
+
+<span class="sd">        mhp(m) = sum(m[:, :, None] * h[:, :, :], axis=(0, 1))</span>
+
+<span class="sd">    where `h` is the vector-Hessian of `f = fun(x)` wrt `x` i.e. the rank-3</span>
+<span class="sd">    tensor of second-order partial derivatives of the vector-valued function,</span>
+<span class="sd">    such that</span>
+
+<span class="sd">        h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])</span>
+
+<span class="sd">    Assumes that the function `fun` broadcasts along the first dimension of the</span>
+<span class="sd">    input being differentiated with respect to such that a batch of outputs can</span>
+<span class="sd">    be computed concurrently for a batch of inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mhp</span><span class="p">,</span> <span class="p">(</span><span class="n">jacob</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">jacobian_and_value</span><span class="p">(</span><span class="n">fun</span><span class="p">)(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">mhp</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">zeros</span><span class="p">())),</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">val</span></div>
+
+
+<div class="viewcode-block" id="hessian_grad_and_value"><a class="viewcode-back" href="../../mici.autograd_wrapper.html#mici.autograd_wrapper.hessian_grad_and_value">[docs]</a><span class="nd">@_wrapped_unary_to_nary</span>
+<span class="k">def</span> <span class="nf">hessian_grad_and_value</span><span class="p">(</span>
+    <span class="n">fun</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a function that returns the Hessian, gradient &amp; value of a function.</span>
+
+<span class="sd">    Assumes that the function `fun` broadcasts along the first dimension of the</span>
+<span class="sd">    input being differentiated with respect to such that a batch of outputs can</span>
+<span class="sd">    be computed concurrently for a batch of inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">grad_fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="n">vjp</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vjp</span><span class="p">(</span><span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">ones</span><span class="p">()),</span> <span class="n">val</span>
+
+    <span class="n">x_vspace</span> <span class="o">=</span> <span class="n">vspace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">x_rep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x_vspace</span><span class="o">.</span><span class="n">size</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">vjp_grad</span><span class="p">,</span> <span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">grad_fun</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x_rep</span><span class="p">)</span>
+    <span class="n">hessian_shape</span> <span class="o">=</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">basis_vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">standard_basis</span><span class="p">()])</span>
+    <span class="n">hessian</span> <span class="o">=</span> <span class="n">vjp_grad</span><span class="p">((</span><span class="n">basis_vectors</span><span class="p">,</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">zeros</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">hessian_shape</span><span class="p">),</span> <span class="n">grad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="mtp_hessian_grad_and_value"><a class="viewcode-back" href="../../mici.autograd_wrapper.html#mici.autograd_wrapper.mtp_hessian_grad_and_value">[docs]</a><span class="nd">@_wrapped_unary_to_nary</span>
+<span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value</span><span class="p">(</span>
+    <span class="n">fun</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a function that returns MTP, Jacobian and value of a function.</span>
+
+<span class="sd">    For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is</span>
+<span class="sd">    here defined as a function of a matrix `m` corresponding to</span>
+
+<span class="sd">        mtp(m) = sum(m[:, :] * t[:, :, :], axis=(-1, -2))</span>
+
+<span class="sd">    where `t` is the &#39;Tressian&#39; of `f = fun(x)` wrt `x` i.e. the 3D array of</span>
+<span class="sd">    third-order partial derivatives of the scalar-valued function such that</span>
+
+<span class="sd">        t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])</span>
+
+<span class="sd">    Assumes that the function `fun` broadcasts along the first dimension of the</span>
+<span class="sd">    input being differentiated with respect to such that a batch of outputs can</span>
+<span class="sd">    be computed concurrently for a batch of inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mtp</span><span class="p">,</span> <span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">hessian_grad_and_value</span><span class="p">(</span><span class="n">fun</span><span class="p">)(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">mtp</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">vspace</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span><span class="o">.</span><span class="n">zeros</span><span class="p">(),</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">zeros</span><span class="p">())),</span>
+        <span class="n">hessian</span><span class="p">,</span>
+        <span class="n">grad</span><span class="p">,</span>
+        <span class="n">val</span><span class="p">,</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

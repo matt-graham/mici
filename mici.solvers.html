@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.solvers module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mici.stagers module" href="mici.stagers.html" />
+    <link rel="prev" title="mici.samplers module" href="mici.samplers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.samplers.html">mici.samplers module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.solvers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.FixedPointSolver"><code class="docutils literal notranslate"><span class="pre">FixedPointSolver</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.ProjectionSolver"><code class="docutils literal notranslate"><span class="pre">ProjectionSolver</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.euclidean_norm"><code class="docutils literal notranslate"><span class="pre">euclidean_norm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.maximum_norm"><code class="docutils literal notranslate"><span class="pre">maximum_norm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.solve_fixed_point_direct"><code class="docutils literal notranslate"><span class="pre">solve_fixed_point_direct()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.solve_fixed_point_steffensen"><code class="docutils literal notranslate"><span class="pre">solve_fixed_point_steffensen()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.solve_projection_onto_manifold_newton"><code class="docutils literal notranslate"><span class="pre">solve_projection_onto_manifold_newton()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.solve_projection_onto_manifold_newton_with_line_search"><code class="docutils literal notranslate"><span class="pre">solve_projection_onto_manifold_newton_with_line_search()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.solvers.solve_projection_onto_manifold_quasi_newton"><code class="docutils literal notranslate"><span class="pre">solve_projection_onto_manifold_quasi_newton()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.solvers module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.solvers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.solvers">
+<span id="mici-solvers-module"></span><h1>mici.solvers module<a class="headerlink" href="#module-mici.solvers" title="Permalink to this heading"></a></h1>
+<p>Solvers for non-linear systems of equations for implicit integrators.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.solvers.FixedPointSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">FixedPointSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#FixedPointSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.FixedPointSolver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Solver for fixed point equation, returning <cite>x</cite> such that <cite>func(x) = x</cite>.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.solvers.ProjectionSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">ProjectionSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#ProjectionSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.ProjectionSolver" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Solver for projection on to manifold step in constrained integrator.</p>
+<p>Solves an equation of the form</p>
+<blockquote>
+<div><p>r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</p>
+</div></blockquote>
+<p>for the vector of Lagrange multipliers <cite>λ</cite> to project a point on to the manifold
+defined by the zero level set of a constraint function <cite>c</cite> (<cite>system.constr</cite>), with
+<cite>Φ₂,₁</cite> the position component of a flow map for the <cite>h₂</cite> Hamiltonian component for
+the system (i.e. <cite>system.h2_flow</cite>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.euclidean_norm">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">euclidean_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vct</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#euclidean_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.euclidean_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the Euclidean (L-2) norm of a vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.maximum_norm">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">maximum_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vct</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#maximum_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.maximum_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the maximum (L-infinity) norm of a vector.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.solve_fixed_point_direct">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">solve_fixed_point_direct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_tol=1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_tol=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#solve_fixed_point_direct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.solve_fixed_point_direct" title="Permalink to this definition"></a></dt>
+<dd><p>Solve fixed point equation <cite>func(x) = x</cite> using direct iteration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>ArrayFunction</em>) – Function to find fixed point of.</p></li>
+<li><p><strong>x0</strong> (<em>ArrayLike</em>) – Initial state (function argument).</p></li>
+<li><p><strong>convergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance - solver successfully terminates when
+<cite>norm(func(x) - x) &lt; convergence_tol</cite>.</p></li>
+<li><p><strong>divergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Divergence tolerance - solver aborts if
+<cite>norm(func(x) - x) &gt; divergence_tol</cite> on any iteration.</p></li>
+<li><p><strong>max_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations before raising exception.</p></li>
+<li><p><strong>norm</strong> (<em>ScalarFunction</em>) – Norm to use to assess convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solution to fixed point equation with <cite>norm(func(x) - x) &lt; convergence_tol</cite>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mici.errors.ConvergenceError if solver does not converge within max_iters</strong> – </p></li>
+<li><p><strong>iterations</strong><strong>, </strong><strong>diverges</strong><strong> or </strong><strong>encounters a ValueError during the iteration.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.solve_fixed_point_steffensen">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">solve_fixed_point_steffensen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_tol=1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_tol=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters=100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#solve_fixed_point_steffensen"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.solve_fixed_point_steffensen" title="Permalink to this definition"></a></dt>
+<dd><p>Solve fixed point equation <cite>func(x) = x</cite> using Steffensen’s method.</p>
+<p>Steffennsen’s method [1] achieves quadratic convergence but at the cost of two
+function evaluations per iteration so for functions where convergence is achieved in
+a small number of iterations, direct iteration may be cheaper.</p>
+<p>[1] : <a class="reference external" href="https://en.wikipedia.org/wiki/Steffensen%27s_method">https://en.wikipedia.org/wiki/Steffensen%27s_method</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>ArrayFunction</em>) – Function to find fixed point of.</p></li>
+<li><p><strong>x0</strong> (<em>ArrayLike</em>) – Initial state (function argument).</p></li>
+<li><p><strong>convergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance - solver successfully terminates
+when <cite>norm(func(x) - x) &lt; convergence_tol</cite>.</p></li>
+<li><p><strong>divergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Divergence tolerance - solver aborts if
+<cite>norm(func(x) - x) &gt; divergence_tol</cite> on any iteration.</p></li>
+<li><p><strong>max_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations before raising exception.</p></li>
+<li><p><strong>norm</strong> (<em>ScalarFunction</em>) – Norm to use to assess convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solution to fixed point equation with <cite>norm(func(x) - x) &lt; convergence_tol</cite>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mici.errors.ConvergenceError if solver does not converge within max_iters</strong> – </p></li>
+<li><p><strong>iterations</strong><strong>, </strong><strong>diverges</strong><strong> or </strong><strong>encounters a ValueError during the iteration.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.solve_projection_onto_manifold_newton">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">solve_projection_onto_manifold_newton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint_tol=1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_tol=1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_tol=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters=50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#solve_projection_onto_manifold_newton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.solve_projection_onto_manifold_newton" title="Permalink to this definition"></a></dt>
+<dd><p>Solve constraint equation using Newton’s method.</p>
+<p>Requires re-evaluating both the constraint function <cite>system.constr</cite> and constraint
+Jacobian <cite>system.jacob_constr</cite> within the solver loop and computation of matrix
+decompositions on each iteration.</p>
+<p>Solves an equation of the form</p>
+<blockquote>
+<div><p>r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</p>
+</div></blockquote>
+<p>for the vector of Lagrange multipliers <cite>λ</cite> to project a point on to the manifold
+defined by the zero level set of a constraint function <cite>c</cite> (<cite>system.constr</cite>), with
+<cite>Φ₂,₁</cite> the position component of a flow map for the <cite>h₂</cite> Hamiltonian component for
+the system (i.e. <cite>system.h2_flow</cite>).</p>
+<p>The Jacobian of the residual function <cite>r</cite> is</p>
+<blockquote>
+<div><p>∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</p>
+</div></blockquote>
+<p>where <cite>∂₂Φ₂,₁</cite> is the Jacobian of the (linear) flow-map <cite>Φ₂,₁</cite> with respect to the
+second (momentum argument), such that the Newton update is</p>
+<blockquote>
+<div><p>λ = λ - ∂r(λ)⁻¹ r(λ)</p>
+</div></blockquote>
+<p>which requires evaluating <cite>∂c</cite> (<cite>system.jacob_constr</cite>) on each iteration and solving
+a linear system in the residual Jacobian <cite>∂r(λ)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Post <cite>h2_flow</cite> update state to project.</p></li>
+<li><p><strong>state_prev</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Previous state in co-tangent bundle before <cite>h2_flow</cite> update which
+defines the co-tangent space to perform projection in.</p></li>
+<li><p><strong>time_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Integrator time step used in <cite>h2_flow</cite> update.</p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining <cite>h2_flow</cite> and <cite>constr</cite> functions used to
+define constraint equation to solve.</p></li>
+<li><p><strong>constraint_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in constraint space. Iteration will
+continue until <cite>norm(constr(pos)) &lt; constraint_tol</cite> where <cite>pos</cite> is the
+position at the current iteration.</p></li>
+<li><p><strong>position_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in position space. Iteration will continue
+until <cite>norm(delt_pos) &lt; position_tol</cite> where <cite>delta_pos</cite> is the change in the
+position in the current iteration.</p></li>
+<li><p><strong>divergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Divergence tolerance - solver aborts if
+<cite>norm(constr(pos)) &gt; divergence_tol</cite> on any iteration where <cite>pos</cite> is the
+position at the current iteration and raises <cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>max_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to perform before aborting and raising
+<cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>norm</strong> (<em>ScalarFunction</em>) – Norm to use to test for convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated <cite>state</cite> object with position component satisfying constraint equation to
+within <cite>constraint_tol</cite>, i.e. <cite>norm(system.constr(state.pos)) &lt; constraint_tol</cite>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mici.errors.ConvergenceError if solver does not converge within max_iters</strong> – </p></li>
+<li><p><strong>iterations</strong><strong>, </strong><strong>diverges</strong><strong> or </strong><strong>encounters a ValueError during the iteration.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.solve_projection_onto_manifold_newton_with_line_search">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">solve_projection_onto_manifold_newton_with_line_search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint_tol=1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_tol=1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_tol=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters=50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_line_search_iters=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#solve_projection_onto_manifold_newton_with_line_search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.solve_projection_onto_manifold_newton_with_line_search" title="Permalink to this definition"></a></dt>
+<dd><p>Solve constraint equation using Newton’s method with backtracking line-search.</p>
+<p>Requires re-evaluating both the constraint function <cite>system.constr</cite> and constraint
+Jacobian <cite>system.jacob_constr</cite> within the solver loop and computation of matrix
+decompositions on each iteration.</p>
+<p>Solves an equation of the form</p>
+<blockquote>
+<div><p>r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</p>
+</div></blockquote>
+<p>for the vector of Lagrange multipliers <cite>λ</cite> to project a point on to the manifold
+defined by the zero level set of a constraint function <cite>c</cite> (<cite>system.constr</cite>), with
+<cite>Φ₂,₁</cite> the position component of a flow map for the <cite>h₂</cite> Hamiltonian component for
+the system (i.e. <cite>system.h2_flow</cite>).</p>
+<p>The Jacobian of the residual function <cite>r</cite> is</p>
+<blockquote>
+<div><p>∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</p>
+</div></blockquote>
+<p>where <cite>∂₂Φ₂,₁</cite> is the Jacobian of the (linear) flow-map <cite>Φ₂,₁</cite> with respect to the
+second (momentum argument), such that the scaled Newton update is</p>
+<blockquote>
+<div><p>λ_(α) = λ - α * ∂r(λ)⁻¹ r(λ)</p>
+</div></blockquote>
+<p>which requires evaluating <cite>∂c</cite> (<cite>system.jacob_constr</cite>) on each iteration and solving
+a linear system in the residual Jacobian <cite>∂r(λ)</cite>.</p>
+<p>The step size <cite>α ∈ [0, 1]</cite> is initialised at <cite>α = 1</cite> with a backtracking line search
+performed by multiplying <cite>α</cite> by 0.5 until <cite>|r(λ_(α))| &lt; |r(λ)</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Post <cite>h2_flow</cite> update state to project.</p></li>
+<li><p><strong>state_prev</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Previous state in co-tangent bundle before <cite>h2_flow</cite> update which
+defines the co-tangent space to perform projection in.</p></li>
+<li><p><strong>time_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Integrator time step used in <cite>h2_flow</cite> update.</p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining <cite>h2_flow</cite> and <cite>constr</cite> functions used to
+define constraint equation to solve.</p></li>
+<li><p><strong>constraint_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in constraint space. Iteration will
+continue until <cite>norm(constr(pos)) &lt; constraint_tol</cite> where <cite>pos</cite> is the
+position at the current iteration.</p></li>
+<li><p><strong>position_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in position space. Iteration will continue
+until <cite>norm(delt_pos) &lt; position_tol</cite> where <cite>delta_pos</cite> is the change in the
+position in the current iteration.</p></li>
+<li><p><strong>divergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Divergence tolerance - solver aborts if
+<cite>norm(constr(pos)) &gt; divergence_tol</cite> on any iteration where <cite>pos</cite> is the
+position at the current iteration and raises <cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>max_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to perform before aborting and raising
+<cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>max_line_search_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of ‘inner’ line search iterations to
+perform to try to find step size along search direction which decreases
+residual norm.</p></li>
+<li><p><strong>norm</strong> (<em>ScalarFunction</em>) – Norm to use to test for convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated state object with position component satisfying constraint equation to
+within <cite>constraint_tol</cite>, i.e. <cite>norm(system.constr(state.pos)) &lt; constraint_tol</cite>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mici.errors.ConvergenceError if solver does not converge within max_iters</strong> – </p></li>
+<li><p><strong>iterations</strong><strong>, </strong><strong>diverges</strong><strong> or </strong><strong>encounters a ValueError during the iteration.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.solvers.solve_projection_onto_manifold_quasi_newton">
+<span class="sig-prename descclassname"><span class="pre">mici.solvers.</span></span><span class="sig-name descname"><span class="pre">solve_projection_onto_manifold_quasi_newton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constraint_tol=1e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_tol=1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_tol=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iters=50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/solvers.html#solve_projection_onto_manifold_quasi_newton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.solvers.solve_projection_onto_manifold_quasi_newton" title="Permalink to this definition"></a></dt>
+<dd><p>Solve constraint equation using symmetric quasi-Newton method.</p>
+<p>Only requires re-evaluating the constraint function <cite>system.constr</cite> within the
+solver loop and no recomputation of matrix decompositions on each iteration.</p>
+<p>Solves an equation of the form</p>
+<blockquote>
+<div><p>r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</p>
+</div></blockquote>
+<p>for the vector of Lagrange multipliers <cite>λ</cite> to project a point on to the manifold
+defined by the zero level set of a constraint function <cite>c</cite> (<cite>system.constr</cite>), with
+<cite>Φ₂,₁</cite> the position component of a flow map for the <cite>h₂</cite> Hamiltonian component for
+the system (i.e. <cite>system.h2_flow</cite>).</p>
+<p>The Jacobian of the residual function <cite>r</cite> is</p>
+<blockquote>
+<div><p>∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</p>
+</div></blockquote>
+<p>where <cite>∂₂Φ₂,₁</cite> is the Jacobian of the (linear) flow-map <cite>Φ₂,₁</cite> with respect to the
+second (momentum argument), such that the full Newton update is</p>
+<blockquote>
+<div><p>λ_(α) = λ - ∂r(λ)⁻¹ r(λ)</p>
+</div></blockquote>
+<p>which requires evaluating <cite>∂c</cite> (<cite>system.jacob_constr</cite>) on each iteration and solving
+a linear system in the residual Jacobian <cite>∂r(λ)</cite>.</p>
+<p>The symmetric quasi-Newton iteration instead uses the approximation</p>
+<blockquote>
+<div><p>∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ ≈ ∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ</p>
+</div></blockquote>
+<p>with the corresponding update</p>
+<blockquote>
+<div><p>λ = λ - (∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ)⁻¹ r(λ)</p>
+</div></blockquote>
+<p>allowing a previously computed decomposition of the matrix <cite>∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ</cite> to
+be used to solve the linear system in each iteration with no requirement to evaluate
+<cite>∂c</cite> (<cite>system.jacob_constr</cite>) on each iteration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Post <cite>h2_flow</cite> update state to project.</p></li>
+<li><p><strong>state_prev</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Previous state in co-tangent bundle before <cite>h2_flow</cite> update which
+defines the co-tangent space to perform  projection in.</p></li>
+<li><p><strong>time_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Integrator time step used in <cite>h2_flow</cite> update.</p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system defining <cite>h2_flow</cite> and <cite>constr</cite> functions used to
+define constraint equation to solve.</p></li>
+<li><p><strong>constraint_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in constraint space. Iteration will
+continue until <cite>norm(constr(pos)) &lt; constraint_tol</cite> where <cite>pos</cite> is the
+position at the current iteration.</p></li>
+<li><p><strong>position_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Convergence tolerance in position space. Iteration will continue
+until <cite>norm(delt_pos) &lt; position_tol</cite> where <cite>delta_pos</cite> is the change in the
+position in the current iteration.</p></li>
+<li><p><strong>divergence_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Divergence tolerance - solver aborts if
+<cite>norm(constr(pos)) &gt; divergence_tol</cite> on any iteration where <cite>pos</cite> is the
+position at the current iteration and raises <cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>max_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to perform before aborting and raising
+<cite>mici.errors.ConvergenceError</cite>.</p></li>
+<li><p><strong>norm</strong> (<em>ScalarFunction</em>) – Norm to use to test for convergence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated state object with position component satisfying constraint equation to
+within <cite>constraint_tol</cite>, i.e. <cite>norm(system.constr(state.pos)) &lt; constraint_tol</cite>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mici.errors.ConvergenceError if solver does not converge within max_iters</strong> – </p></li>
+<li><p><strong>iterations</strong><strong>, </strong><strong>diverges</strong><strong> or </strong><strong>encounters a ValueError during the iteration.</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.samplers.html" class="btn btn-neutral float-left" title="mici.samplers module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mici.stagers.html" class="btn btn-neutral float-right" title="mici.stagers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

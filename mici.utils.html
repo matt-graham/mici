@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.utils module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="mici.types module" href="mici.types.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.samplers.html">mici.samplers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.LogRepFloat"><code class="docutils literal notranslate"><span class="pre">LogRepFloat</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.hash_array"><code class="docutils literal notranslate"><span class="pre">hash_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.log1m_exp"><code class="docutils literal notranslate"><span class="pre">log1m_exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.log1p_exp"><code class="docutils literal notranslate"><span class="pre">log1p_exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.log_diff_exp"><code class="docutils literal notranslate"><span class="pre">log_diff_exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.utils.log_sum_exp"><code class="docutils literal notranslate"><span class="pre">log_sum_exp()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.utils module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.utils">
+<span id="mici-utils-module"></span><h1>mici.utils module<a class="headerlink" href="#module-mici.utils" title="Permalink to this heading"></a></h1>
+<p>Utility functions and classes.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.utils.LogRepFloat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">LogRepFloat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_val</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#LogRepFloat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.LogRepFloat" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Numerically stable logarithmic representation of positive float values.</p>
+<p>Stores logarithm of value and overloads arithmetic operators to use more
+numerically stable implementations where possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>log_val</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.utils.LogRepFloat.val">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">val</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.utils.LogRepFloat.val" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.utils.hash_array">
+<span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">hash_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#hash_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.hash_array" title="Permalink to this definition"></a></dt>
+<dd><p>Compute hash of a NumPy array by hashing data as a byte sequence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>array</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.25)"><em>ndarray</em></a>) – NumPy array to compute hash of.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Computed hash as an integer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.utils.log1m_exp">
+<span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">log1m_exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#log1m_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.log1m_exp" title="Permalink to this definition"></a></dt>
+<dd><p>Numerically stable implementation of <cite>log(1 - exp(val))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.utils.log1p_exp">
+<span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">log1p_exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#log1p_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.log1p_exp" title="Permalink to this definition"></a></dt>
+<dd><p>Numerically stable implementation of <cite>log(1 + exp(val))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>val</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.utils.log_diff_exp">
+<span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">log_diff_exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#log_diff_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.log_diff_exp" title="Permalink to this definition"></a></dt>
+<dd><p>Numerically stable implementation of <cite>log(exp(val1) - exp(val2))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>val2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.utils.log_sum_exp">
+<span class="sig-prename descclassname"><span class="pre">mici.utils.</span></span><span class="sig-name descname"><span class="pre">log_sum_exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/utils.html#log_sum_exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.utils.log_sum_exp" title="Permalink to this definition"></a></dt>
+<dd><p>Numerically stable implementation of <cite>log(exp(val1) + exp(val2))</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>val1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>val2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.types.html" class="btn btn-neutral float-left" title="mici.types module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

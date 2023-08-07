@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.stagers &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.stagers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.stagers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Classes for controlling sampling of Markov chains split into stages.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+    <span class="kn">from</span> <span class="nn">mici.adapters</span> <span class="kn">import</span> <span class="n">Adapter</span>
+    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
+
+
+<div class="viewcode-block" id="ChainStage"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.ChainStage">[docs]</a><span class="k">class</span> <span class="nc">ChainStage</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameters of chain stage.&quot;&quot;&quot;</span>
+
+    <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of iterations in chain stage.&quot;&quot;&quot;</span>
+
+    <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dictionary of adapters to apply to each transition in chain stage.&quot;&quot;&quot;</span>
+
+    <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+
+    <span class="n">record_stats</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether to record statistics and traces during chain stage.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Stager"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.Stager">[docs]</a><span class="k">class</span> <span class="nc">Stager</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract chain iteration stager.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Stager.stages"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.Stager.stages">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">stages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]],</span>
+        <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]],</span>
+        <span class="n">trace_warm_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ChainStage</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create dictionary specifying labels and parameters of chain sampling stages.</span>
+
+<span class="sd">        Constructs a (ordered) dictionary with entries corresponding to the sequence of</span>
+<span class="sd">        sampling stages when running chains with one or more initial adaptation stages.</span>
+<span class="sd">        The keys of each entry are a string label for the sampling stage and the value a</span>
+<span class="sd">        `ChainStage` named tuple specifying the parameters of the stage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending</span>
+<span class="sd">                on the adapters specified by the `adapters` argument the warm up</span>
+<span class="sd">                iterations may be split between one or more adaptive stages.</span>
+<span class="sd">            n_main_iter: Number of iterations (samples to draw) per chain during main</span>
+<span class="sd">                (non-adaptive) sampling stage.</span>
+<span class="sd">            trace_funcs: Iterable of functions which compute the variables to be</span>
+<span class="sd">                recorded at each chain iteration, with each trace function being passed</span>
+<span class="sd">                the current state and returning a dictionary of scalar or array values</span>
+<span class="sd">                corresponding to the variable(s) to be stored. The keys in the returned</span>
+<span class="sd">                dictionaries are used to index the trace arrays in the returned traces</span>
+<span class="sd">                dictionary. If a key appears in multiple dictionaries only the the value</span>
+<span class="sd">                corresponding to the last trace function to return that key will be</span>
+<span class="sd">                stored. By default chains are only traced in the iterations of the final</span>
+<span class="sd">                non-adaptive stage - this behaviour can be altered using the</span>
+<span class="sd">                `trace_warm_up` argument.</span>
+<span class="sd">            adapters: Dictionary of iterables of `Adapter` instances keyed by strings</span>
+<span class="sd">                corresponding to the key of the transition in the sampler `transitions`</span>
+<span class="sd">                dictionary to apply the adapters to, to use to adaptatively set</span>
+<span class="sd">                parameters of the transitions during the adaptive stages of the chains.</span>
+<span class="sd">                Note that the adapter updates are applied in the order the adapters</span>
+<span class="sd">                appear in the iterables and so if multiple adapters change the same</span>
+<span class="sd">                parameter(s) the order will matter.</span>
+<span class="sd">            trace_warm_up: Whether to record chain traces and statistics during warm-up</span>
+<span class="sd">                stage iterations (`True`) or only record traces and statistics in the</span>
+<span class="sd">                iterations of the final non-adaptive stage (`False`, the default).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionary specifying chain stages, keyed by labels for stages.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="WarmUpStager"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.WarmUpStager">[docs]</a><span class="k">class</span> <span class="nc">WarmUpStager</span><span class="p">(</span><span class="n">Stager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Chain iteration stager with a single adaptive warm up stage.</span>
+
+<span class="sd">    Sampling is split in to two stages:</span>
+
+<span class="sd">      1. An adaptive warm up stage will all adapters active.</span>
+<span class="sd">      2. A main sampling stage with no adapters active.</span>
+
+<span class="sd">    Only in the main sampling stage are traces of the chain state recorded by storing</span>
+<span class="sd">    the outputs of functions of the sampled chain state after each iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WarmUpStager.stages"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.WarmUpStager.stages">[docs]</a>    <span class="k">def</span> <span class="nf">stages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]],</span>
+        <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]],</span>
+        <span class="n">trace_warm_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ChainStage</span><span class="p">]:</span>
+        <span class="n">sampling_stages</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># adaptive warm up stage</span>
+        <span class="k">if</span> <span class="n">n_warm_up_iter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warm_up_trace_funcs</span> <span class="o">=</span> <span class="n">trace_funcs</span> <span class="k">if</span> <span class="n">trace_warm_up</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">sampling_stages</span><span class="p">[</span><span class="s2">&quot;Adaptive warm up&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="n">n_warm_up_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="o">=</span><span class="n">adapters</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="o">=</span><span class="n">warm_up_trace_funcs</span><span class="p">,</span>
+                <span class="n">record_stats</span><span class="o">=</span><span class="n">trace_warm_up</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c1"># main non-adaptive stage</span>
+        <span class="k">if</span> <span class="n">n_main_iter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sampling_stages</span><span class="p">[</span><span class="s2">&quot;Main non-adaptive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="n">n_main_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="o">=</span><span class="n">trace_funcs</span><span class="p">,</span>
+                <span class="n">record_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sampling_stages</span></div></div>
+
+
+<div class="viewcode-block" id="WindowedWarmUpStager"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.WindowedWarmUpStager">[docs]</a><span class="k">class</span> <span class="nc">WindowedWarmUpStager</span><span class="p">(</span><span class="n">Stager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Chain iteration stager with a hierarchy of adaptive warm up stages.</span>
+
+<span class="sd">    Following the approach of [Stan](https://mc-stan.org) the adaptive stages are split</span>
+<span class="sd">    in to two types - &#39;fast&#39; adaptation stages which adjust only transition parameters</span>
+<span class="sd">    which can be adapted quickly using local information and &#39;slow&#39; adaptation stages</span>
+<span class="sd">    which *addtionally* adjust transition parameters which require more global</span>
+<span class="sd">    information. The adapters to be used in both the fast and slow adaptation stages</span>
+<span class="sd">    will be referred to as the *fast adapters* and the adapters to use in only the slow</span>
+<span class="sd">    adaptation stages the *slow adapters*. Each adapter self identifies if it is a fast</span>
+<span class="sd">    adapter by whether the `is_fast` attribute is set to `True`.</span>
+
+<span class="sd">    The adaptive warm up iterations are split into three stages:</span>
+
+<span class="sd">      1. An initial fast adaptive stage with only fast adapters active.</span>
+<span class="sd">      2. A slow adaptive stage with both slow and fast adapters active.</span>
+<span class="sd">      3. A final adaptive stage with only fast adapters active.</span>
+
+<span class="sd">    The slow sampling stage (2) is further split in to a sequence of growing, memoryless</span>
+<span class="sd">    windows with the adapter stages reset at the beginning of each window, and the</span>
+<span class="sd">    number of iterations in each window increasing (by default doubling). The split of</span>
+<span class="sd">    the iterations in each of these stages can be controlled using the keyword arguments</span>
+<span class="sd">    `n_init_fast_stage_iter`, `n_init_slow_window_iter`, `n_final_fast_stage_iter` and</span>
+<span class="sd">    `slow_window_multiplier` (see descriptions below).</span>
+
+<span class="sd">    After the initial adaptive warm up stages a subsequent main sampling stage with no</span>
+<span class="sd">    further adaptation is performed. Only in this main sampling stage are traces of the</span>
+<span class="sd">    chain state recorded by storing the outputs of functions of the sampled chain state</span>
+<span class="sd">    after each iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_init_slow_window_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">n_init_fast_stage_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">75</span><span class="p">,</span>
+        <span class="n">n_final_fast_stage_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="n">slow_window_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            n_init_slow_window_iter: Number of iterations in the initial (smallest)</span>
+<span class="sd">                window in the slow adaptation stage. Defaults to 25. If the sum of</span>
+<span class="sd">                `n_init_slow_window_iter`, `n_init_fast_stage_iter` and</span>
+<span class="sd">                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then</span>
+<span class="sd">                `n_init_slow_window_iter` is set to approximately 75% of</span>
+<span class="sd">                `n_warm_up_iter` (with a single window being used in the slow adaptation</span>
+<span class="sd">                stage in this case).</span>
+<span class="sd">            n_init_fast_stage_iter: Number of iterations in the initial fast adaptation</span>
+<span class="sd">                stage. Defaults to 75. If the sum of `n_init_slow_window_iter`,</span>
+<span class="sd">                n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more than</span>
+<span class="sd">                `n_warm_up_iter` then `n_init_fast_stage_iter` is set to approximately</span>
+<span class="sd">                15% of `n_warm_up_iter`.</span>
+<span class="sd">            n_final_fast_stage_iter: Number of iterations in the final fast adaptation</span>
+<span class="sd">                stage. Defaults to 50. If the sum of `n_init_slow_window_iter`,</span>
+<span class="sd">                `n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more than</span>
+<span class="sd">                `n_warm_up_iter` then `n_init_fast_stage_iter` is set to approximately</span>
+<span class="sd">                10% of `n_warm_up_iter`.</span>
+<span class="sd">            slow_window_multiplier: Multiplier by which to increase the number of</span>
+<span class="sd">                iterations of each subsequent slow adaptation window by. Defaults to 2</span>
+<span class="sd">                such that each window doubles in size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_init_slow_window_iter</span> <span class="o">=</span> <span class="n">n_init_slow_window_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_init_fast_stage_iter</span> <span class="o">=</span> <span class="n">n_init_fast_stage_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_final_fast_stage_iter</span> <span class="o">=</span> <span class="n">n_final_fast_stage_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slow_window_multiplier</span> <span class="o">=</span> <span class="n">slow_window_multiplier</span>
+
+<div class="viewcode-block" id="WindowedWarmUpStager.stages"><a class="viewcode-back" href="../../mici.stagers.html#mici.stagers.WindowedWarmUpStager.stages">[docs]</a>    <span class="k">def</span> <span class="nf">stages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]],</span>
+        <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]],</span>
+        <span class="n">trace_warm_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ChainStage</span><span class="p">]:</span>
+        <span class="n">fast_adapters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">trans_key</span><span class="p">:</span> <span class="p">[</span><span class="n">adapter</span> <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">adapter_list</span> <span class="k">if</span> <span class="n">adapter</span><span class="o">.</span><span class="n">is_fast</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">trans_key</span><span class="p">,</span> <span class="n">adapter_list</span> <span class="ow">in</span> <span class="n">adapters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_init_fast_stage_iter</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_init_slow_window_iter</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_final_fast_stage_iter</span>
+        <span class="p">)</span> <span class="o">&gt;</span> <span class="n">n_warm_up_iter</span><span class="p">:</span>
+            <span class="n">n_init_fast_stage_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.15</span> <span class="o">*</span> <span class="n">n_warm_up_iter</span><span class="p">)</span>
+            <span class="n">n_final_fast_stage_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.1</span> <span class="o">*</span> <span class="n">n_warm_up_iter</span><span class="p">)</span>
+            <span class="n">n_init_slow_window_iter</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">n_warm_up_iter</span> <span class="o">-</span> <span class="n">n_init_fast_stage_iter</span> <span class="o">-</span> <span class="n">n_final_fast_stage_iter</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_init_slow_window_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_init_slow_window_iter</span>
+            <span class="n">n_init_fast_stage_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_init_fast_stage_iter</span>
+            <span class="n">n_final_fast_stage_iter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_final_fast_stage_iter</span>
+        <span class="n">sampling_stages</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># adaptive warm-up stages</span>
+        <span class="k">if</span> <span class="n">n_warm_up_iter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">warm_up_trace_funcs</span> <span class="o">=</span> <span class="n">trace_funcs</span> <span class="k">if</span> <span class="n">trace_warm_up</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">record_stats</span> <span class="o">=</span> <span class="n">trace_warm_up</span>
+            <span class="c1"># initial fast adaptation stage</span>
+            <span class="n">sampling_stages</span><span class="p">[</span><span class="s2">&quot;Initial fast adaptive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="n">n_init_fast_stage_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="o">=</span><span class="n">fast_adapters</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="o">=</span><span class="n">warm_up_trace_funcs</span><span class="p">,</span>
+                <span class="n">record_stats</span><span class="o">=</span><span class="n">record_stats</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># growing size slow adaptation windows</span>
+            <span class="n">n_window_iter</span> <span class="o">=</span> <span class="n">n_init_slow_window_iter</span>
+            <span class="n">slow_windows</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">n_slow_stage_iter</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">n_warm_up_iter</span> <span class="o">-</span> <span class="n">n_init_fast_stage_iter</span> <span class="o">-</span> <span class="n">n_final_fast_stage_iter</span>
+            <span class="p">)</span>
+            <span class="k">while</span> <span class="n">counter</span> <span class="o">&lt;</span> <span class="n">n_slow_stage_iter</span><span class="p">:</span>
+                <span class="c1"># check if iteration counter at end of next loop iteration will be</span>
+                <span class="c1"># greater than total number of warm up iterations and if so set number</span>
+                <span class="c1"># of iterations in current window to be equal to all remaining warm up</span>
+                <span class="c1"># iterations</span>
+                <span class="n">counter_next</span> <span class="o">=</span> <span class="n">counter</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">slow_window_multiplier</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_window_iter</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">counter_next</span> <span class="o">&gt;</span> <span class="n">n_slow_stage_iter</span><span class="p">:</span>
+                    <span class="n">n_window_iter</span> <span class="o">=</span> <span class="n">n_slow_stage_iter</span> <span class="o">-</span> <span class="n">counter</span>
+                <span class="n">slow_windows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_window_iter</span><span class="p">)</span>
+                <span class="n">counter</span> <span class="o">+=</span> <span class="n">n_window_iter</span>
+                <span class="n">n_window_iter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slow_window_multiplier</span> <span class="o">*</span> <span class="n">n_window_iter</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n_iter</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">slow_windows</span><span class="p">):</span>
+                <span class="n">sampling_stages</span><span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;Slow adaptive (</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">slow_windows</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                    <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span>
+                    <span class="n">adapters</span><span class="o">=</span><span class="n">adapters</span><span class="p">,</span>
+                    <span class="n">trace_funcs</span><span class="o">=</span><span class="n">warm_up_trace_funcs</span><span class="p">,</span>
+                    <span class="n">record_stats</span><span class="o">=</span><span class="n">record_stats</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="c1"># final fast adaptation stage</span>
+            <span class="n">sampling_stages</span><span class="p">[</span><span class="s2">&quot;Final fast adaptive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="n">n_final_fast_stage_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="o">=</span><span class="n">fast_adapters</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="o">=</span><span class="n">warm_up_trace_funcs</span><span class="p">,</span>
+                <span class="n">record_stats</span><span class="o">=</span><span class="n">record_stats</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="c1"># main non-adaptive stage</span>
+        <span class="k">if</span> <span class="n">n_main_iter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sampling_stages</span><span class="p">[</span><span class="s2">&quot;Main non-adaptive&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ChainStage</span><span class="p">(</span>
+                <span class="n">n_iter</span><span class="o">=</span><span class="n">n_main_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="o">=</span><span class="n">trace_funcs</span><span class="p">,</span>
+                <span class="n">record_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sampling_stages</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

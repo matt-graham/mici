@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.interop &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.interop</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.interop</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities for interfacing with external probabilistic programming libraries.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">mici</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+    <span class="kn">import</span> <span class="nn">arviz</span>
+    <span class="kn">import</span> <span class="nn">pymc3</span>
+
+
+<div class="viewcode-block" id="convert_to_inference_data"><a class="viewcode-back" href="../../mici.interop.html#mici.interop.convert_to_inference_data">[docs]</a><span class="k">def</span> <span class="nf">convert_to_inference_data</span><span class="p">(</span>
+    <span class="n">traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]],</span>
+    <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]],</span>
+    <span class="n">energy_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
+    <span class="n">lp_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lp&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert Mici `sample_chains` output to ArviZ `InferenceData` object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        traces: Traces output from Mici `sample_chains` call. A dictionary of variables</span>
+<span class="sd">            traced over sampled chains with the dictionary keys the variable names and</span>
+<span class="sd">            the values a list of arrays, one array per sampled chain, with the first</span>
+<span class="sd">            array dimension corresponding to the draw index and any remaining</span>
+<span class="sd">            dimensions, the variable dimensions.</span>
+<span class="sd">        stats: Statistics output from Mici `sample_chains` call. A dictionary of chain</span>
+<span class="sd">            statistics traced over sampled chains with the dictionary keys the</span>
+<span class="sd">            statistics names and the values a list of arrays, one array per sampled</span>
+<span class="sd">            chain, with the array dimension corresponding to the draw index.</span>
+<span class="sd">        energy_key: The key of an entry in the `traces` dictionary corresponding the</span>
+<span class="sd">            value of the Hamiltonian energy for the accepted proposal (up to an additive</span>
+<span class="sd">            constant). If present the corresponding values will be added to the</span>
+<span class="sd">            `sample_stats` group of the returned `InferenceData` object.</span>
+<span class="sd">        lp_key: The key of an entry in the `traces` dictionary corresponding the value</span>
+<span class="sd">            of the joint log posterior density for the model (up to an additive</span>
+<span class="sd">            constant). If present the corresponding values will be added to the</span>
+<span class="sd">            `sample_stats` group of the returned `InferenceData` object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ArviZ inference data object with traced chain data stored in the `posterior`</span>
+<span class="sd">        group and additional chain statistics in the `sample_stats` group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">arviz</span>
+
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_step&quot;</span><span class="p">)</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;acceptance_rate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">energy_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">energy_key</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">:</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traces</span><span class="p">[</span><span class="n">energy_key</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">lp_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lp_key</span> <span class="ow">in</span> <span class="n">traces</span><span class="p">:</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;lp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">traces</span><span class="p">[</span><span class="n">lp_key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">(</span>
+        <span class="n">posterior</span><span class="o">=</span><span class="n">arviz</span><span class="o">.</span><span class="n">dict_to_dataset</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">mici</span><span class="p">),</span>
+        <span class="n">sample_stats</span><span class="o">=</span><span class="n">arviz</span><span class="o">.</span><span class="n">dict_to_dataset</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">mici</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sample_pymc3_model"><a class="viewcode-back" href="../../mici.interop.html#mici.interop.sample_pymc3_model">[docs]</a><span class="k">def</span> <span class="nf">sample_pymc3_model</span><span class="p">(</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">tune</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">chains</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cores</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">random_seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">progressbar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">init</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;adapt_diag&quot;</span><span class="p">,</span> <span class="s2">&quot;jitter+adapt_diag&quot;</span><span class="p">,</span> <span class="s2">&quot;adapt_full&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+    <span class="n">jitter_max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">trace</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_inferencedata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pymc3</span><span class="o">.</span><span class="n">Model</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">target_accept</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">max_treedepth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate approximate samples from posterior defined by a PyMC3 model.</span>
+
+<span class="sd">    Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</span>
+
+<span class="sd">    This function replicates the interface of the `pymc3.sample` function to allow using</span>
+<span class="sd">    as a (partial) drop-in replacement.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        draws: The number of samples to draw.</span>
+<span class="sd">        tune: Number of iterations to tune, defaults to 1000. Samplers adjust the step</span>
+<span class="sd">            sizes, scalings or  similar during tuning. Tuning samples will be drawn in</span>
+<span class="sd">            addition to the number specified in the `draws` argument, and will be</span>
+<span class="sd">            discarded.</span>
+<span class="sd">        chains: The number of chains to sample. Running independent chains is important</span>
+<span class="sd">            for some convergence statistics and can also reveal multiple modes in the</span>
+<span class="sd">            posterior. If `None`, then set to either `cores` or 2, whichever is larger.</span>
+<span class="sd">        cores: The number of chains to run in parallel. If `None`, set to the number of</span>
+<span class="sd">            CPUs in the system, but at most 4.</span>
+<span class="sd">        random_seed: Seed for Numpy random number generator used for generating random</span>
+<span class="sd">            variables while sampling chains. If `None` then generator will be seeded</span>
+<span class="sd">            with entropy from operating system.</span>
+<span class="sd">        progressbar: Whether or not to display a progress bar.</span>
+<span class="sd">        init: Initialization method to use. One of:</span>
+
+<span class="sd">            1. adapt_diag: Start with a identity mass matrix and then adapt a</span>
+<span class="sd">                diagonal based on the variance of the tuning samples. All chains use the</span>
+<span class="sd">                test value (usually the prior mean) as starting point.</span>
+<span class="sd">            2. jitter+adapt_diag: Same as ``adapt_diag``, but add uniform jitter in</span>
+<span class="sd">                [-1, 1] to the starting point in each chain. Also chosen if</span>
+<span class="sd">                `init==&quot;auto&quot;`.</span>
+<span class="sd">            3.  adapt_full: Adapt a dense mass matrix using the sample covariances</span>
+
+<span class="sd">        jitter_max_retries: Maximum number of repeated attempts (per chain) at creating</span>
+<span class="sd">            an initial matrix with uniform jitter that yields a finite probability.</span>
+<span class="sd">            This applies to `jitter+adapt_diag` and `jitter+adapt_full` init methods.</span>
+<span class="sd">        trace: A list of variables to track. If `None`, `model.unobserved_RVs` is used.</span>
+<span class="sd">        return_inferencedata: Whether to return the traces as an `arviz.InferenceData`</span>
+<span class="sd">            (`True`) object or a dict (`False`).</span>
+<span class="sd">        model: PyMC3 model defining posterior distribution to sample from. May be `None`</span>
+<span class="sd">            if function is called from within model context manager.</span>
+<span class="sd">        target_accept: Target value for the acceptance statistic being controlled during</span>
+<span class="sd">            adaptive warm-up.</span>
+<span class="sd">        max_treedepth: Maximum depth to expand trajectory binary tree to in integrator</span>
+<span class="sd">            transition. The maximum number of integrator steps corresponds to</span>
+<span class="sd">            `2**max_treedepth`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary or ArviZ `InferenceData` object containing the sampled chain</span>
+<span class="sd">        output. Dictionary output (when `return_inferencedata=False`) has string keys</span>
+<span class="sd">        corresponding to the name of each traced variable in the model, with the values</span>
+<span class="sd">        being the corresponding values of the variables traced across the chains as</span>
+<span class="sd">        NumPy arrays, with the first dimension the chain index  (of size equal to</span>
+<span class="sd">        `chains`), the second dimension the draw index (of size equal to `draws`) and</span>
+<span class="sd">        any remaining dimensions corresponding to the dimensions of the traced variable.</span>
+<span class="sd">        If `return_inferencedata=True` an ArviZ `InferenceData` object is instead</span>
+<span class="sd">        returned with traced chain data stored in the `posterior` group and additional</span>
+<span class="sd">        chain statistics in the `sample_stats` group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">pymc3</span>
+
+    <span class="k">if</span> <span class="n">return_inferencedata</span><span class="p">:</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">arviz</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot return InferenceData as ArviZ is not installed&quot;</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">pymc3</span><span class="o">.</span><span class="n">modelcontext</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cores</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cores</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># assume 2 threads per CPU core</span>
+
+    <span class="k">if</span> <span class="n">chains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">cores</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">trace</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">unobserved_RVs</span>
+
+    <span class="k">if</span> <span class="n">init</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">or</span> <span class="s2">&quot;jitter+adapt_diag&quot;</span><span class="p">:</span>
+        <span class="n">use_dense_metric</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">jitter_init</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">init</span> <span class="o">==</span> <span class="s2">&quot;adapt_diag&quot;</span><span class="p">:</span>
+        <span class="n">use_dense_metric</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">jitter_init</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="n">init</span> <span class="o">==</span> <span class="s2">&quot;adapt_full&quot;</span><span class="p">:</span>
+        <span class="n">use_dense_metric</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">jitter_init</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;init must be &quot;auto&quot;, &quot;jitter+adapt_diag&quot;, &quot;adapt_diag&quot; or &quot;adapt_full&quot;&#39;</span>
+        <span class="p">)</span>
+
+    <span class="n">val_and_grad_log_dens</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">logp_dlogp_function</span><span class="p">()</span>
+    <span class="n">val_and_grad_log_dens</span><span class="o">.</span><span class="n">set_extra_values</span><span class="p">({})</span>
+
+    <span class="k">def</span> <span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">grad</span><span class="p">,</span> <span class="o">-</span><span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+        <span class="n">var_dict</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="o">.</span><span class="n">array_to_dict</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
+        <span class="n">trace_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">trace</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rv</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">var_dict</span><span class="p">:</span>
+                <span class="n">trace_dict</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_dict</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trace_dict</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">transformation</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span>
+                    <span class="n">var_dict</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">transformed</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">trace_dict</span><span class="p">[</span><span class="s2">&quot;lp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">system</span><span class="o">.</span><span class="n">neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">trace_dict</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">trace_dict</span>
+
+    <span class="n">system</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">EuclideanMetricSystem</span><span class="p">(</span>
+        <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span>
+    <span class="p">)</span>
+
+    <span class="n">integrator</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">LeapfrogIntegrator</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">random_seed</span><span class="p">)</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">DynamicMultinomialHMC</span><span class="p">(</span>
+        <span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">max_treedepth</span><span class="o">=</span><span class="n">max_treedepth</span>
+    <span class="p">)</span>
+
+    <span class="n">step_size_adapter</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">DualAveragingStepSizeAdapter</span><span class="p">(</span><span class="n">target_accept</span><span class="p">)</span>
+    <span class="n">metric_adapter</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">OnlineCovarianceMetricAdapter</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">use_dense_metric</span>
+        <span class="k">else</span> <span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">OnlineVarianceMetricAdapter</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">adapters</span> <span class="o">=</span> <span class="p">[</span><span class="n">step_size_adapter</span><span class="p">,</span> <span class="n">metric_adapter</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">jitter_init</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="o">.</span><span class="n">dict_to_array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">test_point</span><span class="p">)</span>
+        <span class="n">init_states</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">jitter_max_retries</span><span class="p">):</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">mean</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">val_and_grad_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">)[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">break</span>
+            <span class="n">init_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">init_states</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">val_and_grad_log_dens</span><span class="o">.</span><span class="n">dict_to_array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">test_point</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">traces</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">sample_chains</span><span class="p">(</span>
+        <span class="n">n_warm_up_iter</span><span class="o">=</span><span class="n">tune</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="o">=</span><span class="n">draws</span><span class="p">,</span>
+        <span class="n">init_states</span><span class="o">=</span><span class="n">init_states</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="o">=</span><span class="n">adapters</span><span class="p">,</span>
+        <span class="n">trace_funcs</span><span class="o">=</span><span class="p">[</span><span class="n">trace_func</span><span class="p">],</span>
+        <span class="n">n_process</span><span class="o">=</span><span class="n">cores</span><span class="p">,</span>
+        <span class="n">display_progress</span><span class="o">=</span><span class="n">progressbar</span><span class="p">,</span>
+        <span class="n">monitor_stats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">,</span> <span class="s2">&quot;n_step&quot;</span><span class="p">,</span> <span class="s2">&quot;diverging&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_inferencedata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">convert_to_inference_data</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">traces</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_stan_model_unconstrained_param_dim</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="n">param_size_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
+    <span class="n">n_dim</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">param_size_list</span><span class="p">)</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">log_prob</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_dim</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">n_dim</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="n">param_size_list</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">n_dim</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">param_size_list</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sample_stan_model"><a class="viewcode-back" href="../../mici.interop.html#mici.interop.sample_stan_model">[docs]</a><span class="k">def</span> <span class="nf">sample_stan_model</span><span class="p">(</span>
+    <span class="n">model_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">num_warmup</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">num_chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="n">save_warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">metric</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;unit_e&quot;</span><span class="p">,</span> <span class="s2">&quot;diag_e&quot;</span><span class="p">,</span> <span class="s2">&quot;dense_e&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;diag_e&quot;</span><span class="p">,</span>
+    <span class="n">stepsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">adapt_engaged</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">delta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">kappa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span>
+    <span class="n">t0</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">init_buffer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">75</span><span class="p">,</span>
+    <span class="n">term_buffer</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_inferencedata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">arviz</span><span class="o">.</span><span class="n">InferenceData</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate approximate samples from posterior defined by a Stan model.</span>
+
+<span class="sd">    Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</span>
+
+<span class="sd">    This function follows a similar argument naming scheme to the PyStan</span>
+<span class="sd">    `stan.Model.sample` method (which itself follows CmdStan) to allow using as a</span>
+<span class="sd">    (partial) drop-in replacement.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_code: Stan program code describing a Stan model.</span>
+<span class="sd">        data: A Python dictionary or mapping providing the data for the model. Variable</span>
+<span class="sd">            names are the keys and the values are their associated values.</span>
+<span class="sd">        num_samples: A non-negative integer specifying the number of non-warm-up</span>
+<span class="sd">            iterations per chain.</span>
+<span class="sd">        num_warmup: A non-negative integer specifying the number of warm-up iterations</span>
+<span class="sd">            per chain.</span>
+<span class="sd">        num_chains: A positive integer specifying the number of Markov chains.</span>
+<span class="sd">        save_warmup: Whether to save warm-up chain data (`True`) or not (`False`).</span>
+<span class="sd">        metric: String specifying metric type. One of &quot;unit_e&quot;, &quot;diag_e&quot; or &quot;dense_e&quot;,</span>
+<span class="sd">            indicating respectively to used a fixed identity matrix metric</span>
+<span class="sd">            representation, to use a diagonal metric matrix representation adapted based</span>
+<span class="sd">            on estimates of the marginal posterior variances, to use a dense metric</span>
+<span class="sd">            matrix representation based on estimates of the posterior covariance matrix.</span>
+<span class="sd">        stepsize: Initial integrator step size.</span>
+<span class="sd">        adapt_engaged: Whether adaptation is engaged (`True`) or not (`False`).</span>
+<span class="sd">        delta: Adaptation target acceptance statistic.</span>
+<span class="sd">        gamma: Adaptation regularization scale.</span>
+<span class="sd">        kappa: Adaptation relaxation exponent.</span>
+<span class="sd">        t0: Adaptation iteration offset.</span>
+<span class="sd">        init_buffer: Width of initial fast adaptation interval.</span>
+<span class="sd">        term_buffer: Width of final fast adaptation interval.</span>
+<span class="sd">        window: Initial width of slow adaptation interval.</span>
+<span class="sd">        max_depth: Maximum depth of binary trajectory tree.</span>
+<span class="sd">        seed: Seed for Numpy random number generator used for generating random</span>
+<span class="sd">            variables while sampling chains. If `None` then generator will be seeded</span>
+<span class="sd">            with entropy from operating system.</span>
+<span class="sd">        return_inferencedata: Whether to return the traces as an `arviz.InferenceData`</span>
+<span class="sd">            (`True`) object or a dict (`False`).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary or ArviZ `InferenceData` object containing the sampled chain</span>
+<span class="sd">        output. Dictionary output (when `return_inferencedata=False`) has string keys</span>
+<span class="sd">        corresponding to the name of each traced variable in the model, with the values</span>
+<span class="sd">        being the corresponding values of the variables traced across the chains as</span>
+<span class="sd">        NumPy arrays, with the first dimension the flattened draw index across all</span>
+<span class="sd">        chains (of size equal to `num_chains * num_samples`) and any remaining</span>
+<span class="sd">        dimensions corresponding to the dimensions of the traced variable. If</span>
+<span class="sd">        `return_inferencedata=True` an ArviZ `InferenceData` object is instead returned</span>
+<span class="sd">        with traced chain data stored in the `posterior` group and additional chain</span>
+<span class="sd">        statistics in the `sample_stats` group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">stan</span>
+
+    <span class="k">if</span> <span class="n">return_inferencedata</span><span class="p">:</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">arviz</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot return InferenceData as ArviZ is not installed&quot;</span><span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">stan</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">model_code</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grad_log_prob</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
+
+    <span class="n">param_size_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">):</span>
+        <span class="n">param_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">constrain_pars</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)))</span>
+        <span class="n">trace_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">param_names</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">param_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">param_size_list</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">trace_dict</span><span class="p">[</span><span class="s2">&quot;lp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">system</span><span class="o">.</span><span class="n">neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">trace_dict</span><span class="p">[</span><span class="s2">&quot;energy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">trace_dict</span>
+
+    <span class="n">system</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">EuclideanMetricSystem</span><span class="p">(</span>
+        <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span>
+    <span class="p">)</span>
+
+    <span class="n">integrator</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">LeapfrogIntegrator</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="n">stepsize</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">DynamicMultinomialHMC</span><span class="p">(</span>
+        <span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">max_tree_depth</span><span class="o">=</span><span class="n">max_depth</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">adapt_engaged</span><span class="p">:</span>
+        <span class="n">step_size_adapter</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">DualAveragingStepSizeAdapter</span><span class="p">(</span>
+            <span class="n">adapt_stat_target</span><span class="o">=</span><span class="n">delta</span><span class="p">,</span>
+            <span class="n">iter_offset</span><span class="o">=</span><span class="n">t0</span><span class="p">,</span>
+            <span class="n">iter_decay_coeff</span><span class="o">=</span><span class="n">kappa</span><span class="p">,</span>
+            <span class="n">log_step_size_reg_coefficient</span><span class="o">=</span><span class="n">gamma</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">adapters</span> <span class="o">=</span> <span class="p">[</span><span class="n">step_size_adapter</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;diag_e&quot;</span><span class="p">:</span>
+            <span class="n">adapters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">OnlineVarianceMetricAdapter</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;dense_e&quot;</span><span class="p">:</span>
+            <span class="n">adapters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mici</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">OnlineCovarianceMetricAdapter</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">adapters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">stager</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">stagers</span><span class="o">.</span><span class="n">WindowedWarmUpStager</span><span class="p">(</span>
+                <span class="n">n_init_fast_stage_iter</span><span class="o">=</span><span class="n">init_buffer</span><span class="p">,</span>
+                <span class="n">n_final_fast_stage_iter</span><span class="o">=</span><span class="n">term_buffer</span><span class="p">,</span>
+                <span class="n">n_init_slow_window_iter</span><span class="o">=</span><span class="n">window</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stager</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">stagers</span><span class="o">.</span><span class="n">WarmUpStager</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">adapters</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">stager</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">dim_u</span> <span class="o">=</span> <span class="n">_get_stan_model_unconstrained_param_dim</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">init_states</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_chains</span><span class="p">,</span> <span class="n">dim_u</span><span class="p">))</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">traces</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">sample_chains</span><span class="p">(</span>
+        <span class="n">n_warm_up_iter</span><span class="o">=</span><span class="n">num_warmup</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="o">=</span><span class="n">num_samples</span><span class="p">,</span>
+        <span class="n">init_states</span><span class="o">=</span><span class="n">init_states</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="o">=</span><span class="n">adapters</span><span class="p">,</span>
+        <span class="n">stager</span><span class="o">=</span><span class="n">stager</span><span class="p">,</span>
+        <span class="n">trace_funcs</span><span class="o">=</span><span class="p">[</span><span class="n">trace_func</span><span class="p">],</span>
+        <span class="n">monitor_stats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">,</span> <span class="s2">&quot;n_step&quot;</span><span class="p">,</span> <span class="s2">&quot;diverging&quot;</span><span class="p">],</span>
+        <span class="n">trace_warmup</span><span class="o">=</span><span class="n">save_warmup</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_inferencedata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">convert_to_inference_data</span><span class="p">(</span><span class="n">traces</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">traces</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

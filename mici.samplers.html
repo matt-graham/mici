@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.samplers module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mici.solvers module" href="mici.solvers.html" />
+    <link rel="prev" title="mici.progressbars module" href="mici.progressbars.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.samplers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.DynamicMultinomialHMC"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.DynamicSliceHMC"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.HamiltonianMCMC"><code class="docutils literal notranslate"><span class="pre">HamiltonianMCMC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.RandomMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.StaticMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.samplers module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.samplers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.samplers">
+<span id="mici-samplers-module"></span><h1>mici.samplers module<a class="headerlink" href="#module-mici.samplers" title="Permalink to this heading"></a></h1>
+<p>Monte Carlo sampler classes for peforming inference.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicMultinomialHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicMultinomialHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMCMC" title="mici.samplers.HamiltonianMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMCMC</span></code></a></p>
+<p>Dynamic integration time H-MCMC with multinomial sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by integrating
+randomly forward and backward in time by a number of steps equal to the previous
+tree size [1, 2] until a termination criteria on the tree leaves is met. The next
+chain state is chosen from the candidate states using a progressive multinomial
+sampling scheme [2] based on the relative probability densities of the different
+candidate states, with the resampling biased towards states further from the current
+state.</p>
+<p>When used with the default settings of <cite>riemannian_no_u_turn_criterion</cite> termination
+criterion and extra subtree checks enabled, this sampler is equivalent to the
+default ‘NUTS’ MCMC algorithm (minus adaptation) used in
+[Stan](<a class="reference external" href="https://mc-stan.org/">https://mc-stan.org/</a>) as of version v2.23.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+<li><p>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+arXiv preprint arXiv:1701.02434.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.max_delta_h">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_delta_h" title="Permalink to this definition"></a></dt>
+<dd><p>Change in Hamiltonian over trajectory to trigger divergence.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.max_tree_depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_tree_depth" title="Permalink to this definition"></a></dt>
+<dd><p>Maximum depth to expand trajectory binary tree to.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of a
+momentum transition followed by an integration transition. The chains are split
+into multiple <em>stages</em> with zero or more adaptive warm up stages followed by the
+main non-adaptive sampling stage. During the adaptive stage(s) parameters of the
+integration transition such as the integrator step size are adaptively tuned
+based on the chain state and/or transition statistics.</p>
+<p>The default settings use a single (fast) <cite>DualAveragingStepSizeAdapter</cite> adapter
+instance which adapts the integrator step-size using a dual-averaging algorithm
+in a single adaptive stage.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+specifying the state position component or a <cite>mici.states.ChainState</cite>
+instance. If an array is passed or the <cite>mom</cite> attribute of the state is
+not set, a momentum component will be independently sampled from its
+conditional distribution. One chain will be run for each state in the
+iterable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. Default is to use a single function which recordes the
+position component of the state under the key <cite>pos</cite> and the Hamiltonian
+at the state under the key <cite>hamiltonian</cite>.</p>
+</dd>
+<dt>adapters: Sequence of <cite>mici.adapters.Adapter</cite> instances to use to</dt><dd><p>adaptatively set parameters of the integration transition such as the
+step size during the adaptive stages of the chains. Note that the
+adapter updates are applied in the order the adapters appear in the
+sequence and so if multiple adapters change the same parameter(s) the
+order will matter. If <cite>None</cite> or an empty sequence no adapters are used.
+Default is to use a single instance of
+<cite>mici.adapters.DualAveragingStepSizeAdapter</cite> with its default
+parameters.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: Sequence of string keys of (integration) transition</dt><dd><p>statistics to monitor mean of over samples computed so far during
+sampling by printing as postfix to progress bar. Default is to print
+only the mean <cite>accept_stat</cite> statistic.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May be used to resume</dt><dd><p>sampling a chain by passing as the initial states to a new
+<cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces: dictionary of chain trace arrays. Values in dictionary are list of</dt><dd><p>arrays of variables outputted by trace functions in <cite>trace_funcs</cite> with
+each array in the list corresponding to a single chain and the leading
+dimension of each array corresponding to the iteration (draw) index
+(within the main non-adaptive sampling stage if <cite>trace_warm_up</cite> is
+False). The key for each value is the corresponding key in the
+dictionary returned by the trace function which computed the traced
+value.</p>
+</dd>
+<dt>stats: dictionary of chain statistics. Values in dictionary are lists of</dt><dd><p>arrays of chain statistic values with each array in the list
+corresponding to a single chain and the leading dimension of each array
+corresponding to the iteration (draw) index (within the main
+non-adaptive sampling stage if <cite>trace_warm_up</cite> is False). The key for
+each value is a string description of the corresponding integration
+transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicSliceHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">euclidean_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicSliceHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicSliceHMC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMCMC" title="mici.samplers.HamiltonianMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMCMC</span></code></a></p>
+<p>Dynamic integration time H-MCMC with slice sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by integrating
+randomly forward and backward in time by a number of steps equal to the previous
+tree size [1] until a termination criteria on the tree leaves is met. The next chain
+state is chosen from the candidate states using a progressive slice sampling scheme
+[1] based on the relative probability densities of the different candidate states,
+with the sampling biased towards states further from the current state.</p>
+<p>When used with the default setting of <cite>euclidean_no_u_turn_criterion</cite> termination
+criterion and extra subtree checks disabled, this sampler is equivalent to
+‘Algorithm 3: Efficient No-U-Turn Sampler’ in [1], i.e. the ‘classic NUTS’
+algorithm.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
+adaptively setting path lengths in Hamiltonian Monte Carlo.
+Journal of Machine Learning Research, 15(1), pp.1593-1623.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.max_delta_h">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_delta_h" title="Permalink to this definition"></a></dt>
+<dd><p>Change in Hamiltonian over trajectory to trigger divergence.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.max_tree_depth">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_tree_depth" title="Permalink to this definition"></a></dt>
+<dd><p>Maximum depth to expand trajectory binary tree to.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of a
+momentum transition followed by an integration transition. The chains are split
+into multiple <em>stages</em> with zero or more adaptive warm up stages followed by the
+main non-adaptive sampling stage. During the adaptive stage(s) parameters of the
+integration transition such as the integrator step size are adaptively tuned
+based on the chain state and/or transition statistics.</p>
+<p>The default settings use a single (fast) <cite>DualAveragingStepSizeAdapter</cite> adapter
+instance which adapts the integrator step-size using a dual-averaging algorithm
+in a single adaptive stage.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+specifying the state position component or a <cite>mici.states.ChainState</cite>
+instance. If an array is passed or the <cite>mom</cite> attribute of the state is
+not set, a momentum component will be independently sampled from its
+conditional distribution. One chain will be run for each state in the
+iterable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. Default is to use a single function which recordes the
+position component of the state under the key <cite>pos</cite> and the Hamiltonian
+at the state under the key <cite>hamiltonian</cite>.</p>
+</dd>
+<dt>adapters: Sequence of <cite>mici.adapters.Adapter</cite> instances to use to</dt><dd><p>adaptatively set parameters of the integration transition such as the
+step size during the adaptive stages of the chains. Note that the
+adapter updates are applied in the order the adapters appear in the
+sequence and so if multiple adapters change the same parameter(s) the
+order will matter. If <cite>None</cite> or an empty sequence no adapters are used.
+Default is to use a single instance of
+<cite>mici.adapters.DualAveragingStepSizeAdapter</cite> with its default
+parameters.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: Sequence of string keys of (integration) transition</dt><dd><p>statistics to monitor mean of over samples computed so far during
+sampling by printing as postfix to progress bar. Default is to print
+only the mean <cite>accept_stat</cite> statistic.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May be used to resume</dt><dd><p>sampling a chain by passing as the initial states to a new
+<cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces: dictionary of chain trace arrays. Values in dictionary are list of</dt><dd><p>arrays of variables outputted by trace functions in <cite>trace_funcs</cite> with
+each array in the list corresponding to a single chain and the leading
+dimension of each array corresponding to the iteration (draw) index
+(within the main non-adaptive sampling stage if <cite>trace_warm_up</cite> is
+False). The key for each value is the corresponding key in the
+dictionary returned by the trace function which computed the traced
+value.</p>
+</dd>
+<dt>stats: dictionary of chain statistics. Values in dictionary are lists of</dt><dd><p>arrays of chain statistic values with each array in the list
+corresponding to a single chain and the leading dimension of each array
+corresponding to the iteration (draw) index (within the main
+non-adaptive sampling stage if <cite>trace_warm_up</cite> is False). The key for
+each value is a string description of the corresponding integration
+transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.HamiltonianMCMC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">HamiltonianMCMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMCMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMCMC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod" title="mici.samplers.MarkovChainMonteCarloMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod</span></code></a></p>
+<p>Wrapper class for Hamiltonian Markov chain Monte Carlo (H-MCMC) methods.</p>
+<p>Here H-MCMC is defined as a MCMC method which augments the original target variable
+(henceforth position variable) with a momentum variable with a user specified
+conditional distribution given the position variable. In each chain iteration two
+Markov transitions leaving the resulting joint distribution on position and momentum
+variables invariant are applied - the momentum variables are updated in a transition
+which leaves their conditional distribution invariant (momentum transition) and then
+a trajectory in the joint space is generated by numerically integrating a
+Hamiltonian dynamic with an appropriate symplectic integrator which is exactly
+reversible, volume preserving and approximately conserves the joint probability
+density of the target-momentum state pair; one state from the resulting trajectory
+is then selected as the next joint chain state using an appropriate sampling scheme
+such that the joint distribution is left exactly invariant (integration transition).</p>
+<p>There are various options available for both the momentum transition and integration
+transition, with by default the momentum transition set to be independent resampling
+of the momentum variables from their conditional distribution.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.</p></li>
+<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+Handbook of Markov Chain Monte Carlo, 2(11), p.2.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>integration_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.IntegrationTransition" title="mici.transitions.IntegrationTransition"><em>IntegrationTransition</em></a>) – </p></li>
+<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.HamiltonianMCMC.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMCMC.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMCMC.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of a
+momentum transition followed by an integration transition. The chains are split
+into multiple <em>stages</em> with zero or more adaptive warm up stages followed by the
+main non-adaptive sampling stage. During the adaptive stage(s) parameters of the
+integration transition such as the integrator step size are adaptively tuned
+based on the chain state and/or transition statistics.</p>
+<p>The default settings use a single (fast) <cite>DualAveragingStepSizeAdapter</cite> adapter
+instance which adapts the integrator step-size using a dual-averaging algorithm
+in a single adaptive stage.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+specifying the state position component or a <cite>mici.states.ChainState</cite>
+instance. If an array is passed or the <cite>mom</cite> attribute of the state is
+not set, a momentum component will be independently sampled from its
+conditional distribution. One chain will be run for each state in the
+iterable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. Default is to use a single function which recordes the
+position component of the state under the key <cite>pos</cite> and the Hamiltonian
+at the state under the key <cite>hamiltonian</cite>.</p>
+</dd>
+<dt>adapters: Sequence of <cite>mici.adapters.Adapter</cite> instances to use to</dt><dd><p>adaptatively set parameters of the integration transition such as the
+step size during the adaptive stages of the chains. Note that the
+adapter updates are applied in the order the adapters appear in the
+sequence and so if multiple adapters change the same parameter(s) the
+order will matter. If <cite>None</cite> or an empty sequence no adapters are used.
+Default is to use a single instance of
+<cite>mici.adapters.DualAveragingStepSizeAdapter</cite> with its default
+parameters.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: Sequence of string keys of (integration) transition</dt><dd><p>statistics to monitor mean of over samples computed so far during
+sampling by printing as postfix to progress bar. Default is to print
+only the mean <cite>accept_stat</cite> statistic.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May be used to resume</dt><dd><p>sampling a chain by passing as the initial states to a new
+<cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces: dictionary of chain trace arrays. Values in dictionary are list of</dt><dd><p>arrays of variables outputted by trace functions in <cite>trace_funcs</cite> with
+each array in the list corresponding to a single chain and the leading
+dimension of each array corresponding to the iteration (draw) index
+(within the main non-adaptive sampling stage if <cite>trace_warm_up</cite> is
+False). The key for each value is the corresponding key in the
+dictionary returned by the trace function which computed the traced
+value.</p>
+</dd>
+<dt>stats: dictionary of chain statistics. Values in dictionary are lists of</dt><dd><p>arrays of chain statistic values with each array in the list
+corresponding to a single chain and the leading dimension of each array
+corresponding to the iteration (draw) index (within the main
+non-adaptive sampling stage if <cite>trace_warm_up</cite> is False). The key for
+each value is a string description of the corresponding integration
+transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">MarkovChainMonteCarloMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Generic Markov chain Monte Carlo (MCMC) sampler.</p>
+<p>Generates a Markov chain from some initial state by iteratively applying
+a sequence of Markov transition operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>transitions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads_per_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_memmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memmap_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with optional adaptive warm up</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of
+one or more Markov transitions. The chains are split into multiple <em>stages</em> with
+zero or more adaptive warm up stages followed by the main non-adaptive sampling
+stage. During the adaptive stage(s) parameters of the transition(s) are
+adaptively tuned based on the chain state and/or transition statistics.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each entry can be either a <cite>ChainState</cite>
+object or a dictionary with entries specifying initial values for all
+state variables used by chain transition <cite>sample</cite> methods.</p></li>
+<li><p><strong>trace_funcs</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><em>TraceFunction</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>adapters</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>stager</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.stagers.html#mici.stagers.Stager" title="mici.stagers.Stager"><em>Stager</em></a><em>]</em>) – </p></li>
+<li><p><strong>n_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>max_threads_per_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>force_memmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>memmap_path</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – </p></li>
+<li><p><strong>monitor_stats</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>display_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>progress_bar_class</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.progressbars.html#mici.progressbars.ProgressBar" title="mici.progressbars.ProgressBar"><em>ProgressBar</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. If <cite>None</cite> or an empty sequence no variables are traced.</p>
+</dd>
+<dt>adapters: dictionary of sequences of <cite>mici.adapters.Adapter</cite> instances keyed</dt><dd><p>by strings corresponding to the key of the transition in the
+<cite>transitions</cite> dictionary to apply the adapters to, to use to
+adaptatively set parameters of the transitions during the adaptive
+stages of the chains. Note that the adapter updates are applied in the
+order the adapters appear in the sueqences and so if multiple adapters
+change the same parameter(s) the order will matter. If <cite>None</cite> or an
+empty sequence no adapters are used.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>trace_warm_up: Whether to record chain traces and statistics during warm-up</dt><dd><p>stage iterations (True) or only record traces and statistics in the
+iterations of the final non-adaptive stage (True, the default).</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: String-keyed dictionary of lists of strings, with dictionary</dt><dd><p>key the key of a Markov transition in the <cite>transitions</cite> dict passed to
+the the <cite>__init__</cite> method and the corresponding list, the keys of
+statistics returned by the transition (as defined by the
+<cite>statistics_type</cite> attribute of transition). The mean over samples
+computed so far of the statistics associated with any valid key-pairs
+will be monitored during sampling by printing as postfix to progress
+bar. If <cite>None</cite> no statistics are monitored.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite> if <cite>None</cite> and
+<cite>display_progress=True</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May</dt><dd><p>be used to resume sampling a chain by passing as the initial states to a
+new <cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces (dict[str, list[array]]): dictionary of chain trace arrays. Values in</dt><dd><p>dictionary are list of arrays of variables outputted by trace functions
+in <cite>trace_funcs</cite> with each array in the list corresponding to a single
+chain and the leading dimension of each array corresponding to the
+iteration (draw) index in the main non-adaptive sampling stage. The key
+for each value is the corresponding key in the dictionary returned by
+the trace function which computed the traced value.</p>
+</dd>
+<dt>chain_stats (dict[str, dict[str, list[array]]]): dictionary of chain</dt><dd><p>transition statistic dictionaries. Values in outer dictionary are
+dictionaries of statistics for each chain transition, keyed by the
+string key for the transition. The values in each inner transition
+dictionary are lists of arrays of chain statistic values with each array
+in the list corresponding to a single chain and the leading dimension of
+each array corresponding to the iteration (draw) index in the main
+non-adaptive sampling stage. The key for each value is a string
+description of the corresponding integration transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>])</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>trace_funcs</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><em>TraceFunction</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>adapters</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>stager</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.stagers.html#mici.stagers.Stager" title="mici.stagers.Stager"><em>Stager</em></a><em>]</em>) – </p></li>
+<li><p><strong>n_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>max_threads_per_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>force_memmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>memmap_path</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – </p></li>
+<li><p><strong>monitor_stats</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>display_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+<li><p><strong>progress_bar_class</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.progressbars.html#mici.progressbars.ProgressBar" title="mici.progressbars.ProgressBar"><em>ProgressBar</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">RandomMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#RandomMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMCMC" title="mici.samplers.HamiltonianMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMCMC</span></code></a></p>
+<p>Random integration time H-MCMC with Metropolis sampling of new state.</p>
+<p>In each transition a trajectory is generated by integrating the Hamiltonian dynamics
+from the current state in the current integration time direction for a random
+integer number of integrator steps sampled from the uniform distribution on an
+integer interval.</p>
+<p>The state at the end of the trajectory with the integration direction negated (this
+ensuring the proposed move is an involution) is used as the proposal in a Metropolis
+acceptance step. The integration direction is then deterministically negated again
+irrespective of the accept decision, with the effect being that on acceptance the
+integration direction will be equal to its initial value and on rejection the
+integration direction will be the negation of its initial value.</p>
+<p>The randomisation of the number of integration steps avoids the potential of the
+chain mixing poorly due to using an integration time close to the period of (near)
+periodic systems [1, 2].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+Handbook of Markov Chain Monte Carlo, 2(11), p.2.</p></li>
+<li><p>Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
+Physics Letters B, 226(3-4), pp.369-371.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.n_step_range">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.n_step_range" title="Permalink to this definition"></a></dt>
+<dd><p>Interval to uniformly draw number of integrator steps from.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of a
+momentum transition followed by an integration transition. The chains are split
+into multiple <em>stages</em> with zero or more adaptive warm up stages followed by the
+main non-adaptive sampling stage. During the adaptive stage(s) parameters of the
+integration transition such as the integrator step size are adaptively tuned
+based on the chain state and/or transition statistics.</p>
+<p>The default settings use a single (fast) <cite>DualAveragingStepSizeAdapter</cite> adapter
+instance which adapts the integrator step-size using a dual-averaging algorithm
+in a single adaptive stage.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+specifying the state position component or a <cite>mici.states.ChainState</cite>
+instance. If an array is passed or the <cite>mom</cite> attribute of the state is
+not set, a momentum component will be independently sampled from its
+conditional distribution. One chain will be run for each state in the
+iterable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. Default is to use a single function which recordes the
+position component of the state under the key <cite>pos</cite> and the Hamiltonian
+at the state under the key <cite>hamiltonian</cite>.</p>
+</dd>
+<dt>adapters: Sequence of <cite>mici.adapters.Adapter</cite> instances to use to</dt><dd><p>adaptatively set parameters of the integration transition such as the
+step size during the adaptive stages of the chains. Note that the
+adapter updates are applied in the order the adapters appear in the
+sequence and so if multiple adapters change the same parameter(s) the
+order will matter. If <cite>None</cite> or an empty sequence no adapters are used.
+Default is to use a single instance of
+<cite>mici.adapters.DualAveragingStepSizeAdapter</cite> with its default
+parameters.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: Sequence of string keys of (integration) transition</dt><dd><p>statistics to monitor mean of over samples computed so far during
+sampling by printing as postfix to progress bar. Default is to print
+only the mean <cite>accept_stat</cite> statistic.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May be used to resume</dt><dd><p>sampling a chain by passing as the initial states to a new
+<cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces: dictionary of chain trace arrays. Values in dictionary are list of</dt><dd><p>arrays of variables outputted by trace functions in <cite>trace_funcs</cite> with
+each array in the list corresponding to a single chain and the leading
+dimension of each array corresponding to the iteration (draw) index
+(within the main non-adaptive sampling stage if <cite>trace_warm_up</cite> is
+False). The key for each value is the corresponding key in the
+dictionary returned by the trace function which computed the traced
+value.</p>
+</dd>
+<dt>stats: dictionary of chain statistics. Values in dictionary are lists of</dt><dd><p>arrays of chain statistic values with each array in the list
+corresponding to a single chain and the leading dimension of each array
+corresponding to the iteration (draw) index (within the main
+non-adaptive sampling stage if <cite>trace_warm_up</cite> is False). The key for
+each value is a string description of the corresponding integration
+transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">StaticMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#StaticMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMCMC" title="mici.samplers.HamiltonianMCMC"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMCMC</span></code></a></p>
+<p>Static integration time H-MCMC implementation with Metropolis sampling.</p>
+<p>In each transition a trajectory is generated by integrating the Hamiltonian dynamics
+from the current state in the current integration time direction for a fixed integer
+number of integrator steps.</p>
+<p>The state at the end of the trajectory with the integration direction negated (this
+ensuring the proposed move is an involution) is used as the proposal in a Metropolis
+acceptance step. The integration direction is then deterministically negated again
+irrespective of the accept decision, with the effect being that on acceptance the
+integration direction will be equal to its initial value and on rejection the
+integration direction will be the negation of its initial value.</p>
+<p>This is original proposed Hybrid Monte Carlo (often now instead termed Hamiltonian
+Monte Carlo) algorithm [1, 2].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
+Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.</p></li>
+<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
+Handbook of Markov Chain Monte Carlo, 2(11), p.2.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+<li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.n_step">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.n_step" title="Permalink to this definition"></a></dt>
+<dd><p>Number of integrator steps per integrator transition.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.sample_chains">
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
+<p>One or more Markov chains are sampled, with each chain iteration consisting of a
+momentum transition followed by an integration transition. The chains are split
+into multiple <em>stages</em> with zero or more adaptive warm up stages followed by the
+main non-adaptive sampling stage. During the adaptive stage(s) parameters of the
+integration transition such as the integrator step size are adaptively tuned
+based on the chain state and/or transition statistics.</p>
+<p>The default settings use a single (fast) <cite>DualAveragingStepSizeAdapter</cite> adapter
+instance which adapts the integrator step-size using a dual-averaging algorithm
+in a single adaptive stage.</p>
+<p>The chains (including both adaptive and non-adaptive stages) may be run in
+parallel across multiple independent processes or sequentially. In all cases all
+chains use independent random draws.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of adaptive warm up iterations per chain. Depending
+on the <cite>mici.stagers.Stager</cite> instance specified by the <cite>stager</cite> argument
+the warm up iterations may be split between one or more adaptive stages.
+If zero, only a single non-adaptive stage is used.</p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
+(non-adaptive) sampling stage.</p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+specifying the state position component or a <cite>mici.states.ChainState</cite>
+instance. If an array is passed or the <cite>mom</cite> attribute of the state is
+not set, a momentum component will be independently sampled from its
+conditional distribution. One chain will be run for each state in the
+iterable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>[NDArray]]]</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>trace_funcs: Sequence of functions which compute the variables to be</dt><dd><p>recorded at each chain iteration (during only the main non-adaptive
+sampling stage if <cite>trace_warm_up</cite> is False), with each trace function
+passed the current state and returning a dictionary of scalar or array
+values corresponding to the variable(s) to be stored. The keys in the
+returned dictionaries are used to index the trace arrays in the returned
+traces dictionary. If a key appears in multiple dictionaries only the
+the value corresponding to the last trace function to return that key
+will be stored. Default is to use a single function which recordes the
+position component of the state under the key <cite>pos</cite> and the Hamiltonian
+at the state under the key <cite>hamiltonian</cite>.</p>
+</dd>
+<dt>adapters: Sequence of <cite>mici.adapters.Adapter</cite> instances to use to</dt><dd><p>adaptatively set parameters of the integration transition such as the
+step size during the adaptive stages of the chains. Note that the
+adapter updates are applied in the order the adapters appear in the
+sequence and so if multiple adapters change the same parameter(s) the
+order will matter. If <cite>None</cite> or an empty sequence no adapters are used.
+Default is to use a single instance of
+<cite>mici.adapters.DualAveragingStepSizeAdapter</cite> with its default
+parameters.</p>
+</dd>
+<dt>stager: Chain iteration stager object which controls the split of the chain</dt><dd><p>iterations into the adaptive warm up and non-adaptive main stages. If
+set to <cite>None</cite> (the default) and all adapters specified by the <cite>adapters</cite>
+argument are of the fast type (i.e. their <cite>is_fast</cite> attribute is <cite>True</cite>)
+then a <cite>mici.stagers.WarmUpStager</cite> instance will be used corresponding
+to using a single adaptive warm up stage will all adapters active. If
+set to <cite>None</cite> and the adapters specified by the adapters argument are
+not all of the fast type, then a <cite>mici.stagers.WindowedWarmUpStager</cite>
+(with its default arguments) will be used, corresponding to using
+multiple adaptive warm up stages with only the fast-type adapters active
+in some - see docstring of <cite>mici.stagers.WarmUpStager</cite> for details.</p>
+</dd>
+<dt>n_process: Number of parallel processes to run chains over. If <cite>n_process=1</cite></dt><dd><p>then chains will be run sequentially otherwise a <cite>multiprocessing.Pool</cite>
+object will be used to dynamically assign the chains across multiple
+processes. If set to <cite>None</cite> then the number of processes will be set to
+the output of <cite>os.cpu_count()</cite>. Default is <cite>n_process=1</cite>.</p>
+</dd>
+<dt>max_threads_per_process: If <cite>threadpoolctl</cite> is available this argument may</dt><dd><p>be used to limit the maximum number of threads that can be used in
+thread pools used in libraries supported by <cite>threadpoolctl</cite>, which
+include BLAS and OpenMP implementations. This argument will only have an
+effect if <cite>n_process &gt; 1</cite> such that chains are being run on multiple
+processes and only if <cite>threadpoolctl</cite> is installed in the current Python
+environment. If set to <cite>None</cite> (the default) no limits are set.</p>
+</dd>
+<dt>force_memmap: Whether to force arrays used to store chain data to be</dt><dd><p>memory-mapped to files on disk to avoid excessive system memory usage
+for long chains and/or large chain states. The chain data is written to
+<cite>.npy</cite> files in the directory specified by <cite>memmap_path</cite> (or a temporary
+directory if <cite>memmap_path</cite> is <cite>None</cite>). Chain data is always memory
+mapped when sampling chains in parallel on multiple processes.</p>
+</dd>
+<dt>memmap_path: Path to directory to write memory-mapped chain data to. If</dt><dd><p><cite>None</cite> (the default) and memory-mapping is enabled then a temporary
+directory will be created and the chain data written to files there,
+with the created files being deleted in this case once the last
+reference to them is closed.</p>
+</dd>
+<dt>monitor_stats: Sequence of string keys of (integration) transition</dt><dd><p>statistics to monitor mean of over samples computed so far during
+sampling by printing as postfix to progress bar. Default is to print
+only the mean <cite>accept_stat</cite> statistic.</p>
+</dd>
+<dt>display_progress: Whether to display a progress bar to track the completed</dt><dd><p>chain sampling iterations. Default value is <cite>True</cite>, i.e. to display
+progress bar.</p>
+</dd>
+<dt>progress_bar_class: Class or factory function for progress bar to use to</dt><dd><p>show chain progress if enabled (<cite>display_progress=True</cite>). Defaults to
+<cite>mici.progressbars.SequenceProgressBar</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>States of chains after final iteration. May be used to resume</dt><dd><p>sampling a chain by passing as the initial states to a new
+<cite>sample_chains</cite> call.</p>
+</dd>
+<dt>traces: dictionary of chain trace arrays. Values in dictionary are list of</dt><dd><p>arrays of variables outputted by trace functions in <cite>trace_funcs</cite> with
+each array in the list corresponding to a single chain and the leading
+dimension of each array corresponding to the iteration (draw) index
+(within the main non-adaptive sampling stage if <cite>trace_warm_up</cite> is
+False). The key for each value is the corresponding key in the
+dictionary returned by the trace function which computed the traced
+value.</p>
+</dd>
+<dt>stats: dictionary of chain statistics. Values in dictionary are lists of</dt><dd><p>arrays of chain statistic values with each array in the list
+corresponding to a single chain and the leading dimension of each array
+corresponding to the iteration (draw) index (within the main
+non-adaptive sampling stage if <cite>trace_warm_up</cite> is False). The key for
+each value is a string description of the corresponding integration
+transition statistic.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>final_states</p>
+</dd>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_warm_up_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.progressbars.html" class="btn btn-neutral float-left" title="mici.progressbars module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mici.solvers.html" class="btn btn-neutral float-right" title="mici.solvers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

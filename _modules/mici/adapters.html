@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.adapters &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.adapters</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.adapters</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Methods for adaptively setting algorithmic parameters of transitions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">IntegratorError</span><span class="p">,</span> <span class="n">AdaptationError</span>
+<span class="kn">from</span> <span class="nn">mici.matrices</span> <span class="kn">import</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">,</span> <span class="n">DensePositiveDefiniteMatrix</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+    <span class="kn">from</span> <span class="nn">mici.integrators</span> <span class="kn">import</span> <span class="n">Integrator</span>
+    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
+    <span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="n">Transition</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">AdaptationStatisticFunction</span><span class="p">,</span>
+        <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">ReducerFunction</span><span class="p">,</span>
+        <span class="n">TransitionStatistics</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Adapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.Adapter">[docs]</a><span class="k">class</span> <span class="nc">Adapter</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract adapter for implementing schemes to adapt transition parameters.</span>
+
+<span class="sd">    Adaptation schemes are assumed to be based on updating a collection of adaptation</span>
+<span class="sd">    variables (collectively termed the adapter state here) after each chain transition</span>
+<span class="sd">    based on the sampled chain state and/or statistics of the transition such as an</span>
+<span class="sd">    acceptance probability statistic. After completing a chain of one or more adaptive</span>
+<span class="sd">    transitions, the final adapter state may be used to perform a final update to the</span>
+<span class="sd">    transition parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Adapter.initialize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.Adapter.initialize">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize adapter state prior to starting adaptive transitions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            chain_state: Initial chain state adaptive transition will be started from.</span>
+<span class="sd">                May be used to calculate initial adapter state but should not be mutated</span>
+<span class="sd">                by method.</span>
+<span class="sd">            transition: Markov transition being adapted. Attributes of the transition or</span>
+<span class="sd">                child objects may be updated in-place by the method.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Initial adapter state.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Adapter.update"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.Adapter.update">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update adapter state after sampling from transition being adapted.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            adapt_state: Current adapter state. Entries will be updated in-place by the</span>
+<span class="sd">                method.</span>
+<span class="sd">            chain_state: Current chain state following sampling from transition being</span>
+<span class="sd">                adapted. May be used to calculate adapter state updates but should not</span>
+<span class="sd">                be mutated by method.</span>
+<span class="sd">            trans_stats: Dictionary of statistics associated with transition being</span>
+<span class="sd">                adapted. May be used to calculate adapter state updates but should not</span>
+<span class="sd">                be mutated by method.</span>
+<span class="sd">            transition: Markov transition being adapted. Attributes of the transition or</span>
+<span class="sd">                child objects may be updated in-place by the method.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Adapter.finalize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.Adapter.finalize">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update transition parameters based on final adapter state or states.</span>
+
+<span class="sd">        Optionally, if multiple adapter states are available, e.g. from a set of</span>
+<span class="sd">        independent adaptive chains, then these adaptation information from all the</span>
+<span class="sd">        chains may be combined to set the transition parameter(s).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            adapt_states: Final adapter state or a list of per chain adapter states.</span>
+<span class="sd">                Arrays / buffers associated with the adapter state entries may be</span>
+<span class="sd">                recycled to reduce memory usage - if so  the corresponding entries will</span>
+<span class="sd">                be removed from the adapter state dictionary / dictionaries.</span>
+<span class="sd">            chain_states: Final state of chain (or states of chains) in current</span>
+<span class="sd">                sampling stage. May be updated in-place if transition parameters altered</span>
+<span class="sd">                by adapter require updating any state components.</span>
+<span class="sd">            transition: Markov transition being dapted. Attributes of the transition or</span>
+<span class="sd">                child objects will be updated in-place by the method.</span>
+<span class="sd">            rngs: Random number generator for the chain or a list of per-chain random</span>
+<span class="sd">                number generators. Used to resample any components of states needing to</span>
+<span class="sd">                be updated due to adaptation if required.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_fast</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the adapter is &#39;fast&#39; or &#39;slow&#39;.</span>
+
+<span class="sd">        An adapter which requires only local information to adapt the transition</span>
+<span class="sd">        parameters should be classified as fast while one which requires more global</span>
+<span class="sd">        information and so more chain iterations should be classified as slow i.e.</span>
+<span class="sd">        `is_fast == False`.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="arithmetic_mean_log_step_size_reducer"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.arithmetic_mean_log_step_size_reducer">[docs]</a><span class="k">def</span> <span class="nf">arithmetic_mean_log_step_size_reducer</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute arithmetic mean of step sizes from their logs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        log_step_sizes: Logarithms of per-chain estimated step sizes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">        Arithmetic mean of estimated step sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">log_step_sizes</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="geometric_mean_log_step_size_reducer"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.geometric_mean_log_step_size_reducer">[docs]</a><span class="k">def</span> <span class="nf">geometric_mean_log_step_size_reducer</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute geometric mean of step sizes from their logs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        log_step_sizes: Logarithms of per-chain estimated step sizes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">        Geometric mean of estimated step sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">log_step_sizes</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="min_log_step_size_reducer"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.min_log_step_size_reducer">[docs]</a><span class="k">def</span> <span class="nf">min_log_step_size_reducer</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute minimum of step sizes from their logs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        log_step_sizes: Logarithms of per-chain estimated step sizes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">        Minimum of estimated step sizes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="default_adapt_stat_func"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.default_adapt_stat_func">[docs]</a><span class="k">def</span> <span class="nf">default_adapt_stat_func</span><span class="p">(</span><span class="n">stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to extract default acceptance statistic used for step-size adaptation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        stats: Dictionary of transition statistics.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Acceptance statistic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="DualAveragingStepSizeAdapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.DualAveragingStepSizeAdapter">[docs]</a><span class="k">class</span> <span class="nc">DualAveragingStepSizeAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dual averaging integrator step size adapter.</span>
+
+<span class="sd">    Implementation of the dual algorithm step size adaptation algorithm described in</span>
+<span class="sd">    [1], a modified version of the stochastic optimisation scheme of [2]. By default the</span>
+<span class="sd">    adaptation is performed to control the `accept_prob` statistic of an integration</span>
+<span class="sd">    transition to be close to a target value but the statistic adapted on can be altered</span>
+<span class="sd">    by changing the `adapt_stat_func`.</span>
+
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">      2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex problems.</span>
+<span class="sd">         Mathematical programming 120(1), pp.221-259.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_stat_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">adapt_stat_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AdaptationStatisticFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_step_size_reg_target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_step_size_reg_coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">iter_decay_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span>
+        <span class="n">iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_init_step_size_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">log_step_size_reducer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReducerFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            adapt_stat_target: Target value for the transition statistic</span>
+<span class="sd">                being controlled during adaptation.</span>
+<span class="sd">            adapt_stat_func: Function which given a dictionary of transition statistics</span>
+<span class="sd">                outputs the value of the statistic to control during adaptation. By</span>
+<span class="sd">                default this is set to a function which simply selects the &#39;accept_stat&#39;</span>
+<span class="sd">                value in the statistics dictionary.</span>
+<span class="sd">            log_step_size_reg_target: Value to regularize the controlled output</span>
+<span class="sd">                (logarithm of the integrator step size) towards. If `None` set to</span>
+<span class="sd">                `log(10 * init_step_size)` where `init_step_size` is the initial</span>
+<span class="sd">                &#39;reasonable&#39; step size found by a coarse search as recommended in</span>
+<span class="sd">                Hoffman and Gelman (2014). This has the effect of giving the dual</span>
+<span class="sd">                averaging algorithm a tendency towards testing step sizes larger than</span>
+<span class="sd">                the initial value, with typically integrating with a larger step size</span>
+<span class="sd">                having a lower computational cost.</span>
+<span class="sd">            log_step_size_reg_coefficient: Coefficient controlling amount of</span>
+<span class="sd">                regularisation of controlled output (logarithm of the integrator step</span>
+<span class="sd">                size) towards `log_step_size_reg_target`. Defaults to 0.05 as</span>
+<span class="sd">                recommended in Hoffman and Gelman (2014).</span>
+<span class="sd">            iter_decay_coeff: Coefficient controlling exponent of decay in schedule</span>
+<span class="sd">                weighting stochastic updates to smoothed log step size estimate. Should</span>
+<span class="sd">                be in the interval (0.5, 1] to ensure asymptotic convergence of</span>
+<span class="sd">                adaptation. A value of 1 gives equal weight to the whole history of</span>
+<span class="sd">                updates while setting to a smaller value increasingly highly weights</span>
+<span class="sd">                recent updates, giving a tendency to &#39;forget&#39; early updates.</span>
+<span class="sd">                Defaults to 0.75 as recommended in Hoffman and Gelman (2014).</span>
+<span class="sd">            iter_offset: Offset used for the iteration based weighting of the adaptation</span>
+<span class="sd">                statistic error estimate. Should be set to a non-negative value. A value</span>
+<span class="sd">                &gt; 0 has the effect of stabilising early iterations. Defaults to the</span>
+<span class="sd">                value of 10 as recommended in Hoffman and Gelman (2014).</span>
+<span class="sd">            max_init_step_size_iters: Maximum number of iterations to use in initial</span>
+<span class="sd">                search for a reasonable step size with an `AdaptationError` exception</span>
+<span class="sd">                raised if a suitable step size is not found within this many iterations.</span>
+<span class="sd">            log_step_size_reducer: Reduction to apply to final per-chain step sizes</span>
+<span class="sd">                estimates to produce overall integrator step size for main chain stages.</span>
+<span class="sd">                The specified function should accept a sequence of logarithms of</span>
+<span class="sd">                estimated step sizes and output a non-negative step size to use. If</span>
+<span class="sd">                `None`, the default, a function which computes the arithmetic mean of</span>
+<span class="sd">                the step sizes is used.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_target</span> <span class="o">=</span> <span class="n">adapt_stat_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_func</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">default_adapt_stat_func</span> <span class="k">if</span> <span class="n">adapt_stat_func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">adapt_stat_func</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reg_target</span> <span class="o">=</span> <span class="n">log_step_size_reg_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reg_coefficient</span> <span class="o">=</span> <span class="n">log_step_size_reg_coefficient</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_decay_coeff</span> <span class="o">=</span> <span class="n">iter_decay_coeff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iter_offset</span> <span class="o">=</span> <span class="n">iter_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_init_step_size_iters</span> <span class="o">=</span> <span class="n">max_init_step_size_iters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reducer</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">arithmetic_mean_log_step_size_reducer</span>
+            <span class="k">if</span> <span class="n">log_step_size_reducer</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">log_step_size_reducer</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="DualAveragingStepSizeAdapter.initialize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.DualAveragingStepSizeAdapter.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
+        <span class="n">integrator</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">integrator</span>
+        <span class="n">system</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">system</span>
+        <span class="n">adapt_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;adapt_stat_error&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">init_step_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_and_set_init_step_size</span><span class="p">(</span>
+            <span class="n">chain_state</span><span class="p">,</span> <span class="n">system</span><span class="p">,</span> <span class="n">integrator</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reg_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;log_step_size_reg_target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">init_step_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;log_step_size_reg_target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reg_target</span>
+        <span class="k">return</span> <span class="n">adapt_state</span></div>
+
+    <span class="k">def</span> <span class="nf">_find_and_set_init_step_size</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find initial step size by coarse search using single step statistics.</span>
+
+<span class="sd">        Adaptation of Algorithm 4 in Hoffman and Gelman (2014).</span>
+
+<span class="sd">        Compared to the Hoffman and Gelman algorithm, this version makes two changes:</span>
+
+<span class="sd">          1. The absolute value of the change in Hamiltonian over a step being larger or</span>
+<span class="sd">             smaller than log(2) is used to determine whether the step size is too big</span>
+<span class="sd">             or small as opposed to the value of the equivalent Metropolis accept</span>
+<span class="sd">             probability being larger or smaller than 0.5. Although a negative change in</span>
+<span class="sd">             the Hamiltonian over a step of magnitude more than log(2) will lead to an</span>
+<span class="sd">             accept probability of 1 for the forward move, the corresponding reversed</span>
+<span class="sd">             move will have an accept probability less than 0.5, and so a change in the</span>
+<span class="sd">             Hamiltonian over a step of magnitude more than log(2) irrespective of the</span>
+<span class="sd">             sign of the change is indicative of the minimum acceptance probability over</span>
+<span class="sd">             both forward and reversed steps being less than 0.5.</span>
+<span class="sd">          2. To allow for integrators for which an integrator step may fail due to e.g.</span>
+<span class="sd">             a convergence error in an iterative solver, the step size is also</span>
+<span class="sd">             considered to be too big if any of the step sizes tried in the search</span>
+<span class="sd">             result in a failed integrator step, with in this case the step size always</span>
+<span class="sd">             being decreased on subsequent steps irrespective of the initial Hamiltonian</span>
+<span class="sd">             error, until a integrator step successfully completes and the absolute</span>
+<span class="sd">             value of the change in Hamiltonian is below the threshold of log(2)</span>
+<span class="sd">             (corresponding to a minimum acceptance probability over forward and</span>
+<span class="sd">             reversed steps of 0.5).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">init_state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">h_init</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">init_state</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">h_init</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span><span class="s2">&quot;Hamiltonian evaluating to NaN at initial state.&quot;</span><span class="p">)</span>
+        <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">delta_h_threshold</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_init_step_size_iters</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="n">integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">init_state</span><span class="p">)</span>
+                <span class="n">delta_h</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h_init</span> <span class="o">-</span> <span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">delta_h</span><span class="p">):</span>
+                    <span class="n">step_size_too_big</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">delta_h</span><span class="p">)</span> <span class="ow">or</span> <span class="n">delta_h</span> <span class="o">&gt;</span> <span class="n">delta_h_threshold</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">step_size_too_big</span> <span class="ow">and</span> <span class="n">delta_h</span> <span class="o">&lt;=</span> <span class="n">delta_h_threshold</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="n">step_size_too_big</span> <span class="ow">and</span> <span class="n">delta_h</span> <span class="o">&gt;</span> <span class="n">delta_h_threshold</span>
+                <span class="p">):</span>
+                    <span class="k">return</span> <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span>
+                <span class="k">elif</span> <span class="n">step_size_too_big</span><span class="p">:</span>
+                    <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">/=</span> <span class="mi">2</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">*=</span> <span class="mi">2</span>
+            <span class="k">except</span> <span class="n">IntegratorError</span><span class="p">:</span>
+                <span class="n">step_size_too_big</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not find reasonable initial step size in &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_init_step_size_iters</span><span class="si">}</span><span class="s2"> iterations (final step size &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span><span class="si">}</span><span class="s2">). A very large final step size may &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;indicate that the target distribution is improper such that the &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;negative log density is flat in one or more directions while a &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;very small final step size may indicate that the density function&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; is insufficiently smooth at the point initialized at.&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="DualAveragingStepSizeAdapter.update"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.DualAveragingStepSizeAdapter.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">error_weight</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_offset</span> <span class="o">+</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">])</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;adapt_stat_error&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">error_weight</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;adapt_stat_error&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">error_weight</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_target</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_func</span><span class="p">(</span><span class="n">trans_stats</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">smoothing_weight</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">])</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_decay_coeff</span>
+        <span class="n">log_step_size</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;log_step_size_reg_target&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span>
+            <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;adapt_stat_error&quot;</span><span class="p">]</span>
+            <span class="o">*</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">**</span> <span class="mf">0.5</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reg_coefficient</span>
+        <span class="p">)</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">smoothing_weight</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">smoothing_weight</span> <span class="o">*</span> <span class="n">log_step_size</span>
+        <span class="n">transition</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">log_step_size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DualAveragingStepSizeAdapter.finalize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.DualAveragingStepSizeAdapter.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">transition</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span>
+                <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">transition</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_step_size_reducer</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">adapt_state</span> <span class="ow">in</span> <span class="n">adapt_states</span><span class="p">]</span>
+            <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OnlineVarianceMetricAdapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter">[docs]</a><span class="k">class</span> <span class="nc">OnlineVarianceMetricAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagonal metric adapter using online variance estimates.</span>
+
+<span class="sd">    Uses Welford&#39;s algorithm [1] to stably compute an online estimate of the sample</span>
+<span class="sd">    variances of the chain state position components during sampling. If online</span>
+<span class="sd">    estimates are available from multiple independent chains, the final variance</span>
+<span class="sd">    estimate is calculated from the per-chain statistics using the parallel / batched</span>
+<span class="sd">    incremental variance algorithm described by Chan et al. [2]. The variance estimates</span>
+<span class="sd">    are optionally regularized towards a common scalar value, with increasing weight for</span>
+<span class="sd">    small number of samples, to decrease the effect of noisy estimates for small sample</span>
+<span class="sd">    sizes, following the approach in Stan [3]. The metric matrix representation is set</span>
+<span class="sd">    to a diagonal matrix with diagonal elements corresponding to the reciprocal of the</span>
+<span class="sd">    (regularized) variance estimates.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of</span>
+<span class="sd">         squares and products. Technometrics, 4(3), pp. 419–420.</span>
+<span class="sd">      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a</span>
+<span class="sd">         pairwise algorithm for computing sample variances. Technical Report</span>
+<span class="sd">         STAN-CS-79-773, Department of Computer Science, Stanford University.</span>
+<span class="sd">      3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,</span>
+<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic</span>
+<span class="sd">         programming language. Journal of Statistical Software, 76(1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            reg_iter_offset: Iteration offset used for calculating iteration dependent</span>
+<span class="sd">                weighting between regularisation target and current covariance estimate.</span>
+<span class="sd">                Higher values cause stronger regularisation during initial iterations. A</span>
+<span class="sd">                value of zero corresponds to no regularisation; this should only be used</span>
+<span class="sd">                if the sample covariance is guaranteed to be positive definite.</span>
+<span class="sd">            reg_scale: Positive scalar defining value variance estimates are regularized</span>
+<span class="sd">                towards.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">=</span> <span class="n">reg_iter_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_scale</span> <span class="o">=</span> <span class="n">reg_scale</span>
+
+<div class="viewcode-block" id="OnlineVarianceMetricAdapter.initialize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="p">),</span>
+            <span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="OnlineVarianceMetricAdapter.update"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Use Welford (1962) incremental algorithm to update statistics to</span>
+        <span class="c1"># calculate online variance estimate</span>
+        <span class="c1"># https://en.wikipedia.org/wiki/</span>
+        <span class="c1">#   Algorithms_for_calculating_variance#Welford&#39;s_online_algorithm</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">pos_minus_mean</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pos_minus_mean</span> <span class="o">/</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pos_minus_mean</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_regularize_var_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update variance estimates by regularizing towards common scalar.</span>
+
+<span class="sd">        Performed in place to prevent further array allocations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">var_est</span> <span class="o">*=</span> <span class="n">n_iter</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">+</span> <span class="n">n_iter</span><span class="p">)</span>
+            <span class="n">var_est</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_scale</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">+</span> <span class="n">n_iter</span><span class="p">)</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="OnlineVarianceMetricAdapter.finalize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+            <span class="n">var_est</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">)</span>
+            <span class="n">chain_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">chain_states</span><span class="p">]</span>
+            <span class="n">rngs</span> <span class="o">=</span> <span class="p">[</span><span class="n">rngs</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use Chan et al. (1979) parallel variance estimation algorithm</span>
+            <span class="c1"># to combine per-chain statistics</span>
+            <span class="c1"># https://en.wikipedia.org/wiki/</span>
+            <span class="c1">#    Algorithms_for_calculating_variance#Parallel_algorithm</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">adapt_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">)</span>
+                    <span class="n">var_est</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n_iter_prev</span> <span class="o">=</span> <span class="n">n_iter</span>
+                    <span class="n">n_iter</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+                    <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">mean_est</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">*=</span> <span class="n">n_iter_prev</span>
+                    <span class="n">mean_est</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">/=</span> <span class="n">n_iter</span>
+                    <span class="n">var_est</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">]</span>
+                    <span class="n">var_est</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="n">mean_diff</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_iter</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span>
+                <span class="s2">&quot;At least two chain samples required to compute a variance &quot;</span>
+                <span class="s2">&quot;estimates.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">var_est</span> <span class="o">/=</span> <span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regularize_var_est</span><span class="p">(</span><span class="n">var_est</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span>
+        <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="n">var_est</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span>
+        <span class="c1"># Resample momentum to account for altered distribution due to new metric</span>
+        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">):</span>
+            <span class="n">chain_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OnlineCovarianceMetricAdapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter">[docs]</a><span class="k">class</span> <span class="nc">OnlineCovarianceMetricAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dense metric adapter using online covariance estimates.</span>
+
+<span class="sd">    Uses Welford&#39;s algorithm [1] to stably compute an online estimate of the sample</span>
+<span class="sd">    covariance matrix of the chain state position components during sampling. If online</span>
+<span class="sd">    estimates are available from multiple independent chains, the final covariance</span>
+<span class="sd">    matrix estimate is calculated from the per-chain statistics using a covariance</span>
+<span class="sd">    variant due to Schubert and Gertz [2] of the parallel / batched incremental variance</span>
+<span class="sd">    algorithm described by Chan et al. [3]. The covariance matrix estimates are</span>
+<span class="sd">    optionally regularized towards a scaled identity matrix, with increasing weight for</span>
+<span class="sd">    small number of samples, to decrease the effect of noisy estimates for small sample</span>
+<span class="sd">    sizes, following the approach in Stan [4]. The metric matrix representation is set</span>
+<span class="sd">    to a dense positive definite matrix corresponding to the inverse of the</span>
+<span class="sd">    (regularized) covariance matrix estimate.</span>
+
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of</span>
+<span class="sd">         squares and products. Technometrics, 4(3), pp. 419–420.</span>
+<span class="sd">      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel computation of</span>
+<span class="sd">         (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.</span>
+<span class="sd">      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a</span>
+<span class="sd">         pairwise algorithm for computing sample variances. Technical Report</span>
+<span class="sd">         STAN-CS-79-773, Department of Computer Science, Stanford University.</span>
+<span class="sd">      4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,</span>
+<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic</span>
+<span class="sd">         programming language. Journal of Statistical Software, 76(1).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            reg_iter_offset: Iteration offset used for calculating iteration</span>
+<span class="sd">                dependent weighting between regularisation target and current covariance</span>
+<span class="sd">                estimate. Higher values cause stronger regularisation during initial</span>
+<span class="sd">                iterations.</span>
+<span class="sd">            reg_scale: Positive scalar defining value variance estimates are</span>
+<span class="sd">                regularized towards.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">=</span> <span class="n">reg_iter_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reg_scale</span> <span class="o">=</span> <span class="n">reg_scale</span>
+
+<div class="viewcode-block" id="OnlineCovarianceMetricAdapter.initialize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
+        <span class="n">dim_pos</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">dim_pos</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">dim_pos</span><span class="p">,</span> <span class="n">dim_pos</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="OnlineCovarianceMetricAdapter.update"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Use Welford (1962) incremental algorithm to update statistics to</span>
+        <span class="c1"># calculate online covariance estimate</span>
+        <span class="c1"># https://en.wikipedia.org/wiki/</span>
+        <span class="c1">#  Algorithms_for_calculating_variance#Online</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">pos_minus_mean</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pos_minus_mean</span> <span class="o">/</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+        <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="n">pos_minus_mean</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="p">(</span><span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">])[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_regularize_covar_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update covariance estimate by regularising towards identity.</span>
+
+<span class="sd">        Performed in place to prevent further array allocations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">covar_est</span> <span class="o">*=</span> <span class="n">n_iter</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">+</span> <span class="n">n_iter</span><span class="p">)</span>
+        <span class="n">covar_est_diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ii-&gt;i&quot;</span><span class="p">,</span> <span class="n">covar_est</span><span class="p">)</span>
+        <span class="n">covar_est_diagonal</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reg_scale</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reg_iter_offset</span> <span class="o">+</span> <span class="n">n_iter</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="OnlineCovarianceMetricAdapter.finalize"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+            <span class="n">covar_est</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">)</span>
+            <span class="n">chain_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">chain_states</span><span class="p">]</span>
+            <span class="n">rngs</span> <span class="o">=</span> <span class="p">[</span><span class="n">rngs</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use Schubert and Gertz (2018) parallel covariance estimation</span>
+            <span class="c1"># algorithm to combine per-chain statistics</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">adapt_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">)</span>
+                    <span class="n">covar_est</span> <span class="o">=</span> <span class="n">adapt_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n_iter_prev</span> <span class="o">=</span> <span class="n">n_iter</span>
+                    <span class="n">n_iter</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
+                    <span class="n">mean_diff</span> <span class="o">=</span> <span class="n">mean_est</span> <span class="o">-</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">*=</span> <span class="n">n_iter_prev</span>
+                    <span class="n">mean_est</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span>
+                    <span class="n">mean_est</span> <span class="o">/=</span> <span class="n">n_iter</span>
+                    <span class="n">covar_est</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">]</span>
+                    <span class="n">covar_est</span> <span class="o">+=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">mean_diff</span><span class="p">,</span> <span class="n">mean_diff</span><span class="p">)</span>
+                        <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span>
+                        <span class="o">/</span> <span class="n">n_iter</span>
+                    <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span>
+                <span class="s2">&quot;At least two chain samples required to compute a variance &quot;</span>
+                <span class="s2">&quot;estimates.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">covar_est</span> <span class="o">/=</span> <span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regularize_covar_est</span><span class="p">(</span><span class="n">covar_est</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span>
+        <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span><span class="n">covar_est</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span>
+        <span class="c1"># Resample momentum to account for altered distribution due to new metric</span>
+        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">):</span>
+            <span class="n">chain_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

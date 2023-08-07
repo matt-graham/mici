@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.transitions &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.transitions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.transitions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Markov transition kernels.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">LogRepFloat</span>
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Error</span><span class="p">,</span>
+    <span class="n">IntegratorError</span><span class="p">,</span>
+    <span class="n">NonReversibleStepError</span><span class="p">,</span>
+    <span class="n">ConvergenceError</span><span class="p">,</span>
+    <span class="n">HamiltonianDivergenceError</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
+    <span class="kn">from</span> <span class="nn">mici.integrators</span> <span class="kn">import</span> <span class="n">Integrator</span>
+    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">TerminationCriterion</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_process_integrator_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">Error</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating trajectory due to error:</span><span class="se">\n</span><span class="si">{</span><span class="n">exception</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Only set stats fields to True if exception is of matching type.</span>
+    <span class="c1"># Corresponding fields should be set to False by default for transitions</span>
+    <span class="c1"># which potentially raise these errors.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">HamiltonianDivergenceError</span><span class="p">):</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;diverging&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">NonReversibleStepError</span><span class="p">):</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;non_reversible_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">ConvergenceError</span><span class="p">):</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;convergence_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="Transition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.Transition">[docs]</a><span class="k">class</span> <span class="nc">Transition</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for Markov transition kernels.</span>
+
+<span class="sd">    Defines expected interface for transitions by sampler classes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@abstractproperty</span>
+    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A set of names of state variables accessed by this transition.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dictionary describing the statistics computed during transition.</span>
+
+<span class="sd">        Either `None` if no statistics are returned by `sample` method or a dictionary</span>
+<span class="sd">        with string keys and tuple values, with the keys defining the keys of the</span>
+<span class="sd">        statistics returned in the `trans_stats` return value of the `sample` method and</span>
+<span class="sd">        the first entry of the value tuples an appropriate NumPy `dtype` for the array</span>
+<span class="sd">        used to store the corresponding statistic values and second entry the default</span>
+<span class="sd">        value to initialize this array with.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Transition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.Transition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new chain state from the Markov transition kernel.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current chain state to condition transition kernel on.</span>
+<span class="sd">            rng: Numpy random number generator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of updated state object and any statistics computed during the</span>
+<span class="sd">            transition or `None` if no statistics.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="MomentumTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MomentumTransition">[docs]</a><span class="k">class</span> <span class="nc">MomentumTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for momentum transitions.</span>
+
+<span class="sd">    Markov transition  kernel which leaves the conditional distribution on the momentum</span>
+<span class="sd">    under the canonical distribution invariant, updating only the momentum component of</span>
+<span class="sd">    the chain state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mom&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
+<span class="sd">                leave invariant.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
+
+<div class="viewcode-block" id="MomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MomentumTransition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new momentum component to state.</span>
+
+<span class="sd">        Assigns a new momentum component to state by sampling from a Markov transition</span>
+<span class="sd">        kernel which leaves the conditional distribution on the momentum under the</span>
+<span class="sd">        canonical distribution defined by the Hamiltonian system invariant.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current chain state to condition transition kernel on.</span>
+<span class="sd">            rng: Numpy random number generator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of updated state object and any statistics computed during the</span>
+<span class="sd">            transition or `None` if no statistics.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="IndependentMomentumTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IndependentMomentumTransition">[docs]</a><span class="k">class</span> <span class="nc">IndependentMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Independent momentum transition.</span>
+
+<span class="sd">    Independently resamples the momentum component of the state from its conditional</span>
+<span class="sd">    distribution given the remaining state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IndependentMomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IndependentMomentumTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="CorrelatedMomentumTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.CorrelatedMomentumTransition">[docs]</a><span class="k">class</span> <span class="nc">CorrelatedMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Correlated (partial) momentum transition.</span>
+
+<span class="sd">    Rather than independently sampling a new momentum, instead a pertubative</span>
+<span class="sd">    Crank-Nicolson type update which produces a new momentum value with a specified</span>
+<span class="sd">    correlation with the previous value is used. It is assumed that the conditional</span>
+<span class="sd">    distribution of the momenta is zero-mean Gaussian such that the Crank-Nicolson</span>
+<span class="sd">    update leaves the momenta conditional distribution exactly invariant. This approach</span>
+<span class="sd">    is sometimes known as partial momentum refreshing or updating, and was originally</span>
+<span class="sd">    proposed in [1].</span>
+
+<span class="sd">    If the resampling coefficient is equal to zero then the momentum is not randomized</span>
+<span class="sd">    at all and succesive applications of the coupled integration transitions will</span>
+<span class="sd">    continue along the same simulated Hamiltonian trajectory. When an integration</span>
+<span class="sd">    transition is accepted this means the subsequent simulated trajectory will continue</span>
+<span class="sd">    evolving in the same direction and so not randomising the momentum will reduce</span>
+<span class="sd">    random-walk behaviour. However on a rejection the integration direction is reversed</span>
+<span class="sd">    and so without randomisation the trajectory will exactly backtrack along the</span>
+<span class="sd">    previous tractory states. A resampling coefficient of one corresponds to the</span>
+<span class="sd">    standard case of independent resampling of the momenta while intermediate values</span>
+<span class="sd">    between zero and one correspond to varying levels of correlation between the pre and</span>
+<span class="sd">    post update momentums.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. Phys. Lett.</span>
+<span class="sd">         B, 268(CERN-TH-6172-91), pp.247-252.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">mom_resample_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
+<span class="sd">                leave invariant.</span>
+<span class="sd">            mom_resample_coeff: Scalar value in [0, 1] defining the momentum resampling</span>
+<span class="sd">                coefficient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">mom_resample_coeff</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mom_resample_coeff</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="s2">&quot;mom_resample_coeff should have a value in the interval [0, 1].&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">=</span> <span class="n">mom_resample_coeff</span>
+
+<div class="viewcode-block" id="CorrelatedMomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.CorrelatedMomentumTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mom_ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">*</span> <span class="n">mom_ind</span>
+        <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="kc">None</span></div></div>
+
+
+<div class="viewcode-block" id="IntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">IntegrationTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for integration transtions.</span>
+
+<span class="sd">    Markov transition kernel which leaves canonical distribution invariant and jointly</span>
+<span class="sd">    updates the position and momentum components of the chain state by integrating the</span>
+<span class="sd">    Hamiltonian dynamics of the system to propose new values for the state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;mom&quot;</span><span class="p">,</span> <span class="s2">&quot;dir&quot;</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system to be simulated.</span>
+<span class="sd">            integrator: Symplectic integrator appropriate to the specified Hamiltonian</span>
+<span class="sd">                system.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span> <span class="o">=</span> <span class="n">integrator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;n_step&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;accept_stat&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>
+            <span class="s2">&quot;non_reversible_step&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">&quot;convergence_error&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="IntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IntegrationTransition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a position-momentum pair using integration based proposal(s).</span>
+
+<span class="sd">        Samples new position and momentum values from a Markov transition kernel which</span>
+<span class="sd">        leaves the canonical distribution on the state space corresponding to the</span>
+<span class="sd">        Hamiltonian system invariant.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: Current chain state.</span>
+<span class="sd">            rng: Numpy random number generator.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of updated state object and any statistics computed during the</span>
+<span class="sd">            transition or `None` if no statistics.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="MetropolisIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">MetropolisIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base for HMC methods using a Metropolis accept step to sample new state.</span>
+
+<span class="sd">    In each transition a trajectory is generated by integrating the Hamiltonian dynamics</span>
+<span class="sd">    from the current state in the current integration time direction for a number of</span>
+<span class="sd">    integrator steps.</span>
+
+<span class="sd">    The state at the end of the trajectory with the integration direction negated (this</span>
+<span class="sd">    ensuring the proposed move is an involution) is used as the proposal in a Metropolis</span>
+<span class="sd">    acceptance step. The integration direction is then deterministically negated again</span>
+<span class="sd">    irrespective of the accept decision, with the effect being that on acceptance the</span>
+<span class="sd">    integration direction will be equal to its initial value and on rejection the</span>
+<span class="sd">    integration direction will be the negation of its initial value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sample_n_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
+        <span class="n">h_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">state_p</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="n">integration_error</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;convergence_error&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;non_reversible_step&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_step</span><span class="p">):</span>
+                <span class="n">state_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">state_p</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">IntegratorError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">integration_error</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="n">_process_integrator_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_step</span>
+            <span class="c1"># Reverse integration direction of proposal to form an involution</span>
+            <span class="n">state_p</span><span class="o">.</span><span class="n">dir</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">state_p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
+            <span class="n">h_final</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state_p</span><span class="p">)</span>
+            <span class="n">accept_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">h_init</span> <span class="o">-</span> <span class="n">h_final</span><span class="p">))</span>
+            <span class="n">accept_prob</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">accept_prob</span><span class="p">)</span> <span class="k">else</span> <span class="n">accept_prob</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">accept_prob</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">accept_prob</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">accept_prob</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">integration_error</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">integration_error</span> <span class="ow">and</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">accept_prob</span><span class="p">:</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">state_p</span>
+        <span class="c1"># Reverse integration direction of new state</span>
+        <span class="c1"># As extended target distribution is symmetric in direction indicator</span>
+        <span class="c1"># this always leaves the distribution invariant</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span></div>
+
+
+<div class="viewcode-block" id="MetropolisStaticIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisStaticIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">MetropolisStaticIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Static integration transition with Metropolis sampling of new state.</span>
+
+<span class="sd">    In this variant the trajectory is generated by integrating the state through time a</span>
+<span class="sd">    fixed number of integrator steps. This is original proposed Hybrid Monte Carlo</span>
+<span class="sd">    (often now instead termed Hamiltonian Monte Carlo) algorithm [1,2].</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte</span>
+<span class="sd">         Carlo. Physics letters B, 195(2), pp.216-222.</span>
+<span class="sd">      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain</span>
+<span class="sd">         Monte Carlo, 2(11), p.2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system to be simulated.</span>
+<span class="sd">            integrator: Symplectic integrator appropriate to the specified Hamiltonian</span>
+<span class="sd">                system.</span>
+<span class="sd">            n_step: Number of integrator steps to simulate in each transition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">n_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Number of integrator steps must be positive&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_step</span> <span class="o">=</span> <span class="n">n_step</span>
+
+<div class="viewcode-block" id="MetropolisStaticIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisStaticIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MetropolisRandomIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisRandomIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">MetropolisRandomIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Random integration transition with Metropolis sampling of new state.</span>
+
+<span class="sd">    In each transition a trajectory is generated by integrating the state in the current</span>
+<span class="sd">    integration direction in time a random integer number of integrator steps sampled</span>
+<span class="sd">    from the uniform distribution on an integer interval. The randomisation of the</span>
+<span class="sd">    number of integration steps avoids the potential of the chain mixing poorly due to</span>
+<span class="sd">    using an integration time close to the period of (near) periodic systems [1,2].</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain</span>
+<span class="sd">         Monte Carlo, 2(11), p.2.</span>
+<span class="sd">      2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. Physics Letters</span>
+<span class="sd">         B, 226(3-4), pp.369-371.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system to be simulated.</span>
+<span class="sd">            integrator: Symplectic integrator appropriate to the specified Hamiltonian</span>
+<span class="sd">                system.</span>
+<span class="sd">            n_step_range: Tuple `(lower, upper)` with two positive integer entries</span>
+<span class="sd">                `lower` and `upper` (with `upper &gt; lower`) specifying respectively the</span>
+<span class="sd">                lower and upper bounds (inclusive) of integer interval to uniformly draw</span>
+<span class="sd">                random number integrator steps to simulate in each transition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
+        <span class="n">n_step_lower</span><span class="p">,</span> <span class="n">n_step_upper</span> <span class="o">=</span> <span class="n">n_step_range</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span>
+        <span class="p">),</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_step_range</span> <span class="o">=</span> <span class="n">n_step_range</span>
+
+<div class="viewcode-block" id="MetropolisRandomIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisRandomIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+        <span class="n">n_step</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_step_range</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="euclidean_no_u_turn_criterion"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.euclidean_no_u_turn_criterion">[docs]</a><span class="k">def</span> <span class="nf">euclidean_no_u_turn_criterion</span><span class="p">(</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;No-U-turn termination criterion for Euclidean manifolds [1].</span>
+
+<span class="sd">    Terminates trajectories when the velocities at the terminal states of the trajectory</span>
+<span class="sd">    both have negative dot products with the vector from the position of the first</span>
+<span class="sd">    terminal state to the position of the second terminal state, corresponding to</span>
+<span class="sd">    further evolution of the trajectory reducing the distance between the terminal state</span>
+<span class="sd">    positions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        system: Hamiltonian system being integrated.</span>
+<span class="sd">        state_1: First terminal state of trajectory.</span>
+<span class="sd">        state_2: Second terminal state of trajectory.</span>
+<span class="sd">        sum_mom: Sum of momentums of trajectory states.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Whether termination criterion is satisfied.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state_1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">state_2</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">state_1</span><span class="o">.</span><span class="n">pos</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state_2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">state_2</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">state_1</span><span class="o">.</span><span class="n">pos</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="riemannian_no_u_turn_criterion"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.riemannian_no_u_turn_criterion">[docs]</a><span class="k">def</span> <span class="nf">riemannian_no_u_turn_criterion</span><span class="p">(</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generalized no-U-turn termination criterion on Riemannian manifolds [2].</span>
+
+<span class="sd">    Terminates trajectories when the velocities at the terminal states of the trajectory</span>
+<span class="sd">    both have negative dot products with the sum of the the momentums across the</span>
+<span class="sd">    trajectory from the first to second terminal state of the first terminal state to</span>
+<span class="sd">    the position of the second terminal state. This generalizes the no-U-turn criterion</span>
+<span class="sd">    of [1] to Riemannian manifolds where due to the intrinsic curvature of the space the</span>
+<span class="sd">    geodesic between two points is general no longer a straight line.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        system: Hamiltonian system being integrated.</span>
+<span class="sd">        state_1: First terminal state of trajectory.</span>
+<span class="sd">        state_2: Second terminal state of trajectory.</span>
+<span class="sd">        sum_mom: Sum of momentums of trajectory states.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Whether termination criterion is satisfied.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">      2. Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian</span>
+<span class="sd">         manifolds. arXiv preprint arXiv:1304.1920.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state_1</span><span class="p">)</span> <span class="o">*</span> <span class="n">sum_mom</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
+        <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state_2</span><span class="p">)</span> <span class="o">*</span> <span class="n">sum_mom</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_SubTree</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sub-tree of binary trajectory tree for dynamic integration transitions.&quot;&quot;&quot;</span>
+
+    <span class="n">negative</span><span class="p">:</span> <span class="n">ChainState</span>
+    <span class="n">positive</span><span class="p">:</span> <span class="n">ChainState</span>
+    <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span>
+
+
+<div class="viewcode-block" id="DynamicIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.DynamicIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">DynamicIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for dynamic integration transitions.</span>
+
+<span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
+<span class="sd">    randomly forward and backward in time by a number of steps equal to the previous</span>
+<span class="sd">    tree size until a termination criteria on the tree&#39;s subtrees is met. The next chain</span>
+<span class="sd">    state is chosen from the candidate states using a progressive sampling scheme based</span>
+<span class="sd">    on relative weights of the different candidate states, with the sampling biased</span>
+<span class="sd">    towards states further from the current state [1, 2].</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.</span>
+<span class="sd">         arXiv preprint arXiv:1701.02434.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+        <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
+        <span class="n">max_tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span>
+        <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
+        <span class="n">do_extra_subtree_checks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            system: Hamiltonian system to be simulated.</span>
+<span class="sd">            integrator: Symplectic integrator appropriate to the specified Hamiltonian</span>
+<span class="sd">                system.</span>
+<span class="sd">            max_tree_depth: Maximum depth to expand trajectory binary tree to. The</span>
+<span class="sd">                maximum number of integrator steps corresponds to `2**max_tree_depth`.</span>
+<span class="sd">            max_delta_h: Maximum change to tolerate in the Hamiltonian function over a</span>
+<span class="sd">                trajectory before signalling a divergence.</span>
+<span class="sd">            termination_criterion: Function computing criterion to use to determine when</span>
+<span class="sd">                to terminate trajectory tree expansion. The function should take a</span>
+<span class="sd">                Hamiltonian system as its first argument, a pair of states corresponding</span>
+<span class="sd">                to the two edge nodes in the trajectory (sub-)tree being checked and an</span>
+<span class="sd">                array containing the sum of the momentums over the trajectory</span>
+<span class="sd">                (sub)-tree. Defaults to `riemannian_no_u_turn_criterion`.</span>
+<span class="sd">            do_extra_subtree_checks: Whether to perform additional termination criterion</span>
+<span class="sd">                checks on overlapping subtrees of the current tree to improve robustness</span>
+<span class="sd">                in systems with dynamics which are well approximated by independent</span>
+<span class="sd">                system of simple harmonic oscillators. In such systems (corresponding to</span>
+<span class="sd">                e.g. a standard normal target distribution and identity metric matrix</span>
+<span class="sd">                representation) at certain step sizes a &#39;resonant&#39; behaviour is seen by</span>
+<span class="sd">                which the termination criterion fails to detect that the trajectory has</span>
+<span class="sd">                expanded past a half-period i.e. has &#39;U-turned&#39; resulting in</span>
+<span class="sd">                trajectories continuing to expand, potentially up until the</span>
+<span class="sd">                `max_tree_depth` limit is hit. For more details see the Stan Discourse</span>
+<span class="sd">                discussion at kutt.it/yAkIES If `do_extra_subtree_checks` is set to</span>
+<span class="sd">                `True` additional termination criterion checks are performed on</span>
+<span class="sd">                overlapping subtrees which help to reduce this resonant behaviour at the</span>
+<span class="sd">                cost of more conservative trajectory termination in some correlated</span>
+<span class="sd">                models and some overhead from additional checks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">max_tree_depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">max_tree_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">max_delta_h</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span> <span class="o">=</span> <span class="n">termination_criterion</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">do_extra_subtree_checks</span> <span class="o">=</span> <span class="n">do_extra_subtree_checks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;av_metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;reject_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;tree_depth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;diverging&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_termination_criterion</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># If performing extra subtree checks evaluate lazily i.e. only evaluate</span>
+        <span class="c1"># if initial whole tree check fails. Extra subtree checks also only</span>
+        <span class="c1"># performed for trees of depth 2 and above (i.e. containing at least</span>
+        <span class="c1"># 4 states) as for trees of depth 1 they are redundant.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">sum_mom</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">tree</span><span class="o">.</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_extra_subtree_checks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+                <span class="n">neg_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
+                <span class="n">pos_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
+                <span class="n">neg_subtree</span><span class="o">.</span><span class="n">sum_mom</span> <span class="o">+</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">negative</span><span class="o">.</span><span class="n">mom</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+                <span class="n">neg_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
+                <span class="n">pos_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
+                <span class="n">pos_subtree</span><span class="o">.</span><span class="n">sum_mom</span> <span class="o">+</span> <span class="n">neg_subtree</span><span class="o">.</span><span class="n">positive</span><span class="o">.</span><span class="n">mom</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_new_leave</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_SubTree</span><span class="p">(</span>
+            <span class="n">negative</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+            <span class="n">positive</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+            <span class="n">sum_mom</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">mom</span><span class="p">),</span>
+            <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weight_function</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">),</span>
+            <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_merge_subtrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">==</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">depth</span>
+        <span class="p">),</span> <span class="s2">&quot;Cannot merge subtrees of different depths&quot;</span>
+        <span class="k">return</span> <span class="n">_SubTree</span><span class="p">(</span>
+            <span class="n">negative</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
+            <span class="n">positive</span><span class="o">=</span><span class="n">pos_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">weight</span> <span class="o">+</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>
+            <span class="n">sum_mom</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">sum_mom</span> <span class="o">+</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">sum_mom</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;h_init&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)}</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_SubTree</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># recursion base case</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># integrate forward/backward one step depending on state.dir</span>
+                <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">else</span> <span class="n">h</span>
+                <span class="c1"># create new tree leave</span>
+                <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_leave</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">)</span>
+                <span class="n">proposal</span> <span class="o">=</span> <span class="n">state</span>
+                <span class="c1"># accumulate stats</span>
+                <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;sum_metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="c1"># default to assuming valid and then check for divergence</span>
+                <span class="n">terminate</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_check_divergence</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">IntegratorError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">_process_integrator_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
+                <span class="n">terminate</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">proposal</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">proposal</span>
+        <span class="c1"># build &#39;inner&#39; subtree, i.e. starting from current state</span>
+        <span class="n">terminate</span><span class="p">,</span> <span class="n">inner_tree</span><span class="p">,</span> <span class="n">inner_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
+            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="c1"># build &#39;outer&#39; subtree, i.e. starting from terminus of inner subtree</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">inner_tree</span><span class="o">.</span><span class="n">positive</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">inner_tree</span><span class="o">.</span><span class="n">negative</span>
+        <span class="n">terminate</span><span class="p">,</span> <span class="n">outer_tree</span><span class="p">,</span> <span class="n">outer_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
+            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="c1"># merge two subtrees accounting for integration direction</span>
+        <span class="n">neg_subtree</span> <span class="o">=</span> <span class="n">inner_tree</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">outer_tree</span>
+        <span class="n">pos_subtree</span> <span class="o">=</span> <span class="n">outer_tree</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">inner_tree</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_subtrees</span><span class="p">(</span><span class="n">neg_subtree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">)</span>
+        <span class="c1"># sample new proposal from two subtree proposals according to weights</span>
+        <span class="n">accept_outer_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_ratio</span><span class="p">(</span><span class="n">outer_tree</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">proposal</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">outer_proposal</span> <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">accept_outer_prob</span> <span class="k">else</span> <span class="n">inner_proposal</span>
+        <span class="p">)</span>
+        <span class="c1"># check termination criterion on tree and subtrees</span>
+        <span class="n">terminate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_termination_criterion</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">proposal</span>
+
+<div class="viewcode-block" id="DynamicIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.DynamicIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;n_step&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;sum_metrop_accept_prob&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;reject_prob&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s2">&quot;diverging&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;convergence_error&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;non_reversible_step&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">aux_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_aux_vars</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_leave</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">],</span> <span class="n">aux_vars</span><span class="p">)</span>
+        <span class="n">next_state</span> <span class="o">=</span> <span class="n">state</span>
+        <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tree_depth</span><span class="p">):</span>
+            <span class="c1"># uniformly sample direction to expand tree in</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">positive</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">tree</span><span class="o">.</span><span class="n">negative</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">=</span> <span class="n">direction</span>
+            <span class="c1"># expand tree by building new subtree of current depth</span>
+            <span class="n">terminate</span><span class="p">,</span> <span class="n">new_tree</span><span class="p">,</span> <span class="n">new_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
+                <span class="n">depth</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># progressively sample new state by choosing between</span>
+            <span class="c1"># current new state and proposal from new subtree, biasing</span>
+            <span class="c1"># towards the new subtree proposal</span>
+            <span class="n">accept_proposal_prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_ratio</span><span class="p">(</span><span class="n">new_tree</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">accept_proposal_prob</span><span class="p">:</span>
+                <span class="n">next_state</span> <span class="o">=</span> <span class="n">new_proposal</span>
+            <span class="c1"># each proposal acceptance independent therefore overall probability</span>
+            <span class="c1"># of &#39;rejecting&#39; - i.e. not accepting all proposals is product of</span>
+            <span class="c1"># probabilties of not accepting each proposal</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;reject_prob&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">accept_proposal_prob</span>
+            <span class="c1"># merge new subtree into current tree accounting for direction</span>
+            <span class="n">neg_subtree</span> <span class="o">=</span> <span class="n">tree</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">new_tree</span>
+            <span class="n">pos_subtree</span> <span class="o">=</span> <span class="n">new_tree</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">tree</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_subtrees</span><span class="p">(</span><span class="n">neg_subtree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">)</span>
+            <span class="c1"># check termination criterion on new tree and subtrees</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_termination_criterion</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">):</span>
+                <span class="k">break</span>
+        <span class="n">sum_accept_prob</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_metrop_accept_prob&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;av_metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum_accept_prob</span> <span class="o">/</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;av_metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;diverging&quot;</span><span class="p">,</span> <span class="s2">&quot;convergence_error&quot;</span><span class="p">,</span> <span class="s2">&quot;non_reversible_step&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;av_metrop_accept_prob&quot;</span><span class="p">]</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;tree_depth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">depth</span>
+        <span class="k">return</span> <span class="n">next_state</span><span class="p">,</span> <span class="n">stats</span></div></div>
+
+
+<div class="viewcode-block" id="MultinomialDynamicIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MultinomialDynamicIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">MultinomialDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration transition with multinomial sampling of new state.</span>
+
+<span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
+<span class="sd">    randomly forward and backward in time by a number of steps equal to the previous</span>
+<span class="sd">    tree size [1,2] until a termination criteria on the tree leaves is met. The next</span>
+<span class="sd">    chain state is chosen from the candidate states using a progressive multinomial</span>
+<span class="sd">    sampling scheme [2] based on the relative probability densities of the different</span>
+<span class="sd">    candidate states, with the sampling biased towards states further from the current</span>
+<span class="sd">    state.</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">      2. Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.</span>
+<span class="sd">         arXiv preprint arXiv:1701.02434.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=-</span><span class="n">h</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">h</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SliceDynamicIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.SliceDynamicIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">SliceDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration transition with slice sampling of new state.</span>
+
+<span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
+<span class="sd">    randomly forward and backward in time by a number of steps equal to the previous</span>
+<span class="sd">    tree size until a termination criteria on the tree leaves is met. The next chain</span>
+<span class="sd">    state is chosen from the candidate states using a progressive slice sampling scheme</span>
+<span class="sd">    based on the relative probability densities of the different candidate states, with</span>
+<span class="sd">    the slice sampler biased towards states further from the current state.</span>
+
+<span class="sd">    When used with the `euclidean_no_u_turn_criterion` this transition is equivalent to</span>
+<span class="sd">    the transitions in &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in [1].</span>
+
+<span class="sd">    References:</span>
+
+<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
+<span class="sd">         15(1), pp.1593-1623.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+        <span class="n">aux_vars</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_init_aux_vars</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">aux_vars</span>
+
+    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">denominator</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">h</span> <span class="o">+</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

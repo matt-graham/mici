@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.interop module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mici.matrices module" href="mici.matrices.html" />
+    <link rel="prev" title="mici.integrators module" href="mici.integrators.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.interop module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.convert_to_inference_data"><code class="docutils literal notranslate"><span class="pre">convert_to_inference_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.sample_pymc3_model"><code class="docutils literal notranslate"><span class="pre">sample_pymc3_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.sample_stan_model"><code class="docutils literal notranslate"><span class="pre">sample_stan_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.samplers.html">mici.samplers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.interop module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.interop.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.interop">
+<span id="mici-interop-module"></span><h1>mici.interop module<a class="headerlink" href="#module-mici.interop" title="Permalink to this heading"></a></h1>
+<p>Utilities for interfacing with external probabilistic programming libraries.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.convert_to_inference_data">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">convert_to_inference_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'energy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lp_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lp'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#convert_to_inference_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.convert_to_inference_data" title="Permalink to this definition"></a></dt>
+<dd><p>Convert Mici <cite>sample_chains</cite> output to ArviZ <cite>InferenceData</cite> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>traces</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>ArrayLike</em><em>]</em><em>]</em>) – Traces output from Mici <cite>sample_chains</cite> call. A dictionary of variables
+traced over sampled chains with the dictionary keys the variable names and
+the values a list of arrays, one array per sampled chain, with the first
+array dimension corresponding to the draw index and any remaining
+dimensions, the variable dimensions.</p></li>
+<li><p><strong>stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>ArrayLike</em><em>]</em><em>]</em>) – Statistics output from Mici <cite>sample_chains</cite> call. A dictionary of chain
+statistics traced over sampled chains with the dictionary keys the
+statistics names and the values a list of arrays, one array per sampled
+chain, with the array dimension corresponding to the draw index.</p></li>
+<li><p><strong>energy_key</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the
+value of the Hamiltonian energy for the accepted proposal (up to an additive
+constant). If present the corresponding values will be added to the
+<cite>sample_stats</cite> group of the returned <cite>InferenceData</cite> object.</p></li>
+<li><p><strong>lp_key</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the value
+of the joint log posterior density for the model (up to an additive
+constant). If present the corresponding values will be added to the
+<cite>sample_stats</cite> group of the returned <cite>InferenceData</cite> object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ArviZ inference data object with traced chain data stored in the <cite>posterior</cite>
+group and additional chain statistics in the <cite>sample_stats</cite> group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>arviz.InferenceData</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.sample_pymc3_model">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">sample_pymc3_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inferencedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_accept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_treedepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#sample_pymc3_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.sample_pymc3_model" title="Permalink to this definition"></a></dt>
+<dd><p>Generate approximate samples from posterior defined by a PyMC3 model.</p>
+<p>Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</p>
+<p>This function replicates the interface of the <cite>pymc3.sample</cite> function to allow using
+as a (partial) drop-in replacement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>draws</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The number of samples to draw.</p></li>
+<li><p><strong>tune</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations to tune, defaults to 1000. Samplers adjust the step
+sizes, scalings or  similar during tuning. Tuning samples will be drawn in
+addition to the number specified in the <cite>draws</cite> argument, and will be
+discarded.</p></li>
+<li><p><strong>chains</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The number of chains to sample. Running independent chains is important
+for some convergence statistics and can also reveal multiple modes in the
+posterior. If <cite>None</cite>, then set to either <cite>cores</cite> or 2, whichever is larger.</p></li>
+<li><p><strong>cores</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – The number of chains to run in parallel. If <cite>None</cite>, set to the number of
+CPUs in the system, but at most 4.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Seed for Numpy random number generator used for generating random
+variables while sampling chains. If <cite>None</cite> then generator will be seeded
+with entropy from operating system.</p></li>
+<li><p><strong>progressbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether or not to display a progress bar.</p></li>
+<li><p><strong>init</strong> (<em>Literal</em><em>[</em><em>'auto'</em><em>, </em><em>'adapt_diag'</em><em>, </em><em>'jitter+adapt_diag'</em><em>, </em><em>'adapt_full'</em><em>]</em>) – <p>Initialization method to use. One of:</p>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>adapt_diag: Start with a identity mass matrix and then adapt a</dt><dd><p>diagonal based on the variance of the tuning samples. All chains use the
+test value (usually the prior mean) as starting point.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>jitter+adapt_diag: Same as <code class="docutils literal notranslate"><span class="pre">adapt_diag</span></code>, but add uniform jitter in</dt><dd><p>[-1, 1] to the starting point in each chain. Also chosen if
+<cite>init==”auto”</cite>.</p>
+</dd>
+</dl>
+</li>
+<li><p>adapt_full: Adapt a dense mass matrix using the sample covariances</p></li>
+</ol>
+</p></li>
+<li><p><strong>jitter_max_retries</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of repeated attempts (per chain) at creating
+an initial matrix with uniform jitter that yields a finite probability.
+This applies to <cite>jitter+adapt_diag</cite> and <cite>jitter+adapt_full</cite> init methods.</p></li>
+<li><p><strong>trace</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>]</em>) – A list of variables to track. If <cite>None</cite>, <cite>model.unobserved_RVs</cite> is used.</p></li>
+<li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to return the traces as an <cite>arviz.InferenceData</cite>
+(<cite>True</cite>) object or a dict (<cite>False</cite>).</p></li>
+<li><p><strong>model</strong> (<em>Optional</em><em>[</em><em>pymc3.Model</em><em>]</em>) – PyMC3 model defining posterior distribution to sample from. May be <cite>None</cite>
+if function is called from within model context manager.</p></li>
+<li><p><strong>target_accept</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Target value for the acceptance statistic being controlled during
+adaptive warm-up.</p></li>
+<li><p><strong>max_treedepth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to in integrator
+transition. The maximum number of integrator steps corresponds to
+<cite>2**max_treedepth</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary or ArviZ <cite>InferenceData</cite> object containing the sampled chain
+output. Dictionary output (when <cite>return_inferencedata=False</cite>) has string keys
+corresponding to the name of each traced variable in the model, with the values
+being the corresponding values of the variables traced across the chains as
+NumPy arrays, with the first dimension the chain index  (of size equal to
+<cite>chains</cite>), the second dimension the draw index (of size equal to <cite>draws</cite>) and
+any remaining dimensions corresponding to the dimensions of the traced variable.
+If <cite>return_inferencedata=True</cite> an ArviZ <cite>InferenceData</cite> object is instead
+returned with traced chain data stored in the <cite>posterior</cite> group and additional
+chain statistics in the <cite>sample_stats</cite> group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[arviz.InferenceData, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.sample_stan_model">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">sample_stan_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_warmup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_warmup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'diag_e'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_engaged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kappa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">term_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inferencedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#sample_stan_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.sample_stan_model" title="Permalink to this definition"></a></dt>
+<dd><p>Generate approximate samples from posterior defined by a Stan model.</p>
+<p>Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</p>
+<p>This function follows a similar argument naming scheme to the PyStan
+<cite>stan.Model.sample</cite> method (which itself follows CmdStan) to allow using as a
+(partial) drop-in replacement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_code</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Stan program code describing a Stan model.</p></li>
+<li><p><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>) – A Python dictionary or mapping providing the data for the model. Variable
+names are the keys and the values are their associated values.</p></li>
+<li><p><strong>num_samples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – A non-negative integer specifying the number of non-warm-up
+iterations per chain.</p></li>
+<li><p><strong>num_warmup</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – A non-negative integer specifying the number of warm-up iterations
+per chain.</p></li>
+<li><p><strong>num_chains</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – A positive integer specifying the number of Markov chains.</p></li>
+<li><p><strong>save_warmup</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to save warm-up chain data (<cite>True</cite>) or not (<cite>False</cite>).</p></li>
+<li><p><strong>metric</strong> (<em>Literal</em><em>[</em><em>'unit_e'</em><em>, </em><em>'diag_e'</em><em>, </em><em>'dense_e'</em><em>]</em>) – String specifying metric type. One of “unit_e”, “diag_e” or “dense_e”,
+indicating respectively to used a fixed identity matrix metric
+representation, to use a diagonal metric matrix representation adapted based
+on estimates of the marginal posterior variances, to use a dense metric
+matrix representation based on estimates of the posterior covariance matrix.</p></li>
+<li><p><strong>stepsize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Initial integrator step size.</p></li>
+<li><p><strong>adapt_engaged</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether adaptation is engaged (<cite>True</cite>) or not (<cite>False</cite>).</p></li>
+<li><p><strong>delta</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Adaptation target acceptance statistic.</p></li>
+<li><p><strong>gamma</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Adaptation regularization scale.</p></li>
+<li><p><strong>kappa</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Adaptation relaxation exponent.</p></li>
+<li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Adaptation iteration offset.</p></li>
+<li><p><strong>init_buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Width of initial fast adaptation interval.</p></li>
+<li><p><strong>term_buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Width of final fast adaptation interval.</p></li>
+<li><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Initial width of slow adaptation interval.</p></li>
+<li><p><strong>max_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth of binary trajectory tree.</p></li>
+<li><p><strong>seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Seed for Numpy random number generator used for generating random
+variables while sampling chains. If <cite>None</cite> then generator will be seeded
+with entropy from operating system.</p></li>
+<li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to return the traces as an <cite>arviz.InferenceData</cite>
+(<cite>True</cite>) object or a dict (<cite>False</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary or ArviZ <cite>InferenceData</cite> object containing the sampled chain
+output. Dictionary output (when <cite>return_inferencedata=False</cite>) has string keys
+corresponding to the name of each traced variable in the model, with the values
+being the corresponding values of the variables traced across the chains as
+NumPy arrays, with the first dimension the flattened draw index across all
+chains (of size equal to <cite>num_chains * num_samples</cite>) and any remaining
+dimensions corresponding to the dimensions of the traced variable. If
+<cite>return_inferencedata=True</cite> an ArviZ <cite>InferenceData</cite> object is instead returned
+with traced chain data stored in the <cite>posterior</cite> group and additional chain
+statistics in the <cite>sample_stats</cite> group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Union</em>[arviz.InferenceData, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ArrayLike]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.integrators.html" class="btn btn-neutral float-left" title="mici.integrators module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mici.matrices.html" class="btn btn-neutral float-right" title="mici.matrices module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

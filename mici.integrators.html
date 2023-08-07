@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.integrators module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mici.interop module" href="mici.interop.html" />
+    <link rel="prev" title="mici.errors module" href="mici.errors.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.integrators module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.BCSSFourStageIntegrator"><code class="docutils literal notranslate"><span class="pre">BCSSFourStageIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.BCSSThreeStageIntegrator"><code class="docutils literal notranslate"><span class="pre">BCSSThreeStageIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.BCSSTwoStageIntegrator"><code class="docutils literal notranslate"><span class="pre">BCSSTwoStageIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.ConstrainedLeapfrogIntegrator"><code class="docutils literal notranslate"><span class="pre">ConstrainedLeapfrogIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.ImplicitLeapfrogIntegrator"><code class="docutils literal notranslate"><span class="pre">ImplicitLeapfrogIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.ImplicitMidpointIntegrator"><code class="docutils literal notranslate"><span class="pre">ImplicitMidpointIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.Integrator"><code class="docutils literal notranslate"><span class="pre">Integrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.LeapfrogIntegrator"><code class="docutils literal notranslate"><span class="pre">LeapfrogIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.SymmetricCompositionIntegrator"><code class="docutils literal notranslate"><span class="pre">SymmetricCompositionIntegrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.integrators.TractableFlowIntegrator"><code class="docutils literal notranslate"><span class="pre">TractableFlowIntegrator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.samplers.html">mici.samplers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.integrators module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.integrators.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.integrators">
+<span id="mici-integrators-module"></span><h1>mici.integrators module<a class="headerlink" href="#module-mici.integrators" title="Permalink to this heading"></a></h1>
+<p>Symplectic integrators for simulation of Hamiltonian dynamics.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.BCSSFourStageIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">BCSSFourStageIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#BCSSFourStageIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.BCSSFourStageIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.SymmetricCompositionIntegrator" title="mici.integrators.SymmetricCompositionIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymmetricCompositionIntegrator</span></code></a></p>
+<p>Four-stage symmetric composition integrator due to Blanes, Casas &amp; Sanz-Serna.</p>
+<p>Described in equation (6.8) in Blanes, Casas, Sanz-Serna (2014).</p>
+<p>References:</p>
+<p>Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).
+Numerical integrators for the Hybrid Monte Carlo method.
+SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.BCSSFourStageIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.BCSSFourStageIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.BCSSThreeStageIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">BCSSThreeStageIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#BCSSThreeStageIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.BCSSThreeStageIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.SymmetricCompositionIntegrator" title="mici.integrators.SymmetricCompositionIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymmetricCompositionIntegrator</span></code></a></p>
+<p>Three-stage symmetric composition integrator due to Blanes, Casas &amp; Sanz-Serna.</p>
+<p>Described in equation (6.7) in Blanes, Casas, Sanz-Serna (2014).</p>
+<p>References:</p>
+<p>Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).
+Numerical integrators for the Hybrid Monte Carlo method.
+SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.BCSSThreeStageIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.BCSSThreeStageIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.BCSSTwoStageIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">BCSSTwoStageIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#BCSSTwoStageIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.BCSSTwoStageIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.SymmetricCompositionIntegrator" title="mici.integrators.SymmetricCompositionIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymmetricCompositionIntegrator</span></code></a></p>
+<p>Two-stage symmetric composition integrator due to Blanes, Casas &amp; Sanz-Serna.</p>
+<p>Described in equation (6.4) in Blanes, Casas, Sanz-Serna (2014).</p>
+<p>References:</p>
+<p>Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).
+Numerical integrators for the Hybrid Monte Carlo method.
+SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.BCSSTwoStageIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.BCSSTwoStageIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.ConstrainedLeapfrogIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">ConstrainedLeapfrogIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_inner_step=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_tol=2e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver=&lt;function</span> <span class="pre">solve_projection_onto_manifold_quasi_newton&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver_kwargs=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#ConstrainedLeapfrogIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.ConstrainedLeapfrogIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.TractableFlowIntegrator" title="mici.integrators.TractableFlowIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowIntegrator</span></code></a></p>
+<p>Leapfrog integrator for constrained Hamiltonian systems.</p>
+<p>The Hamiltonian function is assumed to be expressible as the sum of two components
+for which the corresponding (unconstrained) Hamiltonian flows can be exactly
+simulated. Specifically it is assumed that the Hamiltonian function <cite>h</cite> takes the
+form</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(q, p)</p>
+</div></blockquote>
+<p>where <cite>q</cite> and <cite>p</cite> are the position and momentum variables respectively, and <cite>h₁</cite> and
+<cite>h₂</cite> Hamiltonian component functions for which the exact flows, respectively <cite>Φ₁</cite>
+and <cite>Φ₂</cite>, can be computed.</p>
+<p>The system is assumed to be additionally subject to a set of holonomic constraints
+on the position component of the state i.e. that all valid states must satisfy</p>
+<blockquote>
+<div><p>c(q) = 0</p>
+</div></blockquote>
+<p>for some differentiable and surjective vector constraint function <cite>c</cite> and the set of
+positions satisfying the constraints implicitly defining a manifold the dynamics
+remain confined to.</p>
+<p>The constraints are enforced by introducing a set of Lagrange multipliers <cite>λ</cite> of
+dimension equal to number of constraints, and defining a ‘constrained’ Hamiltonian</p>
+<blockquote>
+<div><p>h̅(q, p) = h₁(q) + h₂(q, p) + c(q)ᵀλ  subject to c(q) = 0</p>
+</div></blockquote>
+<p>with corresponding dynamics described by the system of differential algebraic
+equations</p>
+<blockquote>
+<div><p>q̇ = ∇₂h(q, p),
+ṗ = -∇₁h(q, p) - ∂c(q)ᵀλ,
+c(q) = 0.</p>
+</div></blockquote>
+<p>The dynamics implicitly define a set of constraints on the momentum variables,
+differentiating the constraint equation with respect to time giving that</p>
+<blockquote>
+<div><p>∂c(q) ∇₂h(q, p) = 0</p>
+</div></blockquote>
+<p>The set of momentum variables satisfying the above for given position variables is
+termed the cotangent space of the manifold (at a position), and the set of
+position-momentum pairs for which the position is on the constraint manifold and the
+momentum in the corresponding cotangent space is termed the cotangent bundle.</p>
+<p>To define a second-order symmetric integrator which exactly (up to floating point
+error) preserves these constraints, forming a symplectic map on the cotangent
+bundle, we follow the approach of Reich (1996).</p>
+<p>We first define a map <cite>Π</cite> parametrised by a vector of Lagrange multipliers <cite>λ</cite></p>
+<blockquote>
+<div><p>Π(λ)(q, p) = (q, p + ∂c(q)ᵀλ)</p>
+</div></blockquote>
+<p>with <cite>λ</cite> allowed to be an implicitly defined function of <cite>q</cite> and <cite>p</cite>.</p>
+<p>We then define a map <cite>Ψ₁</cite> in terms of the <cite>h₁</cite> flow map <cite>Φ₁</cite> as</p>
+<blockquote>
+<div><p>Ψ₁(t) = Π(λ) ∘ Φ₁(t)</p>
+</div></blockquote>
+<p>with <cite>λ</cite> implicitly defined such that <cite>(q’, p’) = Ψ₁(t)(q, p) ⟹ ∂c(q’) p’ = 0</cite> for
+any initial state <cite>(q, p)</cite> in the co-tangent bundle, with <cite>c(q’) = 0</cite> trivially
+satisfied as <cite>Φ₁</cite> is an identity map in the position:</p>
+<blockquote>
+<div><p>Φ₁(t)(q, p) = (q, p - t ∇h₁(q))</p>
+</div></blockquote>
+<p>The map <cite>Ψ₁(t)</cite> therefore corresponds to taking an unconstrained step <cite>Φ₁(t)</cite> and
+then projecting the resulting momentum back in to the co-tangent space. For the
+usual case in which <cite>h</cite> includes only quadratic terms in the momentum <cite>p</cite> such that
+<cite>∇₂h(q, p)</cite> is a linear function of <cite>p</cite>, then <cite>λ</cite> can be analytically solved for
+to give a closed-form expression for the projection into the co-tangent space.</p>
+<p>We also define a map <cite>Ψ₂</cite> in terms of the <cite>h₂</cite> flow map <cite>Φ₂</cite> as</p>
+<blockquote>
+<div><p>Ψ₂(t) = Π(λ’) ∘ Φ₂(t) ∘ Π(λ)</p>
+</div></blockquote>
+<p>such that for <cite>(q’, p’) = Ψ₂(t)(q, p)</cite>, <cite>λ</cite> is implicitly defined such that
+<cite>c(q’) = 0</cite> and <cite>λ’</cite> is implicitly defined such that <cite>∂c(q’) ∇₂h(q’, p’) = 0</cite>.</p>
+<p>This can be decomposed as first solving for <cite>λ</cite> such that</p>
+<blockquote>
+<div><p>c((Φ₂(t) ∘ Π(λ)(q, p))₁) = 0</p>
+</div></blockquote>
+<p>i.e. solving for the values of the Lagrange multipliers such that the position
+component of the output of <cite>Φ₂(t) ∘ Π(λ)</cite> is on the manifold, with this typically
+a non-linear system of equations that will need to be solved iteratively e.g. using
+Newton’s method. The momentum output of <cite>Φ₂(t) ∘ Π(λ)</cite> is then projected in to the
+cotangent space to compute the final state pair, with this projection step as noted
+above typically having an analytic solution.</p>
+<p>The overall second-order integrator is then defined as the symmetric composition</p>
+<blockquote>
+<div><p>Ψ(t) = Ψ₁(t / 2) ∘ Ψ₂(t / N)ᴺ ∘ Ψ₁(t / 2)</p>
+</div></blockquote>
+<p>where <cite>N</cite> is a positive integer corresponding to the number of ‘inner’ <cite>h₂</cite> flow
+steps. This integrator exactly preserves the constraints at all steps, such that if
+an initial position momentum pair <cite>(q, p)</cite> are in the cotangent bundle, the
+corresponding pair after calling the <cite>step</cite> method of the integrator will also be in
+the cotangent bundle.</p>
+<p>For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).</p>
+<p>References:</p>
+<p>Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by
+composition methods. SIAM journal on numerical analysis, 33(2), 475-491.</p>
+<p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+Cambridge University Press.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>n_inner_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
+<li><p><strong>projection_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.ProjectionSolver" title="mici.solvers.ProjectionSolver"><em>ProjectionSolver</em></a>) – </p></li>
+<li><p><strong>projection_solver_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.ConstrainedLeapfrogIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.ImplicitLeapfrogIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">ImplicitLeapfrogIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_tol=2e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_point_solver=&lt;function</span> <span class="pre">solve_fixed_point_direct&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_point_solver_kwargs=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#ImplicitLeapfrogIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.ImplicitLeapfrogIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.Integrator" title="mici.integrators.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Integrator</span></code></a></p>
+<p>Implicit leapfrog integrator for Hamiltonians with a non-separable component.</p>
+<p>Also known as the generalised leapfrog method.</p>
+<p>The Hamiltonian function <cite>h</cite> is assumed to take the form</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(q, p)</p>
+</div></blockquote>
+<p>where <cite>q</cite> and <cite>p</cite> are the position and momentum variables respectively, <cite>h₁</cite> is a
+Hamiltonian component function for which the exact flow can be computed and <cite>h₂</cite> is
+a Hamiltonian component function of the position and momentum variables, which may
+be non-separable and for which exact simulation of the correspond Hamiltonian flow
+may not be possible.</p>
+<p>A pair of implicit component updates are used to approximate the flow due to the
+<cite>h₂</cite> Hamiltonian component, with a fixed-point iteration used to solve the
+non-linear system of equations.</p>
+<p>The resulting implicit integrator is a symmetric second-order method corresponding
+to a symplectic partitioned Runge-Kutta method. See Section 6.3.2 in Leimkuhler and
+Reich (2004) for more details.</p>
+<p>References:</p>
+<p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+Cambridge University Press.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
+<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – </p></li>
+<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.ImplicitLeapfrogIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.ImplicitLeapfrogIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.ImplicitMidpointIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">ImplicitMidpointIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_tol=2e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_point_solver=&lt;function</span> <span class="pre">solve_fixed_point_direct&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_point_solver_kwargs=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#ImplicitMidpointIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.ImplicitMidpointIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.Integrator" title="mici.integrators.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Integrator</span></code></a></p>
+<p>Implicit midpoint integrator for general Hamiltonians.</p>
+<p>The Hamiltonian function may be a general (non-separable) function of both the
+position variables <cite>q</cite> and momentum variables <cite>p</cite>.</p>
+<p>The flow is approximated with the composition of an implicit Euler half-step with
+ane explicit Euler half-step.</p>
+<p>The resulting implicit integrator is a second-order method corresponding to a
+symplectic one-stage  Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler
+and Reich (2004) for more details.</p>
+<p>References:</p>
+<p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+Cambridge University Press.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>reverse_check_tol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>reverse_check_norm</strong> (<em>NormFunction</em>) – </p></li>
+<li><p><strong>fixed_point_solver</strong> (<a class="reference internal" href="mici.solvers.html#mici.solvers.FixedPointSolver" title="mici.solvers.FixedPointSolver"><em>FixedPointSolver</em></a>) – </p></li>
+<li><p><strong>fixed_point_solver_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.ImplicitMidpointIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.ImplicitMidpointIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.Integrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">Integrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#Integrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.Integrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Base class for integrators for simulating Hamiltonian dynamics.</p>
+<p>For a Hamiltonian function <cite>h</cite> with position variables <cite>q</cite> and momentum variables
+<cite>p</cite>, the canonical Hamiltonian dynamic is defined by the ordinary differential
+equation system</p>
+<blockquote>
+<div><p>q̇ = ∇₂h(q, p)
+ṗ = -∇₁h(q, p)</p>
+</div></blockquote>
+<p>with the flow map corresponding to the solution of the corresponding initial value
+problem a time-reversible and symplectic (and by consequence volume-preserving) map.</p>
+<p>Derived classes implement a <cite>step</cite> method which approximates the flow-map over some
+small time interval, while conserving the properties of being time-reversible and
+symplectic, with composition of this integrator step method allowing simulation of
+time-discretised trajectories of the Hamiltonian dynamics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.Integrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#Integrator.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.Integrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.LeapfrogIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">LeapfrogIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#LeapfrogIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.LeapfrogIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.TractableFlowIntegrator" title="mici.integrators.TractableFlowIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowIntegrator</span></code></a></p>
+<p>Leapfrog integrator for Hamiltonian systems with tractable component flows.</p>
+<p>For separable Hamiltonians of the form</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(p)</p>
+</div></blockquote>
+<p>where <cite>h₁</cite> is the potential energy and <cite>h₂</cite> is the kinetic energy, this integrator
+corresponds to the classic (position) Störmer-Verlet method.</p>
+<p>The integrator can also be applied to the more general Hamiltonian splitting</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(q, p)</p>
+</div></blockquote>
+<p>providing the flows for <cite>h₁</cite> and <cite>h₂</cite> are both tractable.</p>
+<p>For more details see Sections 2.6 and 4.2.2 in Leimkuhler and Reich (2004).</p>
+<p>References:</p>
+<p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+Cambridge University Press.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.LeapfrogIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.LeapfrogIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.SymmetricCompositionIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">SymmetricCompositionIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_coefficients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_h1_flow_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#SymmetricCompositionIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.SymmetricCompositionIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.TractableFlowIntegrator" title="mici.integrators.TractableFlowIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowIntegrator</span></code></a></p>
+<p>Symmetric composition integrator for Hamiltonians with tractable component flows.</p>
+<p>The Hamiltonian function is assumed to be expressible as the sum of two analytically
+tractable components for which the corresponding Hamiltonian flows can be exactly
+simulated. Specifically it is assumed that the Hamiltonian function h takes the form</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(q, p)</p>
+</div></blockquote>
+<p>where <cite>q</cite> and <cite>p</cite> are the position and momentum variables respectively, and <cite>h₁</cite> and
+<cite>h₂</cite> are Hamiltonian component functions for which the exact flows, respectively
+<cite>Φ₁</cite> and <cite>Φ₂</cite>, can be computed. An alternating composition can then be formed as</p>
+<blockquote>
+<div><p>Ψ(t) = A(aₛt) ∘ B(bₛt) ∘ ⋯ ∘ A(a₁t) ∘ B(b₁t) ∘ A(a₀t)</p>
+</div></blockquote>
+<p>where <cite>A = Φ₁</cite> and <cite>B = Φ₂</cite> or <cite>A = Φ₂</cite> and <cite>B = Φ₁</cite>, and <cite>(a₀, ⋯, aₛ)</cite> and
+<cite>(b₁, ⋯, bₛ)</cite> are a set of coefficients to be determined and <cite>s</cite> is the number of
+stages in the composition.</p>
+<p>To ensure a consistency (i.e. the integrator is at least order one) we require that</p>
+<blockquote>
+<div><p>sum(a₀, ⋯, aₛ) = sum(b₁, ⋯, bₛ) = 1</p>
+</div></blockquote>
+<p>For symmetric compositions we restrict that</p>
+<blockquote>
+<div><p>aₛ₋ₘ = aₘ and bₛ₊₁₋ₘ = bₛ</p>
+</div></blockquote>
+<p>with symmetric consistent methods of at least order two.</p>
+<p>The combination of the symmetry and consistency requirements mean that a <cite>s</cite>-stage
+symmetric composition method can be described by <cite>(s - 1)</cite> ‘free’ coefficients</p>
+<blockquote>
+<div><p>(a₀, b₁, a₁, ⋯, aₖ, bₖ) with k = (s - 1) / 2 if s is odd or
+(a₀, b₁, a₁, ⋯, aₖ) with k = (s - 2) / 2 if s is even</p>
+</div></blockquote>
+<p>The Störmer-Verlet ‘leapfrog’ integrator is a special case corresponding to the
+unique (symmetric and consistent) 1-stage integrator.</p>
+<p>For more details see Section 6.2 in Leimkuhler and Reich (2004).</p>
+<p>References:</p>
+<p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+Cambridge University Press.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>free_coefficients</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+<li><p><strong>initial_h1_flow_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.SymmetricCompositionIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.SymmetricCompositionIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.integrators.TractableFlowIntegrator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">TractableFlowIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#TractableFlowIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.TractableFlowIntegrator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.integrators.Integrator" title="mici.integrators.Integrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Integrator</span></code></a></p>
+<p>Base class for integrators for Hamiltonian systems with tractable component flows</p>
+<p>The Hamiltonian function is assumed to be expressible as the sum of two analytically
+tractable components for which the corresponding Hamiltonian flows can be exactly
+simulated. Specifically it is assumed that the Hamiltonian function <cite>h</cite> takes the
+form</p>
+<blockquote>
+<div><p>h(q, p) = h₁(q) + h₂(q, p)</p>
+</div></blockquote>
+<p>where <cite>q</cite> and <cite>p</cite> are the position and momentum variables respectively, and <cite>h₁</cite> and
+<cite>h₂</cite> are Hamiltonian component functions for which the exact flows can be computed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.integrators.TractableFlowIntegrator.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.integrators.TractableFlowIntegrator.step" title="Permalink to this definition"></a></dt>
+<dd><p>Perform a single integrator step from a supplied state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – System state to perform integrator step from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New object corresponding to stepped state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.errors.html" class="btn btn-neutral float-left" title="mici.errors module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mici.interop.html" class="btn btn-neutral float-right" title="mici.interop module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

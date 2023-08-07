@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.states &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mici.html">mici package</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mici.states</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mici.states</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Objects for recording state of a Markov chain and caching computations.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">ReadOnlyStateError</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
+
+
+<span class="k">def</span> <span class="nf">_cache_key_func</span><span class="p">(</span><span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct cache key for a given system and method pair.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="vm">__name__</span>
+    <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">system</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">id</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="cache_in_state"><a class="viewcode-back" href="../../mici.states.html#mici.states.cache_in_state">[docs]</a><span class="k">def</span> <span class="nf">cache_in_state</span><span class="p">(</span>
+    <span class="o">*</span><span class="n">depends_on</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">System</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">]],</span>
+    <span class="n">Callable</span><span class="p">[[</span><span class="n">System</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Memoizing decorator for system methods.</span>
+
+<span class="sd">    Used to decorate `mici.systems.System` methods which compute a function of one or</span>
+<span class="sd">    more chain state variable(s), with the decorated method caching the value returned</span>
+<span class="sd">    by the method being wrapped in the `ChainState` object to prevent the need for</span>
+<span class="sd">    recomputation on future calls if the state variables the returned value depends on</span>
+<span class="sd">    have not been changed in between the calls.</span>
+
+<span class="sd">    Additionally for `ChainState` instances initialized with a `_call_counts` argument,</span>
+<span class="sd">    the memoized method will update a counter for the method in the `_call_counts`</span>
+<span class="sd">    attribute every time the method being decorated is called (i.e. when there isn&#39;t a</span>
+<span class="sd">    valid cached value available).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        *depends_on: One or more strings corresponding to the names of any state</span>
+<span class="sd">            variables the value returned by the method depends on, e.g. `pos` or `mom`,</span>
+<span class="sd">            such that the cache in the state object is correctly cleared when the value</span>
+<span class="sd">            of any of these variables (attributes) of the state object changes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">cache_in_state_decorator</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">_cache_key_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">depends_on</span><span class="p">:</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">_dependencies</span><span class="p">[</span><span class="n">dep</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span> <span class="ow">or</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">_call_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">_call_counts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">return</span> <span class="n">cache_in_state_decorator</span></div>
+
+
+<div class="viewcode-block" id="cache_in_state_with_aux"><a class="viewcode-back" href="../../mici.states.html#mici.states.cache_in_state_with_aux">[docs]</a><span class="k">def</span> <span class="nf">cache_in_state_with_aux</span><span class="p">(</span>
+    <span class="n">depends_on</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">auxiliary_outputs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">System</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">]],</span>
+    <span class="n">Callable</span><span class="p">[[</span><span class="n">System</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Memoizing decorator for system methods with possible auxiliary outputs.</span>
+
+<span class="sd">    Used to decorate `System` methods which compute a function of one or more chain</span>
+<span class="sd">    state variable(s), with the decorated method caching the value or values returned by</span>
+<span class="sd">    the method being wrapped in the `ChainState` object to prevent the need for</span>
+<span class="sd">    recomputation on future calls if the state variables the returned value(s) depends</span>
+<span class="sd">    on have not been changed in between the calls.</span>
+
+<span class="sd">    Compared to the `cache_in_state` decorator, this variant allows for methods which</span>
+<span class="sd">    may optionally also return additional auxiliary outputs, such as intermediate result</span>
+<span class="sd">    computed while computing the primary output, which correspond to the output of</span>
+<span class="sd">    another system method decorated with the `cache_in_state` or</span>
+<span class="sd">    `cache_in_state_with_aux` decorators. If such auxiliary outputs are returned they</span>
+<span class="sd">    are also used to update cache entry for the corresponding decorated method,</span>
+<span class="sd">    potentially saving recomputation in subsequent calls to that method. A common</span>
+<span class="sd">    instance of this pattern is in derivative values computed using automatic</span>
+<span class="sd">    differentiation (AD), with the primal value being differentiated usually either</span>
+<span class="sd">    calculated alongside the derivative (in forward-mode AD) or calculated first in a</span>
+<span class="sd">    forward-pass before the derivatives are calculated in a reverse-pass (in</span>
+<span class="sd">    reverse-mode AD). By caching the value of the primal computed as part of the</span>
+<span class="sd">    derivative calculation, a subsequent call to a method corresponding to calculation</span>
+<span class="sd">    of the primal itself will retrieve the cached value and not recompute the primal,</span>
+<span class="sd">    providing the relevant state variables the primal (and derivative) depend on have</span>
+<span class="sd">    not been changed in between.</span>
+
+<span class="sd">    Additionally for `ChainState` instances initialized with a `_call_counts` argument,</span>
+<span class="sd">    the memoized method will update a counter for the method in the `_call_counts`</span>
+<span class="sd">    attribute every time the method being decorated is called (i.e. when there isn&#39;t a</span>
+<span class="sd">    valid cached value available).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        depends_on: A string or tuple of strings, with each string corresponding to the</span>
+<span class="sd">            name of a state variables the value(s) returned by the method depends on,</span>
+<span class="sd">            e.g. &#39;pos&#39; or &#39;mom&#39;, such that the cache in the state object is correctly</span>
+<span class="sd">            cleared when the value of any of these variables (attributes) of the state</span>
+<span class="sd">            object changes.</span>
+<span class="sd">        auxiliary_outputs: A string or tuple of strings, with each string defining an</span>
+<span class="sd">            auxiliary output the wrapped method may additionally return in addition to</span>
+<span class="sd">            the primary output. If auxiliary outputs are returned, the returned value</span>
+<span class="sd">            should be a tuple with first entry the &#39;primary&#39; output corresponding to the</span>
+<span class="sd">            value associated with the name of the method and the subsequent entries in</span>
+<span class="sd">            the tuple corresponding to the auxiliary outputs in the order specified by</span>
+<span class="sd">            the entries in the `auxiliary_outputs` argument. If the primary output is</span>
+<span class="sd">            itself a tuple, it must be wrapped in another tuple even when no auxiliary</span>
+<span class="sd">            outputs are being returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">depends_on</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">depends_on</span> <span class="o">=</span> <span class="p">(</span><span class="n">depends_on</span><span class="p">,)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">auxiliary_outputs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">auxiliary_outputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">auxiliary_outputs</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">cache_in_state_with_aux_decorator</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+        <span class="nd">@wraps</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+            <span class="n">prim_key</span> <span class="o">=</span> <span class="n">_cache_key_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">prim_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">_cache_key_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">auxiliary_outputs</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">keys</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">depends_on</span><span class="p">:</span>
+                        <span class="n">state</span><span class="o">.</span><span class="n">_dependencies</span><span class="p">[</span><span class="n">dep</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prim_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span> <span class="ow">or</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">prim_key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">vals</span><span class="p">):</span>
+                        <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">prim_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
+                <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">_call_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">state</span><span class="o">.</span><span class="n">_call_counts</span><span class="p">[</span><span class="n">prim_key</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">prim_key</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">return</span> <span class="n">cache_in_state_with_aux_decorator</span></div>
+
+
+<div class="viewcode-block" id="ChainState"><a class="viewcode-back" href="../../mici.states.html#mici.states.ChainState">[docs]</a><span class="k">class</span> <span class="nc">ChainState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Markov chain state.</span>
+
+<span class="sd">    As well as recording the chain state variable values, the state object is also used</span>
+<span class="sd">    to cache derived quantities to avoid recalculation if these values are subsequently</span>
+<span class="sd">    reused.</span>
+
+<span class="sd">    Additionally for `ChainState` instances initialized with a `_call_counts`</span>
+<span class="sd">    dictionary, any memoized system methods (i.e. those decorated with `cache_in_state`</span>
+<span class="sd">    or `cache_in_state_with_aux`) will update a counter for the method in the state</span>
+<span class="sd">    `_call_counts` dictionary attribute every time the decorated method is called (i.e.</span>
+<span class="sd">    when there isn&#39;t a valid cached value available).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">_call_counts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">_read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">_dependencies</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">variables</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new `ChainState` instance.</span>
+
+<span class="sd">        Any keyword arguments passed to the constructor (with names not starting with an</span>
+<span class="sd">        underscore) will be used to set state variable attributes of state object for</span>
+<span class="sd">        example</span>
+
+<span class="sd">            state = ChainState(pos=pos_val, mom=mom_val, dir=dir_val)</span>
+
+<span class="sd">        will return a `ChainState` instance `state` with variable attributes</span>
+<span class="sd">        `state.pos`, `state.mom` and `state.dir` with initial values set to `pos_val`,</span>
+<span class="sd">        `mom_val` and `dir_val` respectively.</span>
+
+<span class="sd">        Keyword arguments with a leading underscore in the name are reserved for</span>
+<span class="sd">        additional arguments to the constructor not corresponding to state variables.</span>
+<span class="sd">        Additionally the name `copy` should not be used as attribute access to this name</span>
+<span class="sd">        will be blocked by the `copy` method.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **variables: Keyword arguments corresponding to state variables. All names</span>
+<span class="sd">                must not begin with an underscore and no name can be `copy`. See</span>
+<span class="sd">                description above for details.</span>
+<span class="sd">            _call_counts: If a dictionary (or `Counter`) is passed this will be used to</span>
+<span class="sd">                store counts of the number of calls of system methods decorated with</span>
+<span class="sd">                `cache_in_state` or `cache_in_state_with_aux` when called on this state</span>
+<span class="sd">                object and when no cached value for the method is available so that the</span>
+<span class="sd">                wrapped method is called. The `_call_counts` attribute persists between</span>
+<span class="sd">                all copies of a state so will count any decorated method calls on copies</span>
+<span class="sd">                of the state as well - e.g. all copies of a state in a sampled Markov</span>
+<span class="sd">                chain, allowing the `_call_counts` attribute to be used to monitor the</span>
+<span class="sd">                number of method call while sampling a chain.</span>
+<span class="sd">            _read_only: If `True` a `mici.errors.ReadOnlyStateError` exception will be</span>
+<span class="sd">                raised when attempting to set any attributes of the state object after</span>
+<span class="sd">                construction. Defaults to `False`.</span>
+<span class="sd">            _dependencies: Intended for internal use only. If not `None` this should be</span>
+<span class="sd">                a dictionary with string keys corresponding to the state variable names</span>
+<span class="sd">                and values which are sets of strings indicating any dependencies of the</span>
+<span class="sd">                relevant state variable in the cache.</span>
+<span class="sd">            _cache: Intended for internal use only. If not `None` this should be a</span>
+<span class="sd">                dictionary with keys corresponding to unique identifiers for methods</span>
+<span class="sd">                decorated with the `cache_in_state` or `cache_in_state_with_aux`</span>
+<span class="sd">                decorators and values corresponding to cached computed outputs of these</span>
+<span class="sd">                methods or `None` for when a cached output is not available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set attributes by directly writing to __dict__ to ensure set before</span>
+        <span class="c1"># any call to __setattr__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_variables&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span>
+        <span class="k">if</span> <span class="n">_dependencies</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_dependencies</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">set</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_dependencies&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_dependencies</span>
+        <span class="k">if</span> <span class="n">_cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_call_counts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Counter</span><span class="p">(</span><span class="n">_call_counts</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_call_counts</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_call_counts</span><span class="p">,</span> <span class="n">Counter</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">_call_counts</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_read_only&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span>
+
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&#39; object has no attribute &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_only</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ReadOnlyStateError</span><span class="p">(</span><span class="s2">&quot;ChainState instance is read-only.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="c1"># clear any dependent cached values</span>
+            <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">dep</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span>
+
+<div class="viewcode-block" id="ChainState.copy"><a class="viewcode-back" href="../../mici.states.html#mici.states.ChainState.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a deep copy of the state object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            read_only: Whether the state copy should be read-only.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A copy of the state object with variable attributes that are independent</span>
+<span class="sd">            copies of the original state object&#39;s variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
+            <span class="n">_dependencies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="p">,</span>
+            <span class="n">_cache</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="n">_call_counts</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_call_counts</span><span class="p">,</span>
+            <span class="n">_read_only</span><span class="o">=</span><span class="n">read_only</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;(</span><span class="se">\n</span><span class="s2"> &quot;</span> <span class="o">+</span> <span class="s2">&quot;,</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variables</span><span class="p">,</span>
+            <span class="s2">&quot;dependencies&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="p">,</span>
+            <span class="c1"># Don&#39;t pickle callable cached &#39;variables&#39; such as derivative</span>
+            <span class="c1"># functions</span>
+            <span class="s2">&quot;cache&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">v</span><span class="p">)},</span>
+            <span class="s2">&quot;call_counts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_counts</span><span class="p">,</span>
+            <span class="s2">&quot;read_only&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_only</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_variables&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_dependencies&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;dependencies&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_cache&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;cache&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_call_counts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;call_counts&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_read_only&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;read_only&quot;</span><span class="p">]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

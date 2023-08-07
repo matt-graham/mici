@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mici.transitions module &mdash; Mici 0.2.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="mici.types module" href="mici.types.html" />
+    <link rel="prev" title="mici.systems module" href="mici.systems.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.samplers.html">mici.samplers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.transitions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.CorrelatedMomentumTransition"><code class="docutils literal notranslate"><span class="pre">CorrelatedMomentumTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.DynamicIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">DynamicIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.IndependentMomentumTransition"><code class="docutils literal notranslate"><span class="pre">IndependentMomentumTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.IntegrationTransition"><code class="docutils literal notranslate"><span class="pre">IntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.MetropolisIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">MetropolisIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.MetropolisRandomIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">MetropolisRandomIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.MetropolisStaticIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">MetropolisStaticIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.MomentumTransition"><code class="docutils literal notranslate"><span class="pre">MomentumTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.MultinomialDynamicIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">MultinomialDynamicIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.SliceDynamicIntegrationTransition"><code class="docutils literal notranslate"><span class="pre">SliceDynamicIntegrationTransition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.Transition"><code class="docutils literal notranslate"><span class="pre">Transition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.euclidean_no_u_turn_criterion"><code class="docutils literal notranslate"><span class="pre">euclidean_no_u_turn_criterion()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.transitions.riemannian_no_u_turn_criterion"><code class="docutils literal notranslate"><span class="pre">riemannian_no_u_turn_criterion()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Mici</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
+      <li class="breadcrumb-item active">mici.transitions module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mici.transitions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-mici.transitions">
+<span id="mici-transitions-module"></span><h1>mici.transitions module<a class="headerlink" href="#module-mici.transitions" title="Permalink to this heading"></a></h1>
+<p>Markov transition kernels.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.CorrelatedMomentumTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">CorrelatedMomentumTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mom_resample_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#CorrelatedMomentumTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.CorrelatedMomentumTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">MomentumTransition</span></code></a></p>
+<p>Correlated (partial) momentum transition.</p>
+<p>Rather than independently sampling a new momentum, instead a pertubative
+Crank-Nicolson type update which produces a new momentum value with a specified
+correlation with the previous value is used. It is assumed that the conditional
+distribution of the momenta is zero-mean Gaussian such that the Crank-Nicolson
+update leaves the momenta conditional distribution exactly invariant. This approach
+is sometimes known as partial momentum refreshing or updating, and was originally
+proposed in [1].</p>
+<p>If the resampling coefficient is equal to zero then the momentum is not randomized
+at all and succesive applications of the coupled integration transitions will
+continue along the same simulated Hamiltonian trajectory. When an integration
+transition is accepted this means the subsequent simulated trajectory will continue
+evolving in the same direction and so not randomising the momentum will reduce
+random-walk behaviour. However on a rejection the integration direction is reversed
+and so without randomisation the trajectory will exactly backtrack along the
+previous tractory states. A resampling coefficient of one corresponds to the
+standard case of independent resampling of the momenta while intermediate values
+between zero and one correspond to varying levels of correlation between the pre and
+post update momentums.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. Phys. Lett.
+B, 268(CERN-TH-6172-91), pp.247-252.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>mom_resample_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.CorrelatedMomentumTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#CorrelatedMomentumTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.CorrelatedMomentumTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new momentum component to state.</p>
+<p>Assigns a new momentum component to state by sampling from a Markov transition
+kernel which leaves the conditional distribution on the momentum under the
+canonical distribution defined by the Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state to condition transition kernel on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.CorrelatedMomentumTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><span class="pre">set</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.CorrelatedMomentumTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.CorrelatedMomentumTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.CorrelatedMomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.DynamicIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">DynamicIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#DynamicIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.DynamicIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.IntegrationTransition" title="mici.transitions.IntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegrationTransition</span></code></a></p>
+<p>Base class for dynamic integration transitions.</p>
+<p>In each transition a binary tree of states is recursively computed by integrating
+randomly forward and backward in time by a number of steps equal to the previous
+tree size until a termination criteria on the tree’s subtrees is met. The next chain
+state is chosen from the candidate states using a progressive sampling scheme based
+on relative weights of the different candidate states, with the sampling biased
+towards states further from the current state [1, 2].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+<li><p>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+arXiv preprint arXiv:1701.02434.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.DynamicIntegrationTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#DynamicIntegrationTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.DynamicIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.DynamicIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.DynamicIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.DynamicIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.DynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.IndependentMomentumTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">IndependentMomentumTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#IndependentMomentumTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.IndependentMomentumTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">MomentumTransition</span></code></a></p>
+<p>Independent momentum transition.</p>
+<p>Independently resamples the momentum component of the state from its conditional
+distribution given the remaining state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.IndependentMomentumTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#IndependentMomentumTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.IndependentMomentumTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new momentum component to state.</p>
+<p>Assigns a new momentum component to state by sampling from a Markov transition
+kernel which leaves the conditional distribution on the momentum under the
+canonical distribution defined by the Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state to condition transition kernel on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.IndependentMomentumTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><span class="pre">set</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.IndependentMomentumTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.IndependentMomentumTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.IndependentMomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.IntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">IntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#IntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.IntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.Transition" title="mici.transitions.Transition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transition</span></code></a></p>
+<p>Base class for integration transtions.</p>
+<p>Markov transition kernel which leaves canonical distribution invariant and jointly
+updates the position and momentum components of the chain state by integrating the
+Hamiltonian dynamics of the system to propose new values for the state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.IntegrationTransition.sample">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#IntegrationTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.IntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.IntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.IntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.IntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.IntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">MetropolisIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MetropolisIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MetropolisIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.IntegrationTransition" title="mici.transitions.IntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntegrationTransition</span></code></a></p>
+<p>Base for HMC methods using a Metropolis accept step to sample new state.</p>
+<p>In each transition a trajectory is generated by integrating the Hamiltonian dynamics
+from the current state in the current integration time direction for a number of
+integrator steps.</p>
+<p>The state at the end of the trajectory with the integration direction negated (this
+ensuring the proposed move is an involution) is used as the proposal in a Metropolis
+acceptance step. The integration direction is then deterministically negated again
+irrespective of the accept decision, with the effect being that on acceptance the
+integration direction will be equal to its initial value and on rejection the
+integration direction will be the negation of its initial value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisIntegrationTransition.sample">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.transitions.MetropolisIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisRandomIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">MetropolisRandomIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step_range</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MetropolisRandomIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MetropolisRandomIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.MetropolisIntegrationTransition" title="mici.transitions.MetropolisIntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetropolisIntegrationTransition</span></code></a></p>
+<p>Random integration transition with Metropolis sampling of new state.</p>
+<p>In each transition a trajectory is generated by integrating the state in the current
+integration direction in time a random integer number of integrator steps sampled
+from the uniform distribution on an integer interval. The randomisation of the
+number of integration steps avoids the potential of the chain mixing poorly due to
+using an integration time close to the period of (near) periodic systems [1,2].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
+Monte Carlo, 2(11), p.2.</p></li>
+<li><p>Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. Physics Letters
+B, 226(3-4), pp.369-371.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisRandomIntegrationTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MetropolisRandomIntegrationTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MetropolisRandomIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisRandomIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisRandomIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisRandomIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisRandomIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisStaticIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">MetropolisStaticIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MetropolisStaticIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MetropolisStaticIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.MetropolisIntegrationTransition" title="mici.transitions.MetropolisIntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetropolisIntegrationTransition</span></code></a></p>
+<p>Static integration transition with Metropolis sampling of new state.</p>
+<p>In this variant the trajectory is generated by integrating the state through time a
+fixed number of integrator steps. This is original proposed Hybrid Monte Carlo
+(often now instead termed Hamiltonian Monte Carlo) algorithm [1,2].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte
+Carlo. Physics letters B, 195(2), pp.216-222.</p></li>
+<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
+Monte Carlo, 2(11), p.2.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisStaticIntegrationTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MetropolisStaticIntegrationTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MetropolisStaticIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisStaticIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisStaticIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MetropolisStaticIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisStaticIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.MomentumTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">MomentumTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MomentumTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MomentumTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.Transition" title="mici.transitions.Transition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transition</span></code></a></p>
+<p>Base class for momentum transitions.</p>
+<p>Markov transition  kernel which leaves the conditional distribution on the momentum
+under the canonical distribution invariant, updating only the momentum component of
+the chain state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.MomentumTransition.sample">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MomentumTransition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MomentumTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new momentum component to state.</p>
+<p>Assigns a new momentum component to state by sampling from a Markov transition
+kernel which leaves the conditional distribution on the momentum under the
+canonical distribution defined by the Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state to condition transition kernel on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MomentumTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><span class="pre">set</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MomentumTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MomentumTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.MomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.MultinomialDynamicIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">MultinomialDynamicIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#MultinomialDynamicIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.MultinomialDynamicIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.DynamicIntegrationTransition" title="mici.transitions.DynamicIntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicIntegrationTransition</span></code></a></p>
+<p>Dynamic integration transition with multinomial sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by integrating
+randomly forward and backward in time by a number of steps equal to the previous
+tree size [1,2] until a termination criteria on the tree leaves is met. The next
+chain state is chosen from the candidate states using a progressive multinomial
+sampling scheme [2] based on the relative probability densities of the different
+candidate states, with the sampling biased towards states further from the current
+state.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+<li><p>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+arXiv preprint arXiv:1701.02434.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.MultinomialDynamicIntegrationTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MultinomialDynamicIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MultinomialDynamicIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.SliceDynamicIntegrationTransition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">SliceDynamicIntegrationTransition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#SliceDynamicIntegrationTransition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.SliceDynamicIntegrationTransition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.transitions.DynamicIntegrationTransition" title="mici.transitions.DynamicIntegrationTransition"><code class="xref py py-class docutils literal notranslate"><span class="pre">DynamicIntegrationTransition</span></code></a></p>
+<p>Dynamic integration transition with slice sampling of new state.</p>
+<p>In each transition a binary tree of states is recursively computed by integrating
+randomly forward and backward in time by a number of steps equal to the previous
+tree size until a termination criteria on the tree leaves is met. The next chain
+state is chosen from the candidate states using a progressive slice sampling scheme
+based on the relative probability densities of the different candidate states, with
+the slice sampler biased towards states further from the current state.</p>
+<p>When used with the <cite>euclidean_no_u_turn_criterion</cite> this transition is equivalent to
+the transitions in ‘Algorithm 3: Efficient No-U-Turn Sampler’ in [1].</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – </p></li>
+<li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – </p></li>
+<li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – </p></li>
+<li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – </p></li>
+<li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – </p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.SliceDynamicIntegrationTransition.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.transitions.SliceDynamicIntegrationTransition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a position-momentum pair using integration based proposal(s).</p>
+<p>Samples new position and momentum values from a Markov transition kernel which
+leaves the canonical distribution on the state space corresponding to the
+Hamiltonian system invariant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.SliceDynamicIntegrationTransition.state_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.SliceDynamicIntegrationTransition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.SliceDynamicIntegrationTransition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.SliceDynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.transitions.Transition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">Transition</span></span><a class="reference internal" href="_modules/mici/transitions.html#Transition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.Transition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Base class for Markov transition kernels.</p>
+<p>Defines expected interface for transitions by sampler classes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.transitions.Transition.sample">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#Transition.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.Transition.sample" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a new chain state from the Markov transition kernel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state to condition transition kernel on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – Numpy random number generator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
+transition or <cite>None</cite> if no statistics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.Transition.state_variables">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">state_variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.11)"><span class="pre">set</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.Transition.state_variables" title="Permalink to this definition"></a></dt>
+<dd><p>A set of names of state variables accessed by this transition.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mici.transitions.Transition.statistic_types">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.Transition.statistic_types" title="Permalink to this definition"></a></dt>
+<dd><p>A dictionary describing the statistics computed during transition.</p>
+<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
+with string keys and tuple values, with the keys defining the keys of the
+statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
+the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
+used to store the corresponding statistic values and second entry the default
+value to initialize this array with.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.transitions.euclidean_no_u_turn_criterion">
+<span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">euclidean_no_u_turn_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_mom</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#euclidean_no_u_turn_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.euclidean_no_u_turn_criterion" title="Permalink to this definition"></a></dt>
+<dd><p>No-U-turn termination criterion for Euclidean manifolds [1].</p>
+<p>Terminates trajectories when the velocities at the terminal states of the trajectory
+both have negative dot products with the vector from the position of the first
+terminal state to the position of the second terminal state, corresponding to
+further evolution of the trajectory reducing the distance between the terminal state
+positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system being integrated.</p></li>
+<li><p><strong>state_1</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – First terminal state of trajectory.</p></li>
+<li><p><strong>state_2</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Second terminal state of trajectory.</p></li>
+<li><p><strong>sum_mom</strong> (<em>ArrayLike</em>) – Sum of momentums of trajectory states.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether termination criterion is satisfied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a></p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.transitions.riemannian_no_u_turn_criterion">
+<span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">riemannian_no_u_turn_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_mom</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#riemannian_no_u_turn_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.riemannian_no_u_turn_criterion" title="Permalink to this definition"></a></dt>
+<dd><p>Generalized no-U-turn termination criterion on Riemannian manifolds [2].</p>
+<p>Terminates trajectories when the velocities at the terminal states of the trajectory
+both have negative dot products with the sum of the the momentums across the
+trajectory from the first to second terminal state of the first terminal state to
+the position of the second terminal state. This generalizes the no-U-turn criterion
+of [1] to Riemannian manifolds where due to the intrinsic curvature of the space the
+geodesic between two points is general no longer a straight line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system being integrated.</p></li>
+<li><p><strong>state_1</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – First terminal state of trajectory.</p></li>
+<li><p><strong>state_2</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Second terminal state of trajectory.</p></li>
+<li><p><strong>sum_mom</strong> (<em>ArrayLike</em>) – Sum of momentums of trajectory states.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether termination criterion is satisfied.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a></p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
+15(1), pp.1593-1623.</p></li>
+<li><p>Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+manifolds. arXiv preprint arXiv:1304.1920.</p></li>
+</ol>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mici.systems.html" class="btn btn-neutral float-left" title="mici.systems module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="mici.types.html" class="btn btn-neutral float-right" title="mici.types module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Matt Graham.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
