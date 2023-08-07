@@ -1,5 +1,8 @@
 """Utility functions and classes."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import numpy as np
 from math import log, exp, log1p, expm1, inf, nan
 
@@ -10,15 +13,19 @@ try:
 except ImportError:
     XXHASH_AVAILABLE = False
 
+if TYPE_CHECKING:
+    from typing import Optional
+    from mici.types import ScalarLike
 
-def hash_array(array):
+
+def hash_array(array: np.ndarray) -> int:
     """Compute hash of a NumPy array by hashing data as a byte sequence.
 
     Args:
-        array (array): NumPy array to compute hash of.
+        array: NumPy array to compute hash of.
 
     Returns:
-        hash (int): Computed hash as an integer.
+        Computed hash as an integer.
     """
     if XXHASH_AVAILABLE:
         # If fast Python wrapper of fast xxhash implementation is available use
@@ -35,10 +42,10 @@ def hash_array(array):
         return hash(array.tobytes())
 
 
-LOG_2 = log(2.0)
+LOG_2: float = log(2.0)
 
 
-def log1p_exp(val):
+def log1p_exp(val: float) -> float:
     """Numerically stable implementation of `log(1 + exp(val))`."""
     if val > 0.0:
         return val + log1p(exp(-val))
@@ -46,7 +53,7 @@ def log1p_exp(val):
         return log1p(exp(val))
 
 
-def log1m_exp(val):
+def log1m_exp(val: float) -> float:
     """Numerically stable implementation of `log(1 - exp(val))`."""
     if val >= 0.0:
         return nan
@@ -56,7 +63,7 @@ def log1m_exp(val):
         return log1p(-exp(val))
 
 
-def log_sum_exp(val1, val2):
+def log_sum_exp(val1: float, val2: float) -> float:
     """Numerically stable implementation of `log(exp(val1) + exp(val2))`."""
     if val1 == -inf and val2 == -inf:
         return -inf
@@ -66,7 +73,7 @@ def log_sum_exp(val1, val2):
         return val2 + log1p_exp(val1 - val2)
 
 
-def log_diff_exp(val1, val2):
+def log_diff_exp(val1: float, val2: float) -> float:
     """Numerically stable implementation of `log(exp(val1) - exp(val2))`."""
     if val1 == -inf and val2 == -inf:
         return -inf
@@ -78,14 +85,14 @@ def log_diff_exp(val1, val2):
         return val1 + log1m_exp(val2 - val1)
 
 
-class LogRepFloat(object):
+class LogRepFloat:
     """Numerically stable logarithmic representation of positive float values.
 
     Stores logarithm of value and overloads arithmetic operators to use more
     numerically stable implementations where possible.
     """
 
-    def __init__(self, val=None, log_val=None):
+    def __init__(self, val: Optional[float] = None, log_val: Optional[float] = None):
         if log_val is None:
             if val is None:
                 raise ValueError("One of val or log_val must be specified.")
@@ -102,22 +109,22 @@ class LogRepFloat(object):
                 self.log_val = log_val
 
     @property
-    def val(self):
+    def val(self) -> float:
         try:
             return exp(self.log_val)
         except OverflowError:
             return inf
 
-    def __add__(self, other):
+    def __add__(self, other: ScalarLike) -> ScalarLike:
         if isinstance(other, LogRepFloat):
             return LogRepFloat(log_val=log_sum_exp(self.log_val, other.log_val))
         else:
             return self.val + other
 
-    def __radd__(self, other):
+    def __radd__(self, other: ScalarLike) -> ScalarLike:
         return self.__add__(other)
 
-    def __iadd__(self, other):
+    def __iadd__(self, other: ScalarLike) -> ScalarLike:
         if other == 0:
             return self
         elif isinstance(other, LogRepFloat):
@@ -126,7 +133,7 @@ class LogRepFloat(object):
             self.log_val = log_sum_exp(self.log_val, log(other))
         return self
 
-    def __sub__(self, other):
+    def __sub__(self, other: ScalarLike) -> ScalarLike:
         if isinstance(other, LogRepFloat):
             if self.log_val >= other.log_val:
                 return LogRepFloat(log_val=log_diff_exp(self.log_val, other.log_val))
@@ -135,68 +142,71 @@ class LogRepFloat(object):
         else:
             return self.val - other
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: ScalarLike) -> ScalarLike:
         return (-self).__radd__(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other: ScalarLike) -> ScalarLike:
         if isinstance(other, LogRepFloat):
             return LogRepFloat(log_val=self.log_val + other.log_val)
         else:
             return self.val * other
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: ScalarLike) -> ScalarLike:
         return self.__mul__(other)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: ScalarLike) -> ScalarLike:
         if isinstance(other, LogRepFloat):
             return LogRepFloat(log_val=self.log_val - other.log_val)
         else:
             return self.val / other
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: ScalarLike) -> ScalarLike:
         return other / self.val
 
-    def __neg__(self):
+    def __neg__(self) -> float:
         return -self.val
 
-    def __eq__(self, other):
+    def __eq__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val == other.log_val
         else:
             return self.val == other
 
-    def __ne__(self, other):
+    def __ne__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val != other.log_val
         else:
             return self.val != other
 
-    def __lt__(self, other):
+    def __lt__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val < other.log_val
         else:
             return self.val < other
 
-    def __gt__(self, other):
+    def __gt__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val > other.log_val
         else:
             return self.val > other
 
-    def __le__(self, other):
+    def __le__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val <= other.log_val
         else:
             return self.val <= other
 
-    def __ge__(self, other):
+    def __ge__(self, other: ScalarLike) -> bool:
         if isinstance(other, LogRepFloat):
             return self.log_val >= other.log_val
         else:
             return self.val >= other
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.val)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "LogRepFloat(val={0})".format(self.val)
+
+    def __array__(self) -> np.ndarray:
+        return np.array(self.val)

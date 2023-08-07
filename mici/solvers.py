@@ -1,7 +1,15 @@
 """Solvers for non-linear systems of equations for implicit integrators."""
 
+from __future__ import annotations
+
+from typing import Protocol, TYPE_CHECKING
 from mici.errors import ConvergenceError, LinAlgError
 import numpy as np
+
+if TYPE_CHECKING:
+    from mici.states import ChainState
+    from mici.systems import System
+    from mici.types import ScalarFunction, ArrayFunction, ArrayLike
 
 
 def euclidean_norm(vct):
@@ -14,25 +22,32 @@ def maximum_norm(vct):
     return (abs(vct)).max()
 
 
+class FixedPointSolver(Protocol):
+    """Solver for fixed point equation, returning `x` such that `func(x) = x`."""
+
+    def __call__(self, func: ArrayFunction, x0: ArrayLike, **kwargs) -> ArrayLike:
+        ...
+
+
 def solve_fixed_point_direct(
-    func,
-    x0,
-    convergence_tol=1e-9,
-    divergence_tol=1e10,
-    max_iters=100,
-    norm=maximum_norm,
-):
+    func: ArrayFunction,
+    x0: ArrayLike,
+    convergence_tol: float = 1e-9,
+    divergence_tol: float = 1e10,
+    max_iters: int = 100,
+    norm: ScalarFunction = maximum_norm,
+) -> ArrayLike:
     """Solve fixed point equation `func(x) = x` using direct iteration.
 
     Args:
-        func (Callable[[array], array]): Function to find fixed point of.
-        x0 (array): Initial state (function argument).
-        convergence_tol (float): Convergence tolerance - solver successfully terminates
-            when `norm(func(x) - x) < convergence_tol`.
-        divergence_tol (float): Divergence tolerance - solver aborts if
+        func: Function to find fixed point of.
+        x0: Initial state (function argument).
+        convergence_tol: Convergence tolerance - solver successfully terminates when
+            `norm(func(x) - x) < convergence_tol`.
+        divergence_tol: Divergence tolerance - solver aborts if
             `norm(func(x) - x) > divergence_tol` on any iteration.
-        max_iters (int): Maximum number of iterations before raising exception.
-        norm (Callable[[array], float]): Norm to use to assess convergence.
+        max_iters: Maximum number of iterations before raising exception.
+        norm: Norm to use to assess convergence.
 
     Returns:
         Solution to fixed point equation with `norm(func(x) - x) < convergence_tol`.
@@ -64,13 +79,13 @@ def solve_fixed_point_direct(
 
 
 def solve_fixed_point_steffensen(
-    func,
-    x0,
-    convergence_tol=1e-9,
-    divergence_tol=1e10,
-    max_iters=100,
-    norm=maximum_norm,
-):
+    func: ArrayFunction,
+    x0: ArrayLike,
+    convergence_tol: float = 1e-9,
+    divergence_tol: float = 1e10,
+    max_iters: int = 100,
+    norm: ScalarFunction = maximum_norm,
+) -> ArrayLike:
     """Solve fixed point equation `func(x) = x` using Steffensen's method.
 
     Steffennsen's method [1] achieves quadratic convergence but at the cost of two
@@ -80,14 +95,14 @@ def solve_fixed_point_steffensen(
     [1] : https://en.wikipedia.org/wiki/Steffensen%27s_method
 
     Args:
-        func (Callable[[array], array]): Function to find fixed point of.
-        x0 (array): Initial state (function argument).
-        convergence_tol (float): Convergence tolerance - solver successfully terminates
+        func: Function to find fixed point of.
+        x0: Initial state (function argument).
+        convergence_tol: Convergence tolerance - solver successfully terminates
             when `norm(func(x) - x) < convergence_tol`.
-        divergence_tol (float): Divergence tolerance - solver aborts if
+        divergence_tol: Divergence tolerance - solver aborts if
             `norm(func(x) - x) > divergence_tol` on any iteration.
-        max_iters (int): Maximum number of iterations before raising exception.
-        norm (Callable[[array], float]): Norm to use to assess convergence.
+        max_iters: Maximum number of iterations before raising exception.
+        norm: Norm to use to assess convergence.
 
     Returns:
         Solution to fixed point equation with `norm(func(x) - x) < convergence_tol`.
@@ -124,17 +139,41 @@ def solve_fixed_point_steffensen(
     )
 
 
+class ProjectionSolver(Protocol):
+    """Solver for projection on to manifold step in constrained integrator.
+
+    Solves an equation of the form
+
+        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0
+
+    for the vector of Lagrange multipliers `λ` to project a point on to the manifold
+    defined by the zero level set of a constraint function `c` (`system.constr`), with
+    `Φ₂,₁` the position component of a flow map for the `h₂` Hamiltonian component for
+    the system (i.e. `system.h2_flow`).
+    """
+
+    def __call__(
+        self,
+        state: ChainState,
+        state_prev: ChainState,
+        time_step: float,
+        system: System,
+        **kwargs,
+    ) -> ChainState:
+        ...
+
+
 def solve_projection_onto_manifold_quasi_newton(
-    state,
-    state_prev,
-    dt,
-    system,
-    constraint_tol=1e-9,
-    position_tol=1e-8,
-    divergence_tol=1e10,
-    max_iters=50,
-    norm=maximum_norm,
-):
+    state: ChainState,
+    state_prev: ChainState,
+    time_step: float,
+    system: System,
+    constraint_tol: float = 1e-9,
+    position_tol: float = 1e-8,
+    divergence_tol: float = 1e10,
+    max_iters: int = 50,
+    norm: ScalarFunction = maximum_norm,
+) -> ChainState:
     """Solve constraint equation using symmetric quasi-Newton method.
 
     Only requires re-evaluating the constraint function `system.constr` within the
@@ -174,29 +213,27 @@ def solve_projection_onto_manifold_quasi_newton(
     `∂c` (`system.jacob_constr`) on each iteration.
 
     Args:
-        state (mici.states.ChainState): Post `h2_flow` update state to project.
-        state_prev (mici.states.ChainState): Previous state in co-tangent bundle
-            before `h2_flow` update which defines the co-tangent space to perform
-            projection in.
-        dt (float): Integrator time step used in `h2_flow` update.
-        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian system
-            defining `h2_flow` and `constr` functions used to define constraint equation
-            to solve.
-        constraint_tol (float): Convergence tolerance in constraint space. Iteration
-            will continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
+        state: Post `h2_flow` update state to project.
+        state_prev: Previous state in co-tangent bundle before `h2_flow` update which
+            defines the co-tangent space to perform  projection in.
+        time_step: Integrator time step used in `h2_flow` update.
+        system: Hamiltonian system defining `h2_flow` and `constr` functions used to
+            define constraint equation to solve.
+        constraint_tol: Convergence tolerance in constraint space. Iteration will
+            continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
             position at the current iteration.
-        position_tol (float): Convergence tolerance in position space. Iteration will
-           continue until `norm(delt_pos) < position_tol` where `delta_pos` is the
-           change in the position in the current iteration.
-        divergence_tol (float): Divergence tolerance - solver aborts if
+        position_tol: Convergence tolerance in position space. Iteration will continue
+            until `norm(delt_pos) < position_tol` where `delta_pos` is the change in the
+            position in the current iteration.
+        divergence_tol: Divergence tolerance - solver aborts if
             `norm(constr(pos)) > divergence_tol` on any iteration where `pos` is the
             position at the current iteration and raises `mici.errors.ConvergenceError`.
-        max_iters (int): Maximum number of iterations to perform before aborting and
-            raising `mici.errors.ConvergenceError`.
-        norm (Callable[[array], float]): Norm to use to test for convergence.
+        max_iters: Maximum number of iterations to perform before aborting and raising
+            `mici.errors.ConvergenceError`.
+        norm: Norm to use to test for convergence.
 
     Returns:
-        Updated `state` object with position component satisfying constraint equation to
+        Updated state object with position component satisfying constraint equation to
         within `constraint_tol`, i.e. `norm(system.constr(state.pos)) < constraint_tol`.
 
     Raises:
@@ -206,7 +243,7 @@ def solve_projection_onto_manifold_quasi_newton(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom
     ).inv
@@ -223,7 +260,7 @@ def solve_projection_onto_manifold_quasi_newton(
                     f"|delta_pos|={norm(delta_pos):.1e}."
                 )
             elif error < constraint_tol and norm(delta_pos) < position_tol:
-                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(time_step) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -239,16 +276,16 @@ def solve_projection_onto_manifold_quasi_newton(
 
 
 def solve_projection_onto_manifold_newton(
-    state,
-    state_prev,
-    dt,
-    system,
-    constraint_tol=1e-9,
-    position_tol=1e-8,
-    divergence_tol=1e10,
-    max_iters=50,
-    norm=maximum_norm,
-):
+    state: ChainState,
+    state_prev: ChainState,
+    time_step: float,
+    system: System,
+    constraint_tol: float = 1e-9,
+    position_tol: float = 1e-8,
+    divergence_tol: float = 1e10,
+    max_iters: int = 50,
+    norm: ScalarFunction = maximum_norm,
+) -> ChainState:
     """Solve constraint equation using Newton's method.
 
     Requires re-evaluating both the constraint function `system.constr` and constraint
@@ -271,32 +308,30 @@ def solve_projection_onto_manifold_newton(
     where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the
     second (momentum argument), such that the Newton update is
 
-        λ_(α) = λ - ∂r(λ)⁻¹ r(λ)
+        λ = λ - ∂r(λ)⁻¹ r(λ)
 
     which requires evaluating `∂c` (`system.jacob_constr`) on each iteration and solving
     a linear system in the residual Jacobian `∂r(λ)`.
 
     Args:
-        state (mici.states.ChainState): Post `h2_flow` update state to project.
-        state_prev (mici.states.ChainState): Previous state in co-tangent bundle
-            before `h2_flow` update which defines the co-tangent space to perform
-            projection in.
-        dt (float): Integrator time step used in `h2_flow` update.
-        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian system
-            defining `h2_flow` and `constr` functions used to define constraint equation
-            to solve.
-        constraint_tol (float): Convergence tolerance in constraint space. Iteration
-            will continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
+        state: Post `h2_flow` update state to project.
+        state_prev: Previous state in co-tangent bundle before `h2_flow` update which
+            defines the co-tangent space to perform projection in.
+        time_step: Integrator time step used in `h2_flow` update.
+        system: Hamiltonian system defining `h2_flow` and `constr` functions used to
+            define constraint equation to solve.
+        constraint_tol: Convergence tolerance in constraint space. Iteration will
+            continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
             position at the current iteration.
-        position_tol (float): Convergence tolerance in position space. Iteration will
-           continue until `norm(delt_pos) < position_tol` where `delta_pos` is the
-           change in the position in the current iteration.
-        divergence_tol (float): Divergence tolerance - solver aborts if
+        position_tol: Convergence tolerance in position space. Iteration will continue
+            until `norm(delt_pos) < position_tol` where `delta_pos` is the change in the
+            position in the current iteration.
+        divergence_tol: Divergence tolerance - solver aborts if
             `norm(constr(pos)) > divergence_tol` on any iteration where `pos` is the
             position at the current iteration and raises `mici.errors.ConvergenceError`.
-        max_iters (int): Maximum number of iterations to perform before aborting and
-            raising `mici.errors.ConvergenceError`.
-        norm (Callable[[array], float]): Norm to use to test for convergence.
+        max_iters: Maximum number of iterations to perform before aborting and raising
+            `mici.errors.ConvergenceError`.
+        norm: Norm to use to test for convergence.
 
     Returns:
         Updated `state` object with position component satisfying constraint equation to
@@ -309,7 +344,7 @@ def solve_projection_onto_manifold_newton(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -329,7 +364,7 @@ def solve_projection_onto_manifold_newton(
                     f"|delta_pos|={norm(delta_pos):.1e}."
                 )
             if error < constraint_tol and norm(delta_pos) < position_tol:
-                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(time_step) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
@@ -345,17 +380,17 @@ def solve_projection_onto_manifold_newton(
 
 
 def solve_projection_onto_manifold_newton_with_line_search(
-    state,
-    state_prev,
-    dt,
-    system,
-    constraint_tol=1e-9,
-    position_tol=1e-8,
-    divergence_tol=1e10,
-    max_iters=50,
-    max_line_search_iters=10,
-    norm=maximum_norm,
-):
+    state: ChainState,
+    state_prev: ChainState,
+    time_step: float,
+    system: System,
+    constraint_tol: float = 1e-9,
+    position_tol: float = 1e-8,
+    divergence_tol: float = 1e10,
+    max_iters: int = 50,
+    max_line_search_iters: int = 10,
+    norm: ScalarFunction = maximum_norm,
+) -> ChainState:
     """Solve constraint equation using Newton's method with backtracking line-search.
 
     Requires re-evaluating both the constraint function `system.constr` and constraint
@@ -387,32 +422,30 @@ def solve_projection_onto_manifold_newton_with_line_search(
     performed by multiplying `α` by 0.5 until `|r(λ_(α))| < |r(λ)`.
 
     Args:
-        state (mici.states.ChainState): Post `h2_flow` update state to project.
-        state_prev (mici.states.ChainState): Previous state in co-tangent bundle
-            before `h2_flow` update which defines the co-tangent space to perform
-            projection in.
-        dt (float): Integrator time step used in `h2_flow` update.
-        system (mici.systems.ConstrainedEuclideanMetricSystem): Hamiltonian system
-            defining `h2_flow` and `constr` functions used to define constraint equation
-            to solve.
-        constraint_tol (float): Convergence tolerance in constraint space. Iteration
-            will continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
+        state: Post `h2_flow` update state to project.
+        state_prev: Previous state in co-tangent bundle before `h2_flow` update which
+            defines the co-tangent space to perform projection in.
+        time_step: Integrator time step used in `h2_flow` update.
+        system: Hamiltonian system defining `h2_flow` and `constr` functions used to
+            define constraint equation to solve.
+        constraint_tol: Convergence tolerance in constraint space. Iteration will
+            continue until `norm(constr(pos)) < constraint_tol` where `pos` is the
             position at the current iteration.
-        position_tol (float): Convergence tolerance in position space. Iteration will
-           continue until `norm(delt_pos) < position_tol` where `delta_pos` is the
-           change in the position in the current iteration.
-        divergence_tol (float): Divergence tolerance - solver aborts if
+        position_tol: Convergence tolerance in position space. Iteration will continue
+           until `norm(delt_pos) < position_tol` where `delta_pos` is the change in the
+           position in the current iteration.
+        divergence_tol: Divergence tolerance - solver aborts if
             `norm(constr(pos)) > divergence_tol` on any iteration where `pos` is the
             position at the current iteration and raises `mici.errors.ConvergenceError`.
-        max_iters (int): Maximum number of iterations to perform before aborting and
-            raising `mici.errors.ConvergenceError`.
-        max_line_search_iters (int): Maximum number of 'inner' line search iterations to
+        max_iters: Maximum number of iterations to perform before aborting and raising
+            `mici.errors.ConvergenceError`.
+        max_line_search_iters: Maximum number of 'inner' line search iterations to
             perform to try to find step size along search direction which decreases
             residual norm.
-        norm (Callable[[array], float]): Norm to use to test for convergence.
+        norm: Norm to use to test for convergence.
 
     Returns:
-        Updated `state` object with position component satisfying constraint equation to
+        Updated state object with position component satisfying constraint equation to
         within `constraint_tol`, i.e. `norm(system.constr(state.pos)) < constraint_tol`.
 
     Raises:
@@ -422,7 +455,7 @@ def solve_projection_onto_manifold_newton_with_line_search(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(dt))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -437,7 +470,7 @@ def solve_projection_onto_manifold_newton_with_line_search(
             if error < constraint_tol and (
                 i == 0 or norm(step_size * delta_pos) < position_tol
             ):
-                state.mom -= np.sign(dt) * dh2_flow_mom_dmom @ mu
+                state.mom -= np.sign(time_step) * dh2_flow_mom_dmom @ mu
                 return state
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(

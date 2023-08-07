@@ -1,13 +1,25 @@
 """Symplectic integrators for simulation of Hamiltonian dynamics."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 import numpy as np
+from numpy.typing import ArrayLike
 from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (
     maximum_norm,
     solve_fixed_point_direct,
     solve_projection_onto_manifold_quasi_newton,
+    FixedPointSolver,
+    ProjectionSolver,
 )
+
+if TYPE_CHECKING:
+    from typing import Any, Callable, Optional, Sequence
+    from mici.states import ChainState
+    from mici.systems import System
+    from mici.types import NormFunction
 
 
 class Integrator(ABC):
@@ -18,7 +30,7 @@ class Integrator(ABC):
     equation system
 
         q̇ = ∇₂h(q, p)
-        ṗ = −∇₁h(q, p)
+        ṗ = -∇₁h(q, p)
 
     with the flow map corresponding to the solution of the corresponding initial value
     problem a time-reversible and symplectic (and by consequence volume-preserving) map.
@@ -29,28 +41,25 @@ class Integrator(ABC):
     time-discretised trajectories of the Hamiltonian dynamics.
     """
 
-    def __init__(self, system, step_size=None):
+    def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
+            system: Hamiltonian system to integrate the dynamics of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
         """
         self.system = system
         self.step_size = step_size
 
-    def step(self, state):
+    def step(self, state: ChainState) -> ChainState:
         """Perform a single integrator step from a supplied state.
 
         Args:
-            state (mici.states.ChainState): System state to perform integrator step
-                from.
+            state: System state to perform integrator step from.
 
         Returns:
-            new_state (mici.states.ChainState): New object corresponding to stepped
-                state.
+            New object corresponding to stepped state.
         """
         if self.step_size is None:
             raise AdaptationError(
@@ -62,13 +71,12 @@ class Integrator(ABC):
         return state
 
     @abstractmethod
-    def _step(self, state, dt):
+    def _step(self, state: ChainState, time_step: float):
         """Implementation of single integrator step.
 
         Args:
-            state (mici.states.ChainState): System state to perform integrator step
-                from. Updated in place.
-            dt (float): Integrator time step. May be positive or negative.
+            state: System state to perform integrator step from. Updated in place.
+            time_step: Integrator time step. May be positive or negative.
         """
 
 
@@ -86,14 +94,14 @@ class TractableFlowIntegrator(Integrator):
     `h₂` are Hamiltonian component functions for which the exact flows can be computed.
     """
 
-    def __init__(self, system, step_size=None):
+    def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of. Must define both `h1_flow` and `h2_flow` methods.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
+            system: Hamiltonian system to integrate the dynamics of. Must define both
+                `h1_flow` and `h2_flow` methods.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
         """
         if not hasattr(system, "h1_flow") or not hasattr(system, "h2_flow"):
             raise ValueError(
@@ -114,7 +122,7 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
         h(q, p) = h₁(q) + h₂(p)
 
     where `h₁` is the potential energy and `h₂` is the kinetic energy, this integrator
-    corresponds to the classic (position) Störmer–Verlet method.
+    corresponds to the classic (position) Störmer-Verlet method.
 
     The integrator can also be applied to the more general Hamiltonian splitting
 
@@ -130,10 +138,10 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
     Cambridge University Press.
     """
 
-    def _step(self, state, dt):
-        self.system.h1_flow(state, 0.5 * dt)
-        self.system.h2_flow(state, dt)
-        self.system.h1_flow(state, 0.5 * dt)
+    def _step(self, state: ChainState, time_step: float):
+        self.system.h1_flow(state, 0.5 * time_step)
+        self.system.h2_flow(state, time_step)
+        self.system.h1_flow(state, 0.5 * time_step)
 
 
 class SymmetricCompositionIntegrator(TractableFlowIntegrator):
@@ -171,7 +179,7 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         (a₀, b₁, a₁, ⋯, aₖ, bₖ) with k = (s - 1) / 2 if s is odd or
         (a₀, b₁, a₁, ⋯, aₖ) with k = (s - 2) / 2 if s is even
 
-    The Störmer–Verlet 'leapfrog' integrator is a special case corresponding to the
+    The Störmer-Verlet 'leapfrog' integrator is a special case corresponding to the
     unique (symmetric and consistent) 1-stage integrator.
 
     For more details see Section 6.2 in Leimkuhler and Reich (2004).
@@ -183,23 +191,25 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
     """
 
     def __init__(
-        self, system, free_coefficients, step_size=None, initial_h1_flow_step=True
+        self,
+        system: System,
+        free_coefficients: Sequence[float],
+        step_size: Optional[float] = None,
+        initial_h1_flow_step: bool = True,
     ):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            free_coefficients (Sequence[float]): Sequence of `s - 1` scalar values,
-                where `s` is the number of stages in the symmetric composition,
-                specifying the free coefficients `(a₀, b₁, a₁, ⋯, aₖ, bₖ)` with
-                `k = (s - 1) / 2` if `s` is odd or `(a₀, b₁, a₁, ⋯, aₖ)` with
-                `k = (s - 2) / 2` if `s` is even.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
-            initial_h1_flow_step (bool): Whether the initial 'A' flow in the composition
-                should correspond to the flow of the `h₁` Hamiltonian component (True)
-                or to the flow of the `h₂` component (False).
+            system: Hamiltonian system to integrate the dynamics of.
+            free_coefficients: Sequence of `s - 1` scalar values, where `s` is the
+                number of stages in the symmetric composition, specifying the free
+                coefficients `(a₀, b₁, a₁, ⋯, aₖ, bₖ)` with `k = (s - 1) / 2` if `s` is
+                odd or `(a₀, b₁, a₁, ⋯, aₖ)` with `k = (s - 2) / 2` if `s` is even.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
+            initial_h1_flow_step: Whether the initial 'A' flow in the composition should
+                correspond to the flow of the `h₁` Hamiltonian component (`True`) or to
+                the flow of the `h₂` component (`False`).
         """
         super().__init__(system, step_size)
         self.initial_h1_flow_step = initial_h1_flow_step
@@ -216,9 +226,9 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         flow_b = system.h2_flow if initial_h1_flow_step else system.h1_flow
         self.flows = [flow_a, flow_b] * (n_free_coefficients + 1) + [flow_a]
 
-    def _step(self, state, dt):
+    def _step(self, state, time_step):
         for coefficient, flow in zip(self.coefficients, self.flows):
-            flow(state, coefficient * dt)
+            flow(state, coefficient * time_step)
 
 
 class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
@@ -233,14 +243,13 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
     SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system, step_size=None):
+    def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
+            system: Hamiltonian system to integrate the dynamics  of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
         """
         a_0 = (3 - 3 ** 0.5) / 6
         super().__init__(system, (a_0,), step_size, True)
@@ -258,14 +267,13 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
     SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system, step_size=None):
+    def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
+            system: Hamiltonian system to integrate the dynamics  of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
         """
         a_0 = 0.11888010966548
         b_1 = 0.29619504261126
@@ -284,14 +292,13 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
     SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system, step_size=None):
+    def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
+            system: Hamiltonian system to integrate the dynamics  of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
         """
         a_0 = 0.071353913450279725904
         b_1 = 0.191667800000000000000
@@ -330,21 +337,20 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     def __init__(
         self,
-        system,
-        step_size=None,
-        reverse_check_tol=2e-8,
-        reverse_check_norm=maximum_norm,
-        fixed_point_solver=solve_fixed_point_direct,
-        fixed_point_solver_kwargs=None,
+        system: System,
+        step_size: Optional[float] = None,
+        reverse_check_tol: float = 2e-8,
+        reverse_check_norm: NormFunction = maximum_norm,
+        fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
+        fixed_point_solver_kwargs: dict[str, Any] = None,
     ):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
-            reverse_check_tol (float): Tolerance for check of reversibility of implicit
+            system: Hamiltonian system to integrate the dynamics of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
+            reverse_check_tol: Tolerance for check of reversibility of implicit
                 sub-steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
@@ -352,48 +358,50 @@ class ImplicitLeapfrogIntegrator(Integrator):
                 `reverse_check_norm` argument) of `reverse_check_tol` of the original
                 state position component. If this condition is not met a
                 `mici.errors.NonReversibleStepError` exception is raised.
-            reverse_check_norm (Callable[[array], float]): Norm function accepting a
-                single one-dimensional array input and returning a non-negative floating
-                point value defining the distance to use in the reversibility check.
-                Defaults to `mici.solvers.maximum_norm`.
-            fixed_point_solver (Callable[[Callable[array], array], array]):  Function
-                which given a function `func` and initial guess `x0` iteratively solves
-                the fixed point equation `func(x) = x` initialising the iteration with
-                `x0` and returning an array corresponding to the solution if the
-                iteration converges or raising a `mici.errors.ConvergenceError`
-                otherwise. Defaults to `mici.solvers.solve_fixed_point_direct`.
-            fixed_point_solver_kwargs (Optional[Dict[str, Any]]): Dictionary of any
-                keyword arguments to `fixed_point_solver`.
+            reverse_check_norm: Norm function accepting a single one-dimensional array
+                input and returning a non-negative floating point value defining the
+                distance to use in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            fixed_point_solver:  Function which given a function `func` and initial
+                guess `x0` iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or raising a
+                `mici.errors.ConvergenceError` otherwise. Defaults to
+                `mici.solvers.solve_fixed_point_direct`.
+            fixed_point_solver_kwargs: Dictionary of any keyword arguments to
+                `fixed_point_solver`.
         """
         super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
-        self.reverse_check_norm = maximum_norm
+        self.reverse_check_norm = reverse_check_norm
         self.fixed_point_solver = fixed_point_solver
         if fixed_point_solver_kwargs is None:
             fixed_point_solver_kwargs = {}
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
-    def _solve_fixed_point(self, fixed_point_func, x_init):
+    def _solve_fixed_point(
+        self, fixed_point_func: Callable[[ArrayLike], ArrayLike], x_init: ArrayLike
+    ) -> ArrayLike:
         return self.fixed_point_solver(
             fixed_point_func, x_init, **self.fixed_point_solver_kwargs
         )
 
-    def _step_a(self, state, dt):
-        self.system.h1_flow(state, dt)
+    def _step_a(self, state: ChainState, time_step: float):
+        self.system.h1_flow(state, time_step)
 
-    def _step_b_fwd(self, state, dt):
+    def _step_b_fwd(self, state: ChainState, time_step: float):
         def fixed_point_func(mom):
             state.mom = mom
-            return mom_init - dt * self.system.dh2_dpos(state)
+            return mom_init - time_step * self.system.dh2_dpos(state)
 
         mom_init = state.mom
         state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
-    def _step_b_adj(self, state, dt):
+    def _step_b_adj(self, state: ChainState, time_step: float):
         mom_init = state.mom.copy()
-        state.mom -= dt * self.system.dh2_dpos(state)
+        state.mom -= time_step * self.system.dh2_dpos(state)
         state_back = state.copy()
-        self._step_b_fwd(state_back, -dt)
+        self._step_b_fwd(state_back, -time_step)
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -401,11 +409,11 @@ class ImplicitLeapfrogIntegrator(Integrator):
                 f"forward-backward integrated momentums = {rev_diff:.1e}."
             )
 
-    def _step_c_fwd(self, state, dt):
+    def _step_c_fwd(self, state: ChainState, time_step: float):
         pos_init = state.pos.copy()
-        state.pos += dt * self.system.dh2_dmom(state)
+        state.pos += time_step * self.system.dh2_dmom(state)
         state_back = state.copy()
-        self._step_c_adj(state_back, -dt)
+        self._step_c_adj(state_back, -time_step)
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
             raise NonReversibleStepError(
@@ -413,21 +421,21 @@ class ImplicitLeapfrogIntegrator(Integrator):
                 f"forward-backward integrated positions = {rev_diff:.1e}."
             )
 
-    def _step_c_adj(self, state, dt):
+    def _step_c_adj(self, state: ChainState, time_step: float):
         def fixed_point_func(pos):
             state.pos = pos
-            return pos_init + dt * self.system.dh2_dmom(state)
+            return pos_init + time_step * self.system.dh2_dmom(state)
 
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
-    def _step(self, state, dt):
-        self._step_a(state, dt)
-        self._step_b_fwd(state, dt)
-        self._step_c_fwd(state, dt)
-        self._step_c_adj(state, dt)
-        self._step_b_adj(state, dt)
-        self._step_a(state, dt)
+    def _step(self, state: ChainState, time_step: float):
+        self._step_a(state, time_step)
+        self._step_b_fwd(state, time_step)
+        self._step_c_fwd(state, time_step)
+        self._step_c_adj(state, time_step)
+        self._step_b_adj(state, time_step)
+        self._step_a(state, time_step)
 
 
 class ImplicitMidpointIntegrator(Integrator):
@@ -451,21 +459,20 @@ class ImplicitMidpointIntegrator(Integrator):
 
     def __init__(
         self,
-        system,
-        step_size=None,
-        reverse_check_tol=2e-8,
-        reverse_check_norm=maximum_norm,
-        fixed_point_solver=solve_fixed_point_direct,
-        fixed_point_solver_kwargs=None,
+        system: System,
+        step_size: Optional[float] = None,
+        reverse_check_tol: float = 2e-8,
+        reverse_check_norm: NormFunction = maximum_norm,
+        fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
+        fixed_point_solver_kwargs: dict[str, Any] = None,
     ):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
-            reverse_check_tol (float): Tolerance for check of reversibility of implicit
+            system: Hamiltonian system to integrate the dynamics of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
+            reverse_check_tol: Tolerance for check of reversibility of implicit
                 sub-steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
@@ -473,18 +480,18 @@ class ImplicitMidpointIntegrator(Integrator):
                 `reverse_check_norm` argument) of `reverse_check_tol` of the original
                 state position component. If this condition is not met a
                 `mici.errors.NonReversibleStepError` exception is raised.
-            reverse_check_norm (Callable[[array], float]): Norm function accepting a
-                single one-dimensional array input and returning a non-negative floating
-                point value defining the distance to use in the reversibility check.
-                Defaults to `mici.solvers.maximum_norm`.
-            fixed_point_solver (Callable[[Callable[array], array], array]):  Function
-                which given a function `func` and initial guess `x0` iteratively solves
-                the fixed point equation `func(x) = x` initialising the iteration with
-                `x0` and returning an array corresponding to the solution if the
-                iteration converges or raising a `mici.errors.ConvergenceError`
-                otherwise. Defaults to `mici.solvers.solve_fixed_point_direct`.
-            fixed_point_solver_kwargs (Optional[Dict[str, Any]]): Dictionary of any
-                keyword arguments to `fixed_point_solver`.
+            reverse_check_norm: Norm function accepting a single one-dimensional array
+                input and returning a non-negative floating point value defining the
+                distance to use in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            fixed_point_solver:  Function which given a function `func` and initial
+                guess `x0` iteratively solves the fixed point equation `func(x) = x`
+                initialising the iteration with `x0` and returning an array
+                corresponding to the solution if the iteration converges or raising a
+                `mici.errors.ConvergenceError` otherwise. Defaults to
+                `mici.solvers.solve_fixed_point_direct`.
+            fixed_point_solver_kwargs: Dictionary of any keyword arguments to
+                `fixed_point_solver`.
         """
         super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
@@ -494,30 +501,35 @@ class ImplicitMidpointIntegrator(Integrator):
             fixed_point_solver_kwargs = {}
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
-    def _solve_fixed_point(self, fixed_point_func, x_init):
+    def _solve_fixed_point(
+        self, fixed_point_func: Callable[[ArrayLike], ArrayLike], x_init: ArrayLike
+    ) -> ArrayLike:
         return self.fixed_point_solver(
             fixed_point_func, x_init, **self.fixed_point_solver_kwargs
         )
 
-    def _step_a_fwd(self, state, dt):
+    def _step_a_fwd(self, state: ChainState, time_step: float):
         pos_mom_init = np.concatenate([state.pos, state.mom])
 
         def fixed_point_func(pos_mom):
             state.pos, state.mom = np.split(pos_mom, 2)
             return pos_mom_init + np.concatenate(
-                [dt * self.system.dh_dmom(state), -dt * self.system.dh_dpos(state)]
+                [
+                    time_step * self.system.dh_dmom(state),
+                    -time_step * self.system.dh_dpos(state),
+                ]
             )
 
         state.pos, state.mom = np.split(
             self._solve_fixed_point(fixed_point_func, pos_mom_init), 2
         )
 
-    def _step_a_adj(self, state, dt):
+    def _step_a_adj(self, state: ChainState, time_step: float):
         state_prev = state.copy()
-        state.pos += dt * self.system.dh_dmom(state_prev)
-        state.mom -= dt * self.system.dh_dpos(state_prev)
+        state.pos += time_step * self.system.dh_dmom(state_prev)
+        state.mom -= time_step * self.system.dh_dpos(state_prev)
         state_back = state.copy()
-        self._step_a_fwd(state_back, -dt)
+        self._step_a_fwd(state_back, -time_step)
         rev_diff = self.reverse_check_norm(
             np.concatenate(
                 [state_back.pos - state_prev.pos, state_back.mom - state_prev.mom]
@@ -529,9 +541,9 @@ class ImplicitMidpointIntegrator(Integrator):
                 f"forward-backward integrated (pos, mom) pairs = {rev_diff:.1e}."
             )
 
-    def _step(self, state, dt):
-        self._step_a_fwd(state, dt / 2)
-        self._step_a_adj(state, dt / 2)
+    def _step(self, state: ChainState, time_step: float):
+        self._step_a_fwd(state, time_step / 2)
+        self._step_a_adj(state, time_step / 2)
 
 
 class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
@@ -542,7 +554,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     simulated. Specifically it is assumed that the Hamiltonian function `h` takes the
     form
 
-        h(q, p) = h₁(q) + h₂(q, p) =
+        h(q, p) = h₁(q) + h₂(q, p)
 
     where `q` and `p` are the position and momentum variables respectively, and `h₁` and
     `h₂` Hamiltonian component functions for which the exact flows, respectively `Φ₁`
@@ -566,7 +578,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     equations
 
         q̇ = ∇₂h(q, p),
-        ṗ = −∇₁h(q, p) − ∂c(q)ᵀλ,
+        ṗ = -∇₁h(q, p) - ∂c(q)ᵀλ,
         c(q) = 0.
 
     The dynamics implicitly define a set of constraints on the momentum variables,
@@ -597,7 +609,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     any initial state `(q, p)` in the co-tangent bundle, with `c(q') = 0` trivially
     satisfied as `Φ₁` is an identity map in the position:
 
-        Φ₁(t)(q, p) = (q, p − t ∇h₁(q))
+        Φ₁(t)(q, p) = (q, p - t ∇h₁(q))
 
     The map `Ψ₁(t)` therefore corresponds to taking an unconstrained step `Φ₁(t)` and
     then projecting the resulting momentum back in to the co-tangent space. For the
@@ -646,24 +658,23 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     def __init__(
         self,
-        system,
-        step_size=None,
-        n_inner_step=1,
-        reverse_check_tol=2e-8,
-        reverse_check_norm=maximum_norm,
-        projection_solver=solve_projection_onto_manifold_quasi_newton,
-        projection_solver_kwargs=None,
+        system: System,
+        step_size: Optional[float] = None,
+        n_inner_step: int = 1,
+        reverse_check_tol: float = 2e-8,
+        reverse_check_norm: NormFunction = maximum_norm,
+        projection_solver: ProjectionSolver = solve_projection_onto_manifold_quasi_newton,
+        projection_solver_kwargs: Optional[dict[str, Any]] = None,
     ):
         """
         Args:
-            system (mici.systems.System): Hamiltonian system to integrate the dynamics
-                of.
-            step_size (Optional[float]): Integrator time step. If set to `None` it is
-                assumed that a step size adapter will be used to set the step size
-                before calling the `step` method.
-            n_inner_step (int): Positive integer specifying number of 'inner'
-                constrained `system.h2_flow` steps to take within each overall step. As
-                the derivative `system.dh1_dpos` is not evaluated during the
+            system: Hamiltonian system to integrate the dynamics of.
+            step_size: Integrator time step. If set to `None` it is assumed that a step
+                size adapter will be used to set the step size before calling the `step`
+                method.
+            n_inner_step: Positive integer specifying number of 'inner' constrained
+                `system.h2_flow` steps to take within each overall step. As the
+                derivative `system.dh1_dpos` is not evaluated during the
                 `system.h2_flow` steps, if this derivative is relatively expensive to
                 compute compared to evaluating `system.h2_flow` then compared to using
                 `n_inner_step = 1` (the default) for a given `step_size` it can be more
@@ -675,7 +686,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 equations to retract the position component of the updated state back on
                 to the manifold, with the iterative solver typically diverging if the
                 time step used is too large.
-            reverse_check_tol (float): Tolerance for check of reversibility of implicit
+            reverse_check_tol: Tolerance for check of reversibility of implicit
                 sub-steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
@@ -683,28 +694,25 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 `reverse_check_norm` argument) of `reverse_check_tol` of the original
                 state position component. If this condition is not met a
                 `mici.errors.NonReversibleStepError` exception is raised.
-            reverse_check_norm (Callable[[array], float]): Norm function accepting a
-                single one-dimensional array input and returning a non-negative floating
-                point value defining the distance to use in the reversibility check.
-                Defaults to `mici.solvers.maximum_norm`.
-            projection_solver (Callable[
-                    [ChainState, ChainState, float, System], ChainState]): Function
-                which given two states `state` and `state_prev`, floating point time
-                step `dt` and a Hamiltonian system object `system` solves the non-linear
-                system of equations in `λ`
+            reverse_check_norm: Norm function accepting a single one-dimensional array
+                input and returning a non-negative floating point value defining the
+                distance to use in the reversibility check. Defaults to
+                `mici.solvers.maximum_norm`.
+            projection_solver: Function which given two states `state` and `state_prev`,
+                floating point time step `time_step` and a Hamiltonian system object
+                `system` solves the non-linear system of equations in `λ`
 
                     system.constr(
                         state.pos + dh2_flow_pos_dmom @
                             system.jacob_constr(state_prev).T @ λ) == 0
 
-                where `dh2_flow_pos_dmom = system.dh2_flow_dmom(dt)[0]` is the
-                derivative of the action of the (linear) `system.h2_flow` map
-                on the state momentum component with respect to the position
-                component. This is used to project the state position
-                component back on to the manifold after an unconstrained
-                `system.h2_flow` update.
-            projection_solver_kwargs (Optional[Dict[str, object]]): Dictionary of any
-                keyword arguments to `projection_solver`.
+                where `dh2_flow_pos_dmom = system.dh2_flow_dmom(time_step)[0]` is the
+                derivative of the action of the (linear) `system.h2_flow` map on the
+                state momentum component with respect to the position component. This is
+                used to project the state position component back on to the manifold
+                after an unconstrained `system.h2_flow` update.
+            projection_solver_kwargs: Dictionary of any keyword arguments to
+                `projection_solver`.
         """
         super().__init__(system, step_size)
         self.n_inner_step = n_inner_step
@@ -715,24 +723,26 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
             projection_solver_kwargs = {}
         self.projection_solver_kwargs = projection_solver_kwargs
 
-    def _h2_flow_retraction_onto_manifold(self, state, state_prev, dt):
-        self.system.h2_flow(state, dt)
+    def _h2_flow_retraction_onto_manifold(
+        self, state: ChainState, state_prev: ChainState, time_step: float
+    ):
+        self.system.h2_flow(state, time_step)
         self.projection_solver(
-            state, state_prev, dt, self.system, **self.projection_solver_kwargs
+            state, state_prev, time_step, self.system, **self.projection_solver_kwargs
         )
 
-    def _project_onto_cotangent_space(self, state):
+    def _project_onto_cotangent_space(self, state: ChainState):
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
 
-    def _step_a(self, state, dt):
-        self.system.h1_flow(state, dt)
+    def _step_a(self, state: ChainState, time_step: float):
+        self.system.h1_flow(state, time_step)
         self._project_onto_cotangent_space(state)
 
-    def _step_b(self, state, dt):
-        dt_i = dt / self.n_inner_step
+    def _step_b(self, state: ChainState, time_step: float):
+        time_step_inner = time_step / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
-            self._h2_flow_retraction_onto_manifold(state, state_prev, dt_i)
+            self._h2_flow_retraction_onto_manifold(state, state_prev, time_step_inner)
             if i == self.n_inner_step - 1:
                 # If at last inner step pre-evaluate dh1_dpos before projecting
                 # state on to cotangent space, with computed value being
@@ -749,7 +759,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 self.system.dh1_dpos(state)
             self._project_onto_cotangent_space(state)
             state_back = state.copy()
-            self._h2_flow_retraction_onto_manifold(state_back, state, -dt_i)
+            self._h2_flow_retraction_onto_manifold(state_back, state, -time_step_inner)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
                 raise NonReversibleStepError(
@@ -757,7 +767,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                     f"forward-backward integrated positions = {rev_diff:.1e}."
                 )
 
-    def _step(self, state, dt):
-        self._step_a(state, 0.5 * dt)
-        self._step_b(state, dt)
-        self._step_a(state, 0.5 * dt)
+    def _step(self, state: ChainState, time_step: float):
+        self._step_a(state, 0.5 * time_step)
+        self._step_b(state, time_step)
+        self._step_a(state, 0.5 * time_step)

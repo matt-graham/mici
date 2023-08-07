@@ -1,12 +1,31 @@
 """Classes for controlling sampling of Markov chains split into stages."""
 
+from __future__ import annotations
+
 import abc
-from collections import OrderedDict, namedtuple
+from typing import NamedTuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable
+    from numpy.typing import ArrayLike
+    from mici.adapters import Adapter
+    from mici.states import ChainState
 
 
-ChainStage = namedtuple(
-    "ChainStage", ["n_iter", "adapters", "trace_funcs", "record_stats"]
-)
+class ChainStage(NamedTuple):
+    """Parameters of chain stage."""
+
+    n_iter: int
+    """Number of iterations in chain stage."""
+
+    adapters: dict[str, Iterable[Adapter]]
+    """Dictionary of adapters to apply to each transition in chain stage."""
+
+    trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]]
+    """"""
+
+    record_stats: bool
+    """Whether to record statistics and traces during chain stage."""
 
 
 class Stager(abc.ABC):
@@ -14,48 +33,49 @@ class Stager(abc.ABC):
 
     @abc.abstractmethod
     def stages(
-        self, n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up=False
-    ):
-        """Create dictionary specifying labels and parameters of sampling stages.
+        self,
+        n_warm_up_iter: int,
+        n_main_iter: int,
+        adapters: dict[str, Iterable[Adapter]],
+        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_warm_up: bool = False,
+    ) -> dict[str, ChainStage]:
+        """Create dictionary specifying labels and parameters of chain sampling stages.
 
-        Constructs an ordered dictionary with entries corresponding to the sequence of
+        Constructs a (ordered) dictionary with entries corresponding to the sequence of
         sampling stages when running chains with one or more initial adaptation stages.
-        The keys of each entry are string labels for the sampling stage and the values a
-        3-tuple `(n_iter, adapters, trace_funcs)` with `n_iter` the number of chain
-        iterations in the stage, `adapters` a dictionary of transition adapters to pass
-        to the `_sample_chain` call (or `None` if no adaptation to be used) and
-        `trace_func` a list of trace functions to pass to the `_sample_chain` call (list
-        may be empty if no values to be traced).
+        The keys of each entry are a string label for the sampling stage and the value a
+        `ChainStage` named tuple specifying the parameters of the stage.
 
         Args:
-            n_warm_up_iter (int): Number of adaptive warm up iterations per chain.
-                Depending on the adapters specified by the `adapters` argument the warm
-                up iterations may be split between one or more adaptive stages.
-            n_main_iter (int): Number of iterations (samples to draw) per chain during
-                main (non-adaptive) sampling stage.
-            trace_funcs (Iterable[Callable[[ChainState], Dict[str, array]]]): List of
-                functions which compute the variables to be recorded at each chain
-                iteration, with each trace function being passed the current state and
-                returning a dictionary of scalar or array values corresponding to the
-                variable(s) to be stored. The keys in the returned dictionaries are used
-                to index the trace arrays in the returned traces dictionary. If a key
-                appears in multiple dictionaries only the the value corresponding to the
-                last trace function to return that key will be stored. By default chains
-                are only traced in the iterations of the final non-adaptive stage - this
-                behaviour can be altered using the `trace_warm_up` argument.
-            adapters (Dict[str, Iterable[Adapter]): Dictionary of iterables of
-                `mici.adapters.Adapter` instances keyed by strings corresponding to the
-                key of the transition in the `transitions` dictionary to apply the
-                adapters to, to use to adaptatively set parameters of the transitions
-                during the adaptive stages of the chains. Note that the adapter updates
-                are applied in the order the adapters appear in the iterables and so if
-                multiple adapters change the same parameter(s) the order will matter.
-            trace_warm_up (bool): Whether to record chain traces and statistics during
-                warm-up stage iterations (True) or only record traces and statistics in
-                the iterations of the final non-adaptive stage (True, the default).
+            n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending
+                on the adapters specified by the `adapters` argument the warm up
+                iterations may be split between one or more adaptive stages.
+            n_main_iter: Number of iterations (samples to draw) per chain during main
+                (non-adaptive) sampling stage.
+            trace_funcs: Iterable of functions which compute the variables to be
+                recorded at each chain iteration, with each trace function being passed
+                the current state and returning a dictionary of scalar or array values
+                corresponding to the variable(s) to be stored. The keys in the returned
+                dictionaries are used to index the trace arrays in the returned traces
+                dictionary. If a key appears in multiple dictionaries only the the value
+                corresponding to the last trace function to return that key will be
+                stored. By default chains are only traced in the iterations of the final
+                non-adaptive stage - this behaviour can be altered using the
+                `trace_warm_up` argument.
+            adapters: Dictionary of iterables of `Adapter` instances keyed by strings
+                corresponding to the key of the transition in the sampler `transitions`
+                dictionary to apply the adapters to, to use to adaptatively set
+                parameters of the transitions during the adaptive stages of the chains.
+                Note that the adapter updates are applied in the order the adapters
+                appear in the iterables and so if multiple adapters change the same
+                parameter(s) the order will matter.
+            trace_warm_up: Whether to record chain traces and statistics during warm-up
+                stage iterations (`True`) or only record traces and statistics in the
+                iterations of the final non-adaptive stage (`False`, the default).
 
         Returns:
-            OrderedDict[str, ChainStage]: Ordered dictionary specifying sampling stages.
+            Dictionary specifying chain stages, keyed by labels for stages.
         """
 
 
@@ -72,9 +92,14 @@ class WarmUpStager(Stager):
     """
 
     def stages(
-        self, n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up=False
-    ):
-        sampling_stages = OrderedDict()
+        self,
+        n_warm_up_iter: int,
+        n_main_iter: int,
+        adapters: dict[str, Iterable[Adapter]],
+        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_warm_up: bool = False,
+    ) -> dict[str, ChainStage]:
+        sampling_stages = dict()
         # adaptive warm up stage
         if n_warm_up_iter > 0:
             warm_up_trace_funcs = trace_funcs if trace_warm_up else None
@@ -128,35 +153,33 @@ class WindowedWarmUpStager(Stager):
 
     def __init__(
         self,
-        n_init_slow_window_iter=25,
-        n_init_fast_stage_iter=75,
-        n_final_fast_stage_iter=50,
-        slow_window_multiplier=2,
+        n_init_slow_window_iter: int = 25,
+        n_init_fast_stage_iter: int = 75,
+        n_final_fast_stage_iter: int = 50,
+        slow_window_multiplier: float = 2.0,
     ):
         """
         Args:
-            n_init_slow_window_iter (int): Number of iterations in the initial
-                (smallest) window in the slow adaptation stage. Defaults to 25. If the
-                sum of `n_init_slow_window_iter`, `n_init_fast_stage_iter` and
+            n_init_slow_window_iter: Number of iterations in the initial (smallest)
+                window in the slow adaptation stage. Defaults to 25. If the sum of
+                `n_init_slow_window_iter`, `n_init_fast_stage_iter` and
                 `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
                 `n_init_slow_window_iter` is set to approximately 75% of
                 `n_warm_up_iter` (with a single window being used in the slow adaptation
                 stage in this case).
-            n_init_fast_stage_iter (int): Number of iterations in the initial fast
-                adaptation stage. Defaults to 75. If the sum of
-                `n_init_slow_window_iter`, n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 15% of
-                `n_warm_up_iter`.
-            n_final_fast_stage_iter (int): Number of iterations in the final fast
-                adaptation stage. Defaults to 50. If the sum of
-                `n_init_slow_window_iter`, `n_init_fast_stage_iter` and
-                `n_final_fast_stage_iter` is more than `n_warm_up_iter` then
-                `n_init_fast_stage_iter` is set to approximately 10% of
-                `n_warm_up_iter`.
-            slow_window_multiplier (float): Multiplier by which to increase the number
-                of iterations of each subsequent slow adaptation window by. Defaults to
-                2 such that each window doubles in size.
+            n_init_fast_stage_iter: Number of iterations in the initial fast adaptation
+                stage. Defaults to 75. If the sum of `n_init_slow_window_iter`,
+                n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more than
+                `n_warm_up_iter` then `n_init_fast_stage_iter` is set to approximately
+                15% of `n_warm_up_iter`.
+            n_final_fast_stage_iter: Number of iterations in the final fast adaptation
+                stage. Defaults to 50. If the sum of `n_init_slow_window_iter`,
+                `n_init_fast_stage_iter` and `n_final_fast_stage_iter` is more than
+                `n_warm_up_iter` then `n_init_fast_stage_iter` is set to approximately
+                10% of `n_warm_up_iter`.
+            slow_window_multiplier: Multiplier by which to increase the number of
+                iterations of each subsequent slow adaptation window by. Defaults to 2
+                such that each window doubles in size.
         """
         self.n_init_slow_window_iter = n_init_slow_window_iter
         self.n_init_fast_stage_iter = n_init_fast_stage_iter
@@ -164,8 +187,13 @@ class WindowedWarmUpStager(Stager):
         self.slow_window_multiplier = slow_window_multiplier
 
     def stages(
-        self, n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up=False
-    ):
+        self,
+        n_warm_up_iter: int,
+        n_main_iter: int,
+        adapters: dict[str, Iterable[Adapter]],
+        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_warm_up: bool = False,
+    ) -> dict[str, ChainStage]:
         fast_adapters = {
             trans_key: [adapter for adapter in adapter_list if adapter.is_fast]
             for trans_key, adapter_list in adapters.items()
@@ -184,7 +212,7 @@ class WindowedWarmUpStager(Stager):
             n_init_slow_window_iter = self.n_init_slow_window_iter
             n_init_fast_stage_iter = self.n_init_fast_stage_iter
             n_final_fast_stage_iter = self.n_final_fast_stage_iter
-        sampling_stages = OrderedDict()
+        sampling_stages = dict()
         # adaptive warm-up stages
         if n_warm_up_iter > 0:
             warm_up_trace_funcs = trace_funcs if trace_warm_up else None

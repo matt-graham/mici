@@ -1,5 +1,7 @@
 """Exception types."""
 
+from __future__ import annotations
+
 
 class Error(RuntimeError):
     """Base class for errors."""

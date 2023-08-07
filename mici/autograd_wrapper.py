@@ -1,10 +1,12 @@
 """Additional autograd differential operators."""
 
+from __future__ import annotations
+
 from functools import wraps
+from typing import TYPE_CHECKING
 
 AUTOGRAD_AVAILABLE = True
 try:
-    from autograd import make_vjp as vjp_and_value
     from autograd.wrap_util import unary_to_nary
     from autograd.builtins import tuple as atuple
     from autograd.core import make_vjp
@@ -13,8 +15,19 @@ try:
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 
+if TYPE_CHECKING:
+    from typing import Callable
+    from mici.types import (
+        ScalarLike,
+        ArrayLike,
+        ScalarFunction,
+        ArrayFunction,
+        MatrixHessianProduct,
+        MatrixTressianProduct,
+    )
 
-def _wrapped_unary_to_nary(func):
+
+def _wrapped_unary_to_nary(func: Callable) -> Callable:
     """Use functools.wraps with unary_to_nary decorator."""
     if AUTOGRAD_AVAILABLE:
         return wraps(func)(unary_to_nary(func))
@@ -23,7 +36,7 @@ def _wrapped_unary_to_nary(func):
 
 
 @_wrapped_unary_to_nary
-def grad_and_value(fun, x):
+def grad_and_value(fun: ScalarFunction, x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
     """
     Makes a function that returns both gradient and value of a function.
     """
@@ -36,7 +49,7 @@ def grad_and_value(fun, x):
 
 
 @_wrapped_unary_to_nary
-def jacobian_and_value(fun, x):
+def jacobian_and_value(fun: ArrayFunction, x: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
     """
     Makes a function that returns both the Jacobian and value of a function.
 
@@ -56,7 +69,9 @@ def jacobian_and_value(fun, x):
 
 
 @_wrapped_unary_to_nary
-def mhp_jacobian_and_value(fun, x):
+def mhp_jacobian_and_value(
+    fun: ArrayFunction, x: ArrayLike
+) -> tuple[MatrixHessianProduct, ArrayLike, ArrayLike]:
     """
     Makes a function that returns MHP, Jacobian and value of a function.
 
@@ -80,7 +95,9 @@ def mhp_jacobian_and_value(fun, x):
 
 
 @_wrapped_unary_to_nary
-def hessian_grad_and_value(fun, x):
+def hessian_grad_and_value(
+    fun: ArrayFunction, x: ArrayLike
+) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
     """
     Makes a function that returns the Hessian, gradient & value of a function.
 
@@ -103,7 +120,9 @@ def hessian_grad_and_value(fun, x):
 
 
 @_wrapped_unary_to_nary
-def mtp_hessian_grad_and_value(fun, x):
+def mtp_hessian_grad_and_value(
+    fun: ArrayFunction, x: ArrayLike
+) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
     """
     Makes a function that returns MTP, Jacobian and value of a function.
 
