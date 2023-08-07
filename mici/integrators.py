@@ -631,7 +631,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     i.e. solving for the values of the Lagrange multipliers such that the position
     component of the output of `Φ₂(t) ∘ Π(λ)` is on the manifold, with this typically
     a non-linear system of equations that will need to be solved iteratively e.g. using
-    Newton's method. The momentum output of `Φ₂(t) ∘ Π(λ) is then projected in to the
+    Newton's method. The momentum output of `Φ₂(t) ∘ Π(λ)` is then projected in to the
     cotangent space to compute the final state pair, with this projection step as noted
     above typically having an analytic solution.
 

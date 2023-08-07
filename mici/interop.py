@@ -99,6 +99,7 @@ def sample_pymc3_model(
             with entropy from operating system.
         progressbar: Whether or not to display a progress bar.
         init: Initialization method to use. One of:
+
             1. adapt_diag: Start with a identity mass matrix and then adapt a
                 diagonal based on the variance of the tuning samples. All chains use the
                 test value (usually the prior mean) as starting point.
@@ -106,8 +107,10 @@ def sample_pymc3_model(
                 [-1, 1] to the starting point in each chain. Also chosen if
                 `init=="auto"`.
             3.  adapt_full: Adapt a dense mass matrix using the sample covariances
+
         jitter_max_retries: Maximum number of repeated attempts (per chain) at creating
-            an initial matrix with uniform jitter that yields a finite probability. This applies to `jitter+adapt_diag` and `jitter+adapt_full` init methods.
+            an initial matrix with uniform jitter that yields a finite probability.
+            This applies to `jitter+adapt_diag` and `jitter+adapt_full` init methods.
         trace: A list of variables to track. If `None`, `model.unobserved_RVs` is used.
         return_inferencedata: Whether to return the traces as an `arviz.InferenceData`
             (`True`) object or a dict (`False`).
@@ -286,13 +289,11 @@ def sample_stan_model(
         model_code: Stan program code describing a Stan model.
         data: A Python dictionary or mapping providing the data for the model. Variable
             names are the keys and the values are their associated values.
-
-    Kwargs:
         num_samples: A non-negative integer specifying the number of non-warm-up
             iterations per chain.
         num_warmup: A non-negative integer specifying the number of warm-up iterations
             per chain.
-        num_chains: A positive integer specifying the number of Markov chains
+        num_chains: A positive integer specifying the number of Markov chains.
         save_warmup: Whether to save warm-up chain data (`True`) or not (`False`).
         metric: String specifying metric type. One of "unit_e", "diag_e" or "dense_e",
             indicating respectively to used a fixed identity matrix metric
@@ -316,8 +317,8 @@ def sample_stan_model(
             (`True`) object or a dict (`False`).
 
     Returns:
-        A dictionary or ArviZ `InferenceData` object containing the sampled chain output.
-        Dictionary output (when `return_inferencedata=False`) has string keys
+        A dictionary or ArviZ `InferenceData` object containing the sampled chain
+        output. Dictionary output (when `return_inferencedata=False`) has string keys
         corresponding to the name of each traced variable in the model, with the values
         being the corresponding values of the variables traced across the chains as
         NumPy arrays, with the first dimension the flattened draw index across all

@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 """List of names of valid differential operators.
 
-Any automatic differentiation framework wrapper module will need to provide
-all of these operators as callables (with a single function as argument) to
-fully support all of the required derivative functions.
+Any automatic differentiation framework wrapper module will need to provide all of these
+operators as callables (with a single function as argument) to fully support all of the
+required derivative functions.
 """
 DIFF_OPS = [
     # vector Jacobian product and value
@@ -22,13 +22,11 @@ DIFF_OPS = [
     "grad_and_value",
     # Hessian matrix, gradient and value for scalar valued functions
     "hessian_grad_and_value",
-    # matrix Tressian product, gradient and value for scalar valued
-    # functions
+    # matrix Tressian product, gradient and value for scalar valued functions
     "mtp_hessian_grad_and_value",
     # Jacobian matrix and value for vector valued functions
     "jacobian_and_value",
-    # matrix Hessian product, Jacobian matrix and value for vector valued
-    # functions
+    # matrix Hessian product, Jacobian matrix and value for vector valued functions
     "mhp_jacobian_and_value",
 ]
 
@@ -39,14 +37,14 @@ def autodiff_fallback(
     """Generate derivative function automatically if not provided.
 
     Uses automatic differentiation to generate a function corresponding to a
-    differential operator applied to a function if an alternative
-    implementation of the derivative function has not been provided.
+    differential operator applied to a function if an alternative implementation of the
+    derivative function has not been provided.
 
     Args:
         diff_func: Either a callable implementing the required derivative function or
             `None` if none was provided.
         func: Function to differentiate.
-        diff_op_name : String specifying name of differential operator from automatic
+        diff_op_name: String specifying name of differential operator from automatic
             differentiation framework wrapper to use to generate required derivative
             function.
         name: Name of derivative function to use in error message.

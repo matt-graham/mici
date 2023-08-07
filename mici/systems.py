@@ -35,17 +35,19 @@ if TYPE_CHECKING:
 class System(ABC):
     r"""Base class for Hamiltonian systems.
 
-    The Hamiltonian function \(h\) is assumed to have the general form
+    The Hamiltonian function :math:`h` is assumed to have the general form
 
-    \[ h(q, p) = h_1(q) + h_2(q, p) \]
+    .. math::
 
-    where \(q\) and \(p\) are the position and momentum variables respectively, and
-    \(h_1\) and \(h_2\) Hamiltonian component functions. The exact Hamiltonian flow for
-    the \(h_1\) component can be always be computed as it depends only on the position
-    variable however depending on the form of \(h_2\) the corresponding exact
-    Hamiltonian flow may or may not be simulable.
+        h(q, p) = h_1(q) + h_2(q, p)
 
-    By default \(h_1\) is assumed to correspond to the negative logarithm of an
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact
+    Hamiltonian flow for the :math:`h_1` component can be always be computed as it
+    depends only on the position variable however depending on the form of :math:`h_2`
+    the corresponding exact Hamiltonian flow may or may not be simulable.
+
+    By default :math:`h_1` is assumed to correspond to the negative logarithm of an
     unnormalized density on the position variables with respect to the Lebesgue measure,
     with the corresponding distribution on the position space being the target
     distribution it is wished to draw approximate samples from.
@@ -218,19 +220,23 @@ class EuclideanMetricSystem(System):
     r"""Hamiltonian system with a Euclidean metric on the position space.
 
     Here Euclidean metric is defined to mean a metric with a fixed positive definite
-    matrix representation \(M\). The momentum variables are taken to be independent of
-    the position variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by \(M\), so that the \(h_2\) Hamiltonian component is
+    matrix representation :math:`M`. The momentum variables are taken to be independent
+    of the position variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by :math:`M`, so that the :math:`h_2` Hamiltonian component is
 
-    \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p \]
+    .. math::
 
-    where \(q\) and \(p\) are the position and momentum variables respectively.
+        h_2(q, p) = \frac{1}{2} p^T M^{-1} p
 
-    The \(h_1\) Hamiltonian component function is
+    where :math:`q` and :math:`p` are the position and momentum variables respectively.
 
-    \[ h_1(q) = \ell(q) \]
+    The :math:`h_1` Hamiltonian component function is
 
-    where \(\ell(q)\) is the negative log (unnormalized) density of the target
+    .. math::
+
+        h_1(q) = \ell(q)
+
+    where :math:`\ell(q)` is the negative log (unnormalized) density of the target
     distribution with respect to the Lebesgue measure.
     """
 
@@ -331,27 +337,32 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     r"""Euclidean Hamiltonian system with a tractable Gaussian component.
 
     Here Euclidean metric is defined to mean a metric with a fixed positive definite
-    matrix representation \(M\). The momentum variables are taken to be independent of
-    the position variables and with a zero-mean Gaussian marginal distribution with
-    covariance specified by \(M\).
+    matrix representation :math:`M`. The momentum variables are taken to be independent
+    of the position variables and with a zero-mean Gaussian marginal distribution with
+    covariance specified by :math:`M`.
 
     Additionally the target distribution on the position variables is assumed to be
     defined by an unnormalized density with respect to the standard Gaussian measure on
     the position space (with identity covariance and zero mean), with the Hamiltonian
-    component \(h_1\) corresponding to the negative logarithm of this density rather
+    component :math:`h_1` corresponding to the negative logarithm of this density rather
     than the density with respect to the Lebesgue measure on the position space, i.e.
 
-    \[ h_1(q) = \ell(q) - \frac{1}{2} q^T q \]
+    .. math::
 
-    where \(q\) is the position and \(\ell(q)\) is the negative log (unnormalized)
-    density of the target distribution with respect to the Lebesgue measure at \(q\).
-    The Hamiltonian  component function \(h_2\) is then assumed to have the form
+        h_1(q) = \ell(q) - \frac{1}{2} q^T q
 
-    \[ h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p \]
+    where :math:`q` is the position and :math:`\ell(q)` is the negative log
+    (unnormalized) density of the target distribution with respect to the Lebesgue
+    measure at :math:`q`. The Hamiltonian  component function :math:`h_2` is then
+    assumed to have the form
 
-    where \(p\) is the momentum. In this case the Hamiltonian flow due to the quadratic
-    \(h_2\) component can be solved for analytically, allowing an integrator to be
-    defined using this alternative splitting of the Hamiltonian [1].
+    .. math::
+
+        h_2(q, p) = \frac{1}{2} q^T q + \frac{1}{2} p^T M^{-1} p
+
+    where :math:`p` is the momentum. In this case the Hamiltonian flow due to the
+    quadratic :math:`h_2` component can be solved for analytically, allowing an
+    integrator to be defined using this alternative splitting of the Hamiltonian [1].
 
     References:
 
@@ -433,42 +444,46 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     r"""Base class for Euclidean Hamiltonian systems subject to constraints.
 
     The (constrained) position space is assumed to be a differentiable manifold embedded
-    with a \(Q\)-dimensional ambient Euclidean space. The \(Q-C\) dimensional manifold
-    \(\mathcal{M}\) is implicitly defined by an equation \(\mathcal{M} = \lbrace q \in
-    \mathbb{R}^Q : c(q) = 0 \rbrace\) with \(c: \mathbb{R}^Q \to \mathbb{R}^C\) the
-    *constraint function*.
+    with a :math:`Q`-dimensional ambient Euclidean space. The :math:`Q-C` dimensional
+    manifold :math:`\mathcal{M}` is implicitly defined by an equation
+    :math:`\mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace` with
+    :math:`c: \mathbb{R}^Q \to \mathbb{R}^C` the *constraint function*.
 
     The ambient Euclidean space is assumed to be equipped with a metric with constant
-    positive-definite matrix representation \(M\) which further specifies the covariance
-    of the zero-mean Gaussian distribution \(\mathcal{N}(0, M)\) on the *unconstrained*
-    momentum (co-)vector \(p\) with corresponding \(h_2\) Hamiltonian component defined
-    as
+    positive-definite matrix representation :math:`M` which further specifies the
+    covariance of the zero-mean Gaussian distribution :math:`\mathcal{N}(0, M)` on the
+    *unconstrained* momentum (co-)vector :math:`p` with corresponding :math:`h_2`
+    Hamiltonian component defined as
 
-    \[ h_2(q, p) = \frac{1}{2} p^T M^{-1} p. \]
+    .. math::
+
+        h_2(q, p) = \frac{1}{2} p^T M^{-1} p.
 
     The time-derivative of the constraint equation implies a further set of constraints
-    on the momentum \(q\) with \( \partial c(q) M^{-1} p = 0\) at all time points,
-    corresponding to the momentum (velocity) being in the co-tangent space (tangent
-    space) to the manifold.
+    on the momentum :math:`q` with :math:` \partial c(q) M^{-1} p = 0` at all time
+    points, corresponding to the momentum (velocity) being in the co-tangent space
+    (tangent space) to the manifold.
 
     The target distribution is either assumed to be directly specified with unnormalized
-    density \(\exp(-\ell(q))\) with respect to the Hausdorff measure on the manifold
-    (under the metric induced from the ambient metric) with in this case the \(h_1\)
+    density :math:`\exp(-\ell(q))` with respect to the Hausdorff measure on the manifold
+    (under the metric induced from the ambient metric) with in this case the :math:`h_1`
     Hamiltonian component then simply
 
-    \[ h_1(q) = \ell(q), \]
+    .. math::
 
-    or alternatively it is assumed a prior distribution on the position \(q\) with
-    density \(\exp(-\ell(q))\) with respect to the Lebesgue measure on the ambient space
-    is specifed and the target distribution is the posterior distribution on \(q\) when
-    conditioning on the event \(c(q) = 0\). The negative logarithm of the posterior
-    distribution density with respect to the Hausdorff measure (and so \(h_1\)
-    Hamiltonian component) is then
+        h_1(q) = \ell(q),
 
-    \[
-      h_1(q) =
-      \ell(q) + \frac{1}{2} \log\left|\partial c(q)M^{-1}\partial c(q)^T\right|
-    \]
+    or alternatively it is assumed a prior distribution on the position :math:`q` with
+    density :math:`\exp(-\ell(q))` with respect to the Lebesgue measure on the ambient
+    space is specifed and the target distribution is the posterior distribution on
+    :math:`q` when conditioning on the event :math:`c(q) = 0`. The negative logarithm of
+    the posterior distribution density with respect to the Hausdorff measure (and so
+    :math:`h_1` Hamiltonian component) is then
+
+    .. math::
+
+        h_1(q) =
+        \ell(q) + \frac{1}{2} \log\left|\partial c(q)M^{-1}\partial c(q)^T\right|
 
     with an additional second *Gram matrix* determinant term to give the correct density
     with respect to the Hausdorff measure on the manifold.
@@ -996,22 +1011,26 @@ class RiemannianMetricSystem(System):
     specific type.
 
     The position space is assumed to be a Riemannian manifold with a metric with
-    position-dependent positive definite matrix-representation \(M(q)\) where \(q\) is a
-    position vector. The momentum \(p\) is then taken to have a zero-mean Gaussian
-    conditional distribution given the position \(q\), with covariance \(M(q)\), i.e.
-    \(p \sim \mathcal{N}(0, M(q))\) [1].
+    position-dependent positive definite matrix-representation :math:`M(q)` where
+    :math:`q` is a position vector. The momentum :math:`p` is then taken to have a
+    zero-mean Gaussian conditional distribution given the position :math:`q`, with
+    covariance :math:`M(q)`, i.e. :math:`p \sim \mathcal{N}(0, M(q))` [1].
 
-    The \(h_1\) Hamiltonian component is then
+    The :math:`h_1` Hamiltonian component is then
 
-    \[ h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right| \]
+    .. math::
 
-    where \(\ell(q)\) is the negative log (unnormalized) density of the target
-    distribution with respect to the Lebesgue measure at \(q\). The \(h_2\) Hamiltonian
-    component is
+        h_1(q) = \ell(q) + \frac{1}{2}\log\left|M(q)\right|
 
-    \[ h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p. \]
+    where :math:`\ell(q)` is the negative log (unnormalized) density of the target
+    distribution with respect to the Lebesgue measure at :math:`q`. The :math:`h_2`
+    Hamiltonian component is
 
-    Due to the coupling between the position and momentum variables in \(h_2\), the
+    .. math::
+
+        h_2(q, p) = \frac{1}{2} p^T (M(q))^{-1} p.
+
+    Due to the coupling between the position and momentum variables in :math:`h_2`, the
     Hamiltonian system is non-separable, requiring use of a numerical integrator with
     implicit steps when simulating the Hamiltonian dynamic associated with the system,
     e.g. `mici.integrators.ImplicitLeapfrogIntegrator`.
