@@ -120,7 +120,7 @@
 <span class="sd">    the corresponding exact Hamiltonian flow may or may not be simulable.</span>
 
 <span class="sd">    By default :math:`h_1` is assumed to correspond to the negative logarithm of an</span>
-<span class="sd">    unnormalized density on the position variables with respect to the Lebesgue measure,</span>
+<span class="sd">    unnormalized density on the position variables with respect to a reference measure,</span>
 <span class="sd">    with the corresponding distribution on the position space being the target</span>
 <span class="sd">    distribution it is wished to draw approximate samples from.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -134,7 +134,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
 <span class="sd">                logarithm of an unnormalized probability density on the position space</span>
-<span class="sd">                with respect to the Lebesgue measure, with the corresponding</span>
+<span class="sd">                with respect to a reference measure, with the corresponding</span>
 <span class="sd">                distribution on the position space being the target distribution it is</span>
 <span class="sd">                wished to draw approximate samples from.</span>
 <span class="sd">            grad_neg_log_dens: Function which given a position array returns the</span>
@@ -288,7 +288,55 @@
 <span class="sd">        &quot;&quot;&quot;</span></div></div>
 
 
-<div class="viewcode-block" id="EuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">EuclideanMetricSystem</span><span class="p">(</span><span class="n">System</span><span class="p">):</span>
+<div class="viewcode-block" id="TractableFlowSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.TractableFlowSystem">[docs]</a><span class="k">class</span> <span class="nc">TractableFlowSystem</span><span class="p">(</span><span class="n">System</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for Hamiltonian systems with tractable component flows.</span>
+
+<span class="sd">    The Hamiltonian function :math:`h` is assumed to have the general form</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        h(q, p) = h_1(q) + h_2(q, p)</span>
+
+<span class="sd">    where :math:`q` and :math:`p` are the position and momentum variables respectively,</span>
+<span class="sd">    and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact</span>
+<span class="sd">    Hamiltonian flows for both the :math:`h_1` and :math:`h_2` components are assumed to</span>
+<span class="sd">    be tractable for subclasses of this class.</span>
+<span class="sd">    </span>
+<span class="sd">    By default :math:`h_1` is assumed to correspond to the negative logarithm of an</span>
+<span class="sd">    unnormalized density on the position variables with respect to a reference measure,</span>
+<span class="sd">    with the corresponding distribution on the position space being the target</span>
+<span class="sd">    distribution it is wished to draw approximate samples from.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TractableFlowSystem.h2_flow"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.TractableFlowSystem.h2_flow">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply exact flow map corresponding to `h2` Hamiltonian component.</span>
+
+<span class="sd">        `state` argument is modified in place.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: State to start flow at.</span>
+<span class="sd">            dt: Time interval to simulate flow for.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="TractableFlowSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.TractableFlowSystem.dh2_flow_dmom">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivatives of `h2_flow` flow map with respect to momentum argument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dt: Time interval flow simulated for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple `(dpos_dmom, dmom_dmom)` with :code:`dpos_dmom` a matrix representing</span>
+<span class="sd">            derivative (Jacobian) of position output of :py:meth:`h2_flow` with respect</span>
+<span class="sd">            to the value of the momentum component of the initial input state and</span>
+<span class="sd">            :code:`dmom_dmom` a matrix representing derivative (Jacobian) of momentum</span>
+<span class="sd">            output of :py:meth:`h2_flow` with respect to the value of the momentum</span>
+<span class="sd">            component of the initial input state.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="EuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">EuclideanMetricSystem</span><span class="p">(</span><span class="n">TractableFlowSystem</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Hamiltonian system with a Euclidean metric on the position space.</span>
 
 <span class="sd">    Here Euclidean metric is defined to mean a metric with a fixed positive definite</span>
@@ -375,30 +423,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh1_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="EuclideanMetricSystem.h2_flow"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.h2_flow">[docs]</a>    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply exact flow map corresponding to `h2` Hamiltonian component.</span>
-
-<span class="sd">        `state` argument is modified in place.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            state: State to start flow at.</span>
-<span class="sd">            dt: Time interval to simulate flow for.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">+=</span> <span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh2_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="EuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivatives of `h2_flow` flow map with respect to input momentum.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            dt: Time interval flow simulated for.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            dpos_dmom: Matrix representing derivative (Jacobian) of position output of</span>
-<span class="sd">                `h2_flow` with respect to the value of the momentum component of the</span>
-<span class="sd">                initial input state.</span>
-<span class="sd">            dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</span>
-<span class="sd">                `h2_flow` with respect to the value of the momentum component of the</span>
-<span class="sd">                initial input state.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="EuclideanMetricSystem.sample_momentum"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.sample_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
@@ -532,7 +559,7 @@
 <span class="sd">        h_2(q, p) = \frac{1}{2} p^T M^{-1} p.</span>
 
 <span class="sd">    The time-derivative of the constraint equation implies a further set of constraints</span>
-<span class="sd">    on the momentum :math:`q` with :math:` \partial c(q) M^{-1} p = 0` at all time</span>
+<span class="sd">    on the momentum :math:`q` with :math:`\partial c(q) M^{-1} p = 0` at all time</span>
 <span class="sd">    points, corresponding to the momentum (velocity) being in the co-tangent space</span>
 <span class="sd">    (tangent space) to the manifold.</span>
 
@@ -563,7 +590,7 @@
 <span class="sd">    Due to the requirement to enforce the constraints on the position and momentum, a</span>
 <span class="sd">    constraint-preserving numerical integrator needs to be used when simulating the</span>
 <span class="sd">    Hamiltonian dynamic associated with the system, e.g.</span>
-<span class="sd">    `mici.integrators.ConstrainedLeapfrogIntegrator`.</span>
+<span class="sd">    :py:class:`mici.integrators.ConstrainedLeapfrogIntegrator`.</span>
 
 <span class="sd">    References:</span>
 
@@ -584,80 +611,75 @@
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JacobianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
 <span class="sd">                logarithm of an unnormalized probability density on the constrained</span>
 <span class="sd">                position space with respect to the Hausdorff measure on the constraint</span>
-<span class="sd">                manifold (if `dens_wrt_hausdorff == True`) or alternatively the negative</span>
-<span class="sd">                logarithm of an unnormalized probability density on the unconstrained</span>
-<span class="sd">                (ambient) position space with respect to the Lebesgue measure. In the</span>
-<span class="sd">                former case the target distribution it is wished to draw approximate</span>
-<span class="sd">                samples from is assumed to be directly specified by the density function</span>
-<span class="sd">                on the manifold. In the latter case the density function is instead</span>
-<span class="sd">                taken to specify a prior distribution on the ambient space with the</span>
-<span class="sd">                target distribution then corresponding to the posterior distribution</span>
-<span class="sd">                when conditioning on the (zero Lebesgue measure) event `constr(pos) ==</span>
-<span class="sd">                0`. This target posterior distribution has support on the differentiable</span>
-<span class="sd">                manifold implicitly defined by the constraint equation, with density</span>
-<span class="sd">                with respect to the Hausdorff measure on the manifold corresponding to</span>
-<span class="sd">                the ratio of the prior density (specified by `neg_log_dens`) and the</span>
+<span class="sd">                manifold (if :code:`dens_wrt_hausdorff == True`) or alternatively the</span>
+<span class="sd">                negative logarithm of an unnormalized probability density on the</span>
+<span class="sd">                unconstrained (ambient) position space with respect to the Lebesgue</span>
+<span class="sd">                measure. In the former case the target distribution it is wished to draw</span>
+<span class="sd">                approximate samples from is assumed to be directly specified by the</span>
+<span class="sd">                density function on the manifold. In the latter case the density</span>
+<span class="sd">                function is instead taken to specify a prior distribution on the ambient</span>
+<span class="sd">                space with the target distribution then corresponding to the posterior</span>
+<span class="sd">                distribution when conditioning on the (zero Lebesgue measure) event</span>
+<span class="sd">                :code:`constr(q) == 0` where :code:`q` is the position array. This</span>
+<span class="sd">                target posterior distribution has support on the differentiable manifold</span>
+<span class="sd">                implicitly defined by the constraint equation, with density with respect</span>
+<span class="sd">                to the Hausdorff measure on the manifold corresponding to the ratio of</span>
+<span class="sd">                the prior density (specified by :code:`neg_log_dens`) and the</span>
 <span class="sd">                square-root of the determinant of the Gram matrix defined by</span>
-
-<span class="sd">                .. code-block::</span>
-
-<span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
-
-<span class="sd">                where `jacob_constr` is the Jacobian of the constraint function `constr`</span>
-<span class="sd">                and `metric` is the matrix representation of the metric on the ambient</span>
-<span class="sd">                space.</span>
+<span class="sd">                :code:`gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T`</span>
+<span class="sd">                where :code:`jacob_constr` is the Jacobian of the constraint function</span>
+<span class="sd">                :code:`constr` and :code:`metric` is the matrix representation of the</span>
+<span class="sd">                metric on the ambient space.</span>
 <span class="sd">            constr: Function which given a position rray return as a 1D array the value</span>
 <span class="sd">                of the (vector-valued) constraint function, the zero level-set of which</span>
 <span class="sd">                implicitly defines the manifold the dynamic is simulated on.</span>
 <span class="sd">            metric: Matrix object corresponding to matrix representation of metric on</span>
 <span class="sd">                *unconstrained* position space and covariance of Gaussian marginal</span>
-<span class="sd">                distribution on *unconstrained* momentum vector. If `None` is passed</span>
-<span class="sd">                (the default), the identity matrix will be used. If a 1D array is passed</span>
-<span class="sd">                then this is assumed to specify a metric with positive diagonal matrix</span>
-<span class="sd">                representation and the array the matrix diagonal. If a 2D array is</span>
-<span class="sd">                passed then this is assumed to specify a metric with a dense positive</span>
+<span class="sd">                distribution on *unconstrained* momentum vector. If :code:`None` is</span>
+<span class="sd">                passed (the default), the identity matrix will be used. If a 1D array is</span>
+<span class="sd">                passed then this is assumed to specify a metric with positive diagonal</span>
+<span class="sd">                matrix representation and the array the matrix diagonal. If a 2D array</span>
+<span class="sd">                is passed then this is assumed to specify a metric with a dense positive</span>
 <span class="sd">                definite matrix representation specified by the array. Otherwise if the</span>
-<span class="sd">                value is a `mici.matrices.PositiveDefiniteMatrix` subclass it is assumed</span>
-<span class="sd">                to directly specify the metric matrix representation.</span>
-<span class="sd">            dens_wrt_hausdorff: Whether the `neg_log_dens` function specifies the</span>
+<span class="sd">                value is a :py:class:`mici.matrices.PositiveDefiniteMatrix` subclass it</span>
+<span class="sd">                is assumed to directly specify the metric matrix representation.</span>
+<span class="sd">            dens_wrt_hausdorff: Whether the :code:`neg_log_dens` function specifies the</span>
 <span class="sd">                (negative logarithm) of the density of the target distribution with</span>
-<span class="sd">                respect to the Hausdorff measure on the manifold directly (True) or</span>
-<span class="sd">                alternatively the negative logarithm of a density of a prior</span>
+<span class="sd">                respect to the Hausdorff measure on the manifold directly (:code:`True`)</span>
+<span class="sd">                or alternatively the negative logarithm of a density of a prior</span>
 <span class="sd">                distriubtion on the unconstrained (ambient) position space with respect</span>
 <span class="sd">                to the Lebesgue measure, with the target distribution then corresponding</span>
-<span class="sd">                to the posterior distribution when conditioning on the event `const(pos)</span>
-<span class="sd">                == 0` (False). Note that in the former case the base Hausdorff measure</span>
-<span class="sd">                on the manifold depends on the metric defined on the ambient space, with</span>
-<span class="sd">                the Hausdorff measure being defined with respect to the metric induced</span>
-<span class="sd">                on the manifold from this ambient metric.</span>
+<span class="sd">                to the posterior distribution when conditioning on the event</span>
+<span class="sd">                :code:`constr(pos) == 0` (:code:`False`). Note that in the former case</span>
+<span class="sd">                the base Hausdorff measure on the manifold depends on the metric defined</span>
+<span class="sd">                on the ambient space, with the Hausdorff measure being defined with</span>
+<span class="sd">                respect to the metric induced on the manifold from this ambient metric.</span>
 <span class="sd">            grad_neg_log_dens: Function which given a position array returns the</span>
-<span class="sd">                derivative of `neg_log_dens` with respect to the position array</span>
+<span class="sd">                derivative of :code:`neg_log_dens` with respect to the position array</span>
 <span class="sd">                argument. Optionally the function may instead return a 2-tuple of values</span>
 <span class="sd">                with the first being the array corresponding to the derivative and the</span>
-<span class="sd">                second being the value of the `neg_log_dens` evaluated at the passed</span>
-<span class="sd">                position array. If `None` is passed (the default) an automatic</span>
-<span class="sd">                differentiation fallback will be used to attempt to construct a function</span>
-<span class="sd">                to compute the derivative (and value) of `neg_log_dens` automatically.</span>
+<span class="sd">                second being the value of the :code:`neg_log_dens` evaluated at the</span>
+<span class="sd">                passed position array. If :code:`None` is passed (the default) an</span>
+<span class="sd">                automatic differentiation fallback will be used to attempt to construct</span>
+<span class="sd">                a function to compute the derivative (and value) of :code:`neg_log_dens`</span>
+<span class="sd">                automatically.</span>
 <span class="sd">            jacob_constr: Function which given a position array computes the Jacobian</span>
 <span class="sd">                (matrix / 2D array of partial derivatives) of the output of the</span>
-<span class="sd">                constraint function `c = constr(q)` with respect to the position array</span>
-<span class="sd">                argument `q`, returning the computed Jacobian as a 2D array `jacob` with</span>
-
-<span class="sd">               .. code-block::</span>
-
-<span class="sd">                    jacob[i, j] = ∂c[i] / ∂q[j]</span>
-
-<span class="sd">                Optionally the function may instead return a 2-tuple of values with the</span>
-<span class="sd">                first being the array corresponding to the Jacobian and the second being</span>
-<span class="sd">                the value of `constr` evaluated at the passed position array. If `None`</span>
+<span class="sd">                constraint function :code:`c = constr(q)` with respect to the position</span>
+<span class="sd">                array argument :code:`q`, returning the computed Jacobian as a 2D array</span>
+<span class="sd">                :code:`jacob` with :code:`jacob[i, j] = ∂c[i] / ∂q[j]`. Optionally the</span>
+<span class="sd">                function may instead return a 2-tuple of values with the first being the</span>
+<span class="sd">                array corresponding to the Jacobian and the second being the value of</span>
+<span class="sd">                :code:`constr` evaluated at the passed position array. If :code:`None`</span>
 <span class="sd">                is passed (the default) an automatic differentiation fallback will be</span>
 <span class="sd">                used to attempt to construct a function to compute the Jacobian (and</span>
-<span class="sd">                value) of `constr` automatically.</span>
+<span class="sd">                value) of :code:`constr`</span>
+<span class="sd">                automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
@@ -678,7 +700,7 @@
 <span class="sd">            state: State to compute value at.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Value of `constr(state.pos)` as 1D array.</span>
+<span class="sd">            Value of :code:`constr(state.pos)` as 1D array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
@@ -690,7 +712,7 @@
 <span class="sd">            state: State to compute value at.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Value of Jacobian of `constr(state.pos)` as 2D array.</span>
+<span class="sd">            Value of Jacobian of :code:`constr(state.pos)` as 2D array.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
@@ -703,16 +725,16 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute inner product of rows of constraint Jacobian matrices.</span>
 
-<span class="sd">        Computes `jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T` potentially</span>
-<span class="sd">        exploiting any structure / sparsity in `jacob_constr_1`, `jacob_constr_2` and</span>
-<span class="sd">        `inner_product_matrix`.</span>
+<span class="sd">        Computes :code:`jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`</span>
+<span class="sd">        potentially exploiting any structure / sparsity in :code:`jacob_constr_1`,</span>
+<span class="sd">        :code:`jacob_constr_2` and :code:`inner_product_matrix`.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            jacob_constr_1: First constraint Jacobian in product.</span>
 <span class="sd">            inner_product_matrix: Positive-definite matrix defining inner-product</span>
 <span class="sd">                between rows of two constraint Jacobians.</span>
 <span class="sd">            jacob_constr_2: Second constraint Jacobian in product. Defaults to</span>
-<span class="sd">                `jacob_constr_1` if set to `None`.</span>
+<span class="sd">                :code:`jacob_constr_1` if set to :code:`None`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">            Object corresponding to computed inner products of the constraint Jacobian</span>
@@ -725,12 +747,13 @@
 
 <span class="sd">        The Gram matrix as a position `q` is defined as</span>
 
-<span class="sd">        .. code-block::</span>
+<span class="sd">        .. code::</span>
 
 <span class="sd">            gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
 
-<span class="sd">        where `jacob_constr` is the Jacobian of the constraint function `constr` and</span>
-<span class="sd">        `metric` is the matrix representation of the metric on the ambient space.</span>
+<span class="sd">        where :code:`jacob_constr` is the Jacobian of the constraint function</span>
+<span class="sd">        :code:`constr` and :code:`metric` is the matrix representation of the metric on</span>
+<span class="sd">        the ambient space.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: State to compute value at.</span>
@@ -759,13 +782,14 @@
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">grad_log_det_sqrt_gram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of (half of) log-determinant of Gram matrix wrt position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of half of log-determinant of Gram matrix with respect to position</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: State to compute value at.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Value of `log_det_sqrt_gram(state)` derivative with respect to `state.pos`.</span>
+<span class="sd">            Value of :code:`log_det_sqrt_gram(state)` derivative with respect to</span>
+<span class="sd">            :code:`state.pos`.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.h1"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.h1">[docs]</a>    <span class="k">def</span> <span class="nf">h1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
@@ -791,7 +815,7 @@
 <span class="sd">                co-tangent space of.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Projected momentum in the co-tangent space at `state.pos`.</span>
+<span class="sd">            Projected momentum in the co-tangent space at :code:`state.pos`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Use parenthesis to force right-to-left evaluation to avoid</span>
         <span class="c1"># matrix-matrix products</span>
@@ -809,7 +833,8 @@
 <div class="viewcode-block" id="DenseConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.DenseConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">DenseConstrainedEuclideanMetricSystem</span><span class="p">(</span><span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Euclidean Hamiltonian system subject to a dense set of constraints.</span>
 
-<span class="sd">    See `ConstrainedEuclideanMetricSystem` for more details about constrained systems.</span>
+<span class="sd">    See :py:class:`ConstrainedEuclideanMetricSystem` for more details about constrained</span>
+<span class="sd">    systems.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -827,100 +852,88 @@
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
 <span class="sd">                logarithm of an unnormalized probability density on the constrained</span>
 <span class="sd">                position space with respect to the Hausdorff measure on the constraint</span>
-<span class="sd">                manifold (if `dens_wrt_hausdorff == True`) or alternatively the negative</span>
-<span class="sd">                logarithm of an unnormalized probability density on the unconstrained</span>
-<span class="sd">                (ambient) position space with respect to the Lebesgue measure. In the</span>
-<span class="sd">                former case the target distribution it is wished to draw approximate</span>
-<span class="sd">                samples from is assumed to be directly specified by the density function</span>
-<span class="sd">                on the manifold. In the latter case the density function is instead</span>
-<span class="sd">                taken to specify a prior distribution on the ambient space with the</span>
-<span class="sd">                target distribution then corresponding to the posterior distribution</span>
-<span class="sd">                when conditioning on the (zero Lebesgue measure) event `constr(pos) ==</span>
-<span class="sd">                0`. This target posterior distribution has support on the differentiable</span>
-<span class="sd">                manifold implicitly defined by the constraint equation, with density</span>
-<span class="sd">                with respect to the Hausdorff measure on the manifold corresponding to</span>
-<span class="sd">                the ratio of the prior density (specified by `neg_log_dens`) and the</span>
+<span class="sd">                manifold (if :code:`dens_wrt_hausdorff == True`) or alternatively the</span>
+<span class="sd">                negative logarithm of an unnormalized probability density on the</span>
+<span class="sd">                unconstrained (ambient) position space with respect to the Lebesgue</span>
+<span class="sd">                measure. In the former case the target distribution it is wished to draw</span>
+<span class="sd">                approximate samples from is assumed to be directly specified by the</span>
+<span class="sd">                density function on the manifold. In the latter case the density</span>
+<span class="sd">                function is instead taken to specify a prior distribution on the ambient</span>
+<span class="sd">                space with the target distribution then corresponding to the posterior</span>
+<span class="sd">                distribution when conditioning on the (zero Lebesgue measure) event</span>
+<span class="sd">                :code:`constr(q) == 0` where :code:`q` is the position array. This</span>
+<span class="sd">                target posterior distribution has support on the differentiable manifold</span>
+<span class="sd">                implicitly defined by the constraint equation, with density with respect</span>
+<span class="sd">                to the Hausdorff measure on the manifold corresponding to the ratio of</span>
+<span class="sd">                the prior density (specified by :code:`neg_log_dens`) and the</span>
 <span class="sd">                square-root of the determinant of the Gram matrix defined by</span>
-<span class="sd">                </span>
-<span class="sd">               .. code-block::</span>
-
-<span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
-
-<span class="sd">                where `jacob_constr` is the Jacobian of the constraint function `constr`</span>
-<span class="sd">                and `metric` is the matrix representation of the metric on the ambient</span>
-<span class="sd">                space.</span>
-<span class="sd">            constr: Function which given a position array return as a 1D array the value</span>
+<span class="sd">                :code:`gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T`</span>
+<span class="sd">                where :code:`jacob_constr` is the Jacobian of the constraint function</span>
+<span class="sd">                :code:`constr` and :code:`metric` is the matrix representation of the</span>
+<span class="sd">                metric on the ambient space.</span>
+<span class="sd">            constr: Function which given a position rray return as a 1D array the value</span>
 <span class="sd">                of the (vector-valued) constraint function, the zero level-set of which</span>
 <span class="sd">                implicitly defines the manifold the dynamic is simulated on.</span>
 <span class="sd">            metric: Matrix object corresponding to matrix representation of metric on</span>
 <span class="sd">                *unconstrained* position space and covariance of Gaussian marginal</span>
-<span class="sd">                distribution on *unconstrained* momentum vector. If `None` is passed</span>
-<span class="sd">                (the default), the identity matrix will be used. If a 1D array is passed</span>
-<span class="sd">                then this is assumed to specify a metric with positive diagonal matrix</span>
-<span class="sd">                representation and the array the matrix diagonal. If a 2D array is</span>
-<span class="sd">                passed then this is assumed to specify a metric with a dense positive</span>
+<span class="sd">                distribution on *unconstrained* momentum vector. If :code:`None` is</span>
+<span class="sd">                passed (the default), the identity matrix will be used. If a 1D array is</span>
+<span class="sd">                passed then this is assumed to specify a metric with positive diagonal</span>
+<span class="sd">                matrix representation and the array the matrix diagonal. If a 2D array</span>
+<span class="sd">                is passed then this is assumed to specify a metric with a dense positive</span>
 <span class="sd">                definite matrix representation specified by the array. Otherwise if the</span>
-<span class="sd">                value is a `mici.matrices.PositiveDefiniteMatrix` subclass it is assumed</span>
-<span class="sd">                to directly specify the metric matrix representation.</span>
-<span class="sd">            dens_wrt_hausdorff: Whether the `neg_log_dens` function specifies the</span>
+<span class="sd">                value is a :py:class:`mici.matrices.PositiveDefiniteMatrix` subclass it</span>
+<span class="sd">                is assumed to directly specify the metric matrix representation.</span>
+<span class="sd">            dens_wrt_hausdorff: Whether the :code:`neg_log_dens` function specifies the</span>
 <span class="sd">                (negative logarithm) of the density of the target distribution with</span>
-<span class="sd">                respect to the Hausdorff measure on the manifold directly (True) or</span>
-<span class="sd">                alternatively the negative logarithm of a density of a prior</span>
+<span class="sd">                respect to the Hausdorff measure on the manifold directly (:code:`True`)</span>
+<span class="sd">                or alternatively the negative logarithm of a density of a prior</span>
 <span class="sd">                distriubtion on the unconstrained (ambient) position space with respect</span>
 <span class="sd">                to the Lebesgue measure, with the target distribution then corresponding</span>
-<span class="sd">                to the posterior distribution when conditioning on the event `const(pos)</span>
-<span class="sd">                == 0` (False). Note that in the former case the base Hausdorff measure</span>
-<span class="sd">                on the manifold depends on the metric defined on the ambient space, with</span>
-<span class="sd">                the Hausdorff measure being defined with respect to the metric induced</span>
-<span class="sd">                on the manifold from this ambient metric.</span>
+<span class="sd">                to the posterior distribution when conditioning on the event</span>
+<span class="sd">                :code:`constr(pos) == 0` (:code:`False`). Note that in the former case</span>
+<span class="sd">                the base Hausdorff measure on the manifold depends on the metric defined</span>
+<span class="sd">                on the ambient space, with the Hausdorff measure being defined with</span>
+<span class="sd">                respect to the metric induced on the manifold from this ambient metric.</span>
 <span class="sd">            grad_neg_log_dens: Function which given a position array returns the</span>
-<span class="sd">                derivative of `neg_log_dens` with respect to the position array</span>
+<span class="sd">                derivative of :code:`neg_log_dens` with respect to the position array</span>
 <span class="sd">                argument. Optionally the function may instead return a 2-tuple of values</span>
 <span class="sd">                with the first being the array corresponding to the derivative and the</span>
-<span class="sd">                second being the value of the `neg_log_dens` evaluated at the passed</span>
-<span class="sd">                position array. If `None` is passed (the default) an automatic</span>
-<span class="sd">                differentiation fallback will be used to attempt to construct a function</span>
-<span class="sd">                to compute the derivative (and value) of `neg_log_dens` automatically.</span>
+<span class="sd">                second being the value of the :code:`neg_log_dens` evaluated at the</span>
+<span class="sd">                passed position array. If :code:`None` is passed (the default) an</span>
+<span class="sd">                automatic differentiation fallback will be used to attempt to construct</span>
+<span class="sd">                a function to compute the derivative (and value) of :code:`neg_log_dens`</span>
+<span class="sd">                automatically.</span>
 <span class="sd">            jacob_constr: Function which given a position array computes the Jacobian</span>
 <span class="sd">                (matrix / 2D array of partial derivatives) of the output of the</span>
-<span class="sd">                constraint function `c = constr(q)` with respect to the position array</span>
-<span class="sd">                argument `q`, returning the computed Jacobian as a 2D array `jacob` with</span>
-<span class="sd">                </span>
-<span class="sd">               .. code-block::</span>
-
-<span class="sd">                    jacob[i, j] = ∂c[i] / ∂q[j]</span>
-
-<span class="sd">                Optionally the function may instead return a 2-tuple of values with the</span>
-<span class="sd">                first being the array corresponding to the Jacobian and the second being</span>
-<span class="sd">                the value of `constr` evaluated at the passed position array. If `None`</span>
+<span class="sd">                constraint function :code:`c = constr(q)` with respect to the position</span>
+<span class="sd">                array argument :code:`q`, returning the computed Jacobian as a 2D array</span>
+<span class="sd">                :code:`jacob` with :code:`jacob[i, j] = ∂c[i] / ∂q[j]`. Optionally the</span>
+<span class="sd">                function may instead return a 2-tuple of values with the first being the</span>
+<span class="sd">                array corresponding to the Jacobian and the second being the value of</span>
+<span class="sd">                :code:`constr` evaluated at the passed position array. If :code:`None`</span>
 <span class="sd">                is passed (the default) an automatic differentiation fallback will be</span>
 <span class="sd">                used to attempt to construct a function to compute the Jacobian (and</span>
-<span class="sd">                value) of `neg_log_dens` automatically.</span>
+<span class="sd">                value) of :code:`constr`</span>
+<span class="sd">                automatically.</span>
 <span class="sd">            mhp_constr: Function which given a position array returns another function</span>
 <span class="sd">                which takes a 2D array as an argument and returns the</span>
-<span class="sd">                *matrix-Hessian-product* (MHP) of the constraint function `constr` with</span>
-<span class="sd">                respect to the position array argument. The MHP is here defined as a</span>
-<span class="sd">                function of a `(dim_constr, dim_pos)` shaped 2D array `m`</span>
-<span class="sd">                </span>
-<span class="sd">               .. code-block::</span>
-
-<span class="sd">                    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))</span>
-
-<span class="sd">                where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped</span>
-<span class="sd">                vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of</span>
-<span class="sd">                second-order partial derivatives of such that</span>
-<span class="sd">                </span>
-<span class="sd">               .. code-block::</span>
-
-<span class="sd">                    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])</span>
-
-<span class="sd">                Optionally the function may instead return a 3-tuple of values with the</span>
-<span class="sd">                first a function to compute a MHP of `constr`, the second a 2D array</span>
-<span class="sd">                corresponding to the Jacobian of `constr`, and the third the value of</span>
-<span class="sd">                `constr`, all evaluated at the passed position array. If `None` is</span>
-<span class="sd">                passed (the default) an automatic differentiation fallback will be used</span>
-<span class="sd">                to attempt to construct a function which calculates the MHP (and</span>
-<span class="sd">                Jacobian and value) of `constr` automatically.</span>
+<span class="sd">                *matrix-Hessian-product* (MHP) of the constraint function :code:`constr`</span>
+<span class="sd">                with respect to the position array argument. The MHP is here defined as</span>
+<span class="sd">                a function of a :code:`(dim_constr, dim_pos)` shaped 2D array :code:`m`</span>
+<span class="sd">                as :code:`mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))`</span>
+<span class="sd">                where :code:`hess` is the :code:`(dim_constr, dim_pos, dim_pos)` shaped</span>
+<span class="sd">                vector-Hessian of :code:`c = constr(q)` with respect to :code:`q` i.e.</span>
+<span class="sd">                the array of second-order partial derivatives of such that</span>
+<span class="sd">                :code:`hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])`. Optionally the function</span>
+<span class="sd">                may instead return a 3-tuple of values with the first a function to</span>
+<span class="sd">                compute a MHP of :code:`constr`, the second a 2D array corresponding to</span>
+<span class="sd">                the Jacobian of :code:`constr`, and the third the value of</span>
+<span class="sd">                :code:`constr`, all evaluated at the passed position array. If</span>
+<span class="sd">                :code:`None` is passed (the default) an automatic differentiation</span>
+<span class="sd">                fallback will be used to attempt to construct a function which</span>
+<span class="sd">                calculates the MHP (and Jacobian and value) of :code:`constr`</span>
+<span class="sd">                automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>

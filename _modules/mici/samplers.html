@@ -877,8 +877,18 @@
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">_bit_generator</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span> <span class="o">=</span> <span class="n">transitions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transitions</span> <span class="o">=</span> <span class="n">transitions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dictionary of transition kernels sampled from in each chain iteration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transitions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;NumPy random number generator object.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
 
 <div class="viewcode-block" id="MarkovChainMonteCarloMethod.sample_chains"><a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.sample_chains">[docs]</a>    <span class="k">def</span> <span class="nf">sample_chains</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -1164,21 +1174,22 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            system Hamiltonian system to be simulated.</span>
+<span class="sd">            system Hamiltonian system to be simulated, corresponding to joint</span>
+<span class="sd">                distribution on augmented space.</span>
 <span class="sd">            rng: Numpy random number generator.</span>
-<span class="sd">            integration_transition: Markov transition kernel which leaves canonical</span>
+<span class="sd">            integration_transition: Markov transition kernel which leaves joint</span>
 <span class="sd">                distribution invariant and jointly updates the position and momentum</span>
 <span class="sd">                components of the chain state by integrating the Hamiltonian dynamics of</span>
 <span class="sd">                the system to propose new values for the state.</span>
 <span class="sd">            momentum_transition: Markov transition kernel which leaves the conditional</span>
-<span class="sd">                distribution on the momentum under the canonical distribution invariant,</span>
+<span class="sd">                distribution on the momentum under the join distribution invariant,</span>
 <span class="sd">                updating only the momentum component of the chain state. If set to</span>
-<span class="sd">                `None` the momentum transition operator</span>
-<span class="sd">                `mici.transitions.IndependentMomentumTransition` will be used, which</span>
-<span class="sd">                independently samples the momentum from its conditional distribution.</span>
+<span class="sd">                :py:const:`None` the momentum transition operator</span>
+<span class="sd">                :py:class:`mici.transitions.IndependentMomentumTransition` will be used,</span>
+<span class="sd">                which independently samples the momentum from its conditional</span>
+<span class="sd">                distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system</span> <span class="o">=</span> <span class="n">system</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_system</span> <span class="o">=</span> <span class="n">system</span>
         <span class="k">if</span> <span class="n">momentum_transition</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">momentum_transition</span> <span class="o">=</span> <span class="n">IndependentMomentumTransition</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -1188,6 +1199,11 @@
                 <span class="s2">&quot;integration_transition&quot;</span><span class="p">:</span> <span class="n">integration_transition</span><span class="p">,</span>
             <span class="p">},</span>
         <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">system</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">System</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hamiltonian system corresponding to joint distribution on augmented space.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_system</span>
 
     <span class="k">def</span> <span class="nf">_preprocess_init_state</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">init_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>

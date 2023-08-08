@@ -73,6 +73,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.ScalarRiemannianMetricSystem"><code class="docutils literal notranslate"><span class="pre">ScalarRiemannianMetricSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.SoftAbsRiemannianMetricSystem"><code class="docutils literal notranslate"><span class="pre">SoftAbsRiemannianMetricSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.systems.TractableFlowSystem"><code class="docutils literal notranslate"><span class="pre">TractableFlowSystem</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
@@ -456,7 +457,7 @@ Hamiltonian component defined as</p>
 <div class="math notranslate nohighlight">
 \[h_2(q, p) = \frac{1}{2} p^T M^{-1} p.\]</div>
 <p>The time-derivative of the constraint equation implies a further set of constraints
-on the momentum <span class="math notranslate nohighlight">\(q\)</span> with :math:` partial c(q) M^{-1} p = 0` at all time
+on the momentum <span class="math notranslate nohighlight">\(q\)</span> with <span class="math notranslate nohighlight">\(\partial c(q) M^{-1} p = 0\)</span> at all time
 points, corresponding to the momentum (velocity) being in the co-tangent space
 (tangent space) to the manifold.</p>
 <p>The target distribution is either assumed to be directly specified with unnormalized
@@ -479,7 +480,7 @@ with respect to the Hausdorff measure on the manifold.</p>
 <p>Due to the requirement to enforce the constraints on the position and momentum, a
 constraint-preserving numerical integrator needs to be used when simulating the
 Hamiltonian dynamic associated with the system, e.g.
-<cite>mici.integrators.ConstrainedLeapfrogIntegrator</cite>.</p>
+<a class="reference internal" href="mici.integrators.html#mici.integrators.ConstrainedLeapfrogIntegrator" title="mici.integrators.ConstrainedLeapfrogIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.integrators.ConstrainedLeapfrogIntegrator</span></code></a>.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p>Lelièvre, T., Rousset, M. and Stoltz, G., 2019. Hybrid Monte Carlo methods for
@@ -492,79 +493,73 @@ pp.5105-5164.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <p>Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the constrained
 position space with respect to the Hausdorff measure on the constraint
-manifold (if <cite>dens_wrt_hausdorff == True</cite>) or alternatively the negative
-logarithm of an unnormalized probability density on the unconstrained
-(ambient) position space with respect to the Lebesgue measure. In the
-former case the target distribution it is wished to draw approximate
-samples from is assumed to be directly specified by the density function
-on the manifold. In the latter case the density function is instead
-taken to specify a prior distribution on the ambient space with the
-target distribution then corresponding to the posterior distribution
-when conditioning on the (zero Lebesgue measure) event <cite>constr(pos) ==
-0</cite>. This target posterior distribution has support on the differentiable
-manifold implicitly defined by the constraint equation, with density
-with respect to the Hausdorff measure on the manifold corresponding to
-the ratio of the prior density (specified by <cite>neg_log_dens</cite>) and the
-square-root of the determinant of the Gram matrix defined by</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-</pre></div>
-</div>
-<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite>
-and <cite>metric</cite> is the matrix representation of the metric on the ambient
-space.</p>
-</p></li>
+manifold (if <code class="code docutils literal notranslate"><span class="pre">dens_wrt_hausdorff</span> <span class="pre">==</span> <span class="pre">True</span></code>) or alternatively the
+negative logarithm of an unnormalized probability density on the
+unconstrained (ambient) position space with respect to the Lebesgue
+measure. In the former case the target distribution it is wished to draw
+approximate samples from is assumed to be directly specified by the
+density function on the manifold. In the latter case the density
+function is instead taken to specify a prior distribution on the ambient
+space with the target distribution then corresponding to the posterior
+distribution when conditioning on the (zero Lebesgue measure) event
+<code class="code docutils literal notranslate"><span class="pre">constr(q)</span> <span class="pre">==</span> <span class="pre">0</span></code> where <code class="code docutils literal notranslate"><span class="pre">q</span></code> is the position array. This
+target posterior distribution has support on the differentiable manifold
+implicitly defined by the constraint equation, with density with respect
+to the Hausdorff measure on the manifold corresponding to the ratio of
+the prior density (specified by <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>) and the
+square-root of the determinant of the Gram matrix defined by
+<code class="code docutils literal notranslate"><span class="pre">gram(q)</span> <span class="pre">=</span> <span class="pre">jacob_constr(q)</span> <span class="pre">&#64;</span> <span class="pre">inv(metric)</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr(q).T</span></code>
+where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the
+metric on the ambient space.</p></li>
 <li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position rray return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
 <li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
-distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
-(the default), the identity matrix will be used. If a 1D array is passed
-then this is assumed to specify a metric with positive diagonal matrix
-representation and the array the matrix diagonal. If a 2D array is
-passed then this is assumed to specify a metric with a dense positive
+distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
+passed (the default), the identity matrix will be used. If a 1D array is
+passed then this is assumed to specify a metric with positive diagonal
+matrix representation and the array the matrix diagonal. If a 2D array
+is passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if the
-value is a <cite>mici.matrices.PositiveDefiniteMatrix</cite> subclass it is assumed
-to directly specify the metric matrix representation.</p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <cite>neg_log_dens</cite> function specifies the
+value is a <a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.matrices.PositiveDefiniteMatrix</span></code></a> subclass it
+is assumed to directly specify the metric matrix representation.</p></li>
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
 (negative logarithm) of the density of the target distribution with
-respect to the Hausdorff measure on the manifold directly (True) or
-alternatively the negative logarithm of a density of a prior
+respect to the Hausdorff measure on the manifold directly (<code class="code docutils literal notranslate"><span class="pre">True</span></code>)
+or alternatively the negative logarithm of a density of a prior
 distriubtion on the unconstrained (ambient) position space with respect
 to the Lebesgue measure, with the target distribution then corresponding
-to the posterior distribution when conditioning on the event <cite>const(pos)
-== 0</cite> (False). Note that in the former case the base Hausdorff measure
-on the manifold depends on the metric defined on the ambient space, with
-the Hausdorff measure being defined with respect to the metric induced
-on the manifold from this ambient metric.</p></li>
+to the posterior distribution when conditioning on the event
+<code class="code docutils literal notranslate"><span class="pre">constr(pos)</span> <span class="pre">==</span> <span class="pre">0</span></code> (<code class="code docutils literal notranslate"><span class="pre">False</span></code>). Note that in the former case
+the base Hausdorff measure on the manifold depends on the metric defined
+on the ambient space, with the Hausdorff measure being defined with
+respect to the metric induced on the manifold from this ambient metric.</p></li>
 <li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
-derivative of <cite>neg_log_dens</cite> with respect to the position array
+derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
-second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
-position array. If <cite>None</cite> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct a function
-to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <dl class="simple">
-<dt>Function which given a position array computes the Jacobian</dt><dd><p>(matrix / 2D array of partial derivatives) of the output of the
-constraint function <cite>c = constr(q)</cite> with respect to the position array
-argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    jacob[i, j] = ∂c[i] / ∂q[j]
-
-Optionally the function may instead return a 2-tuple of values with the
-first being the array corresponding to the Jacobian and the second being
-the value of `constr` evaluated at the passed position array. If `None`
+second being the value of the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> evaluated at the
+passed position array. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is passed (the default) an
+automatic differentiation fallback will be used to attempt to construct
+a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
+automatically.</p></li>
+<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – Function which given a position array computes the Jacobian
+(matrix / 2D array of partial derivatives) of the output of the
+constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
+array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
+<code class="code docutils literal notranslate"><span class="pre">jacob</span></code> with <code class="code docutils literal notranslate"><span class="pre">jacob[i,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">∂c[i]</span> <span class="pre">/</span> <span class="pre">∂q[j]</span></code>. Optionally the
+function may instead return a 2-tuple of values with the first being the
+array corresponding to the Jacobian and the second being the value of
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> evaluated at the passed position array. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>
 is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
-value) of `constr` automatically.
-</pre></div>
-</div>
-</p></li>
+value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
+automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -577,7 +572,7 @@ value) of `constr` automatically.
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>constr(state.pos)</cite> as 1D array.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 1D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -639,24 +634,21 @@ value) of `constr` automatically.
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom">
 <span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to input momentum.</p>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Matrix representing derivative (Jacobian) of position output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-<dt>dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dpos_dmom</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -698,13 +690,14 @@ initial input state.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_det_sqrt_gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" title="Permalink to this definition"></a></dt>
-<dd><p>Derivative of (half of) log-determinant of Gram matrix wrt position.</p>
+<dd><p>Derivative of half of log-determinant of Gram matrix with respect to position</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>log_det_sqrt_gram(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">log_det_sqrt_gram(state)</span></code> derivative with respect to
+<code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -737,8 +730,9 @@ initial input state.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 </pre></div>
 </div>
-<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
-<cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
+<p>where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the metric on
+the ambient space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
@@ -859,7 +853,7 @@ initial input state.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of Jacobian of <cite>constr(state.pos)</cite> as 2D array.</p>
+<dd class="field-even"><p>Value of Jacobian of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 2D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -871,9 +865,9 @@ initial input state.</p>
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
-<p>Computes <cite>jacob_constr_1 &#64; inner_product_matrix &#64; jacob_constr_2.T</cite> potentially
-exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_constr_2</cite> and
-<cite>inner_product_matrix</cite>.</p>
+<p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
+potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_2</span></code> and <code class="code docutils literal notranslate"><span class="pre">inner_product_matrix</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -881,7 +875,7 @@ exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
 <li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
-<cite>jacob_constr_1</cite> if set to <cite>None</cite>.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -939,7 +933,7 @@ co-tangent space of.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Projected momentum in the co-tangent space at <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Projected momentum in the co-tangent space at <code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -974,112 +968,96 @@ co-tangent space of.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a></p>
 <p>Euclidean Hamiltonian system subject to a dense set of constraints.</p>
-<p>See <cite>ConstrainedEuclideanMetricSystem</cite> for more details about constrained systems.</p>
+<p>See <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a> for more details about constrained
+systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <dl class="simple">
-<dt>Function which given a position array returns the negative</dt><dd><p>logarithm of an unnormalized probability density on the constrained
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the constrained
 position space with respect to the Hausdorff measure on the constraint
-manifold (if <cite>dens_wrt_hausdorff == True</cite>) or alternatively the negative
-logarithm of an unnormalized probability density on the unconstrained
-(ambient) position space with respect to the Lebesgue measure. In the
-former case the target distribution it is wished to draw approximate
-samples from is assumed to be directly specified by the density function
-on the manifold. In the latter case the density function is instead
-taken to specify a prior distribution on the ambient space with the
-target distribution then corresponding to the posterior distribution
-when conditioning on the (zero Lebesgue measure) event <cite>constr(pos) ==
-0</cite>. This target posterior distribution has support on the differentiable
-manifold implicitly defined by the constraint equation, with density
-with respect to the Hausdorff measure on the manifold corresponding to
-the ratio of the prior density (specified by <cite>neg_log_dens</cite>) and the
-square-root of the determinant of the Gram matrix defined by</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
-
-where `jacob_constr` is the Jacobian of the constraint function `constr`
-and `metric` is the matrix representation of the metric on the ambient
-space.
-</pre></div>
-</div>
-</p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+manifold (if <code class="code docutils literal notranslate"><span class="pre">dens_wrt_hausdorff</span> <span class="pre">==</span> <span class="pre">True</span></code>) or alternatively the
+negative logarithm of an unnormalized probability density on the
+unconstrained (ambient) position space with respect to the Lebesgue
+measure. In the former case the target distribution it is wished to draw
+approximate samples from is assumed to be directly specified by the
+density function on the manifold. In the latter case the density
+function is instead taken to specify a prior distribution on the ambient
+space with the target distribution then corresponding to the posterior
+distribution when conditioning on the (zero Lebesgue measure) event
+<code class="code docutils literal notranslate"><span class="pre">constr(q)</span> <span class="pre">==</span> <span class="pre">0</span></code> where <code class="code docutils literal notranslate"><span class="pre">q</span></code> is the position array. This
+target posterior distribution has support on the differentiable manifold
+implicitly defined by the constraint equation, with density with respect
+to the Hausdorff measure on the manifold corresponding to the ratio of
+the prior density (specified by <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>) and the
+square-root of the determinant of the Gram matrix defined by
+<code class="code docutils literal notranslate"><span class="pre">gram(q)</span> <span class="pre">=</span> <span class="pre">jacob_constr(q)</span> <span class="pre">&#64;</span> <span class="pre">inv(metric)</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr(q).T</span></code>
+where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the
+metric on the ambient space.</p></li>
+<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position rray return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
 <li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
-distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
-(the default), the identity matrix will be used. If a 1D array is passed
-then this is assumed to specify a metric with positive diagonal matrix
-representation and the array the matrix diagonal. If a 2D array is
-passed then this is assumed to specify a metric with a dense positive
+distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
+passed (the default), the identity matrix will be used. If a 1D array is
+passed then this is assumed to specify a metric with positive diagonal
+matrix representation and the array the matrix diagonal. If a 2D array
+is passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if the
-value is a <cite>mici.matrices.PositiveDefiniteMatrix</cite> subclass it is assumed
-to directly specify the metric matrix representation.</p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <cite>neg_log_dens</cite> function specifies the
+value is a <a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.matrices.PositiveDefiniteMatrix</span></code></a> subclass it
+is assumed to directly specify the metric matrix representation.</p></li>
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
 (negative logarithm) of the density of the target distribution with
-respect to the Hausdorff measure on the manifold directly (True) or
-alternatively the negative logarithm of a density of a prior
+respect to the Hausdorff measure on the manifold directly (<code class="code docutils literal notranslate"><span class="pre">True</span></code>)
+or alternatively the negative logarithm of a density of a prior
 distriubtion on the unconstrained (ambient) position space with respect
 to the Lebesgue measure, with the target distribution then corresponding
-to the posterior distribution when conditioning on the event <cite>const(pos)
-== 0</cite> (False). Note that in the former case the base Hausdorff measure
-on the manifold depends on the metric defined on the ambient space, with
-the Hausdorff measure being defined with respect to the metric induced
-on the manifold from this ambient metric.</p></li>
+to the posterior distribution when conditioning on the event
+<code class="code docutils literal notranslate"><span class="pre">constr(pos)</span> <span class="pre">==</span> <span class="pre">0</span></code> (<code class="code docutils literal notranslate"><span class="pre">False</span></code>). Note that in the former case
+the base Hausdorff measure on the manifold depends on the metric defined
+on the ambient space, with the Hausdorff measure being defined with
+respect to the metric induced on the manifold from this ambient metric.</p></li>
 <li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
-derivative of <cite>neg_log_dens</cite> with respect to the position array
+derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
-second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
-position array. If <cite>None</cite> is passed (the default) an automatic
-differentiation fallback will be used to attempt to construct a function
-to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <dl class="simple">
-<dt>Function which given a position array computes the Jacobian</dt><dd><p>(matrix / 2D array of partial derivatives) of the output of the
-constraint function <cite>c = constr(q)</cite> with respect to the position array
-argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    jacob[i, j] = ∂c[i] / ∂q[j]
-
-Optionally the function may instead return a 2-tuple of values with the
-first being the array corresponding to the Jacobian and the second being
-the value of `constr` evaluated at the passed position array. If `None`
+second being the value of the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> evaluated at the
+passed position array. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is passed (the default) an
+automatic differentiation fallback will be used to attempt to construct
+a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
+automatically.</p></li>
+<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – Function which given a position array computes the Jacobian
+(matrix / 2D array of partial derivatives) of the output of the
+constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
+array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
+<code class="code docutils literal notranslate"><span class="pre">jacob</span></code> with <code class="code docutils literal notranslate"><span class="pre">jacob[i,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">∂c[i]</span> <span class="pre">/</span> <span class="pre">∂q[j]</span></code>. Optionally the
+function may instead return a 2-tuple of values with the first being the
+array corresponding to the Jacobian and the second being the value of
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> evaluated at the passed position array. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>
 is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
-value) of `neg_log_dens` automatically.
-</pre></div>
-</div>
-</p></li>
-<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – <dl class="simple">
-<dt>Function which given a position array returns another function</dt><dd><p>which takes a 2D array as an argument and returns the
-<em>matrix-Hessian-product</em> (MHP) of the constraint function <cite>constr</cite> with
-respect to the position array argument. The MHP is here defined as a
-function of a <cite>(dim_constr, dim_pos)</cite> shaped 2D array <cite>m</cite></p>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
-
-where `hess` is the `(dim_constr, dim_pos, dim_pos)` shaped
-vector-Hessian of `c = constr(q)` with respect to `q` i.e. the array of
-second-order partial derivatives of such that
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    hess[i, j, k] = ∂²c[i] / (∂q[j] ∂q[k])
-
-Optionally the function may instead return a 3-tuple of values with the
-first a function to compute a MHP of `constr`, the second a 2D array
-corresponding to the Jacobian of `constr`, and the third the value of
-`constr`, all evaluated at the passed position array. If `None` is
-passed (the default) an automatic differentiation fallback will be used
-to attempt to construct a function which calculates the MHP (and
-Jacobian and value) of `constr` automatically.
-</pre></div>
-</div>
-</p></li>
+value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
+automatically.</p></li>
+<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – Function which given a position array returns another function
+which takes a 2D array as an argument and returns the
+<em>matrix-Hessian-product</em> (MHP) of the constraint function <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
+with respect to the position array argument. The MHP is here defined as
+a function of a <code class="code docutils literal notranslate"><span class="pre">(dim_constr,</span> <span class="pre">dim_pos)</span></code> shaped 2D array <code class="code docutils literal notranslate"><span class="pre">m</span></code>
+as <code class="code docutils literal notranslate"><span class="pre">mhp(m)</span> <span class="pre">=</span> <span class="pre">sum(m[:,</span> <span class="pre">:,</span> <span class="pre">None]</span> <span class="pre">*</span> <span class="pre">hess[:,</span> <span class="pre">:,</span> <span class="pre">:],</span> <span class="pre">axis=(0,</span> <span class="pre">1))</span></code>
+where <code class="code docutils literal notranslate"><span class="pre">hess</span></code> is the <code class="code docutils literal notranslate"><span class="pre">(dim_constr,</span> <span class="pre">dim_pos,</span> <span class="pre">dim_pos)</span></code> shaped
+vector-Hessian of <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to <code class="code docutils literal notranslate"><span class="pre">q</span></code> i.e.
+the array of second-order partial derivatives of such that
+<code class="code docutils literal notranslate"><span class="pre">hess[i,</span> <span class="pre">j,</span> <span class="pre">k]</span> <span class="pre">=</span> <span class="pre">∂²c[i]</span> <span class="pre">/</span> <span class="pre">(∂q[j]</span> <span class="pre">∂q[k])</span></code>. Optionally the function
+may instead return a 3-tuple of values with the first a function to
+compute a MHP of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>, the second a 2D array corresponding to
+the Jacobian of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>, and the third the value of
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code>, all evaluated at the passed position array. If
+<code class="code docutils literal notranslate"><span class="pre">None</span></code> is passed (the default) an automatic differentiation
+fallback will be used to attempt to construct a function which
+calculates the MHP (and Jacobian and value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
+automatically.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1092,7 +1070,7 @@ Jacobian and value) of `constr` automatically.
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>constr(state.pos)</cite> as 1D array.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 1D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -1154,24 +1132,21 @@ Jacobian and value) of `constr` automatically.
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">
 <span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to input momentum.</p>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Matrix representing derivative (Jacobian) of position output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-<dt>dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dpos_dmom</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1213,13 +1188,14 @@ initial input state.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">
 <span class="sig-name descname"><span class="pre">grad_log_det_sqrt_gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" title="Permalink to this definition"></a></dt>
-<dd><p>Derivative of (half of) log-determinant of Gram matrix wrt position.</p>
+<dd><p>Derivative of half of log-determinant of Gram matrix with respect to position</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>log_det_sqrt_gram(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">log_det_sqrt_gram(state)</span></code> derivative with respect to
+<code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -1252,8 +1228,9 @@ initial input state.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 </pre></div>
 </div>
-<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
-<cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
+<p>where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the metric on
+the ambient space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
@@ -1374,7 +1351,7 @@ initial input state.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of Jacobian of <cite>constr(state.pos)</cite> as 2D array.</p>
+<dd class="field-even"><p>Value of Jacobian of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 2D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -1386,9 +1363,9 @@ initial input state.</p>
 <dt class="sig sig-object py" id="mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">
 <span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
-<p>Computes <cite>jacob_constr_1 &#64; inner_product_matrix &#64; jacob_constr_2.T</cite> potentially
-exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_constr_2</cite> and
-<cite>inner_product_matrix</cite>.</p>
+<p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
+potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_2</span></code> and <code class="code docutils literal notranslate"><span class="pre">inner_product_matrix</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1396,7 +1373,7 @@ exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
 <li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
-<cite>jacob_constr_1</cite> if set to <cite>None</cite>.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1467,7 +1444,7 @@ co-tangent space of.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Projected momentum in the co-tangent space at <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Projected momentum in the co-tangent space at <code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -2152,7 +2129,7 @@ partial derivatives of the function such that</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.EuclideanMetricSystem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">EuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#EuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.EuclideanMetricSystem" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#mici.systems.System" title="mici.systems.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#mici.systems.TractableFlowSystem" title="mici.systems.TractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowSystem</span></code></a></p>
 <p>Hamiltonian system with a Euclidean metric on the position space.</p>
 <p>Here Euclidean metric is defined to mean a metric with a fixed positive definite
 matrix representation <span class="math notranslate nohighlight">\(M\)</span>. The momentum variables are taken to be independent
@@ -2249,24 +2226,21 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.EuclideanMetricSystem.dh2_flow_dmom">
 <span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#EuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.EuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to input momentum.</p>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Matrix representing derivative (Jacobian) of position output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-<dt>dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.EuclideanMetricSystem.h2_flow" title="mici.systems.EuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.EuclideanMetricSystem.h2_flow" title="mici.systems.EuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dpos_dmom</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2541,7 +2515,7 @@ Jacobian and value) of <cite>constr</cite> automatically.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>constr(state.pos)</cite> as 1D array.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 1D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -2603,24 +2577,21 @@ Jacobian and value) of <cite>constr</cite> automatically.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">
 <span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to input momentum.</p>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Matrix representing derivative (Jacobian) of position output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-<dt>dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dpos_dmom</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2662,13 +2633,14 @@ initial input state.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">
 <span class="sig-name descname"><span class="pre">grad_log_det_sqrt_gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" title="Permalink to this definition"></a></dt>
-<dd><p>Derivative of (half of) log-determinant of Gram matrix wrt position.</p>
+<dd><p>Derivative of half of log-determinant of Gram matrix with respect to position</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of <cite>log_det_sqrt_gram(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">log_det_sqrt_gram(state)</span></code> derivative with respect to
+<code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -2701,8 +2673,9 @@ initial input state.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gram</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">=</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span> <span class="o">@</span> <span class="n">jacob_constr</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 </pre></div>
 </div>
-<p>where <cite>jacob_constr</cite> is the Jacobian of the constraint function <cite>constr</cite> and
-<cite>metric</cite> is the matrix representation of the metric on the ambient space.</p>
+<p>where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
+<code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the metric on
+the ambient space.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
@@ -2823,7 +2796,7 @@ initial input state.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Value of Jacobian of <cite>constr(state.pos)</cite> as 2D array.</p>
+<dd class="field-even"><p>Value of Jacobian of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 2D array.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -2835,9 +2808,9 @@ initial input state.</p>
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product">
 <span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
-<p>Computes <cite>jacob_constr_1 &#64; inner_product_matrix &#64; jacob_constr_2.T</cite> potentially
-exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_constr_2</cite> and
-<cite>inner_product_matrix</cite>.</p>
+<p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
+potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_2</span></code> and <code class="code docutils literal notranslate"><span class="pre">inner_product_matrix</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -2845,7 +2818,7 @@ exploiting any structure / sparsity in <cite>jacob_constr_1</cite>, <cite>jacob_
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
 <li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
-<cite>jacob_constr_1</cite> if set to <cite>None</cite>.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2916,7 +2889,7 @@ co-tangent space of.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Projected momentum in the co-tangent space at <cite>state.pos</cite>.</p>
+<dd class="field-even"><p>Projected momentum in the co-tangent space at <code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
@@ -3059,24 +3032,21 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom">
 <span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianEuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to input momentum.</p>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>Matrix representing derivative (Jacobian) of position output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-<dt>dmom_dmom: Matrix representing derivative (Jacobian) of momentum output of</dt><dd><p><cite>h2_flow</cite> with respect to the value of the momentum component of the
-initial input state.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>dpos_dmom</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4371,7 +4341,7 @@ Hamiltonian flow for the <span class="math notranslate nohighlight">\(h_1\)</spa
 depends only on the position variable however depending on the form of <span class="math notranslate nohighlight">\(h_2\)</span>
 the corresponding exact Hamiltonian flow may or may not be simulable.</p>
 <p>By default <span class="math notranslate nohighlight">\(h_1\)</span> is assumed to correspond to the negative logarithm of an
-unnormalized density on the position variables with respect to the Lebesgue measure,
+unnormalized density on the position variables with respect to a reference measure,
 with the corresponding distribution on the position space being the target
 distribution it is wished to draw approximate samples from.</p>
 <dl class="field-list simple">
@@ -4379,7 +4349,7 @@ distribution it is wished to draw approximate samples from.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
-with respect to the Lebesgue measure, with the corresponding
+with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
 <li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
@@ -4581,6 +4551,285 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.System.sample_momentum">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.sample_momentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.sample_momentum" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a momentum from its conditional distribution given a position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State defining position to condition on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sampled momentum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">TractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.systems.System" title="mici.systems.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a></p>
+<p>Base class for Hamiltonian systems with tractable component flows.</p>
+<p>The Hamiltonian function <span class="math notranslate nohighlight">\(h\)</span> is assumed to have the general form</p>
+<div class="math notranslate nohighlight">
+\[h(q, p) = h_1(q) + h_2(q, p)\]</div>
+<p>where <span class="math notranslate nohighlight">\(q\)</span> and <span class="math notranslate nohighlight">\(p\)</span> are the position and momentum variables respectively,
+and <span class="math notranslate nohighlight">\(h_1\)</span> and <span class="math notranslate nohighlight">\(h_2\)</span> Hamiltonian component functions. The exact
+Hamiltonian flows for both the <span class="math notranslate nohighlight">\(h_1\)</span> and <span class="math notranslate nohighlight">\(h_2\)</span> components are assumed to
+be tractable for subclasses of this class.</p>
+<p>By default <span class="math notranslate nohighlight">\(h_1\)</span> is assumed to correspond to the negative logarithm of an
+unnormalized density on the position variables with respect to a reference measure,
+with the corresponding distribution on the position space being the target
+distribution it is wished to draw approximate samples from.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to a reference measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh1_dpos">
+<span class="sig-name descname"><span class="pre">dh1_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh1_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h1</cite> Hamiltonian component with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_dmom">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2(state)</cite> derivative with respect to <cite>state.mom</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_dpos">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_flow_dmom">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
+derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.TractableFlowSystem.h2_flow" title="mici.systems.TractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
+to the value of the momentum component of the initial input state and
+<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
+output of <a class="reference internal" href="#mici.systems.TractableFlowSystem.h2_flow" title="mici.systems.TractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
+component of the initial input state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh_dmom">
+<span class="sig-name descname"><span class="pre">dh_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of Hamiltonian with respect to momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h(state)</cite> derivative with respect to <cite>state.mom</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh_dpos">
+<span class="sig-name descname"><span class="pre">dh_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of Hamiltonian with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.grad_neg_log_dens">
+<span class="sig-name descname"><span class="pre">grad_neg_log_dens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.grad_neg_log_dens" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of negative log density with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>neg_log_dens(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h">
+<span class="sig-name descname"><span class="pre">h</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian function for system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of Hamiltonian.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h1">
+<span class="sig-name descname"><span class="pre">h1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h1" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian component depending only on position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h1_flow">
+<span class="sig-name descname"><span class="pre">h1_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h1_flow" title="Permalink to this definition"></a></dt>
+<dd><p>Apply exact flow map corresponding to <cite>h1</cite> Hamiltonian component.</p>
+<p><cite>state</cite> argument is modified in place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h2">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian component depending on momentum and optionally position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h2_flow">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem.h2_flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2_flow" title="Permalink to this definition"></a></dt>
+<dd><p>Apply exact flow map corresponding to <cite>h2</cite> Hamiltonian component.</p>
+<p><cite>state</cite> argument is modified in place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.neg_log_dens">
+<span class="sig-name descname"><span class="pre">neg_log_dens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.neg_log_dens" title="Permalink to this definition"></a></dt>
+<dd><p>Negative logarithm of unnormalized density of target distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of computed negative log density.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.sample_momentum">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.sample_momentum" title="Permalink to this definition"></a></dt>
 <dd><p>Sample a momentum from its conditional distribution given a position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

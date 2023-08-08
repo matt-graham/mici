@@ -102,7 +102,7 @@
              
   <section id="module-mici.stagers">
 <span id="mici-stagers-module"></span><h1>mici.stagers module<a class="headerlink" href="#module-mici.stagers" title="Permalink to this heading"></a></h1>
-<p>Classes for controlling sampling of Markov chains split into stages.</p>
+<p>Classes for staging sampling of Markov chains.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.stagers.ChainStage">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.stagers.</span></span><span class="sig-name descname"><span class="pre">ChainStage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_stats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/stagers.html#ChainStage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.stagers.ChainStage" title="Permalink to this definition"></a></dt>
@@ -113,8 +113,8 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations in chain stage.</p></li>
 <li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of adapters to apply to each transition in chain stage.</p></li>
-<li><p><strong>trace_funcs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><em>TraceFunction</em><em>]</em>) – Functions defining chain variables to trace during chain stage.</p></li>
-<li><p><strong>record_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to record statistics and traces during chain stage.</p></li>
+<li><p><strong>trace_funcs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><em>TraceFunction</em><em>]</em><em>]</em>) – Functions defining chain variables to trace during chain stage.</p></li>
+<li><p><strong>record_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to record statistics during chain stage.</p></li>
 </ul>
 </dd>
 </dl>
@@ -129,10 +129,10 @@
 <dt class="sig sig-object py" id="mici.stagers.Stager.stages">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/stagers.html#Stager.stages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.stagers.Stager.stages" title="Permalink to this definition"></a></dt>
 <dd><p>Create dictionary specifying labels and parameters of chain sampling stages.</p>
-<p>Constructs a (ordered) dictionary with entries corresponding to the sequence of
+<p>Constructs an ordered dictionary with entries corresponding to the sequence of
 sampling stages when running chains with one or more initial adaptation stages.
 The keys of each entry are a string label for the sampling stage and the value a
-<cite>ChainStage</cite> named tuple specifying the parameters of the stage.</p>
+<a class="reference internal" href="#mici.stagers.ChainStage" title="mici.stagers.ChainStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChainStage</span></code></a> named tuple specifying the parameters of the stage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -151,16 +151,19 @@ corresponding to the last trace function to return that key will be
 stored. By default chains are only traced in the iterations of the final
 non-adaptive stage - this behaviour can be altered using the
 <cite>trace_warm_up</cite> argument.</p></li>
-<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <cite>Adapter</cite> instances keyed by strings
-corresponding to the key of the transition in the sampler <cite>transitions</cite>
+<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.adapters.Adapter</span></code></a>
+instances keyed by strings corresponding to the key of the transition in
+the sampler
+<a class="reference internal" href="mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="mici.samplers.MarkovChainMonteCarloMethod.transitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mici.samplers.MarkovChainMonteCarloMethod.transitions</span></code></a>
 dictionary to apply the adapters to, to use to adaptatively set
 parameters of the transitions during the adaptive stages of the chains.
 Note that the adapter updates are applied in the order the adapters
 appear in the iterables and so if multiple adapters change the same
 parameter(s) the order will matter.</p></li>
 <li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to record chain traces and statistics during warm-up
-stage iterations (<cite>True</cite>) or only record traces and statistics in the
-iterations of the final non-adaptive stage (<cite>False</cite>, the default).</p></li>
+stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
+the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
+default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -192,10 +195,10 @@ the outputs of functions of the sampled chain state after each iteration.</p>
 <dt class="sig sig-object py" id="mici.stagers.WarmUpStager.stages">
 <span class="sig-name descname"><span class="pre">stages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/stagers.html#WarmUpStager.stages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.stagers.WarmUpStager.stages" title="Permalink to this definition"></a></dt>
 <dd><p>Create dictionary specifying labels and parameters of chain sampling stages.</p>
-<p>Constructs a (ordered) dictionary with entries corresponding to the sequence of
+<p>Constructs an ordered dictionary with entries corresponding to the sequence of
 sampling stages when running chains with one or more initial adaptation stages.
 The keys of each entry are a string label for the sampling stage and the value a
-<cite>ChainStage</cite> named tuple specifying the parameters of the stage.</p>
+<a class="reference internal" href="#mici.stagers.ChainStage" title="mici.stagers.ChainStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChainStage</span></code></a> named tuple specifying the parameters of the stage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -204,7 +207,7 @@ on the adapters specified by the <cite>adapters</cite> argument the warm up
 iterations may be split between one or more adaptive stages.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>trace_funcs</strong> (<em>Iterable</em><em>[</em><em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>ArrayLike</em><em>]</em><em>]</em><em>]</em>) – Iterable of functions which compute the variables to be
+<li><p><strong>trace_funcs</strong> (<em>Iterable</em><em>[</em><em>TraceFunction</em><em>]</em>) – Iterable of functions which compute the variables to be
 recorded at each chain iteration, with each trace function being passed
 the current state and returning a dictionary of scalar or array values
 corresponding to the variable(s) to be stored. The keys in the returned
@@ -214,16 +217,19 @@ corresponding to the last trace function to return that key will be
 stored. By default chains are only traced in the iterations of the final
 non-adaptive stage - this behaviour can be altered using the
 <cite>trace_warm_up</cite> argument.</p></li>
-<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <cite>Adapter</cite> instances keyed by strings
-corresponding to the key of the transition in the sampler <cite>transitions</cite>
+<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.adapters.Adapter</span></code></a>
+instances keyed by strings corresponding to the key of the transition in
+the sampler
+<a class="reference internal" href="mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="mici.samplers.MarkovChainMonteCarloMethod.transitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mici.samplers.MarkovChainMonteCarloMethod.transitions</span></code></a>
 dictionary to apply the adapters to, to use to adaptatively set
 parameters of the transitions during the adaptive stages of the chains.
 Note that the adapter updates are applied in the order the adapters
 appear in the iterables and so if multiple adapters change the same
 parameter(s) the order will matter.</p></li>
 <li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to record chain traces and statistics during warm-up
-stage iterations (<cite>True</cite>) or only record traces and statistics in the
-iterations of the final non-adaptive stage (<cite>False</cite>, the default).</p></li>
+stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
+the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
+default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -249,7 +255,8 @@ which <em>addtionally</em> adjust transition parameters which require more globa
 information. The adapters to be used in both the fast and slow adaptation stages
 will be referred to as the <em>fast adapters</em> and the adapters to use in only the slow
 adaptation stages the <em>slow adapters</em>. Each adapter self identifies if it is a fast
-adapter by whether the <cite>is_fast</cite> attribute is set to <cite>True</cite>.</p>
+adapter by whether the <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter.is_fast" title="mici.adapters.Adapter.is_fast"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mici.adapters.Adapter.is_fast</span></code></a> attribute is set to
+<code class="code docutils literal notranslate"><span class="pre">True</span></code>.</p>
 <p>The adaptive warm up iterations are split into three stages:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -298,10 +305,10 @@ such that each window doubles in size.</p></li>
 <dt class="sig sig-object py" id="mici.stagers.WindowedWarmUpStager.stages">
 <span class="sig-name descname"><span class="pre">stages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/stagers.html#WindowedWarmUpStager.stages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.stagers.WindowedWarmUpStager.stages" title="Permalink to this definition"></a></dt>
 <dd><p>Create dictionary specifying labels and parameters of chain sampling stages.</p>
-<p>Constructs a (ordered) dictionary with entries corresponding to the sequence of
+<p>Constructs an ordered dictionary with entries corresponding to the sequence of
 sampling stages when running chains with one or more initial adaptation stages.
 The keys of each entry are a string label for the sampling stage and the value a
-<cite>ChainStage</cite> named tuple specifying the parameters of the stage.</p>
+<a class="reference internal" href="#mici.stagers.ChainStage" title="mici.stagers.ChainStage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChainStage</span></code></a> named tuple specifying the parameters of the stage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -320,16 +327,19 @@ corresponding to the last trace function to return that key will be
 stored. By default chains are only traced in the iterations of the final
 non-adaptive stage - this behaviour can be altered using the
 <cite>trace_warm_up</cite> argument.</p></li>
-<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <cite>Adapter</cite> instances keyed by strings
-corresponding to the key of the transition in the sampler <cite>transitions</cite>
+<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em>) – Dictionary of iterables of <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.adapters.Adapter</span></code></a>
+instances keyed by strings corresponding to the key of the transition in
+the sampler
+<a class="reference internal" href="mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="mici.samplers.MarkovChainMonteCarloMethod.transitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mici.samplers.MarkovChainMonteCarloMethod.transitions</span></code></a>
 dictionary to apply the adapters to, to use to adaptatively set
 parameters of the transitions during the adaptive stages of the chains.
 Note that the adapter updates are applied in the order the adapters
 appear in the iterables and so if multiple adapters change the same
 parameter(s) the order will matter.</p></li>
 <li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to record chain traces and statistics during warm-up
-stage iterations (<cite>True</cite>) or only record traces and statistics in the
-iterations of the final non-adaptive stage (<cite>False</cite>, the default).</p></li>
+stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
+the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
+default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
