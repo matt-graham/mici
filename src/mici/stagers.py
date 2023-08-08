@@ -6,10 +6,8 @@ import abc
 from typing import NamedTuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
-    from numpy.typing import ArrayLike
+    from typing import Iterable, Optional
     from mici.adapters import Adapter
-    from mici.states import ChainState
     from mici.types import TraceFunction
 
 
@@ -25,7 +23,7 @@ class ChainStage(NamedTuple):
 
     n_iter: int
     adapters: dict[str, Iterable[Adapter]]
-    trace_funcs: tuple[TraceFunction]
+    trace_funcs: Optional[tuple[TraceFunction]]
     record_stats: bool
 
 
@@ -97,17 +95,18 @@ class WarmUpStager(Stager):
         n_warm_up_iter: int,
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
-        trace_funcs: Iterable[Callable[[ChainState], dict[str, ArrayLike]]],
+        trace_funcs: Iterable[TraceFunction],
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
         sampling_stages = dict()
+        trace_funcs = tuple(trace_funcs) if trace_funcs is not None else trace_funcs
         # adaptive warm up stage
         if n_warm_up_iter > 0:
             warm_up_trace_funcs = trace_funcs if trace_warm_up else None
             sampling_stages["Adaptive warm up"] = ChainStage(
                 n_iter=n_warm_up_iter,
                 adapters=adapters,
-                trace_funcs=tuple(warm_up_trace_funcs),
+                trace_funcs=warm_up_trace_funcs,
                 record_stats=trace_warm_up,
             )
         # main non-adaptive stage
@@ -115,7 +114,7 @@ class WarmUpStager(Stager):
             sampling_stages["Main non-adaptive"] = ChainStage(
                 n_iter=n_main_iter,
                 adapters=None,
-                trace_funcs=tuple(trace_funcs),
+                trace_funcs=trace_funcs,
                 record_stats=True,
             )
         return sampling_stages
@@ -195,6 +194,7 @@ class WindowedWarmUpStager(Stager):
         trace_funcs: Iterable[TraceFunction],
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
+        trace_funcs = tuple(trace_funcs) if trace_funcs is not None else trace_funcs
         fast_adapters = {
             trans_key: [adapter for adapter in adapter_list if adapter.is_fast]
             for trans_key, adapter_list in adapters.items()
@@ -222,7 +222,7 @@ class WindowedWarmUpStager(Stager):
             sampling_stages["Initial fast adaptive"] = ChainStage(
                 n_iter=n_init_fast_stage_iter,
                 adapters=fast_adapters,
-                trace_funcs=tuple(warm_up_trace_funcs),
+                trace_funcs=warm_up_trace_funcs,
                 record_stats=record_stats,
             )
             # growing size slow adaptation windows
@@ -251,14 +251,14 @@ class WindowedWarmUpStager(Stager):
                 ] = ChainStage(
                     n_iter=n_iter,
                     adapters=adapters,
-                    trace_funcs=tuple(warm_up_trace_funcs),
+                    trace_funcs=warm_up_trace_funcs,
                     record_stats=record_stats,
                 )
             # final fast adaptation stage
             sampling_stages["Final fast adaptive"] = ChainStage(
                 n_iter=n_final_fast_stage_iter,
                 adapters=fast_adapters,
-                trace_funcs=tuple(warm_up_trace_funcs),
+                trace_funcs=warm_up_trace_funcs,
                 record_stats=record_stats,
             )
         # main non-adaptive stage
@@ -266,7 +266,7 @@ class WindowedWarmUpStager(Stager):
             sampling_stages["Main non-adaptive"] = ChainStage(
                 n_iter=n_main_iter,
                 adapters=None,
-                trace_funcs=tuple(trace_funcs),
+                trace_funcs=trace_funcs,
                 record_stats=True,
             )
         return sampling_stages
