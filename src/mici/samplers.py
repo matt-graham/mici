@@ -805,8 +805,18 @@ class MarkovChainMonteCarloMethod:
                 DeprecationWarning,
             )
             rng = np.random.Generator(rng._bit_generator)
-        self.rng = rng
-        self.transitions = transitions
+        self._rng = rng
+        self._transitions = transitions
+
+    @property
+    def transitions(self) -> dict[str, Transition]:
+        """Dictionary of transition kernels sampled from in each chain iteration."""
+        return self._transitions
+
+    @property
+    def rng(self) -> Generator:
+        """NumPy random number generator object."""
+        return self._rng
 
     def sample_chains(
         self,
@@ -1092,21 +1102,22 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
     ):
         """
         Args:
-            system Hamiltonian system to be simulated.
+            system Hamiltonian system to be simulated, corresponding to joint
+                distribution on augmented space.
             rng: Numpy random number generator.
-            integration_transition: Markov transition kernel which leaves canonical
+            integration_transition: Markov transition kernel which leaves joint
                 distribution invariant and jointly updates the position and momentum
                 components of the chain state by integrating the Hamiltonian dynamics of
                 the system to propose new values for the state.
             momentum_transition: Markov transition kernel which leaves the conditional
-                distribution on the momentum under the canonical distribution invariant,
+                distribution on the momentum under the join distribution invariant,
                 updating only the momentum component of the chain state. If set to
-                `None` the momentum transition operator
-                `mici.transitions.IndependentMomentumTransition` will be used, which
-                independently samples the momentum from its conditional distribution.
+                :py:const:`None` the momentum transition operator
+                :py:class:`mici.transitions.IndependentMomentumTransition` will be used,
+                which independently samples the momentum from its conditional
+                distribution.
         """
-        self.system = system
-        self.rng = rng
+        self._system = system
         if momentum_transition is None:
             momentum_transition = IndependentMomentumTransition(system)
         super().__init__(
@@ -1116,6 +1127,11 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 "integration_transition": integration_transition,
             },
         )
+
+    @property
+    def system(self) -> System:
+        """Hamiltonian system corresponding to joint distribution on augmented space."""
+        return self._system
 
     def _preprocess_init_state(
         self, init_state: Union[NDArray, ChainState, dict]

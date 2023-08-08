@@ -18,27 +18,28 @@ from mici.solvers import (
 if TYPE_CHECKING:
     from typing import Any, Callable, Optional, Sequence
     from mici.states import ChainState
-    from mici.systems import System
+    from mici.systems import System, TractableFlowSystem
     from mici.types import NormFunction
 
 
 class Integrator(ABC):
-    """Base class for integrators for simulating Hamiltonian dynamics.
+    r"""Base class for integrators for simulating Hamiltonian dynamics.
 
-    For a Hamiltonian function `h` with position variables `q` and momentum variables
-    `p`, the canonical Hamiltonian dynamic is defined by the ordinary differential
-    equation system
+    For a Hamiltonian function :math:`h` with position variables :math:`q` and momentum
+    variables :math:`p`, the canonical Hamiltonian dynamic is defined by the ordinary
+    differential equation system
 
-        q̇ = ∇₂h(q, p)
-        ṗ = -∇₁h(q, p)
+    .. math::
+
+        \dot{q} = \nabla_2 h(q, p),  \qquad \dot{p} = -\nabla_1 h(q, p)
 
     with the flow map corresponding to the solution of the corresponding initial value
     problem a time-reversible and symplectic (and by consequence volume-preserving) map.
 
-    Derived classes implement a `step` method which approximates the flow-map over some
-    small time interval, while conserving the properties of being time-reversible and
-    symplectic, with composition of this integrator step method allowing simulation of
-    time-discretised trajectories of the Hamiltonian dynamics.
+    Derived classes implement a :py:meth:`step` method which approximates the flow-map
+    over some small time interval, while conserving the properties of being
+    time-reversible and symplectic, with composition of this integrator step method
+    allowing simulation of time-discretised trajectories of the Hamiltonian dynamics.
     """
 
     def __init__(self, system: System, step_size: Optional[float] = None):
@@ -85,23 +86,26 @@ class TractableFlowIntegrator(Integrator):
 
     The Hamiltonian function is assumed to be expressible as the sum of two analytically
     tractable components for which the corresponding Hamiltonian flows can be exactly
-    simulated. Specifically it is assumed that the Hamiltonian function `h` takes the
-    form
+    simulated. Specifically it is assumed that the Hamiltonian function :math:`h` takes
+    the form
 
-        h(q, p) = h₁(q) + h₂(q, p)
+    .. math::
 
-    where `q` and `p` are the position and momentum variables respectively, and `h₁` and
-    `h₂` are Hamiltonian component functions for which the exact flows can be computed.
+        h(q, p) = h_1(q) + h_2(q, p)
+
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    and :math:`h_1` and :math:`h_2` are Hamiltonian component functions for which the
+    exact flows can be computed.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
         """
         Args:
-            system: Hamiltonian system to integrate the dynamics of. Must define both
-                `h1_flow` and `h2_flow` methods.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            system: Hamiltonian system to integrate the dynamics of with tractable
+                Hamiltonian component flows.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
         """
         if not hasattr(system, "h1_flow") or not hasattr(system, "h2_flow"):
             raise ValueError(
@@ -117,25 +121,29 @@ class TractableFlowIntegrator(Integrator):
 class LeapfrogIntegrator(TractableFlowIntegrator):
     """Leapfrog integrator for Hamiltonian systems with tractable component flows.
 
-    For separable Hamiltonians of the form
+    For separable Hamiltonians of the
 
-        h(q, p) = h₁(q) + h₂(p)
+    .. math::
 
-    where `h₁` is the potential energy and `h₂` is the kinetic energy, this integrator
-    corresponds to the classic (position) Störmer-Verlet method.
+        h(q, p) = h_1(q) + h_2(p)
+
+    where :math:`h_1` is the potential energy and :math:`h_2` is the kinetic energy,
+    this integrator corresponds to the classic (position) Störmer-Verlet method.
 
     The integrator can also be applied to the more general Hamiltonian splitting
 
-        h(q, p) = h₁(q) + h₂(q, p)
+    .. math::
 
-    providing the flows for `h₁` and `h₂` are both tractable.
+        h(q, p) = h_1(q) + h_2(q, p)
+
+    providing the flows for :math:`h_1` and :math:`h_2` are both tractable.
 
     For more details see Sections 2.6 and 4.2.2 in Leimkuhler and Reich (2004).
 
     References:
 
-    Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
-    Cambridge University Press.
+      1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+         Cambridge University Press.
     """
 
     def _step(self, state: ChainState, time_step: float):
@@ -145,39 +153,61 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
 
 
 class SymmetricCompositionIntegrator(TractableFlowIntegrator):
-    """Symmetric composition integrator for Hamiltonians with tractable component flows.
+    r"""Symmetric composition integrator for Hamiltonians with tractable component flows
 
     The Hamiltonian function is assumed to be expressible as the sum of two analytically
     tractable components for which the corresponding Hamiltonian flows can be exactly
-    simulated. Specifically it is assumed that the Hamiltonian function h takes the form
+    simulated. Specifically it is assumed that the Hamiltonian function :math:`h` takes
+    the form
 
-        h(q, p) = h₁(q) + h₂(q, p)
+    .. math::
 
-    where `q` and `p` are the position and momentum variables respectively, and `h₁` and
-    `h₂` are Hamiltonian component functions for which the exact flows, respectively
-    `Φ₁` and `Φ₂`, can be computed. An alternating composition can then be formed as
+        h(q, p) = h_1(q) + h_2(q, p)
 
-        Ψ(t) = A(aₛt) ∘ B(bₛt) ∘ ⋯ ∘ A(a₁t) ∘ B(b₁t) ∘ A(a₀t)
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    and :math:`h_1` and :math:`h_2` are Hamiltonian component functions for which the
+    exact flows, respectively :math:`\Phi_1` and :math:`\Phi_2`, can be computed. An
+    alternating composition can then be formed as
 
-    where `A = Φ₁` and `B = Φ₂` or `A = Φ₂` and `B = Φ₁`, and `(a₀, ⋯, aₛ)` and
-    `(b₁, ⋯, bₛ)` are a set of coefficients to be determined and `s` is the number of
-    stages in the composition.
+    .. math::
+
+        \Psi(t) =
+        A(a_S t) \circ B(b_S t) \circ \dots \circ A(a_1 t) \circ B(b_1 t) \circ A(a_0 t)
+
+    where :math:`A = \Phi_1` and :math:`B = \Phi_2` or :math:`A = \Phi_2` and :math:`B =
+    \Phi_1`, and :math:`(a_0,\dots, a_S)` and :math:`(b_1, \dots, b_S)` are a set of
+    coefficients to be determined and :math:`S` is the number of stages in the
+    composition.
 
     To ensure a consistency (i.e. the integrator is at least order one) we require that
 
-        sum(a₀, ⋯, aₛ) = sum(b₁, ⋯, bₛ) = 1
+    .. math::
+
+        \sum_{s=0}^S a_s = \sum_{s=1}^S b_s = 1.
 
     For symmetric compositions we restrict that
 
-        aₛ₋ₘ = aₘ and bₛ₊₁₋ₘ = bₛ
+    .. math::
+
+        a_{S-m} = a_m, \quad b_{S+1-m} = b_s
 
     with symmetric consistent methods of at least order two.
 
-    The combination of the symmetry and consistency requirements mean that a `s`-stage
-    symmetric composition method can be described by `(s - 1)` 'free' coefficients
+    The combination of the symmetry and consistency requirements mean that a
+    :math:`S`-stage symmetric composition method can be described by :math:`S - 1`
+    'free' coefficients
 
-        (a₀, b₁, a₁, ⋯, aₖ, bₖ) with k = (s - 1) / 2 if s is odd or
-        (a₀, b₁, a₁, ⋯, aₖ) with k = (s - 2) / 2 if s is even
+    .. math::
+
+        (a_0, b_1, a_1, \dots, a_K, b_K)
+
+    with :math:`K = (S - 1) / 2` if :math:`S` is odd or
+
+    .. math::
+
+        (a_0, b_1, a_1, \dots, a_K)
+
+    with :math:`K = (S - 2) / 2` if :math:`S` is even.
 
     The Störmer-Verlet 'leapfrog' integrator is a special case corresponding to the
     unique (symmetric and consistent) 1-stage integrator.
@@ -186,30 +216,33 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
 
     References:
 
-    Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
-    Cambridge University Press.
+      1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+         Cambridge University Press.
     """
 
     def __init__(
         self,
-        system: System,
+        system: TractableFlowSystem,
         free_coefficients: Sequence[float],
         step_size: Optional[float] = None,
         initial_h1_flow_step: bool = True,
     ):
-        """
+        r"""
         Args:
-            system: Hamiltonian system to integrate the dynamics of.
-            free_coefficients: Sequence of `s - 1` scalar values, where `s` is the
-                number of stages in the symmetric composition, specifying the free
-                coefficients `(a₀, b₁, a₁, ⋯, aₖ, bₖ)` with `k = (s - 1) / 2` if `s` is
-                odd or `(a₀, b₁, a₁, ⋯, aₖ)` with `k = (s - 2) / 2` if `s` is even.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
-            initial_h1_flow_step: Whether the initial 'A' flow in the composition should
-                correspond to the flow of the `h₁` Hamiltonian component (`True`) or to
-                the flow of the `h₂` component (`False`).
+            system: Hamiltonian system to integrate the dynamics of with tractable
+                Hamiltonian component flows.
+            free_coefficients: Sequence of :math:`S - 1` scalar values, where :math:`S`
+                is the number of stages in the symmetric composition, specifying the
+                free coefficients :math:`(a_0, b_1, a_1, \dots, a_K, b_K)` with :math:`K
+                = (S - 1) / 2` if :math:`S` is odd or :math:`(a_0, b_1, a_1, \dots,
+                a_K)` with :math:`k = (S - 2) / 2` if `S` is even.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
+            initial_h1_flow_step: Whether the initial :math:`A` flow in the composition
+                should correspond to the flow of the `h_1` Hamiltonian component
+                (:code:`True`) or to the flow of the :math:`h_2` component
+                (:code:`False`).
         """
         super().__init__(system, step_size)
         self.initial_h1_flow_step = initial_h1_flow_step
@@ -238,18 +271,19 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
 
     References:
 
-    Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
-    Numerical integrators for the Hybrid Monte Carlo method.
-    SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
+      1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
+         Numerical integrators for the Hybrid Monte Carlo method.
+         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
         """
         Args:
-            system: Hamiltonian system to integrate the dynamics  of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            system: Hamiltonian system to integrate the dynamics of with tractable
+                Hamiltonian component flows.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
         """
         a_0 = (3 - 3 ** 0.5) / 6
         super().__init__(system, (a_0,), step_size, True)
@@ -262,18 +296,19 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
 
     References:
 
-    Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
-    Numerical integrators for the Hybrid Monte Carlo method.
-    SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
+      1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
+         Numerical integrators for the Hybrid Monte Carlo method.
+         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
         """
         Args:
-            system: Hamiltonian system to integrate the dynamics  of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            system: Hamiltonian system to integrate the dynamics of with tractable
+                Hamiltonian component flows.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
         """
         a_0 = 0.11888010966548
         b_1 = 0.29619504261126
@@ -287,18 +322,19 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
 
     References:
 
-    Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
-    Numerical integrators for the Hybrid Monte Carlo method.
-    SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
+      1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
+         Numerical integrators for the Hybrid Monte Carlo method.
+         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
         """
         Args:
-            system: Hamiltonian system to integrate the dynamics  of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            system: Hamiltonian system to integrate the dynamics of with tractable
+                Hamiltonian component flows.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that
+                a step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
         """
         a_0 = 0.071353913450279725904
         b_1 = 0.191667800000000000000
@@ -311,18 +347,20 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     Also known as the generalised leapfrog method.
 
-    The Hamiltonian function `h` is assumed to take the form
+    The Hamiltonian function :math:`h` is assumed to take the form
 
-        h(q, p) = h₁(q) + h₂(q, p)
+    .. math::
 
-    where `q` and `p` are the position and momentum variables respectively, `h₁` is a
-    Hamiltonian component function for which the exact flow can be computed and `h₂` is
-    a Hamiltonian component function of the position and momentum variables, which may
-    be non-separable and for which exact simulation of the correspond Hamiltonian flow
-    may not be possible.
+        h(q, p) = h_1(q) + h_2(q, p)
+
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    :math:`h_1` is a Hamiltonian component function for which the exact flow can be
+    computed and :math:`h_2` is a Hamiltonian component function of the position and
+    momentum variables, which may be non-separable and for which exact simulation of the
+    correspond Hamiltonian flow may not be possible.
 
     A pair of implicit component updates are used to approximate the flow due to the
-    `h₂` Hamiltonian component, with a fixed-point iteration used to solve the
+    :math:`h_2` Hamiltonian component, with a fixed-point iteration used to solve the
     non-linear system of equations.
 
     The resulting implicit integrator is a symmetric second-order method corresponding
@@ -331,8 +369,8 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     References:
 
-    Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
-    Cambridge University Press.
+      1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+         Cambridge University Press.
     """
 
     def __init__(

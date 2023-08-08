@@ -1,4 +1,4 @@
-"""Classes for controlling sampling of Markov chains split into stages."""
+"""Classes for staging sampling of Markov chains."""
 
 from __future__ import annotations
 
@@ -13,12 +13,12 @@ if TYPE_CHECKING:
 
 class ChainStage(NamedTuple):
     """Parameters of chain stage.
-    
+
     Parameters:
         n_iter: Number of iterations in chain stage.
         adapters: Dictionary of adapters to apply to each transition in chain stage.
         trace_funcs: Functions defining chain variables to trace during chain stage.
-        record_stats: Whether to record statistics and traces during chain stage.
+        record_stats: Whether to record statistics during chain stage.
     """
 
     n_iter: int
@@ -41,10 +41,10 @@ class Stager(abc.ABC):
     ) -> dict[str, ChainStage]:
         """Create dictionary specifying labels and parameters of chain sampling stages.
 
-        Constructs a (ordered) dictionary with entries corresponding to the sequence of
+        Constructs an ordered dictionary with entries corresponding to the sequence of
         sampling stages when running chains with one or more initial adaptation stages.
         The keys of each entry are a string label for the sampling stage and the value a
-        `ChainStage` named tuple specifying the parameters of the stage.
+        :py:class:`ChainStage` named tuple specifying the parameters of the stage.
 
         Args:
             n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending
@@ -62,16 +62,19 @@ class Stager(abc.ABC):
                 stored. By default chains are only traced in the iterations of the final
                 non-adaptive stage - this behaviour can be altered using the
                 `trace_warm_up` argument.
-            adapters: Dictionary of iterables of `Adapter` instances keyed by strings
-                corresponding to the key of the transition in the sampler `transitions`
+            adapters: Dictionary of iterables of :py:class:`mici.adapters.Adapter`
+                instances keyed by strings corresponding to the key of the transition in
+                the sampler
+                :py:attr:`mici.samplers.MarkovChainMonteCarloMethod.transitions`
                 dictionary to apply the adapters to, to use to adaptatively set
                 parameters of the transitions during the adaptive stages of the chains.
                 Note that the adapter updates are applied in the order the adapters
                 appear in the iterables and so if multiple adapters change the same
                 parameter(s) the order will matter.
             trace_warm_up: Whether to record chain traces and statistics during warm-up
-                stage iterations (`True`) or only record traces and statistics in the
-                iterations of the final non-adaptive stage (`False`, the default).
+                stage iterations (:code:`True`) or only record traces and statistics in
+                the iterations of the final non-adaptive stage (:code:`False`, the
+                default).
 
         Returns:
             Dictionary specifying chain stages, keyed by labels for stages.
@@ -130,7 +133,8 @@ class WindowedWarmUpStager(Stager):
     information. The adapters to be used in both the fast and slow adaptation stages
     will be referred to as the *fast adapters* and the adapters to use in only the slow
     adaptation stages the *slow adapters*. Each adapter self identifies if it is a fast
-    adapter by whether the `is_fast` attribute is set to `True`.
+    adapter by whether the :py:attr:`mici.adapters.Adapter.is_fast` attribute is set to
+    :code:`True`.
 
     The adaptive warm up iterations are split into three stages:
 

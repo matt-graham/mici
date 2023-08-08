@@ -113,7 +113,7 @@ class Adapter(ABC):
         An adapter which requires only local information to adapt the transition
         parameters should be classified as fast while one which requires more global
         information and so more chain iterations should be classified as slow i.e.
-        `is_fast == False`.
+        :code:`is_fast == False`.
         """
 
 
