@@ -533,7 +533,7 @@ class ImplicitMidpointIntegrator(Integrator):
         """
         super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
-        self.reverse_check_norm = maximum_norm
+        self.reverse_check_norm = reverse_check_norm
         self.fixed_point_solver = fixed_point_solver
         if fixed_point_solver_kwargs is None:
             fixed_point_solver_kwargs = {}
