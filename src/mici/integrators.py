@@ -31,24 +31,26 @@ class Integrator(ABC):
 
     .. math::
 
-        \dot{q} = \nabla_2 h(q, p),  \qquad \dot{p} = -\nabla_1 h(q, p)
+        \dot{q} = \nabla_2 h(q, p),  \qquad \dot{p} = -\nabla_1 h(q, p),
 
-    with the flow map corresponding to the solution of the corresponding initial value
-    problem a time-reversible and symplectic (and by consequence volume-preserving) map.
+    with the flow map :math:`\Phi` corresponding to the solution of the corresponding
+    initial value problem a time-reversible and symplectic (and by consequence
+    volume-preserving) map.
 
     Derived classes implement a :py:meth:`step` method which approximates the flow-map
-    over some small time interval, while conserving the properties of being
-    time-reversible and symplectic, with composition of this integrator step method
-    allowing simulation of time-discretised trajectories of the Hamiltonian dynamics.
+    with :math:`\Psi(t) \approx \Phi(t)` over some small time interval :math:`t`, while
+    conserving the properties of being time-reversible and symplectic, with composition
+    of this integrator step method allowing simulation of time-discretised trajectories
+    of the Hamiltonian dynamics.
     """
 
     def __init__(self, system: System, step_size: Optional[float] = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                `step` method.
         """
         self.system = system
         self.step_size = step_size
@@ -82,7 +84,7 @@ class Integrator(ABC):
 
 
 class TractableFlowIntegrator(Integrator):
-    """Base class for integrators for Hamiltonian systems with tractable component flows
+    r"""Base class for integrators for Hamiltonian systems with tractable flows.
 
     The Hamiltonian function is assumed to be expressible as the sum of two analytically
     tractable components for which the corresponding Hamiltonian flows can be exactly
@@ -91,11 +93,12 @@ class TractableFlowIntegrator(Integrator):
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(q, p)
+        h(q, p) = h_1(q) + h_2(q, p),
 
     where :math:`q` and :math:`p` are the position and momentum variables respectively,
     and :math:`h_1` and :math:`h_2` are Hamiltonian component functions for which the
-    exact flows can be computed.
+    exact flow maps, :math:`\Phi_1` and :math:`\Phi_2` respectively, can be computed
+    exactly.
     """
 
     def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
@@ -119,13 +122,22 @@ class TractableFlowIntegrator(Integrator):
 
 
 class LeapfrogIntegrator(TractableFlowIntegrator):
-    """Leapfrog integrator for Hamiltonian systems with tractable component flows.
+    r"""Leapfrog integrator for Hamiltonian systems with tractable component flows.
+
+    The overall integrator step :math:`\Psi` is defined by the symmetric composition
+
+    .. math::
+
+        \Psi(t) = \Phi_1(t/2) \circ \Phi_2(t) \circ \Phi_1(t/2)
+
+    where :math:`\Phi_1` and :math:`\Phi_2` are the exact flow maps associated with the
+    Hamiltonian components :math:`h_1` and :math:`h_2` respectively.
 
     For separable Hamiltonians of the
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(p)
+        h(q, p) = h_1(q) + h_2(p),
 
     where :math:`h_1` is the potential energy and :math:`h_2` is the kinetic energy,
     this integrator corresponds to the classic (position) Störmer-Verlet method.
@@ -134,7 +146,7 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(q, p)
+        h(q, p) = h_1(q) + h_2(q, p),
 
     providing the flows for :math:`h_1` and :math:`h_2` are both tractable.
 
@@ -153,7 +165,7 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
 
 
 class SymmetricCompositionIntegrator(TractableFlowIntegrator):
-    r"""Symmetric composition integrator for Hamiltonians with tractable component flows
+    r"""Symmetric composition integrator for Hamiltonians with tractable flows.
 
     The Hamiltonian function is assumed to be expressible as the sum of two analytically
     tractable components for which the corresponding Hamiltonian flows can be exactly
@@ -162,7 +174,7 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(q, p)
+        h(q, p) = h_1(q) + h_2(q, p),
 
     where :math:`q` and :math:`p` are the position and momentum variables respectively,
     and :math:`h_1` and :math:`h_2` are Hamiltonian component functions for which the
@@ -171,13 +183,12 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        \Psi(t) =
-        A(a_S t) \circ B(b_S t) \circ \dots \circ A(a_1 t) \circ B(b_1 t) \circ A(a_0 t)
+        \Psi(t) = A(a_S t) \circ B(b_S t) \circ \dots \circ
+                  A(a_1 t) \circ B(b_1 t) \circ A(a_0 t),
 
     where :math:`A = \Phi_1` and :math:`B = \Phi_2` or :math:`A = \Phi_2` and :math:`B =
     \Phi_1`, and :math:`(a_0,\dots, a_S)` and :math:`(b_1, \dots, b_S)` are a set of
-    coefficients to be determined and :math:`S` is the number of stages in the
-    composition.
+    coefficients to be determined with :math:`S \geq 1`.
 
     To ensure a consistency (i.e. the integrator is at least order one) we require that
 
@@ -189,28 +200,20 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        a_{S-m} = a_m, \quad b_{S+1-m} = b_s
+        a_{S-m} = a_m, \quad b_{S+1-m} = b_m,
 
     with symmetric consistent methods of at least order two.
 
-    The combination of the symmetry and consistency requirements mean that a
-    :math:`S`-stage symmetric composition method can be described by :math:`S - 1`
-    'free' coefficients
+    The combination of the symmetry and consistency requirements mean that for each
+    :math:`S \geq 1` a symmetric composition method can be described by :math:`S - 1`
+    'free' coefficients :math:`(a_0, b_1, \dots, a_{K-1}, b_K)`  with
+    :math:`K = (S - 1) / 2` if :math:`S > 1` is odd (with no free coefficients for
+    :math:`S = 1` case) or :math:`(a_0, b_1, \dots, a_K)` with :math:`K = (S - 2) / 2`
+    if :math:`S > 2` is even (with a single free coefficient :math:`a_0` for :math:`S=2`
+    case).
 
-    .. math::
-
-        (a_0, b_1, a_1, \dots, a_K, b_K)
-
-    with :math:`K = (S - 1) / 2` if :math:`S` is odd or
-
-    .. math::
-
-        (a_0, b_1, a_1, \dots, a_K)
-
-    with :math:`K = (S - 2) / 2` if :math:`S` is even.
-
-    The Störmer-Verlet 'leapfrog' integrator is a special case corresponding to the
-    unique (symmetric and consistent) 1-stage integrator.
+    The Störmer-Verlet 'leapfrog' integrator is the special case corresponding to the
+    unique (symmetric and consistent) '1-stage' (:math:`S = 1`) integrator.
 
     For more details see Section 6.2 in Leimkuhler and Reich (2004).
 
@@ -265,9 +268,12 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
 
 
 class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
-    """Two-stage symmetric composition integrator due to Blanes, Casas & Sanz-Serna.
+    r"""Two-stage symmetric composition integrator due to Blanes, Casas & Sanz-Serna.
 
     Described in equation (6.4) in Blanes, Casas, Sanz-Serna (2014).
+
+    Corresponds to specific instance of :py:class:`SymmetricCompositionIntegrator` with
+    :math:`S = 2` and free coefficient :math:`a_0 = (3 - \sqrt{3}) / 6`.
 
     References:
 
@@ -293,6 +299,10 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
     """Three-stage symmetric composition integrator due to Blanes, Casas & Sanz-Serna.
 
     Described in equation (6.7) in Blanes, Casas, Sanz-Serna (2014).
+
+    Corresponds to specific instance of :py:class:`SymmetricCompositionIntegrator` with
+    :math:`S = 3` and free coefficients :math:`a_0 = 0.11888010966548` and
+    :math:`b_1 = 0.29619504261126`.
 
     References:
 
@@ -320,6 +330,10 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
 
     Described in equation (6.8) in Blanes, Casas, Sanz-Serna (2014).
 
+    Corresponds to specific instance of :py:class:`SymmetricCompositionIntegrator` with
+    :math:`S = 4` and free coefficients :math:`a_0 = 0.071353913450279725904`,
+    :math:`b_1 = 0.191667800000000000000` and :math:`a_1 = 268548791161230105820`.
+
     References:
 
       1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
@@ -343,7 +357,7 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
 
 
 class ImplicitLeapfrogIntegrator(Integrator):
-    """Implicit leapfrog integrator for Hamiltonians with a non-separable component.
+    r"""Implicit leapfrog integrator for Hamiltonians with a non-separable component.
 
     Also known as the generalised leapfrog method.
 
@@ -351,7 +365,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(q, p)
+        h(q, p) = h_1(q) + h_2(q, p),
 
     where :math:`q` and :math:`p` are the position and momentum variables respectively,
     :math:`h_1` is a Hamiltonian component function for which the exact flow can be
@@ -359,9 +373,26 @@ class ImplicitLeapfrogIntegrator(Integrator):
     momentum variables, which may be non-separable and for which exact simulation of the
     correspond Hamiltonian flow may not be possible.
 
-    A pair of implicit component updates are used to approximate the flow due to the
-    :math:`h_2` Hamiltonian component, with a fixed-point iteration used to solve the
-    non-linear system of equations.
+    The overall integrator step :math:`\Psi` is defined by the symmetric composition
+
+    .. math::
+
+        \Psi(t) =
+        A(t/2) \circ B(t/2) \circ C(t/2) \circ C^*(t/2) \circ B^*(t/2) \circ A^*(t/2),
+
+    where the *adjoint* of a flow map :math:`X` is defined such that :math:`X^*(t) =
+    X(-t)^{-1}` and the component maps are defined by
+
+    .. math::
+
+        A(t)(q, p) = A^*(t)(q, p) = (q, p - t\nabla h_1(q)), \\
+        B(t)(q, p) = \lbrace (q, p') : p' = p - t \nabla_1 h_2(q, p') \rbrace, \\
+        B^*(t)(q, p) = (q, p - t \nabla_1 h_2(q, p)), \\
+        C(t)(q, p) = (q + t \nabla_2 h_2(q, p), p), \\
+        C^*(t)(q, p) = \lbrace (q', p) : q' = q + t \nabla_2 h_2(q', p) \rbrace.
+
+    Fixed-point iterations are used to solve the non-linear systems of equations in the
+    implicit component updates (:math:`B` and :math:`C^*`).
 
     The resulting implicit integrator is a symmetric second-order method corresponding
     to a symplectic partitioned Runge-Kutta method. See Section 6.3.2 in Leimkuhler and
@@ -385,29 +416,29 @@ class ImplicitLeapfrogIntegrator(Integrator):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
             reverse_check_tol: Tolerance for check of reversibility of implicit
                 sub-steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
                 position component within a distance (defined by the
-                `reverse_check_norm` argument) of `reverse_check_tol` of the original
-                state position component. If this condition is not met a
-                `mici.errors.NonReversibleStepError` exception is raised.
+                :code:`reverse_check_norm` argument) of :code:`reverse_check_tol` of the
+                original state position component. If this condition is not met a
+                :py:exc:`mici.errors.NonReversibleStepError` exception is raised.
             reverse_check_norm: Norm function accepting a single one-dimensional array
                 input and returning a non-negative floating point value defining the
                 distance to use in the reversibility check. Defaults to
-                `mici.solvers.maximum_norm`.
-            fixed_point_solver:  Function which given a function `func` and initial
-                guess `x0` iteratively solves the fixed point equation `func(x) = x`
-                initialising the iteration with `x0` and returning an array
-                corresponding to the solution if the iteration converges or raising a
-                `mici.errors.ConvergenceError` otherwise. Defaults to
-                `mici.solvers.solve_fixed_point_direct`.
+                :py:func:`mici.solvers.maximum_norm`.
+            fixed_point_solver:  Function which given a function :code:`func` and
+                initial guess :code:`x0` iteratively solves the fixed point equation
+                :code:`func(x) = x` initialising the iteration with :code:`x0` and
+                returning an array corresponding to the solution if the iteration
+                converges or raising a :py:class:`mici.errors.ConvergenceError`
+                otherwise. Defaults to :py:exc:`mici.solvers.solve_fixed_point_direct`.
             fixed_point_solver_kwargs: Dictionary of any keyword arguments to
-                `fixed_point_solver`.
+                :code:`fixed_point_solver`.
         """
         super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
@@ -477,22 +508,37 @@ class ImplicitLeapfrogIntegrator(Integrator):
 
 
 class ImplicitMidpointIntegrator(Integrator):
-    """Implicit midpoint integrator for general Hamiltonians.
+    r"""Implicit midpoint integrator for general Hamiltonians.
 
-    The Hamiltonian function may be a general (non-separable) function of both the
-    position variables `q` and momentum variables `p`.
+    The Hamiltonian function :math:`h` may be a general (non-separable) function of both
+    the position variables :math:`q` and momentum variables :math:`p`.
 
-    The flow is approximated with the composition of an implicit Euler half-step with
-    ane explicit Euler half-step.
+    The Hamiltonian flow :math:`\Phi` is approximated with the symmetric composition
+    :math:`\Psi(t) = A(t/2) \circ A^*(t/2)` of an implicit Euler half-step
+    :math:`A(t/2)` with an explicit Euler half-step :math:`A^*(t/2)` (which is adjoint
+    to the implicit Euler step, that is :math:`A^*(t) = A(-t)^{-1}`), with the
+    components maps defined by
+
+    .. math::
+
+        A(t)(q, p) = \lbrace
+        (q', p') :
+        q' = q +  t \nabla_2 h(q', p'),
+        p' = p - t \nabla_1 h(q', p'))
+        \rbrace, \\
+        A^*(t)(q, p) = (q +  t \nabla_2 h(q, p), p - t \nabla_1 h(q, p)).
+
+    A fixed-point iteration is used to solve the non-linear system of equations in the
+    implicit Euler step :math:`A`.
 
     The resulting implicit integrator is a second-order method corresponding to a
-    symplectic one-stage  Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler
+    symplectic one-stage Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler
     and Reich (2004) for more details.
 
     References:
 
-    Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
-    Cambridge University Press.
+      1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+         Cambridge University Press.
     """
 
     def __init__(
@@ -507,29 +553,29 @@ class ImplicitMidpointIntegrator(Integrator):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
-            reverse_check_tol: Tolerance for check of reversibility of implicit
-                sub-steps which involve iterative solving of a non-linear system of
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                `step` method.
+            reverse_check_tol: Tolerance for check of reversibility of implicit Euler
+                steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
                 position component within a distance (defined by the
-                `reverse_check_norm` argument) of `reverse_check_tol` of the original
-                state position component. If this condition is not met a
-                `mici.errors.NonReversibleStepError` exception is raised.
+                :code:`reverse_check_norm` argument) of :code:`reverse_check_tol` of the
+                original state position component. If this condition is not met a
+                :py:exc:`mici.errors.NonReversibleStepError` exception is raised.
             reverse_check_norm: Norm function accepting a single one-dimensional array
                 input and returning a non-negative floating point value defining the
                 distance to use in the reversibility check. Defaults to
-                `mici.solvers.maximum_norm`.
-            fixed_point_solver:  Function which given a function `func` and initial
-                guess `x0` iteratively solves the fixed point equation `func(x) = x`
-                initialising the iteration with `x0` and returning an array
-                corresponding to the solution if the iteration converges or raising a
-                `mici.errors.ConvergenceError` otherwise. Defaults to
-                `mici.solvers.solve_fixed_point_direct`.
+                :py:func:`mici.solvers.maximum_norm`.
+            fixed_point_solver: Function which given a function :code:`func` and initial
+                guess :code:`x0` iteratively solves the fixed point equation
+                :code:`func(x) = x` initialising the iteration with :code:`x0` and
+                returning an array corresponding to the solution if the iteration
+                converges or raising a :py:exc:`mici.errors.ConvergenceError`
+                otherwise. Defaults to :py:func:`mici.solvers.solve_fixed_point_direct`.
             fixed_point_solver_kwargs: Dictionary of any keyword arguments to
-                `fixed_point_solver`.
+                :code:`fixed_point_solver`.
         """
         super().__init__(system, step_size)
         self.reverse_check_tol = reverse_check_tol
@@ -585,44 +631,55 @@ class ImplicitMidpointIntegrator(Integrator):
 
 
 class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
-    """Leapfrog integrator for constrained Hamiltonian systems.
+    r"""Leapfrog integrator for constrained Hamiltonian systems.
 
     The Hamiltonian function is assumed to be expressible as the sum of two components
     for which the corresponding (unconstrained) Hamiltonian flows can be exactly
     simulated. Specifically it is assumed that the Hamiltonian function `h` takes the
     form
 
-        h(q, p) = h₁(q) + h₂(q, p)
+    .. math::
 
-    where `q` and `p` are the position and momentum variables respectively, and `h₁` and
-    `h₂` Hamiltonian component functions for which the exact flows, respectively `Φ₁`
-    and `Φ₂`, can be computed.
+        h(q, p) = h_1(q) + h_2(q, p)
+
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    and :math:`h_1` and :math:`h_2` Hamiltonian component functions for which the exact
+    flows, respectively :math:`\Phi_1` and :math:`\Phi_2`, can be computed.
 
     The system is assumed to be additionally subject to a set of holonomic constraints
     on the position component of the state i.e. that all valid states must satisfy
 
-        c(q) = 0
+    .. math::
 
-    for some differentiable and surjective vector constraint function `c` and the set of
-    positions satisfying the constraints implicitly defining a manifold the dynamics
-    remain confined to.
+        c(q) = 0,
 
-    The constraints are enforced by introducing a set of Lagrange multipliers `λ` of
-    dimension equal to number of constraints, and defining a 'constrained' Hamiltonian
+    for some differentiable and surjective vector constraint function :math:`c` and the
+    set of positions satisfying the constraints implicitly defining a manifold the
+    dynamics remain confined to.
 
-        h̅(q, p) = h₁(q) + h₂(q, p) + c(q)ᵀλ  subject to c(q) = 0
+    The constraints are enforced by introducing a set of Lagrange multipliers
+    :math:`\lambda` of dimension equal to number of constraints, and defining a
+    'constrained' Hamiltonian
+
+    .. math::
+
+        \bar{h}(q, p) = h_1(q) + h_2(q, p) + c(q)^T\lambda  ~\text{s.t.}~ c(q) = 0,
 
     with corresponding dynamics described by the system of differential algebraic
     equations
 
-        q̇ = ∇₂h(q, p),
-        ṗ = -∇₁h(q, p) - ∂c(q)ᵀλ,
+    .. math::
+
+        \dot{q} = \nabla_2 h(q, p), \quad
+        \dot{p} = -\nabla_1 h(q, p) - \partial c(q)^T\lambda, \quad
         c(q) = 0.
 
     The dynamics implicitly define a set of constraints on the momentum variables,
     differentiating the constraint equation with respect to time giving that
 
-        ∂c(q) ∇₂h(q, p) = 0
+    .. math::
+
+        \partial c(q) \nabla_2 h(q, p) = \nabla_2 h_2(q, p) = 0.
 
     The set of momentum variables satisfying the above for given position variables is
     termed the cotangent space of the manifold (at a position), and the set of
@@ -633,65 +690,85 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     error) preserves these constraints, forming a symplectic map on the cotangent
     bundle, we follow the approach of Reich (1996).
 
-    We first define a map `Π` parametrised by a vector of Lagrange multipliers `λ`
+    We first define a map :math:`\Pi` parametrised by a vector of Lagrange multipliers
+    :math:`\lambda`
 
-        Π(λ)(q, p) = (q, p + ∂c(q)ᵀλ)
+    .. math::
 
-    with `λ` allowed to be an implicitly defined function of `q` and `p`.
+        \Pi(\lambda)(q, p) = (q, p + \partial c(q)^T \lambda),
 
-    We then define a map `Ψ₁` in terms of the `h₁` flow map `Φ₁` as
+    with :math:`\lambda` allowed to be an implicitly defined function of :math:`q` and
+    :math:`p`.
 
-        Ψ₁(t) = Π(λ) ∘ Φ₁(t)
+    We then define a map :math:`A` in terms of the :math:`h_1` flow map :math:`\Phi_1`
+    as
 
-    with `λ` implicitly defined such that `(q', p') = Ψ₁(t)(q, p) ⟹ ∂c(q') p' = 0` for
-    any initial state `(q, p)` in the co-tangent bundle, with `c(q') = 0` trivially
-    satisfied as `Φ₁` is an identity map in the position:
+    .. math::
 
-        Φ₁(t)(q, p) = (q, p - t ∇h₁(q))
+        A(t) = \Pi(\lambda) \circ \Phi_1(t),
 
-    The map `Ψ₁(t)` therefore corresponds to taking an unconstrained step `Φ₁(t)` and
-    then projecting the resulting momentum back in to the co-tangent space. For the
-    usual case in which `h` includes only quadratic terms in the momentum `p` such that
-    `∇₂h(q, p)` is a linear function of `p`, then `λ` can be analytically solved for
-    to give a closed-form expression for the projection into the co-tangent space.
+    with :math:`\lambda` implicitly defined such that for :math:`(q', p') = A(t)(q, p)`
+    we have that :math:`\partial c(q') \nabla_2 h_2(q', p') = 0` for any initial state
+    :math:`(q, p)` in the co-tangent bundle, with :math:`c(q') = 0` trivially satisfied
+    as :math:`\Phi_1` is an identity map in the position:
 
-    We also define a map `Ψ₂` in terms of the `h₂` flow map `Φ₂` as
+    .. math::
 
-        Ψ₂(t) = Π(λ') ∘ Φ₂(t) ∘ Π(λ)
+        \Phi_1(t)(q, p) = (q, p - t \nabla h_1(q)).
 
-    such that for `(q', p') = Ψ₂(t)(q, p)`, `λ` is implicitly defined such that
-    `c(q') = 0` and `λ'` is implicitly defined such that `∂c(q') ∇₂h(q', p') = 0`.
+    The map :math:`A(t)` therefore corresponds to taking an unconstrained step according
+    to the :math:`h_1` component flow map :math:`\Phi_1(t)` and then projecting the
+    resulting updated momentum back in to the co-tangent space. For the usual case in
+    which :math:`h` includes only quadratic terms in the momentum :math:`p` such that
+    :math:`\nabla_2 h(q, p)` is a linear function of :math:`p`, then :math:`\lambda`
+    can be analytically solved for to give a closed-form expression for the projection
+    into the co-tangent space.
 
-    This can be decomposed as first solving for `λ` such that
+    We also define a map :math:`B` in terms of the :math:`h_2` flow map :math:`\Phi_2`
+    as
 
-        c((Φ₂(t) ∘ Π(λ)(q, p))₁) = 0
+    .. math::
+
+        B(t) = \Pi(\lambda') \circ \Phi_2(t) \circ \Pi(\lambda),
+
+    such that for :math:`(q', p') = B(t)(q, p)`, :math:`\lambda` is implicitly defined
+    such that :math:`c(q') = 0` and :math:`\lambda'` is implicitly defined such that
+    :math:`\partial c(q') \nabla_2 h(q', p') = 0`.
+
+    This can be decomposed as first solving for :math:`\lambda` such that
+
+    .. math::
+
+        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) = 0
 
     i.e. solving for the values of the Lagrange multipliers such that the position
-    component of the output of `Φ₂(t) ∘ Π(λ)` is on the manifold, with this typically
-    a non-linear system of equations that will need to be solved iteratively e.g. using
-    Newton's method. The momentum output of `Φ₂(t) ∘ Π(λ)` is then projected in to the
-    cotangent space to compute the final state pair, with this projection step as noted
-    above typically having an analytic solution.
+    component of the output of :math:`\Phi_2(t) \circ \Pi(\lambda)` is on the manifold,
+    with this typically a non-linear system of equations that will need to be solved
+    iteratively e.g. using Newton's method. The momentum output of :math:`\Phi_2(t)
+    \circ \Pi(\lambda)` is then projected in to the cotangent space to compute the final
+    state pair, with this projection step as noted above typically having an analytic
+    solution.
 
     The overall second-order integrator is then defined as the symmetric composition
 
-        Ψ(t) = Ψ₁(t / 2) ∘ Ψ₂(t / N)ᴺ ∘ Ψ₁(t / 2)
+    .. math::
 
-    where `N` is a positive integer corresponding to the number of 'inner' `h₂` flow
-    steps. This integrator exactly preserves the constraints at all steps, such that if
-    an initial position momentum pair `(q, p)` are in the cotangent bundle, the
-    corresponding pair after calling the `step` method of the integrator will also be in
-    the cotangent bundle.
+        \Psi(t) = A(t / 2) \circ B(t / N)^N \circ A(t / 2),
+
+    where :math:`N` is a positive integer corresponding to the number of 'inner'
+    :math:`h_2` flow steps. This integrator exactly preserves the constraints at all
+    steps, such that if an initial position momentum pair :math:`(q, p)` are in the
+    cotangent bundle, the corresponding pair after calling the :py:meth:`step` method of
+    the integrator will also be in the cotangent bundle.
 
     For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).
 
     References:
 
-    Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by
-    composition methods. SIAM journal on numerical analysis, 33(2), 475-491.
-
-    Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
-    Cambridge University Press.
+      1. Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by
+         composition methods. SIAM journal on numerical analysis, 33(2), 475-491.
+      2. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
+         Cambridge University Press.
     """
 
     def __init__(
@@ -707,50 +784,55 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
-            step_size: Integrator time step. If set to `None` it is assumed that a step
-                size adapter will be used to set the step size before calling the `step`
-                method.
+            step_size: Integrator time step. If set to :code:`None` it is assumed that a
+                step size adapter will be used to set the step size before calling the
+                :py:meth:`step` method.
             n_inner_step: Positive integer specifying number of 'inner' constrained
-                `system.h2_flow` steps to take within each overall step. As the
-                derivative `system.dh1_dpos` is not evaluated during the
-                `system.h2_flow` steps, if this derivative is relatively expensive to
-                compute compared to evaluating `system.h2_flow` then compared to using
-                `n_inner_step = 1` (the default) for a given `step_size` it can be more
-                computationally efficient to use `n_inner_step > 1` in combination
-                within a larger `step_size`, thus reducing the number of
-                `system.dh1_dpos` evaluations to simulate forward a given time while
-                still controlling the effective time step used for the constrained
-                `system.h2_flow` steps which involve solving a non-linear system of
-                equations to retract the position component of the updated state back on
-                to the manifold, with the iterative solver typically diverging if the
+                :code:`system.h2_flow` steps to take within each overall step. As the
+                derivative :code:`system.dh1_dpos` is not evaluated during the
+                :code:`system.h2_flow` steps, if this derivative is relatively expensive
+                to compute compared to evaluating :code:`system.h2_flow` then compared
+                to using :code:`n_inner_step = 1` (the default) for a given
+                :code:`step_size` it can be more computationally efficient to use
+                :code:`n_inner_step > 1` in combination within a larger
+                :code:`step_size`, thus reducing the number of :code:`system.dh1_dpos`
+                evaluations to simulate forward a given time while still controlling the
+                effective time step used for the constrained :code:`system.h2_flow`
+                steps which involve solving a non-linear system of equations to retract
+                the position component of the updated state back on to the manifold,
+                with the iterative solver typically diverging if the
                 time step used is too large.
             reverse_check_tol: Tolerance for check of reversibility of implicit
                 sub-steps which involve iterative solving of a non-linear system of
                 equations. The step is assumed to be reversible if sequentially applying
                 the forward and adjoint updates to a state returns to a state with a
                 position component within a distance (defined by the
-                `reverse_check_norm` argument) of `reverse_check_tol` of the original
-                state position component. If this condition is not met a
-                `mici.errors.NonReversibleStepError` exception is raised.
+                `reverse_check_norm` argument) of :code:`reverse_check_tol` of the
+                original state position component. If this condition is not met a
+                :py:exc:`mici.errors.NonReversibleStepError` exception is raised.
             reverse_check_norm: Norm function accepting a single one-dimensional array
                 input and returning a non-negative floating point value defining the
                 distance to use in the reversibility check. Defaults to
-                `mici.solvers.maximum_norm`.
-            projection_solver: Function which given two states `state` and `state_prev`,
-                floating point time step `time_step` and a Hamiltonian system object
-                `system` solves the non-linear system of equations in `λ`
+                :py:func:`mici.solvers.maximum_norm`.
+            projection_solver: Function which given two states :code:`state` and
+                :code:`state_prev`, floating point time step :code:`time_step` and a
+                Hamiltonian system object :code:`system` solves the non-linear system of
+                equations in :code:`λ`
+
+                .. code::
 
                     system.constr(
-                        state.pos + dh2_flow_pos_dmom @
-                            system.jacob_constr(state_prev).T @ λ) == 0
+                        state.pos 
+                        + dh2_flow_pos_dmom @ system.jacob_constr(state_prev).T @ λ
+                    ) == 0
 
-                where `dh2_flow_pos_dmom = system.dh2_flow_dmom(time_step)[0]` is the
-                derivative of the action of the (linear) `system.h2_flow` map on the
-                state momentum component with respect to the position component. This is
-                used to project the state position component back on to the manifold
-                after an unconstrained `system.h2_flow` update.
+                where :code:`dh2_flow_pos_dmom = system.dh2_flow_dmom(time_step)[0]` is
+                the derivative of the action of the (linear) :code:`system.h2_flow` map
+                on the state momentum component with respect to the position component.
+                This is used to project the state position component back on to the
+                manifold after an unconstrained :code:`system.h2_flow` update.
             projection_solver_kwargs: Dictionary of any keyword arguments to
-                `projection_solver`.
+                :code:`projection_solver`.
         """
         super().__init__(system, step_size)
         self.n_inner_step = n_inner_step
