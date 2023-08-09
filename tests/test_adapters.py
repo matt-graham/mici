@@ -166,7 +166,11 @@ class TestDualAveragingStepSizeAdapterWithConstrainedEuclideanMetricSystem(
 
     @pytest.fixture
     def integrator(self, system):
-        return mici.integrators.ConstrainedLeapfrogIntegrator(system, step_size=None)
+        return mici.integrators.ConstrainedLeapfrogIntegrator(
+            system,
+            step_size=None,
+            projection_solver=mici.solvers.solve_projection_onto_manifold_quasi_newton,
+        )
 
 
 class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
