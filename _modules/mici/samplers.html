@@ -75,7 +75,6 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">queue</span>
 <span class="kn">import</span> <span class="nn">signal</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
@@ -90,21 +89,27 @@
 
 <span class="kn">from</span> <span class="nn">mici.adapters</span> <span class="kn">import</span> <span class="n">DualAveragingStepSizeAdapter</span>
 <span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">AdaptationError</span>
-<span class="kn">from</span> <span class="nn">mici.progressbars</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DummyProgressBar</span><span class="p">,</span> <span class="n">LabelledSequenceProgressBar</span><span class="p">,</span>
-                               <span class="n">SequenceProgressBar</span><span class="p">,</span> <span class="n">_ProxySequenceProgressBar</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mici.progressbars</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DummyProgressBar</span><span class="p">,</span>
+    <span class="n">LabelledSequenceProgressBar</span><span class="p">,</span>
+    <span class="n">SequenceProgressBar</span><span class="p">,</span>
+    <span class="n">_ProxySequenceProgressBar</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">mici.stagers</span> <span class="kn">import</span> <span class="n">WarmUpStager</span><span class="p">,</span> <span class="n">WindowedWarmUpStager</span>
 <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-<span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">IndependentMomentumTransition</span><span class="p">,</span>
-                              <span class="n">MetropolisRandomIntegrationTransition</span><span class="p">,</span>
-                              <span class="n">MetropolisStaticIntegrationTransition</span><span class="p">,</span>
-                              <span class="n">MultinomialDynamicIntegrationTransition</span><span class="p">,</span>
-                              <span class="n">SliceDynamicIntegrationTransition</span><span class="p">,</span>
-                              <span class="n">euclidean_no_u_turn_criterion</span><span class="p">,</span>
-                              <span class="n">riemannian_no_u_turn_criterion</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">IndependentMomentumTransition</span><span class="p">,</span>
+    <span class="n">MetropolisRandomIntegrationTransition</span><span class="p">,</span>
+    <span class="n">MetropolisStaticIntegrationTransition</span><span class="p">,</span>
+    <span class="n">MultinomialDynamicIntegrationTransition</span><span class="p">,</span>
+    <span class="n">SliceDynamicIntegrationTransition</span><span class="p">,</span>
+    <span class="n">euclidean_no_u_turn_criterion</span><span class="p">,</span>
+    <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span>
-                        <span class="n">Union</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
 
@@ -113,10 +118,15 @@
     <span class="kn">from</span> <span class="nn">mici.progressbars</span> <span class="kn">import</span> <span class="n">ProgressBar</span>
     <span class="kn">from</span> <span class="nn">mici.stagers</span> <span class="kn">import</span> <span class="n">Stager</span>
     <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
-    <span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">,</span> <span class="n">MomentumTransition</span><span class="p">,</span>
-                                  <span class="n">Transition</span><span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">ChainIterator</span><span class="p">,</span> <span class="n">PyTree</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">,</span>
-                            <span class="n">TerminationCriterion</span><span class="p">,</span> <span class="n">TraceFunction</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="n">IntegrationTransition</span><span class="p">,</span> <span class="n">MomentumTransition</span><span class="p">,</span> <span class="n">Transition</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">AdapterState</span><span class="p">,</span>
+        <span class="n">ChainIterator</span><span class="p">,</span>
+        <span class="n">PyTree</span><span class="p">,</span>
+        <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">TerminationCriterion</span><span class="p">,</span>
+        <span class="n">TraceFunction</span><span class="p">,</span>
+    <span class="p">)</span>
 
 <span class="c1"># Preferentially import from multiprocess library if available as able to</span>
 <span class="c1"># serialize much wider range of types including autograd functions</span>
@@ -194,13 +204,15 @@
 
 
 <span class="k">def</span> <span class="nf">_generate_memmap_filenames</span><span class="p">(</span>
-    <span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate new memory-map filenames.&quot;&quot;&quot;</span>
     <span class="n">key_str</span> <span class="o">=</span> <span class="n">_get_valid_filename</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key_str</span><span class="si">}</span><span class="s2">.npy&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span>
-    <span class="p">]</span>
+    <span class="n">dir_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">dir_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key_str</span><span class="si">}</span><span class="s2">.npy&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">_open_new_memmap</span><span class="p">(</span>
@@ -218,7 +230,7 @@
 <span class="sd">            `dtype`.</span>
 <span class="sd">        dtype: NumPy data-type for array.</span>
 
-<span class="sd">    Returns</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        Memory-mapped array object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -297,18 +309,21 @@
 
 
 <span class="k">def</span> <span class="nf">_check_and_process_init_state</span><span class="p">(</span>
-    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+    <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check initial chain state is valid and convert dict to ChainState.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">trans_key</span><span class="p">,</span> <span class="n">transition</span> <span class="ow">in</span> <span class="n">transitions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">var_key</span> <span class="ow">in</span> <span class="n">transition</span><span class="o">.</span><span class="n">state_variables</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">var_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;init_state does contain have </span><span class="si">{</span><span class="n">var_key</span><span class="si">}</span><span class="s2"> value required by&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2"> transition.&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;init_state does contain have </span><span class="si">{</span><span class="n">var_key</span><span class="si">}</span><span class="s2"> value required by &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2"> transition.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">(</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;init_state should be a dictionary or ChainState.&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;init_state should be a dictionary or ChainState.&quot;</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ChainState</span><span class="p">(</span><span class="o">**</span><span class="n">state</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">state</span>
 
 
@@ -316,6 +331,7 @@
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
     <span class="n">n_chain</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
     <span class="n">use_memmap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">memmap_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]]]:</span>
@@ -329,7 +345,10 @@
                     <span class="n">stats</span><span class="p">[</span><span class="n">trans_key</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
                         <span class="n">_open_new_memmap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
                         <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">_generate_memmap_filenames</span><span class="p">(</span>
-                            <span class="n">memmap_path</span><span class="p">,</span> <span class="s2">&quot;stats&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)</span>
+                            <span class="n">memmap_path</span><span class="p">,</span>
+                            <span class="s2">&quot;stats&quot;</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">),</span>
                         <span class="p">)</span>
                     <span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -341,6 +360,7 @@
     <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">TraceFunction</span><span class="p">,</span>
     <span class="n">init_states</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
     <span class="n">use_memmap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">memmap_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]]:</span>
@@ -349,26 +369,30 @@
     <span class="n">n_chain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_states</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">trace_func</span> <span class="ow">in</span> <span class="n">trace_funcs</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trace_func</span><span class="p">(</span><span class="n">init_states</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span>
-            <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inexact</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">array_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span>
+            <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">array_val</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inexact</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">use_memmap</span><span class="p">:</span>
                 <span class="n">traces</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">_open_new_memmap</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="p">(</span><span class="n">n_iter</span><span class="p">,)</span> <span class="o">+</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="n">_open_new_memmap</span><span class="p">(</span>
+                        <span class="n">filename</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">n_iter</span><span class="p">,</span> <span class="o">*</span><span class="n">array_val</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+                        <span class="n">init</span><span class="p">,</span>
+                        <span class="n">array_val</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="p">)</span>
                     <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">_generate_memmap_filenames</span><span class="p">(</span>
-                        <span class="n">memmap_path</span><span class="p">,</span> <span class="s2">&quot;trace&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)</span>
+                        <span class="n">memmap_path</span><span class="p">,</span>
+                        <span class="s2">&quot;trace&quot;</span><span class="p">,</span>
+                        <span class="n">key</span><span class="p">,</span>
+                        <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">),</span>
                     <span class="p">)</span>
                 <span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">traces</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
-                        <span class="p">(</span>
-                            <span class="n">n_chain</span><span class="p">,</span>
-                            <span class="n">n_iter</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="o">+</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                        <span class="p">(</span><span class="n">n_chain</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="o">*</span><span class="n">array_val</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
                         <span class="n">init</span><span class="p">,</span>
-                        <span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                    <span class="p">)</span>
+                        <span class="n">array_val</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                    <span class="p">),</span>
                 <span class="p">)</span>
     <span class="k">return</span> <span class="n">traces</span>
 
@@ -413,11 +437,12 @@
         <span class="k">for</span> <span class="n">stats_key</span> <span class="ow">in</span> <span class="n">monitor_stats</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">val</span> <span class="o">=</span> <span class="n">trans_stats</span><span class="p">[</span><span class="n">stats_key</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Monitored statistics key </span><span class="si">{</span><span class="n">stats_key</span><span class="si">}</span><span class="s2"> is not present in &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;statistics returned by transition </span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
             <span class="k">if</span> <span class="n">stats_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">monitor_dict</span><span class="p">:</span>
                 <span class="n">monitor_dict</span><span class="p">[</span><span class="n">stats_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
             <span class="k">else</span><span class="p">:</span>
@@ -425,7 +450,8 @@
 
 
 <span class="k">def</span> <span class="nf">_flush_memmap_chain_data</span><span class="p">(</span>
-    <span class="n">chain_traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span> <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]]</span>
+    <span class="n">chain_traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Flush all pending writes to memory-mapped chain data arrays to disk.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">chain_traces</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -444,6 +470,7 @@
     <span class="n">chain_iterator</span><span class="p">:</span> <span class="n">ChainIterator</span><span class="p">,</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
     <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">chain_traces</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">chain_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -536,12 +563,12 @@
                 <span class="n">adapter_states</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="n">adapter_list</span><span class="p">:</span>
                     <span class="n">adapter_states</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                        <span class="n">adapter</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">transitions</span><span class="p">[</span><span class="n">trans_key</span><span class="p">])</span>
+                        <span class="n">adapter</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">transitions</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]),</span>
                     <span class="p">)</span>
     <span class="k">except</span> <span class="n">AdaptationError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Initialisation of </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> for chain &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">exception</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">exception</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">adapter_states</span><span class="p">,</span> <span class="n">exception</span>
     <span class="k">try</span><span class="p">:</span>
@@ -552,10 +579,14 @@
                     <span class="n">state</span><span class="p">,</span> <span class="n">trans_stats</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">adapters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">trans_key</span> <span class="ow">in</span> <span class="n">adapters</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">adapter</span><span class="p">,</span> <span class="n">adapter_state</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                            <span class="n">adapters</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span> <span class="n">adapter_states</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]</span>
+                            <span class="n">adapters</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span>
+                            <span class="n">adapter_states</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span>
                         <span class="p">):</span>
                             <span class="n">adapter</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                                <span class="n">adapter_state</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">trans_stats</span><span class="p">,</span> <span class="n">transition</span>
+                                <span class="n">adapter_state</span><span class="p">,</span>
+                                <span class="n">state</span><span class="p">,</span>
+                                <span class="n">trans_stats</span><span class="p">,</span>
+                                <span class="n">transition</span><span class="p">,</span>
                             <span class="p">)</span>
                     <span class="k">if</span> <span class="n">chain_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">_update_chain_stats</span><span class="p">(</span>
@@ -566,7 +597,10 @@
                         <span class="p">)</span>
                     <span class="k">if</span> <span class="n">monitor_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">_update_monitor_stats</span><span class="p">(</span>
-                            <span class="n">monitor_stats</span><span class="p">,</span> <span class="n">monitor_dict</span><span class="p">,</span> <span class="n">trans_key</span><span class="p">,</span> <span class="n">trans_stats</span>
+                            <span class="n">monitor_stats</span><span class="p">,</span>
+                            <span class="n">monitor_dict</span><span class="p">,</span>
+                            <span class="n">trans_key</span><span class="p">,</span>
+                            <span class="n">trans_stats</span><span class="p">,</span>
                         <span class="p">)</span>
                 <span class="k">if</span> <span class="n">chain_traces</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">trace_funcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">trace_func</span> <span class="ow">in</span> <span class="n">trace_funcs</span><span class="p">:</span>
@@ -579,7 +613,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Sampling manually interrupted for chain </span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> at&quot;</span>
             <span class="sa">f</span><span class="s2">&quot; iteration </span><span class="si">{</span><span class="n">sample_index</span><span class="si">}</span><span class="s2">. Arrays containing chain traces and&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot; statistics computed before interruption will be returned.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot; statistics computed before interruption will be returned.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">exception</span> <span class="o">=</span> <span class="kc">None</span>
@@ -590,7 +624,7 @@
 
 
 <span class="k">def</span> <span class="nf">_collate_chain_outputs</span><span class="p">(</span>
-    <span class="n">chain_outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]]</span>
+    <span class="n">chain_outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Unzip list of tuples of chain outputs in to tuple of stacked outputs.&quot;&quot;&quot;</span>
     <span class="n">final_states_stack</span> <span class="o">=</span> <span class="p">[]</span>
@@ -625,7 +659,8 @@
         <span class="n">seed_sequence</span> <span class="o">=</span> <span class="n">bit_generator</span><span class="o">.</span><span class="n">_seed_seq</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">seed_sequence</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported random number generator type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">base_rng</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported random number generator type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">base_rng</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_sample_chains_sequential</span><span class="p">(</span>
@@ -637,7 +672,7 @@
     <span class="n">chain_outputs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">exception</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">chain_index</span><span class="p">,</span> <span class="p">(</span><span class="n">chain_iterator</span><span class="p">,</span> <span class="n">chain_kwargs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">,</span> <span class="n">per_chain_kwargs</span><span class="p">)</span>
+        <span class="nb">zip</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">,</span> <span class="n">per_chain_kwargs</span><span class="p">),</span>
     <span class="p">):</span>
         <span class="o">*</span><span class="n">outputs</span><span class="p">,</span> <span class="n">exception</span> <span class="o">=</span> <span class="n">_sample_chain</span><span class="p">(</span>
             <span class="n">chain_iterator</span><span class="o">=</span><span class="n">chain_iterator</span><span class="p">,</span>
@@ -657,7 +692,9 @@
 
 
 <span class="k">def</span> <span class="nf">_sample_chains_worker</span><span class="p">(</span>
-    <span class="n">chain_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">iter_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">common_kwargs</span>
+    <span class="n">chain_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">iter_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
+    <span class="n">common_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker process function for parallel sampling of chains.</span>
 
@@ -678,7 +715,9 @@
                 <span class="o">*</span><span class="n">outputs</span><span class="p">,</span> <span class="n">exception</span> <span class="o">=</span> <span class="n">_sample_chain</span><span class="p">(</span>
                     <span class="n">chain_index</span><span class="o">=</span><span class="n">chain_index</span><span class="p">,</span>
                     <span class="n">chain_iterator</span><span class="o">=</span><span class="n">_ProxySequenceProgressBar</span><span class="p">(</span>
-                        <span class="nb">range</span><span class="p">(</span><span class="n">n_iter</span><span class="p">),</span> <span class="n">chain_index</span><span class="p">,</span> <span class="n">iter_queue</span>
+                        <span class="nb">range</span><span class="p">(</span><span class="n">n_iter</span><span class="p">),</span>
+                        <span class="n">chain_index</span><span class="p">,</span>
+                        <span class="n">iter_queue</span><span class="p">,</span>
                     <span class="p">),</span>
                     <span class="n">load_memmaps</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">chain_kwargs</span><span class="p">,</span>
@@ -699,10 +738,11 @@
                 <span class="k">break</span>
         <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
             <span class="k">pass</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
             <span class="c1"># Log exception here so that correct traceback is logged</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;Exception encountered in chain worker process:&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="n">exception</span>
+                <span class="s2">&quot;Exception encountered in chain worker process:&quot;</span><span class="p">,</span>
+                <span class="n">exc_info</span><span class="o">=</span><span class="n">exception</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="c1"># Put exception on iteration queue to be reraised in parent process</span>
             <span class="n">iter_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
@@ -738,10 +778,10 @@
                 <span class="c1"># Map memmaps to their filepaths prior to putting on argument queue to</span>
                 <span class="c1"># avoid serializing potentially large memory mapped arrays</span>
                 <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_stats&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_memmaps_to_file_paths</span><span class="p">(</span>
-                    <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_stats&quot;</span><span class="p">]</span>
+                    <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_stats&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_traces&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_memmaps_to_file_paths</span><span class="p">(</span>
-                    <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_traces&quot;</span><span class="p">]</span>
+                    <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_traces&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="n">chain_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">c</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">chain_kwargs</span><span class="p">))</span>
             <span class="c1"># Start n_process worker processes which each have access to the</span>
@@ -779,9 +819,8 @@
                         <span class="k">break</span>
                     <span class="c1"># Re raise any other exception passed from worker processes</span>
                     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_queue_item</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                            <span class="s2">&quot;Unhandled exception in chain worker process.&quot;</span>
-                        <span class="p">)</span> <span class="kn">from</span> <span class="nn">iter_queue_item</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unhandled exception in chain worker process.&quot;</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">iter_queue_item</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="c1"># Otherwise unpack and update progress bar</span>
                         <span class="n">chain_index</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">,</span> <span class="n">data_dict</span> <span class="o">=</span> <span class="n">iter_queue_item</span>
@@ -792,22 +831,20 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">MULTIPROCESS_AVAILABLE</span> <span class="ow">and</span> <span class="p">(</span>
                 <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">PicklingError</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;pickle&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Error encountered while trying to run chains on multiple&quot;</span>
-                    <span class="s2">&quot;processes in parallel. The inbuilt multiprocessing module&quot;</span>
-                    <span class="s2">&quot; uses pickle to communicate between processes and pickle &quot;</span>
-                    <span class="s2">&quot;does support pickling anonymous or nested functions. If &quot;</span>
-                    <span class="s2">&quot;you use anonymous or nested functions in your model &quot;</span>
-                    <span class="s2">&quot;functions or are using autograd to automatically compute &quot;</span>
-                    <span class="s2">&quot;derivatives (autograd uses anonymous and nested &quot;</span>
-                    <span class="s2">&quot;functions) then installing the Python package &quot;</span>
-                    <span class="s2">&quot;multiprocess, which is able to serialise anonymous and &quot;</span>
-                    <span class="s2">&quot;nested functions and will be used in preference to &quot;</span>
-                    <span class="s2">&quot;multiprocessing by this package when available, may &quot;</span>
-                    <span class="s2">&quot;resolve this error.&quot;</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">e</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Error encountered while trying to run chains on multipleprocesses &quot;</span>
+                    <span class="s2">&quot;in parallel. The inbuilt multiprocessing module uses pickle to &quot;</span>
+                    <span class="s2">&quot;communicate between processes and pickle does support pickling &quot;</span>
+                    <span class="s2">&quot;anonymous or nested functions. If you use anonymous or nested &quot;</span>
+                    <span class="s2">&quot;functions in your model functions or are using autograd to &quot;</span>
+                    <span class="s2">&quot;automatically compute derivatives (autograd uses anonymous and &quot;</span>
+                    <span class="s2">&quot;nested functions) then installing the Python package &quot;</span>
+                    <span class="s2">&quot;multiprocess, which is able to serialise anonymous and nested &quot;</span>
+                    <span class="s2">&quot;functions and will be used in preference to multiprocessing by &quot;</span>
+                    <span class="s2">&quot;this package when available, may resolve this error.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">e</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Interrupts handled in child processes therefore ignore here</span>
             <span class="n">exception</span> <span class="o">=</span> <span class="n">e</span>
@@ -873,6 +910,7 @@
                 <span class="s2">&quot;deprecated. Please use a numpy.random.Generator instance &quot;</span>
                 <span class="s2">&quot;instead for example from a call to numpy.random.default_rng.&quot;</span><span class="p">,</span>
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">_bit_generator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">rng</span>
@@ -906,7 +944,7 @@
         <span class="n">display_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">progress_bar_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProgressBar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MCMCSampleChainsOutputs</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample Markov chains from given initial states with optional adaptive warm up</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample Markov chains from initial states with optional adaptive warm up.</span>
 
 <span class="sd">        One or more Markov chains are sampled, with each chain iteration consisting of</span>
 <span class="sd">        one or more Markov transitions. The chains are split into multiple *stages* with</span>
@@ -1027,22 +1065,26 @@
                 <span class="kc">None</span>
                 <span class="k">if</span> <span class="n">trace_funcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">trace_funcs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
                 <span class="k">else</span> <span class="n">_init_traces</span><span class="p">(</span>
-                    <span class="n">trace_funcs</span><span class="p">,</span> <span class="n">init_states</span><span class="p">,</span> <span class="n">n_trace_iter</span><span class="p">,</span> <span class="n">use_memmap</span><span class="p">,</span> <span class="n">memmap_path</span>
+                    <span class="n">trace_funcs</span><span class="p">,</span>
+                    <span class="n">init_states</span><span class="p">,</span>
+                    <span class="n">n_trace_iter</span><span class="p">,</span>
+                    <span class="n">use_memmap</span><span class="o">=</span><span class="n">use_memmap</span><span class="p">,</span>
+                    <span class="n">memmap_path</span><span class="o">=</span><span class="n">memmap_path</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="n">stats</span> <span class="o">=</span> <span class="n">_init_stats</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">,</span>
                 <span class="n">n_chain</span><span class="p">,</span>
                 <span class="n">n_trace_iter</span><span class="p">,</span>
-                <span class="n">use_memmap</span><span class="p">,</span>
-                <span class="n">memmap_path</span><span class="p">,</span>
+                <span class="n">use_memmap</span><span class="o">=</span><span class="n">use_memmap</span><span class="p">,</span>
+                <span class="n">memmap_path</span><span class="o">=</span><span class="n">memmap_path</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">per_chain_rngs</span> <span class="o">=</span> <span class="n">_get_per_chain_rngs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">)</span>
             <span class="n">per_chain_traces</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span> <span class="k">if</span> <span class="n">traces</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">traces</span><span class="p">))</span>
             <span class="p">)</span>
             <span class="n">per_chain_stats</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+                <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">()}),</span>
             <span class="p">)</span>
             <span class="n">common_kwargs</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;transitions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">,</span>
@@ -1065,15 +1107,24 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">stager</span> <span class="o">=</span> <span class="n">WindowedWarmUpStager</span><span class="p">()</span>
             <span class="n">sampling_stages</span> <span class="o">=</span> <span class="n">stager</span><span class="o">.</span><span class="n">stages</span><span class="p">(</span>
-                <span class="n">n_warm_up_iter</span><span class="p">,</span> <span class="n">n_main_iter</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">trace_funcs</span><span class="p">,</span> <span class="n">trace_warm_up</span>
+                <span class="n">n_warm_up_iter</span><span class="p">,</span>
+                <span class="n">n_main_iter</span><span class="p">,</span>
+                <span class="n">adapters</span><span class="p">,</span>
+                <span class="n">trace_funcs</span><span class="p">,</span>
+                <span class="n">trace_warm_up</span><span class="o">=</span><span class="n">trace_warm_up</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">chain_states</span> <span class="o">=</span> <span class="n">init_states</span>
             <span class="n">sampling_index_offset</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">with</span> <span class="n">LabelledSequenceProgressBar</span><span class="p">(</span>
-                <span class="n">sampling_stages</span><span class="p">,</span> <span class="s2">&quot;Sampling stage&quot;</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chain</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">sampling_stages</span><span class="p">,</span>
+                <span class="s2">&quot;Sampling stage&quot;</span><span class="p">,</span>
+                <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chain</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
             <span class="p">)</span> <span class="k">as</span> <span class="n">sampling_stages_pb</span><span class="p">:</span>
                 <span class="n">chain_iterators</span> <span class="o">=</span> <span class="n">_construct_chain_iterators</span><span class="p">(</span>
-                    <span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar_class</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">,</span> <span class="mi">1</span>
+                    <span class="mi">1</span><span class="p">,</span>
+                    <span class="n">progress_bar_class</span><span class="p">,</span>
+                    <span class="n">n_chain</span><span class="p">,</span>
+                    <span class="mi">1</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="k">for</span> <span class="n">stage</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sampling_stages_pb</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">chain_it</span> <span class="ow">in</span> <span class="n">chain_iterators</span><span class="p">:</span>
@@ -1160,7 +1211,6 @@
 <span class="sd">    of the momentum variables from their conditional distribution.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.</span>
 <span class="sd">         Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.</span>
 <span class="sd">      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.</span>
@@ -1208,16 +1258,16 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_system</span>
 
     <span class="k">def</span> <span class="nf">_preprocess_init_state</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">init_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">init_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make sure initial state is a ChainState and has momentum.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">init_state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="c1"># If array use to set position component of new ChainState</span>
             <span class="n">init_state</span> <span class="o">=</span> <span class="n">ChainState</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">init_state</span><span class="p">,</span> <span class="n">mom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">init_state</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;mom&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">init_state</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;init_state should be an array or `ChainState` with &quot;</span> <span class="s2">&quot;`mom` attribute.&quot;</span>
-            <span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;init_state should be an array or `ChainState` with `mom` attribute.&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">init_state</span><span class="o">.</span><span class="n">mom</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">init_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">init_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">init_state</span>
@@ -1268,7 +1318,7 @@
 <span class="sd">                conditional distribution. One chain will be run for each state in the</span>
 <span class="sd">                iterable.</span>
 
-<span class="sd">        Keyword args:</span>
+<span class="sd">        Keyword Args:</span>
 <span class="sd">            trace_funcs: Sequence of functions which compute the variables to be</span>
 <span class="sd">                recorded at each chain iteration (during only the main non-adaptive</span>
 <span class="sd">                sampling stage if `trace_warm_up` is False), with each trace function</span>
@@ -1351,7 +1401,7 @@
         <span class="k">if</span> <span class="s2">&quot;monitor_stats&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;monitor_stats&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;monitor_stats&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;integration_transition&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;monitor_stats&quot;</span><span class="p">]</span>
+                    <span class="s2">&quot;integration_transition&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;monitor_stats&quot;</span><span class="p">],</span>
                 <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;monitor_stats&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;accept_stat&quot;</span><span class="p">]}</span>
@@ -1360,7 +1410,10 @@
         <span class="k">if</span> <span class="s2">&quot;adapters&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;adapters&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;adapters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;adapters&quot;</span><span class="p">]}</span>
         <span class="n">final_states</span><span class="p">,</span> <span class="n">traces</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample_chains</span><span class="p">(</span>
-            <span class="n">n_warm_up_iter</span><span class="p">,</span> <span class="n">n_main_iter</span><span class="p">,</span> <span class="n">init_states</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="n">n_warm_up_iter</span><span class="p">,</span>
+            <span class="n">n_main_iter</span><span class="p">,</span>
+            <span class="n">init_states</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="k">return</span> <span class="n">HMCSampleChainsOutputs</span><span class="p">(</span><span class="n">final_states</span><span class="p">,</span> <span class="n">traces</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span></div></div>
@@ -1384,7 +1437,6 @@
 <span class="sd">    Monte Carlo) algorithm [1, 2].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.</span>
 <span class="sd">         Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.</span>
 <span class="sd">      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.</span>
@@ -1415,7 +1467,9 @@
 <span class="sd">                independently samples the momentum from its conditional distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">MetropolisStaticIntegrationTransition</span><span class="p">(</span>
-            <span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="n">n_step</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
+            <span class="n">n_step</span><span class="o">=</span><span class="n">n_step</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
@@ -1426,7 +1480,9 @@
 
     <span class="nd">@n_step</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;n_step must be non-negative&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;n_step must be non-negative&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
@@ -1450,7 +1506,6 @@
 <span class="sd">    periodic systems [1, 2].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.</span>
 <span class="sd">         Handbook of Markov Chain Monte Carlo, 2(11), p.2.</span>
 <span class="sd">      2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.</span>
@@ -1484,7 +1539,9 @@
 <span class="sd">                independently samples the momentum from its conditional distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">MetropolisRandomIntegrationTransition</span><span class="p">(</span>
-            <span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="n">n_step_range</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
+            <span class="n">n_step_range</span><span class="o">=</span><span class="n">n_step_range</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
@@ -1496,9 +1553,9 @@
     <span class="nd">@n_step_range</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
         <span class="n">n_step_lower</span><span class="p">,</span> <span class="n">n_step_upper</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span>
-        <span class="p">),</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step_range</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
@@ -1519,7 +1576,6 @@
 <span class="sd">    [Stan](https://mc-stan.org/) as of version v2.23.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
@@ -1532,6 +1588,7 @@
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">max_tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
@@ -1579,12 +1636,12 @@
 <span class="sd">                independently samples the momentum from its conditional distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">MultinomialDynamicIntegrationTransition</span><span class="p">(</span>
-            <span class="n">system</span><span class="p">,</span>
-            <span class="n">integrator</span><span class="p">,</span>
-            <span class="n">max_tree_depth</span><span class="p">,</span>
-            <span class="n">max_delta_h</span><span class="p">,</span>
-            <span class="n">termination_criterion</span><span class="p">,</span>
-            <span class="n">do_extra_subtree_checks</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
+            <span class="n">max_tree_depth</span><span class="o">=</span><span class="n">max_tree_depth</span><span class="p">,</span>
+            <span class="n">max_delta_h</span><span class="o">=</span><span class="n">max_delta_h</span><span class="p">,</span>
+            <span class="n">termination_criterion</span><span class="o">=</span><span class="n">termination_criterion</span><span class="p">,</span>
+            <span class="n">do_extra_subtree_checks</span><span class="o">=</span><span class="n">do_extra_subtree_checks</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
@@ -1595,7 +1652,9 @@
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
@@ -1624,7 +1683,6 @@
 <span class="sd">    algorithm.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:</span>
 <span class="sd">         adaptively setting path lengths in Hamiltonian Monte Carlo.</span>
 <span class="sd">         Journal of Machine Learning Research, 15(1), pp.1593-1623.</span>
@@ -1635,6 +1693,7 @@
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">max_tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">euclidean_no_u_turn_criterion</span><span class="p">,</span>
@@ -1682,12 +1741,12 @@
 <span class="sd">                independently samples the momentum from its conditional distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">SliceDynamicIntegrationTransition</span><span class="p">(</span>
-            <span class="n">system</span><span class="p">,</span>
-            <span class="n">integrator</span><span class="p">,</span>
-            <span class="n">max_tree_depth</span><span class="p">,</span>
-            <span class="n">max_delta_h</span><span class="p">,</span>
-            <span class="n">termination_criterion</span><span class="p">,</span>
-            <span class="n">do_extra_subtree_checks</span><span class="p">,</span>
+            <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
+            <span class="n">max_tree_depth</span><span class="o">=</span><span class="n">max_tree_depth</span><span class="p">,</span>
+            <span class="n">max_delta_h</span><span class="o">=</span><span class="n">max_delta_h</span><span class="p">,</span>
+            <span class="n">termination_criterion</span><span class="o">=</span><span class="n">termination_criterion</span><span class="p">,</span>
+            <span class="n">do_extra_subtree_checks</span><span class="o">=</span><span class="n">do_extra_subtree_checks</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
@@ -1698,7 +1757,9 @@
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>

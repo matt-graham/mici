@@ -82,8 +82,10 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
-                              <span class="n">ConstrainedTractableFlowSystem</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
+        <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarFunction</span>
 
 
@@ -146,21 +148,20 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
             <span class="n">error</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">divergence_tol</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Fixed point iteration diverged on iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">convergence_tol</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">x</span>
             <span class="n">x0</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span></div>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="solve_fixed_point_steffensen"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_fixed_point_steffensen">[docs]</a><span class="k">def</span> <span class="nf">solve_fixed_point_steffensen</span><span class="p">(</span>
@@ -207,21 +208,20 @@
             <span class="n">x</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">-</span> <span class="p">(</span><span class="n">x1</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">denom</span>
             <span class="n">error</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">divergence_tol</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Fixed point iteration diverged on iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">convergence_tol</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">x</span>
             <span class="n">x0</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span></div>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ProjectionSolver"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver">[docs]</a><span class="k">class</span> <span class="nc">ProjectionSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
@@ -378,10 +378,12 @@
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
     <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">state_prev</span><span class="p">,</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">inv_jacob_constr_inner_product</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr_inner_product</span><span class="p">(</span>
-        <span class="n">jacob_constr_prev</span><span class="p">,</span> <span class="n">dh2_flow_pos_dmom</span>
+        <span class="n">jacob_constr_prev</span><span class="p">,</span>
+        <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span>
     <span class="p">)</span><span class="o">.</span><span class="n">inv</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -390,25 +392,25 @@
             <span class="n">delta_mu</span> <span class="o">=</span> <span class="n">jacob_constr_prev</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">inv_jacob_constr_inner_product</span> <span class="o">@</span> <span class="n">constr</span><span class="p">)</span>
             <span class="n">delta_pos</span> <span class="o">=</span> <span class="n">dh2_flow_pos_dmom</span> <span class="o">@</span> <span class="n">delta_mu</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">divergence_tol</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Quasi-Newton solver diverged on iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;|delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">constraint_tol</span> <span class="ow">and</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">position_tol</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">constraint_tol</span> <span class="ow">and</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">position_tol</span><span class="p">:</span>
                 <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span> <span class="o">*</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">@</span> <span class="n">mu</span>
                 <span class="k">return</span> <span class="n">state</span>
             <span class="n">mu</span> <span class="o">+=</span> <span class="n">delta_mu</span>
             <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-=</span> <span class="n">delta_pos</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of quasi-Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of quasi-Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Quasi-Newton solver did not converge with </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="solve_projection_onto_manifold_newton"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_projection_onto_manifold_newton">[docs]</a><span class="k">def</span> <span class="nf">solve_projection_onto_manifold_newton</span><span class="p">(</span>
@@ -498,7 +500,8 @@
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
     <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">state_prev</span><span class="p">,</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -507,17 +510,19 @@
             <span class="n">error</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">constr</span><span class="p">)</span>
             <span class="n">delta_mu</span> <span class="o">=</span> <span class="n">jacob_constr_prev</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span>
                 <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr_inner_product</span><span class="p">(</span>
-                    <span class="n">jacob_constr</span><span class="p">,</span> <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">jacob_constr_prev</span>
+                    <span class="n">jacob_constr</span><span class="p">,</span>
+                    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span>
+                    <span class="n">jacob_constr_prev</span><span class="p">,</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">inv</span>
 <div class="viewcode-block" id="solve_projection_onto_manifold_newton_with_line_search"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_projection_onto_manifold_newton_with_line_search">[docs]</a>                <span class="o">@</span> <span class="n">constr</span>
             <span class="p">)</span>
             <span class="n">delta_pos</span> <span class="o">=</span> <span class="n">dh2_flow_pos_dmom</span> <span class="o">@</span> <span class="n">delta_mu</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">divergence_tol</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Newton solver diverged at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;|delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">constraint_tol</span> <span class="ow">and</span> <span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">position_tol</span><span class="p">:</span>
                 <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span> <span class="o">*</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">@</span> <span class="n">mu</span>
                 <span class="k">return</span> <span class="n">state</span>
@@ -525,13 +530,13 @@
             <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">-=</span> <span class="n">delta_pos</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Newton solver did not converge in </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">solve_projection_onto_manifold_newton_with_line_search</span><span class="p">(</span>
@@ -629,7 +634,8 @@
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
     <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+        <span class="n">state_prev</span><span class="p">,</span>
+        <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="c1"># Initialize with dummy values to avoid undefined name linter errors</span>
     <span class="n">delta_pos</span><span class="p">,</span> <span class="n">step_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -639,11 +645,11 @@
             <span class="n">constr</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
             <span class="n">error</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">constr</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">error</span> <span class="o">&gt;</span> <span class="n">divergence_tol</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Newton solver diverged at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;|delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">constraint_tol</span> <span class="ow">and</span> <span class="p">(</span>
                 <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">norm</span><span class="p">(</span><span class="n">step_size</span> <span class="o">*</span> <span class="n">delta_pos</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">position_tol</span>
             <span class="p">):</span>
@@ -651,7 +657,9 @@
                 <span class="k">return</span> <span class="n">state</span>
             <span class="n">delta_mu</span> <span class="o">=</span> <span class="n">jacob_constr_prev</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span>
                 <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr_inner_product</span><span class="p">(</span>
-                    <span class="n">jacob_constr</span><span class="p">,</span> <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">jacob_constr_prev</span>
+                    <span class="n">jacob_constr</span><span class="p">,</span>
+                    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span>
+                    <span class="n">jacob_constr_prev</span><span class="p">,</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">inv</span>
                 <span class="o">@</span> <span class="n">constr</span>
             <span class="p">)</span>
@@ -667,13 +675,13 @@
             <span class="n">mu</span> <span class="o">+=</span> <span class="n">step_size</span> <span class="o">*</span> <span class="n">delta_mu</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="p">)</span>
-    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Newton solver did not converge in </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">step_size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span></div>
+    <span class="p">)</span>
+    <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

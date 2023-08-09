@@ -79,23 +79,33 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">mici.matrices</span> <span class="k">as</span> <span class="nn">matrices</span>
+<span class="kn">from</span> <span class="nn">mici</span> <span class="kn">import</span> <span class="n">matrices</span>
 <span class="kn">from</span> <span class="nn">mici.autodiff</span> <span class="kn">import</span> <span class="n">autodiff_fallback</span>
 <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">cache_in_state</span><span class="p">,</span> <span class="n">cache_in_state_with_aux</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
 
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
 
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">GradientFunction</span><span class="p">,</span>
-                            <span class="n">HessianFunction</span><span class="p">,</span> <span class="n">JacobianFunction</span><span class="p">,</span>
-                            <span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
-                            <span class="n">MatrixLike</span><span class="p">,</span> <span class="n">MatrixTressianProduct</span><span class="p">,</span>
-                            <span class="n">MatrixTressianProductFunction</span><span class="p">,</span> <span class="n">MetricLike</span><span class="p">,</span>
-                            <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">VectorJacobianProduct</span><span class="p">,</span>
-                            <span class="n">VectorJacobianProductFunction</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">GradientFunction</span><span class="p">,</span>
+        <span class="n">HessianFunction</span><span class="p">,</span>
+        <span class="n">JacobianFunction</span><span class="p">,</span>
+        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
+        <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
+        <span class="n">MatrixLike</span><span class="p">,</span>
+        <span class="n">MatrixTressianProduct</span><span class="p">,</span>
+        <span class="n">MatrixTressianProductFunction</span><span class="p">,</span>
+        <span class="n">MetricLike</span><span class="p">,</span>
+        <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">VectorJacobianProduct</span><span class="p">,</span>
+        <span class="n">VectorJacobianProductFunction</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <div class="viewcode-block" id="System"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.System">[docs]</a><span class="k">class</span> <span class="nc">System</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -122,6 +132,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -142,7 +153,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_neg_log_dens</span> <span class="o">=</span> <span class="n">neg_log_dens</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_grad_neg_log_dens</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span> <span class="n">neg_log_dens</span><span class="p">,</span> <span class="s2">&quot;grad_and_value&quot;</span><span class="p">,</span> <span class="s2">&quot;grad_neg_log_dens&quot;</span>
+            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="s2">&quot;grad_and_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grad_neg_log_dens&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="System.neg_log_dens"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.System.neg_log_dens">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
@@ -255,7 +269,6 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Value of `h(state)` derivative with respect to `state.pos`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh1_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh2_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="System.dh_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.System.dh_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
@@ -341,6 +354,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -370,7 +384,7 @@
 <span class="sd">                differentiation fallback will be used to attempt to construct the</span>
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">()</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
@@ -379,10 +393,11 @@
             <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="s2">&quot;If NumPy ndarray value is used for `metric` must be either 1D &quot;</span>
                     <span class="s2">&quot;(diagonal matrix) or 2D (dense positive definite matrix).&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
 
@@ -439,7 +454,6 @@
 <span class="sd">    integrator to be defined using this alternative splitting of the Hamiltonian [1].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian</span>
 <span class="sd">         Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -447,6 +461,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -476,7 +491,11 @@
 <span class="sd">                differentiation fallback will be used to attempt to construct the</span>
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="GaussianEuclideanMetricSystem.h2"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianEuclideanMetricSystem.h2">[docs]</a>    <span class="k">def</span> <span class="nf">h2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -494,13 +513,13 @@
 <div class="viewcode-block" id="GaussianEuclideanMetricSystem.h2_flow"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianEuclideanMetricSystem.h2_flow">[docs]</a>    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
         <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
-        <span class="n">eigvec_T_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span>
-        <span class="n">eigvec_T_mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span>
+        <span class="n">eigvec_trans_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span>
+        <span class="n">eigvec_trans_mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">@</span> <span class="p">(</span>
-            <span class="n">cos_omega_dt</span> <span class="o">*</span> <span class="n">eigvec_T_pos</span> <span class="o">+</span> <span class="p">(</span><span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">eigvec_T_mom</span>
+            <span class="n">cos_omega_dt</span> <span class="o">*</span> <span class="n">eigvec_trans_pos</span> <span class="o">+</span> <span class="p">(</span><span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">eigvec_trans_mom</span>
         <span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">@</span> <span class="p">(</span>
-            <span class="n">cos_omega_dt</span> <span class="o">*</span> <span class="n">eigvec_T_mom</span> <span class="o">-</span> <span class="p">(</span><span class="n">sin_omega_dt</span> <span class="o">/</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">eigvec_T_pos</span>
+            <span class="n">cos_omega_dt</span> <span class="o">*</span> <span class="n">eigvec_trans_mom</span> <span class="o">-</span> <span class="p">(</span><span class="n">sin_omega_dt</span> <span class="o">/</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">eigvec_trans_pos</span>
         <span class="p">)</span></div></div>
 
 
@@ -598,14 +617,16 @@
 <span class="sd">            jacob_constr_2: Second constraint Jacobian in product. Defaults to</span>
 <span class="sd">                :code:`jacob_constr_1` if set to :code:`None`.</span>
 
-<span class="sd">        Returns</span>
+<span class="sd">        Returns:</span>
 <span class="sd">            Object corresponding to computed inner products of the constraint Jacobian</span>
 <span class="sd">            rows.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
 
 <div class="viewcode-block" id="ConstrainedTractableFlowSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivatives of :py:meth:`h2_flow` flow map with respect to momentum argument.</span>
 
@@ -624,7 +645,9 @@
 
 <div class="viewcode-block" id="ConstrainedTractableFlowSystem.project_onto_cotangent_space"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">project_onto_cotangent_space</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Project a momentum on to the co-tangent space at a position.</span>
 
@@ -639,12 +662,12 @@
 
 <div class="viewcode-block" id="ConstrainedTractableFlowSystem.sample_momentum"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.sample_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="n">mom</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
-        <span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_onto_cotangent_space</span><span class="p">(</span><span class="n">mom</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">mom</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_onto_cotangent_space</span><span class="p">(</span><span class="n">mom</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">ConstrainedEuclideanMetricSystem</span><span class="p">(</span>
-    <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span> <span class="n">EuclideanMetricSystem</span>
+    <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
+    <span class="n">EuclideanMetricSystem</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for Euclidean Hamiltonian systems subject to constraints.</span>
 
@@ -699,7 +722,6 @@
 <span class="sd">    :py:class:`mici.integrators.ConstrainedLeapfrogIntegrator`.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Lelièvre, T., Rousset, M. and Stoltz, G., 2019. Hybrid Monte Carlo methods for</span>
 <span class="sd">         sampling probability measures on submanifolds. Numerische Mathematik, 143(2),</span>
 <span class="sd">         pp.379-421.</span>
@@ -712,6 +734,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dens_wrt_hausdorff</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -795,7 +818,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_constr</span> <span class="o">=</span> <span class="n">constr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dens_wrt_hausdorff</span> <span class="o">=</span> <span class="n">dens_wrt_hausdorff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_jacob_constr</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
-            <span class="n">jacob_constr</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="s2">&quot;jacobian_and_value&quot;</span><span class="p">,</span> <span class="s2">&quot;jacob_constr&quot;</span>
+            <span class="n">jacob_constr</span><span class="p">,</span>
+            <span class="n">constr</span><span class="p">,</span>
+            <span class="s2">&quot;jacobian_and_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;jacob_constr&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.constr">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
@@ -807,7 +833,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
 
@@ -832,7 +860,8 @@
 <span class="sd">            Gram matrix as matrix object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr_inner_product</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.inv_gram"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.inv_gram">[docs]</a>    <span class="k">def</span> <span class="nf">inv_gram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">:</span>
@@ -852,7 +881,7 @@
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">grad_log_det_sqrt_gram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of half of log-determinant of Gram matrix with respect to position</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivative of half log-determinant of Gram matrix with respect to position.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: State to compute value at.</span>
@@ -875,7 +904,9 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_log_det_sqrt_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space">[docs]</a>    <span class="k">def</span> <span class="nf">project_onto_cotangent_space</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="c1"># Use parenthesis to force right-to-left evaluation to avoid</span>
         <span class="c1"># matrix-matrix products</span>
@@ -896,6 +927,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dens_wrt_hausdorff</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1000,7 +1032,10 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dens_wrt_hausdorff</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mhp_constr</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
-                <span class="n">mhp_constr</span><span class="p">,</span> <span class="n">constr</span><span class="p">,</span> <span class="s2">&quot;mhp_jacobian_and_value&quot;</span><span class="p">,</span> <span class="s2">&quot;mhp_constr&quot;</span>
+                <span class="n">mhp_constr</span><span class="p">,</span>
+                <span class="n">constr</span><span class="p">,</span>
+                <span class="s2">&quot;mhp_jacobian_and_value&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mhp_constr&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
 <div class="viewcode-block" id="DenseConstrainedEuclideanMetricSystem.mhp_constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.DenseConstrainedEuclideanMetricSystem.mhp_constr">[docs]</a>    <span class="nd">@cache_in_state_with_aux</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;jacob_constr&quot;</span><span class="p">,</span> <span class="s2">&quot;constr&quot;</span><span class="p">))</span>
@@ -1015,11 +1050,11 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="n">jacob_constr_1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
@@ -1028,12 +1063,13 @@
         <span class="c1"># will potentially be computed in &#39;forward&#39; pass and cached</span>
         <span class="n">mhp_constr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mhp_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mhp_constr</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">inv_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inv_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span>
         <span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="GaussianDenseConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">GaussianDenseConstrainedEuclideanMetricSystem</span><span class="p">(</span>
-    <span class="n">GaussianEuclideanMetricSystem</span><span class="p">,</span> <span class="n">DenseConstrainedEuclideanMetricSystem</span>
+    <span class="n">GaussianEuclideanMetricSystem</span><span class="p">,</span>
+    <span class="n">DenseConstrainedEuclideanMetricSystem</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.</span>
 
@@ -1046,6 +1082,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JacobianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1064,7 +1101,7 @@
 <span class="sd">                equation, with density with respect to the Hausdorff measure on the</span>
 <span class="sd">                manifold corresponding to the ratio of the prior density (specified by</span>
 <span class="sd">                `neg_log_dens`) and the square-root of the determinant of the Gram</span>
-<span class="sd">                matrix defined by</span>
+<span class="sd">                matrix defined by.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1154,21 +1191,24 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="n">jacob_constr_1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSymmetricMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
         <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span>
+                <span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">cos_omega_dt</span><span class="p">),</span>
         <span class="p">)</span></div></div>
@@ -1210,7 +1250,6 @@
 <span class="sd">    e.g. `mici.integrators.ImplicitLeapfrogIntegrator`.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and</span>
 <span class="sd">         Hamiltonian Monte Varlo methods. Journal of the Royal Statistical Society:</span>
 <span class="sd">         Series B (Statistical Methodology), 73(2), pp.123-214.</span>
@@ -1219,8 +1258,9 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
-        <span class="n">metric_matrix_class</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">],</span>
+        <span class="n">metric_matrix_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">],</span>
         <span class="n">metric_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metric_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1240,7 +1280,7 @@
 <span class="sd">                of a `mici.matrices.DiagonalMatrix`). The class initializer may also</span>
 <span class="sd">                optionally take one or more keyword arguments, with the `metric_kwargs`</span>
 <span class="sd">                argument used to specify the value of these, if any. Together this means</span>
-<span class="sd">                the metric matrix representation at a position `pos` is constructed as</span>
+<span class="sd">                the metric matrix representation at a position `pos` is constructed as.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1294,10 +1334,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric_matrix_class</span> <span class="o">=</span> <span class="n">metric_matrix_class</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric_func</span> <span class="o">=</span> <span class="n">metric_func</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vjp_metric_func</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
-            <span class="n">vjp_metric_func</span><span class="p">,</span> <span class="n">metric_func</span><span class="p">,</span> <span class="s2">&quot;vjp_and_value&quot;</span><span class="p">,</span> <span class="s2">&quot;vjp_metric_func&quot;</span>
+            <span class="n">vjp_metric_func</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="p">,</span>
+            <span class="s2">&quot;vjp_and_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;vjp_metric_func&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metric_kwargs</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">metric_kwargs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">metric_kwargs</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">neg_log_dens</span><span class="p">,</span> <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RiemannianMetricSystem.metric_func"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem.metric_func">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">metric_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
@@ -1366,7 +1409,7 @@
         <span class="c1"># potentially be computed in forward pass and cached</span>
         <span class="n">vjp_metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vjp_metric_func</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">vjp_metric</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">grad_log_abs_det</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">grad_log_abs_det</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="RiemannianMetricSystem.h2"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem.h2">[docs]</a>    <span class="k">def</span> <span class="nf">h2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
@@ -1402,6 +1445,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_scalar_func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">vjp_metric_scalar_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1419,7 +1463,7 @@
 <span class="sd">                another function which takes a scalar as an argument and returns the</span>
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_scalar_func` with respect to</span>
 <span class="sd">                the position array argument. The VJP is here defined as a function of a</span>
-<span class="sd">                scalar `v`</span>
+<span class="sd">                scalar `v`.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1449,19 +1493,19 @@
 <span class="sd">                differentiation fallback will be used to attempt to construct the</span>
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">neg_log_dens</span><span class="p">,</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveScaledIdentityMatrix</span><span class="p">,</span>
-            <span class="n">metric_scalar_func</span><span class="p">,</span>
-            <span class="n">vjp_metric_scalar_func</span><span class="p">,</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric_matrix_class</span><span class="o">=</span><span class="n">matrices</span><span class="o">.</span><span class="n">PositiveScaledIdentityMatrix</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="o">=</span><span class="n">metric_scalar_func</span><span class="p">,</span>
+            <span class="n">vjp_metric_func</span><span class="o">=</span><span class="n">vjp_metric_scalar_func</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ScalarRiemannianMetricSystem.metric"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ScalarRiemannianMetricSystem.metric">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_matrix_class</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">metric_func</span><span class="p">(</span><span class="n">state</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metric_func</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span></div></div>
 
 
@@ -1482,6 +1526,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_diagonal_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">vjp_metric_diagonal_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1499,7 +1544,7 @@
 <span class="sd">                another function which takes a 1D array as an argument and returns the</span>
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_diagonal_func` with respect</span>
 <span class="sd">                to the position array argument. The VJP is here defined as a function of</span>
-<span class="sd">                a 1D array `v`</span>
+<span class="sd">                a 1D array `v`.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1530,11 +1575,11 @@
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">neg_log_dens</span><span class="p">,</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDiagonalMatrix</span><span class="p">,</span>
-            <span class="n">metric_diagonal_func</span><span class="p">,</span>
-            <span class="n">vjp_metric_diagonal_func</span><span class="p">,</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric_matrix_class</span><span class="o">=</span><span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDiagonalMatrix</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="o">=</span><span class="n">metric_diagonal_func</span><span class="p">,</span>
+            <span class="n">vjp_metric_func</span><span class="o">=</span><span class="n">vjp_metric_diagonal_func</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1554,6 +1599,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_chol_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">vjp_metric_chol_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1572,7 +1618,7 @@
 <span class="sd">                values in the array above the diagonal are ignored) and returns the</span>
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_chol_func` with respect to</span>
 <span class="sd">                the position array argument. The VJP is here defined as a function of a</span>
-<span class="sd">                2D array `v`</span>
+<span class="sd">                2D array `v`.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1603,11 +1649,11 @@
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">neg_log_dens</span><span class="p">,</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">,</span>
-            <span class="n">metric_chol_func</span><span class="p">,</span>
-            <span class="n">vjp_metric_chol_func</span><span class="p">,</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric_matrix_class</span><span class="o">=</span><span class="n">matrices</span><span class="o">.</span><span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="o">=</span><span class="n">metric_chol_func</span><span class="p">,</span>
+            <span class="n">vjp_metric_func</span><span class="o">=</span><span class="n">vjp_metric_chol_func</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
             <span class="n">metric_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;factor_is_lower&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
         <span class="p">)</span></div>
 
@@ -1628,6 +1674,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1647,7 +1694,7 @@
 <span class="sd">                function which takes a 2D array as an argument and returns the</span>
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_func` with respect to the</span>
 <span class="sd">                position array argument. The VJP is here defined as a function of a 2D</span>
-<span class="sd">                array `v`</span>
+<span class="sd">                array `v`.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1677,11 +1724,11 @@
 <span class="sd">                derivative of `neg_log_dens` automatically.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">neg_log_dens</span><span class="p">,</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">,</span>
-            <span class="n">metric_func</span><span class="p">,</span>
-            <span class="n">vjp_metric_func</span><span class="p">,</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric_matrix_class</span><span class="o">=</span><span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="o">=</span><span class="n">metric_func</span><span class="p">,</span>
+            <span class="n">vjp_metric_func</span><span class="o">=</span><span class="n">vjp_metric_func</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1719,7 +1766,6 @@
 <span class="sd">    Riemannian-metric Hamiltonian systems.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian</span>
 <span class="sd">         Monte Carlo. In Geometric science of information (pp. 327-334).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1727,6 +1773,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">hess_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">HessianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">mtp_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixTressianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1761,7 +1808,7 @@
 <span class="sd">                function which takes a 2D array (matrix) as an argument and returns the</span>
 <span class="sd">                *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the</span>
 <span class="sd">                position array argument. The MTP is here defined as a function of a</span>
-<span class="sd">                matrix `m` corresponding to</span>
+<span class="sd">                matrix `m` corresponding to.</span>
 
 <span class="sd">                .. code-block::</span>
 
@@ -1789,7 +1836,10 @@
 <span class="sd">                becomes increasingly close to the absolute function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hess_neg_log_dens</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
-            <span class="n">hess_neg_log_dens</span><span class="p">,</span> <span class="n">neg_log_dens</span><span class="p">,</span> <span class="s2">&quot;hessian_grad_and_value&quot;</span><span class="p">,</span> <span class="s2">&quot;neg_log_dens&quot;</span>
+            <span class="n">hess_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="s2">&quot;hessian_grad_and_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;neg_log_dens&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mtp_neg_log_dens</span> <span class="o">=</span> <span class="n">autodiff_fallback</span><span class="p">(</span>
             <span class="n">mtp_neg_log_dens</span><span class="p">,</span>
@@ -1798,11 +1848,11 @@
             <span class="s2">&quot;mtp_neg_log_dens&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">neg_log_dens</span><span class="p">,</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">SoftAbsRegularizedPositiveDefiniteMatrix</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_hess_neg_log_dens</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_mtp_neg_log_dens</span><span class="p">,</span>
-            <span class="n">grad_neg_log_dens</span><span class="p">,</span>
+            <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+            <span class="n">metric_matrix_class</span><span class="o">=</span><span class="n">matrices</span><span class="o">.</span><span class="n">SoftAbsRegularizedPositiveDefiniteMatrix</span><span class="p">,</span>
+            <span class="n">metric_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_hess_neg_log_dens</span><span class="p">,</span>
+            <span class="n">vjp_metric_func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_mtp_neg_log_dens</span><span class="p">,</span>
+            <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
             <span class="n">metric_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;softabs_coeff&quot;</span><span class="p">:</span> <span class="n">softabs_coeff</span><span class="p">},</span>
         <span class="p">)</span>
 
@@ -1827,7 +1877,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hess_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SoftAbsRiemannianMetricSystem.mtp_neg_log_dens"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.SoftAbsRiemannianMetricSystem.mtp_neg_log_dens">[docs]</a>    <span class="nd">@cache_in_state_with_aux</span><span class="p">(</span>
-        <span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;hess_neg_log_dens&quot;</span><span class="p">,</span> <span class="s2">&quot;grad_neg_log_dens&quot;</span><span class="p">,</span> <span class="s2">&quot;neg_log_dens&quot;</span><span class="p">)</span>
+        <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">&quot;hess_neg_log_dens&quot;</span><span class="p">,</span> <span class="s2">&quot;grad_neg_log_dens&quot;</span><span class="p">,</span> <span class="s2">&quot;neg_log_dens&quot;</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="k">def</span> <span class="nf">mtp_neg_log_dens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixTressianProduct</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate MTP of negative log density with respect to position.</span>

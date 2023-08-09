@@ -80,8 +80,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ConvergenceError</span><span class="p">,</span> <span class="n">Error</span><span class="p">,</span> <span class="n">HamiltonianDivergenceError</span><span class="p">,</span>
-                         <span class="n">IntegratorError</span><span class="p">,</span> <span class="n">NonReversibleStepError</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConvergenceError</span><span class="p">,</span>
+    <span class="n">Error</span><span class="p">,</span>
+    <span class="n">HamiltonianDivergenceError</span><span class="p">,</span>
+    <span class="n">IntegratorError</span><span class="p">,</span>
+    <span class="n">NonReversibleStepError</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">LogRepFloat</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -137,7 +142,9 @@
 
 <div class="viewcode-block" id="Transition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.Transition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new chain state from the Markov transition kernel.</span>
 
@@ -173,7 +180,9 @@
 
 <div class="viewcode-block" id="MomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MomentumTransition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new momentum component to state.</span>
 
@@ -199,7 +208,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="IndependentMomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IndependentMomentumTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="kc">None</span></div></div>
@@ -229,7 +240,6 @@
 <span class="sd">    post update momentums.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. Phys. Lett.</span>
 <span class="sd">         B, 268(CERN-TH-6172-91), pp.247-252.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -243,13 +253,15 @@
 <span class="sd">                coefficient.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">mom_resample_coeff</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mom_resample_coeff</span> <span class="o">&lt;=</span> <span class="mi">1</span>
-        <span class="p">),</span> <span class="s2">&quot;mom_resample_coeff should have a value in the interval [0, 1].&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mom_resample_coeff</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mom_resample_coeff</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;mom_resample_coeff should have a value in the interval [0, 1].&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">=</span> <span class="n">mom_resample_coeff</span>
 
 <div class="viewcode-block" id="CorrelatedMomentumTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.CorrelatedMomentumTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
@@ -295,7 +307,9 @@
 
 <div class="viewcode-block" id="IntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IntegrationTransition.sample">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a position-momentum pair using integration based proposal(s).</span>
 
@@ -333,7 +347,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_sample_n_step</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
         <span class="n">h_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">state_p</span> <span class="o">=</span> <span class="n">state</span>
@@ -344,11 +361,11 @@
             <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_step</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">_s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_step</span><span class="p">):</span>
                 <span class="n">state_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">state_p</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">IntegratorError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">integration_error</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_s</span>
             <span class="n">_process_integrator_error</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">stats</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_step</span>
@@ -379,7 +396,6 @@
 <span class="sd">    (often now instead termed Hamiltonian Monte Carlo) algorithm [1,2].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte</span>
 <span class="sd">         Carlo. Physics letters B, 195(2), pp.216-222.</span>
 <span class="sd">      2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain</span>
@@ -395,11 +411,15 @@
 <span class="sd">            n_step: Number of integrator steps to simulate in each transition.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">n_step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Number of integrator steps must be positive&quot;</span>
+        <span class="k">if</span> <span class="n">n_step</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Number of integrator steps must be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_step</span> <span class="o">=</span> <span class="n">n_step</span>
 
 <div class="viewcode-block" id="MetropolisStaticIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisStaticIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
 
@@ -414,7 +434,6 @@
 <span class="sd">    using an integration time close to the period of (near) periodic systems [1,2].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain</span>
 <span class="sd">         Monte Carlo, 2(11), p.2.</span>
 <span class="sd">      2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. Physics Letters</span>
@@ -422,7 +441,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+        <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
+        <span class="n">n_step_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -436,20 +458,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
         <span class="n">n_step_lower</span><span class="p">,</span> <span class="n">n_step_upper</span> <span class="o">=</span> <span class="n">n_step_range</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span>
-        <span class="p">),</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_step_range</span> <span class="o">=</span> <span class="n">n_step_range</span>
 
 <div class="viewcode-block" id="MetropolisRandomIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisRandomIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
         <span class="n">n_step</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_step_range</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="euclidean_no_u_turn_criterion"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.euclidean_no_u_turn_criterion">[docs]</a><span class="k">def</span> <span class="nf">euclidean_no_u_turn_criterion</span><span class="p">(</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+    <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+    <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+    <span class="n">_sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;No-U-turn termination criterion for Euclidean manifolds [1].</span>
 
@@ -463,13 +490,12 @@
 <span class="sd">        system: Hamiltonian system being integrated.</span>
 <span class="sd">        state_1: First terminal state of trajectory.</span>
 <span class="sd">        state_2: Second terminal state of trajectory.</span>
-<span class="sd">        sum_mom: Sum of momentums of trajectory states.</span>
+<span class="sd">        _sum_mom: Sum of momentums of trajectory states (unused).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Whether termination criterion is satisfied.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
@@ -481,7 +507,10 @@
 
 
 <div class="viewcode-block" id="riemannian_no_u_turn_criterion"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.riemannian_no_u_turn_criterion">[docs]</a><span class="k">def</span> <span class="nf">riemannian_no_u_turn_criterion</span><span class="p">(</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+    <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+    <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+    <span class="n">sum_mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generalized no-U-turn termination criterion on Riemannian manifolds [2].</span>
 
@@ -502,7 +531,6 @@
 <span class="sd">        Whether termination criterion is satisfied.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
@@ -536,7 +564,6 @@
 <span class="sd">    towards states further from the current state [1, 2].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
@@ -548,6 +575,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">max_tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
@@ -585,7 +613,9 @@
 <span class="sd">                models and some overhead from additional checks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">max_tree_depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
+        <span class="k">if</span> <span class="n">max_tree_depth</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">max_tree_depth</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">max_delta_h</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span> <span class="o">=</span> <span class="n">termination_criterion</span>
@@ -596,35 +626,41 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;diverging&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_termination_criterion</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span>
+        <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span>
+        <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="c1"># If performing extra subtree checks evaluate lazily i.e. only evaluate</span>
         <span class="c1"># if initial whole tree check fails. Extra subtree checks also only</span>
         <span class="c1"># performed for trees of depth 2 and above (i.e. containing at least</span>
         <span class="c1"># 4 states) as for trees of depth 1 they are redundant.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span> <span class="n">tree</span><span class="o">.</span><span class="n">sum_mom</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">sum_mom</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">elif</span> <span class="n">tree</span><span class="o">.</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_extra_subtree_checks</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
                 <span class="n">neg_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
                 <span class="n">pos_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
                 <span class="n">neg_subtree</span><span class="o">.</span><span class="n">sum_mom</span> <span class="o">+</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">negative</span><span class="o">.</span><span class="n">mom</span><span class="p">,</span>
-            <span class="p">):</span>
-                <span class="k">return</span> <span class="kc">True</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
+            <span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
                 <span class="n">neg_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
                 <span class="n">pos_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
                 <span class="n">pos_subtree</span><span class="o">.</span><span class="n">sum_mom</span> <span class="o">+</span> <span class="n">neg_subtree</span><span class="o">.</span><span class="n">positive</span><span class="o">.</span><span class="n">mom</span><span class="p">,</span>
-            <span class="p">):</span>
-                <span class="k">return</span> <span class="kc">True</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">_new_leave</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_SubTree</span><span class="p">(</span>
             <span class="n">negative</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
@@ -635,9 +671,9 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_merge_subtrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="p">(</span>
-            <span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">==</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">depth</span>
-        <span class="p">),</span> <span class="s2">&quot;Cannot merge subtrees of different depths&quot;</span>
+        <span class="k">if</span> <span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">!=</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">depth</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot merge subtrees of different depths.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_SubTree</span><span class="p">(</span>
             <span class="n">negative</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
             <span class="n">positive</span><span class="o">=</span><span class="n">pos_subtree</span><span class="o">.</span><span class="n">positive</span><span class="p">,</span>
@@ -647,13 +683,17 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;h_init&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)}</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">pass</span>
 
@@ -689,7 +729,7 @@
                 <span class="n">proposal</span> <span class="o">=</span> <span class="n">state</span>
                 <span class="c1"># accumulate stats</span>
                 <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;sum_metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
-                    <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span><span class="p">)</span>
+                    <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">h</span><span class="p">),</span>
                 <span class="p">)</span>
                 <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_step&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="c1"># default to assuming valid and then check for divergence</span>
@@ -701,14 +741,22 @@
             <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">proposal</span>
         <span class="c1"># build &#39;inner&#39; subtree, i.e. starting from current state</span>
         <span class="n">terminate</span><span class="p">,</span> <span class="n">inner_tree</span><span class="p">,</span> <span class="n">inner_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
-            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">stats</span><span class="p">,</span>
+            <span class="n">rng</span><span class="p">,</span>
+            <span class="n">aux_vars</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
         <span class="c1"># build &#39;outer&#39; subtree, i.e. starting from terminus of inner subtree</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">inner_tree</span><span class="o">.</span><span class="n">positive</span> <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">inner_tree</span><span class="o">.</span><span class="n">negative</span>
         <span class="n">terminate</span><span class="p">,</span> <span class="n">outer_tree</span><span class="p">,</span> <span class="n">outer_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
-            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+            <span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">stats</span><span class="p">,</span>
+            <span class="n">rng</span><span class="p">,</span>
+            <span class="n">aux_vars</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -726,7 +774,9 @@
         <span class="k">return</span> <span class="n">terminate</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">proposal</span>
 
 <div class="viewcode-block" id="DynamicIntegrationTransition.sample"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.DynamicIntegrationTransition.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
         <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;n_step&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
@@ -747,7 +797,11 @@
             <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">=</span> <span class="n">direction</span>
             <span class="c1"># expand tree by building new subtree of current depth</span>
             <span class="n">terminate</span><span class="p">,</span> <span class="n">new_tree</span><span class="p">,</span> <span class="n">new_proposal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">(</span>
-                <span class="n">depth</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">stats</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">aux_vars</span>
+                <span class="n">depth</span><span class="p">,</span>
+                <span class="n">state</span><span class="p">,</span>
+                <span class="n">stats</span><span class="p">,</span>
+                <span class="n">rng</span><span class="p">,</span>
+                <span class="n">aux_vars</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">terminate</span><span class="p">:</span>
                 <span class="k">break</span>
@@ -796,7 +850,6 @@
 <span class="sd">    state.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
@@ -805,18 +858,23 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=-</span><span class="n">h</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;h_init&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SliceDynamicIntegrationTransition"><a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.SliceDynamicIntegrationTransition">[docs]</a><span class="k">class</span> <span class="nc">SliceDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
@@ -833,32 +891,38 @@
 <span class="sd">    the transitions in &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in [1].</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">aux_vars</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_init_aux_vars</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">aux_vars</span>
 
     <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">denominator</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">+</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;log_u&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

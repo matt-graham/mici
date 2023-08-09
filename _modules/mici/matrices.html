@@ -86,7 +86,8 @@
 <span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">hash_array</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
 
@@ -96,7 +97,8 @@
 <span class="k">def</span> <span class="nf">_choose_matrix_product_class</span><span class="p">(</span><span class="n">matrix_l</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">matrix_r</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixProduct</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">matrix_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">matrix_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">matrix_r</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">matrix_l</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">matrix_l</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">matrix_r</span><span class="p">,</span> <span class="n">InvertibleMatrix</span>
+            <span class="n">matrix_r</span><span class="p">,</span>
+            <span class="n">InvertibleMatrix</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">InvertibleMatrixProduct</span>
         <span class="k">else</span><span class="p">:</span>
@@ -121,7 +123,7 @@
 
     <span class="n">__array_priority__</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">           shape: Shape of matrix `(num_rows, num_columns)`.</span>
@@ -140,9 +142,8 @@
     <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">_is_scalar</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                    <span class="s2">&quot;Scalar multiplication by zero not implemented.&quot;</span>
-                <span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar multiplication by zero not implemented.&quot;</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
@@ -153,7 +154,8 @@
     <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">_is_scalar</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Scalar division by zero not implemented.&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar division by zero not implemented.&quot;</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
@@ -163,10 +165,11 @@
 
     <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">matrix_product_class</span> <span class="o">=</span> <span class="n">_choose_matrix_product_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">matrix_product_class</span><span class="p">((</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">),</span> <span class="n">check_shapes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -175,10 +178,11 @@
 
     <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">matrix_product_class</span> <span class="o">=</span> <span class="n">_choose_matrix_product_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">matrix_product_class</span><span class="p">((</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">check_shapes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -278,12 +282,13 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;_array&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;_array must be specified in kwargs&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;_array&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray_chkfinite</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;_array&quot;</span><span class="p">])</span>
-            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="s2">&quot;Array is not finite.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_array must be specified in kwargs&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;_array&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray_chkfinite</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;_array&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Array is not finite.&quot;</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -342,7 +347,7 @@
 <span class="sd">    Each adjacent pair of matrices in the sequence must have compatible shapes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            matrices: Sequence of matrices forming product in left-to-right order.</span>
@@ -353,10 +358,11 @@
         <span class="k">if</span> <span class="n">check_shapes</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">matrix_l</span><span class="p">,</span> <span class="n">matrix_r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">matrices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
                 <span class="k">if</span> <span class="n">matrix_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrix_r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Matrices </span><span class="si">{</span><span class="n">matrix_l</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">matrix_r</span><span class="si">}</span><span class="s2"> have inconsistent&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot; inner dimensions for forming a matrix product.&quot;</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Matrices </span><span class="si">{</span><span class="n">matrix_l</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">matrix_r</span><span class="si">}</span><span class="s2"> have inconsistent inner &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;dimensions for forming a matrix product.&quot;</span>
                     <span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
     <span class="nd">@property</span>
@@ -397,7 +403,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2"> is not a valid shape for a square matrix.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2"> is not a valid shape for a square matrix.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -417,16 +424,16 @@
 <span class="sd">    All the matrices must have the same shape.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
         <span class="n">matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">check_shapes</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not square.&quot;</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not square.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
                 <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">matrix</span><span class="si">}</span><span class="s2"> have different shapes.&quot;</span>
-                    <span class="p">)</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">matrix</span><span class="si">}</span><span class="s2"> have different shapes.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">matrices</span><span class="p">,</span> <span class="n">check_shapes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -471,16 +478,22 @@
 <span class="sd">    All the matrices must have the same shape.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">InvertibleMatrix</span><span class="p">],</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">InvertibleMatrix</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="n">matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;matrix </span><span class="si">{</span><span class="n">matrix</span><span class="si">}</span><span class="s2"> is not invertible.&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">matrices</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;matrix </span><span class="si">{</span><span class="n">matrix</span><span class="si">}</span><span class="s2"> is not invertible.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">matrices</span><span class="p">,</span> <span class="n">check_shapes</span><span class="o">=</span><span class="n">check_shapes</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InvertibleMatrixProduct</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">InvertibleMatrixProduct</span><span class="p">(</span>
-            <span class="nb">tuple</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">inv</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">))</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">inv</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">)),</span>
         <span class="p">)</span></div>
 
 
@@ -596,10 +609,11 @@
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot get array representation for identity matrix with &quot;</span>
-                <span class="s2">&quot;implicit size.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Cannot get array representation for identity matrix with implicit &quot;</span>
+                <span class="s2">&quot;size.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="nd">@property</span>
@@ -669,7 +683,8 @@
 <span class="sd">                an explicit shape will be available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scalar must be non-zero&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;scalar must be non-zero&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">=</span> <span class="n">scalar</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">))</span>
 
@@ -704,19 +719,21 @@
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot get array representation for scaled identity matrix &quot;</span>
-                <span class="s2">&quot;with implicit size.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Cannot get array representation for scaled identity matrix with &quot;</span>
+                <span class="s2">&quot;implicit size.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">log_abs_det</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot get log determinant for scaled identity matrix with &quot;</span>
-                <span class="s2">&quot;implicit size.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Cannot get log determinant for scaled identity matrix with implicit &quot;</span>
+                <span class="s2">&quot;size.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">))</span>
 
     <span class="nd">@property</span>
@@ -744,7 +761,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Scalar multiplier must be positive.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar multiplier must be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScaledIdentityMatrix</span><span class="p">:</span>
@@ -769,7 +787,8 @@
 <span class="sd">            diagonal: 1D array specifying diagonal elements of matrix.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Specified diagonal must be a 1D array.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Specified diagonal must be a 1D array.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">diagonal</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="n">_diagonal</span><span class="o">=</span><span class="n">diagonal</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -785,10 +804,11 @@
         <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">other</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Left matrix multiplication only defined for one or two &quot;</span>
-                <span class="s2">&quot;dimensional right hand sides.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Left matrix multiplication only defined for one or two dimensional &quot;</span>
+                <span class="s2">&quot;right hand sides.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">other</span>
@@ -829,7 +849,8 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">diagonal</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Diagonal values must all be positive.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Diagonal values must all be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiagonalMatrix</span><span class="p">:</span>
@@ -845,7 +866,7 @@
         <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_make_array_triangular</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_make_array_triangular</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make array lower/upper triangular by zeroing above/below diagonal.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="k">if</span> <span class="n">lower</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
 
@@ -854,7 +875,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix with non-zero values only in lower or upper triangle elements.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -867,12 +892,16 @@
 <span class="sd">                zeroing entries in upper triangle if `lower == True` and in lower</span>
 <span class="sd">                triangle if `lower == False`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">_make_array_triangular</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span> <span class="k">if</span> <span class="n">make_triangular</span> <span class="k">else</span> <span class="n">array</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">_make_array_triangular</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="n">lower</span><span class="p">)</span> <span class="k">if</span> <span class="n">make_triangular</span> <span class="k">else</span> <span class="n">array</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">_array</span><span class="o">=</span><span class="n">array</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lower</span> <span class="o">=</span> <span class="n">lower</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">TriangularMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lower</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -880,12 +909,16 @@
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">InverseTriangularMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -900,7 +933,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Triangular matrix implicitly specified by its inverse.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">inverse_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inverse_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -917,7 +954,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">inverse_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray_chkfinite</span><span class="p">(</span><span class="n">inverse_array</span><span class="p">)</span>
         <span class="n">inverse_array</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">_make_array_triangular</span><span class="p">(</span><span class="n">inverse_array</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
+            <span class="n">_make_array_triangular</span><span class="p">(</span><span class="n">inverse_array</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="n">lower</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">make_triangular</span>
             <span class="k">else</span> <span class="n">inverse_array</span>
         <span class="p">)</span>
@@ -926,17 +963,26 @@
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">InverseTriangularMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span> <span class="o">/</span> <span class="n">scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span> <span class="o">/</span> <span class="n">scalar</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">sla</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span>
+            <span class="n">other</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">sla</span><span class="o">.</span><span class="n">solve_triangular</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span>
+            <span class="n">other</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">trans</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
     <span class="nd">@property</span>
@@ -945,12 +991,16 @@
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">InverseTriangularMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -982,23 +1032,25 @@
 <span class="k">class</span> <span class="nc">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">(</span><span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">sign</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">sign</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;sign must be equal to +1 or -1&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sign</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;sign must be equal to +1 or -1&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span> <span class="o">=</span> <span class="n">sign</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Triangular matrix with `matrix = sign * factor @ factor.T`&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Triangular matrix with `matrix = sign * factor @ factor.T`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Signed binary value with `matrix = sign * factor @ factor.T`&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Signed binary value with `matrix = sign * factor @ factor.T`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">(</span>
-            <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sign</span>
+            <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1010,7 +1062,9 @@
 
 
 <div class="viewcode-block" id="TriangularFactoredDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.TriangularFactoredDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">TriangularFactoredDefiniteMatrix</span><span class="p">(</span>
-    <span class="n">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">,</span> <span class="n">ImplicitArrayMatrix</span>
+    <span class="n">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">DifferentiableMatrix</span><span class="p">,</span>
+    <span class="n">ImplicitArrayMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix specified as a signed self-product of a triangular factor.</span>
 
@@ -1028,7 +1082,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">],</span>
         <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">factor_is_lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">factor_is_lower</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -1044,17 +1098,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="p">(</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">)):</span>
             <span class="k">if</span> <span class="n">factor_is_lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;For array `factor` parameter `factor_is_lower` must be &quot;</span>
-                    <span class="s2">&quot;specified as a boolean value.&quot;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;For array `factor` parameter `factor_is_lower` must be specified &quot;</span>
+                    <span class="s2">&quot;as a boolean value.&quot;</span>
                 <span class="p">)</span>
-            <span class="n">factor</span> <span class="o">=</span> <span class="n">TriangularMatrix</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">factor_is_lower</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">TriangularMatrix</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="n">factor_is_lower</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="o">=</span> <span class="n">factor</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">factor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sign</span><span class="o">=</span><span class="n">sign</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">(</span>
-            <span class="n">factor</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+            <span class="n">factor</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span>
+            <span class="n">sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1071,7 +1127,8 @@
         <span class="n">inv_factor_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="n">vector</span>
         <span class="n">inv_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="n">vector</span>
         <span class="k">return</span> <span class="n">_make_array_triangular</span><span class="p">(</span>
-            <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">inv_vector</span><span class="p">,</span> <span class="n">inv_factor_vector</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">lower</span>
+            <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">inv_vector</span><span class="p">,</span> <span class="n">inv_factor_vector</span><span class="p">),</span>
+            <span class="n">lower</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1085,7 +1142,8 @@
 
 
 <div class="viewcode-block" id="TriangularFactoredPositiveDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.TriangularFactoredPositiveDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">(</span>
-    <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">,</span> <span class="n">PositiveDefiniteMatrix</span>
+    <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Positive definite matrix parametrized a triangular matrix product.</span>
 
@@ -1101,6 +1159,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">factor_is_lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1118,7 +1177,7 @@
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">(</span>
-                <span class="n">factor</span><span class="o">=</span><span class="n">scalar</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span>
+                <span class="n">factor</span><span class="o">=</span><span class="n">scalar</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
@@ -1131,7 +1190,9 @@
 
 
 <div class="viewcode-block" id="DenseDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.DenseDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">DenseDefiniteMatrix</span><span class="p">(</span>
-    <span class="n">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">,</span> <span class="n">ExplicitArrayMatrix</span>
+    <span class="n">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">DifferentiableMatrix</span><span class="p">,</span>
+    <span class="n">ExplicitArrayMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Definite matrix specified by a dense 2D array.&quot;&quot;&quot;</span>
 
@@ -1139,6 +1200,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
         <span class="n">factor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">is_posdef</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1182,7 +1244,8 @@
                     <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="n">nla</span><span class="o">.</span><span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="s2">&quot;Cholesky factorisation failed.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cholesky factorisation failed.&quot;</span>
+                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span>
 
     <span class="nd">@property</span>
@@ -1221,7 +1284,8 @@
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span>
-            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_construct_inv</span><span class="p">(),</span> <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_construct_inv</span><span class="p">(),</span>
+            <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
@@ -1256,7 +1320,8 @@
 <span class="sd">                product defining matrix. If `None` an identity matrix is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">rect_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">rect_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;rect_matrix must have more columns than rows&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;rect_matrix must have more columns than rows&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rect_matrix</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">rect_matrix</span> <span class="o">=</span> <span class="n">DenseRectangularMatrix</span><span class="p">(</span><span class="n">rect_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rect_matrix</span> <span class="o">=</span> <span class="n">rect_matrix</span>
@@ -1311,7 +1376,9 @@
             <span class="c1"># Multiply upper-triangle by scalar</span>
             <span class="n">new_lu</span> <span class="o">=</span> <span class="n">old_lu</span> <span class="o">+</span> <span class="p">(</span><span class="n">scalar</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">old_lu</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span> <span class="p">(</span><span class="n">new_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span>
+                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">new_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -1334,7 +1401,9 @@
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">:</span>
         <span class="n">lu_and_piv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lu_and_piv</span>
         <span class="k">return</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span> <span class="n">lu_and_piv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span>
+            <span class="n">inv_lu_and_piv</span><span class="o">=</span><span class="n">lu_and_piv</span><span class="p">,</span>
+            <span class="n">inv_lu_transposed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -1345,6 +1414,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inv_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
         <span class="n">inv_lu_and_piv</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">inv_lu_transposed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1369,12 +1439,17 @@
         <span class="c1"># Divide upper-triangle by scalar</span>
         <span class="n">new_inv_lu</span> <span class="o">=</span> <span class="n">old_inv_lu</span> <span class="o">-</span> <span class="p">(</span><span class="n">scalar</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">scalar</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">old_inv_lu</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span> <span class="o">/</span> <span class="n">scalar</span><span class="p">,</span> <span class="p">(</span><span class="n">new_inv_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span> <span class="o">/</span> <span class="n">scalar</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">new_inv_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span>
+            <span class="n">inv_lu_transposed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">sla</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span>
+            <span class="n">other</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span><span class="p">,</span>
+            <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1394,12 +1469,16 @@
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DenseSquareMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_and_piv</span><span class="p">,</span>
+            <span class="n">inv_lu_transposed</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inv_lu_transposed</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -1525,7 +1604,9 @@
 
 
 <div class="viewcode-block" id="EigendecomposedSymmetricMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.EigendecomposedSymmetricMatrix">[docs]</a><span class="k">class</span> <span class="nc">EigendecomposedSymmetricMatrix</span><span class="p">(</span>
-    <span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">,</span> <span class="n">ImplicitArrayMatrix</span>
+    <span class="n">SymmetricMatrix</span><span class="p">,</span>
+    <span class="n">InvertibleMatrix</span><span class="p">,</span>
+    <span class="n">ImplicitArrayMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Symmetric matrix parametrized by its eigendecomposition.</span>
 
@@ -1572,10 +1653,11 @@
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="s2">&quot;Cannot get array representation for symmetric &quot;</span>
-                <span class="s2">&quot;eigendecomposed matrix with implicit size.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Cannot get array representation for symmetric eigendecomposed matrix &quot;</span>
+                <span class="s2">&quot;with implicit size.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_compute_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -1588,7 +1670,8 @@
 
 
 <div class="viewcode-block" id="EigendecomposedPositiveDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.EigendecomposedPositiveDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span>
-    <span class="n">EigendecomposedSymmetricMatrix</span><span class="p">,</span> <span class="n">PositiveDefiniteMatrix</span>
+    <span class="n">EigendecomposedSymmetricMatrix</span><span class="p">,</span>
+    <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Positive definite matrix parametrized by its eigendecomposition.</span>
 
@@ -1603,13 +1686,15 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">OrthogonalMatrix</span><span class="p">],</span> <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">eigval</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Eigenvalues must all be positive.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Eigenvalues must all be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">*</span> <span class="n">scalar</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
@@ -1622,7 +1707,8 @@
 
 
 <div class="viewcode-block" id="SoftAbsRegularizedPositiveDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.SoftAbsRegularizedPositiveDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">SoftAbsRegularizedPositiveDefiniteMatrix</span><span class="p">(</span>
-    <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span>
+    <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">DifferentiableMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix transformed to be positive definite by regularising eigenvalues.</span>
 
@@ -1644,7 +1730,8 @@
 <span class="sd">                becomes increasingly close to the absolute function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">softabs_coeff</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;softabs_coeff must be positive.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;softabs_coeff must be positive.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_softabs_coeff</span> <span class="o">=</span> <span class="n">softabs_coeff</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unreg_eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">nla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">symmetric_array</span><span class="p">)</span>
         <span class="n">eigval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softabs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unreg_eigval</span><span class="p">)</span>
@@ -1682,7 +1769,7 @@
     <span class="nd">@property</span>
     <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
     <span class="k">def</span> <span class="nf">blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Matrix</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Non-zero blocks of matrix as a tuple of Matrix instances&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Non-zero blocks of matrix as a tuple of Matrix instances.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_compute_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">))</span>
@@ -1704,7 +1791,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">SquareMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must be square&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must be square&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
         <span class="n">total_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">total_size</span><span class="p">,</span> <span class="n">total_size</span><span class="p">))</span>
@@ -1717,7 +1805,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span>
 
     <span class="k">def</span> <span class="nf">_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot split other along axis with size </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1740,7 +1830,7 @@
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">SquareBlockDiagonalMatrix</span><span class="p">(</span>
-            <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_array</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1787,12 +1877,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">SymmetricMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must be symmetric&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must be symmetric&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymmetricBlockDiagonalMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">SymmetricBlockDiagonalMatrix</span><span class="p">(</span>
-            <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymmetricBlockDiagonalMatrix</span><span class="p">:</span>
@@ -1800,7 +1891,9 @@
 
 
 <div class="viewcode-block" id="PositiveDefiniteBlockDiagonalMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.PositiveDefiniteBlockDiagonalMatrix">[docs]</a><span class="k">class</span> <span class="nc">PositiveDefiniteBlockDiagonalMatrix</span><span class="p">(</span>
-    <span class="n">SquareBlockDiagonalMatrix</span><span class="p">,</span> <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span>
+    <span class="n">SquareBlockDiagonalMatrix</span><span class="p">,</span>
+    <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">DifferentiableMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Positive definite specialisation of `SymmetricBlockDiagonalMatrix`.</span>
 
@@ -1815,16 +1908,17 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">PositiveDefiniteMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must be positive definite&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must be positive definite&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">is_differentiable</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareBlockDiagonalMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositiveDefiniteBlockDiagonalMatrix</span><span class="p">(</span>
-                <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
+                <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
@@ -1840,7 +1934,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_differentiable</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">grad_log_abs_det</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Not all blocks are differentiable&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PositiveDefiniteBlockDiagonalMatrix.grad_quadratic_form_inv"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.PositiveDefiniteBlockDiagonalMatrix.grad_quadratic_form_inv">[docs]</a>    <span class="k">def</span> <span class="nf">grad_quadratic_form_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_differentiable</span><span class="p">:</span>
@@ -1849,7 +1944,8 @@
                 <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">vector_part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Not all blocks are differentiable&quot;</span><span class="p">)</span></div></div>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="DenseRectangularMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.DenseRectangularMatrix">[docs]</a><span class="k">class</span> <span class="nc">DenseRectangularMatrix</span><span class="p">(</span><span class="n">ExplicitArrayMatrix</span><span class="p">):</span>
@@ -1880,9 +1976,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must be matrices&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must have same row-dimension.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must be matrices&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must have same row-dimension.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">col_dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">sum</span><span class="p">(</span><span class="n">col_dims</span><span class="p">)))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">col_dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -1893,14 +1991,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Inconsistent inner dimension for matrix multiply.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">block</span> <span class="o">@</span> <span class="n">part</span>
                 <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
                 <span class="p">)</span>
-            <span class="p">]</span>
+            <span class="p">],</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1928,9 +2029,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must be matrices&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">]))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All blocks must have same column-dimension.&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must be matrices&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">({</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All blocks must have same column-dimension.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">row_dims</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">row_dims</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">row_dims</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
@@ -1944,14 +2047,17 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">block</span> <span class="o">@</span> <span class="n">other</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Inconsistent inner dimension for matrix multiply&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">part</span> <span class="o">@</span> <span class="n">block</span>
                 <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
                 <span class="p">)</span>
-            <span class="p">]</span>
+            <span class="p">],</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -2006,7 +2112,7 @@
 <span class="sd">            inner_square_matrix: Optional square matrix with shape</span>
 <span class="sd">                `(dim_inner, dim_inner)` specifying inner term in matrix product</span>
 <span class="sd">                defining low-rank update. If `None` an identity matrix is used.</span>
-<span class="sd">            capacitance_matrix: Square matrix equal to</span>
+<span class="sd">            capacitance_matrix: Square matrix equal to.</span>
 
 <span class="sd">                    inner_square_matrix.inv</span>
 <span class="sd">                    + right_factor_matrix @ square_matrix.inv @ left_factor_matrix</span>
@@ -2020,30 +2126,32 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dim_outer</span><span class="p">,</span> <span class="n">dim_inner</span> <span class="o">=</span> <span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">if</span> <span class="n">square_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">dim_outer</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Inconsistent factor and square matrix shapes: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;outer dimensions </span><span class="si">{</span><span class="n">dim_outer</span><span class="si">}</span><span class="s2"> and &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">square_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Inconsistent factor and square matrix shapes: outer dimensions &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dim_outer</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">square_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">square_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">square_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;square_matrix argument must be square&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;square_matrix argument must be square&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">left_factor_matrix</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">left_factor_matrix</span> <span class="o">=</span> <span class="n">DenseRectangularMatrix</span><span class="p">(</span><span class="n">left_factor_matrix</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">right_factor_matrix</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">right_factor_matrix</span> <span class="o">=</span> <span class="n">DenseRectangularMatrix</span><span class="p">(</span><span class="n">right_factor_matrix</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">right_factor_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim_inner</span><span class="p">,</span> <span class="n">dim_outer</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Inconsistent factor matrix shapes: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Inconsistent factor matrix shapes: </span><span class="si">{</span><span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">right_factor_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inner_square_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">inner_square_matrix</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">dim_inner</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">inner_square_matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dim_inner</span><span class="p">,</span> <span class="n">dim_inner</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;inner_square matrix must be square and of shape&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="p">(</span><span class="n">dim_inner</span><span class="p">,</span><span class="w"> </span><span class="n">dim_inner</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;inner_square matrix must be square and of shape &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dim_inner</span><span class="p">,</span><span class="w"> </span><span class="n">dim_inner</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">left_factor_matrix</span> <span class="o">=</span> <span class="n">left_factor_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">right_factor_matrix</span> <span class="o">=</span> <span class="n">right_factor_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span> <span class="o">=</span> <span class="n">square_matrix</span>
@@ -2095,7 +2203,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">=</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inner_square_matrix</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">array</span>
                 <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">right_factor_matrix</span>
-                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
+                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span>
 
@@ -2143,7 +2251,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">right_factor_matrix</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inner_square_matrix</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="p">),</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">SquareLowRankUpdateMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -2156,7 +2264,9 @@
 
 
 <div class="viewcode-block" id="SymmetricLowRankUpdateMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.SymmetricLowRankUpdateMatrix">[docs]</a><span class="k">class</span> <span class="nc">SymmetricLowRankUpdateMatrix</span><span class="p">(</span>
-    <span class="n">SquareLowRankUpdateMatrix</span><span class="p">,</span> <span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span>
+    <span class="n">SquareLowRankUpdateMatrix</span><span class="p">,</span>
+    <span class="n">SymmetricMatrix</span><span class="p">,</span>
+    <span class="n">InvertibleMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Symmetric matrix equal to a low-rank update to a symmetric matrix.</span>
 
@@ -2199,7 +2309,7 @@
 <span class="sd">            inner_symmetric_matrix: Optional symmetric matrix with shape</span>
 <span class="sd">                `(dim_inner, dim_inner)` specifying inner term in matrix product</span>
 <span class="sd">                defining low-rank update. If `None` an identity matrix is used.</span>
-<span class="sd">            capacitance_matrix: Symmetric matrix  equal to</span>
+<span class="sd">            capacitance_matrix: Symmetric matrix  equal to.</span>
 
 <span class="sd">                    inner_symmetric_matrix.inv</span>
 <span class="sd">                    + factor_matrix.T @  symmetric_matrix.inv @ factor_matrix</span>
@@ -2213,23 +2323,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dim_inner</span> <span class="o">=</span> <span class="n">factor_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">symmetric_matrix</span><span class="o">.</span><span class="n">T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">symmetric_matrix</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;symmetric_matrix must be symmetric&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;symmetric_matrix must be symmetric&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inner_symmetric_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">inner_symmetric_matrix</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">dim_inner</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inner_symmetric_matrix</span><span class="o">.</span><span class="n">T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">inner_symmetric_matrix</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;inner_symmetric_matrix must be symmetric&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;inner_symmetric_matrix must be symmetric&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor_matrix</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">factor_matrix</span> <span class="o">=</span> <span class="n">DenseRectangularMatrix</span><span class="p">(</span><span class="n">factor_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span> <span class="o">=</span> <span class="n">factor_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symmetric_matrix</span> <span class="o">=</span> <span class="n">symmetric_matrix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner_symmetric_matrix</span> <span class="o">=</span> <span class="n">inner_symmetric_matrix</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">factor_matrix</span><span class="p">,</span>
-            <span class="n">factor_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-            <span class="n">symmetric_matrix</span><span class="p">,</span>
-            <span class="n">inner_symmetric_matrix</span><span class="p">,</span>
-            <span class="n">capacitance_matrix</span><span class="p">,</span>
-            <span class="n">sign</span><span class="p">,</span>
+            <span class="n">left_factor_matrix</span><span class="o">=</span><span class="n">factor_matrix</span><span class="p">,</span>
+            <span class="n">right_factor_matrix</span><span class="o">=</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">square_matrix</span><span class="o">=</span><span class="n">symmetric_matrix</span><span class="p">,</span>
+            <span class="n">inner_square_matrix</span><span class="o">=</span><span class="n">inner_symmetric_matrix</span><span class="p">,</span>
+            <span class="n">capacitance_matrix</span><span class="o">=</span><span class="n">capacitance_matrix</span><span class="p">,</span>
+            <span class="n">sign</span><span class="o">=</span><span class="n">sign</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">:</span>
@@ -2249,7 +2361,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">=</span> <span class="n">DenseSymmetricMatrix</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inner_symmetric_matrix</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">array</span>
                 <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">T</span>
-                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symmetric_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
+                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symmetric_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span>
 
@@ -2277,7 +2389,9 @@
 
 
 <div class="viewcode-block" id="PositiveDefiniteLowRankUpdateMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.PositiveDefiniteLowRankUpdateMatrix">[docs]</a><span class="k">class</span> <span class="nc">PositiveDefiniteLowRankUpdateMatrix</span><span class="p">(</span>
-    <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">,</span> <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span>
+    <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">,</span>
+    <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
+    <span class="n">DifferentiableMatrix</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Positive-definite matrix equal to low-rank update to a square matrix.</span>
 
@@ -2320,7 +2434,7 @@
 <span class="sd">            inner_pos_def_matrix: Optional positive definite matrix with shape</span>
 <span class="sd">                `(dim_inner, dim_inner)` specifying inner term in matrix product</span>
 <span class="sd">                defining low-rank update. If `None` an identity matrix is used.</span>
-<span class="sd">            capacitance_matrix: Positive-definite matrix equal to</span>
+<span class="sd">            capacitance_matrix: Positive-definite matrix equal to.</span>
 
 <span class="sd">                    inner_pos_def_matrix.inv</span>
 <span class="sd">                    + factor_matrix.T @ pos_def_matrix.inv @ factor_matrix</span>
@@ -2341,11 +2455,11 @@
             <span class="n">inner_pos_def_matrix</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">dim_inner</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span> <span class="o">=</span> <span class="n">inner_pos_def_matrix</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">factor_matrix</span><span class="p">,</span>
-            <span class="n">pos_def_matrix</span><span class="p">,</span>
-            <span class="n">inner_pos_def_matrix</span><span class="p">,</span>
-            <span class="n">capacitance_matrix</span><span class="p">,</span>
-            <span class="n">sign</span><span class="p">,</span>
+            <span class="n">factor_matrix</span><span class="o">=</span><span class="n">factor_matrix</span><span class="p">,</span>
+            <span class="n">symmetric_matrix</span><span class="o">=</span><span class="n">pos_def_matrix</span><span class="p">,</span>
+            <span class="n">inner_symmetric_matrix</span><span class="o">=</span><span class="n">inner_pos_def_matrix</span><span class="p">,</span>
+            <span class="n">capacitance_matrix</span><span class="o">=</span><span class="n">capacitance_matrix</span><span class="p">,</span>
+            <span class="n">sign</span><span class="o">=</span><span class="n">sign</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">:</span>
@@ -2376,7 +2490,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">=</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">array</span>
                 <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">T</span>
-                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
+                <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span>
 
@@ -2386,16 +2500,22 @@
         <span class="c1">#   Ambikasaran, O&#39;Neill &amp; Singh (2016). Fast symmetric factorization</span>
         <span class="c1">#   of hierarchical matrices with applications. arxiv:1405.0223.</span>
         <span class="c1"># Variable naming below follows notation in Algorithm 1 in paper</span>
-        <span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="o">.</span><span class="n">sqrt</span>
-        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span>
-        <span class="n">U</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span>
-        <span class="n">L</span> <span class="o">=</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
-            <span class="n">nla</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">U</span><span class="o">.</span><span class="n">array</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span>
+        <span class="n">w_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="o">.</span><span class="n">sqrt</span>
+        <span class="n">k_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span>
+        <span class="n">u_matrix</span> <span class="o">=</span> <span class="n">w_matrix</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span>
+        <span class="n">l_matrix</span> <span class="o">=</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
+            <span class="n">nla</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">u_matrix</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">u_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">),</span>
+            <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">I_outer</span><span class="p">,</span> <span class="n">I_inner</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">M</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">I_inner</span> <span class="o">+</span> <span class="n">L</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">K</span> <span class="o">@</span> <span class="n">L</span><span class="o">.</span><span class="n">array</span><span class="p">))</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">DenseSymmetricMatrix</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">((</span><span class="n">M</span> <span class="o">-</span> <span class="n">I_inner</span><span class="p">)</span> <span class="o">@</span> <span class="n">L</span><span class="o">.</span><span class="n">inv</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">W</span> <span class="o">@</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">I_outer</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+        <span class="n">i_outer</span><span class="p">,</span> <span class="n">i_inner</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span>
+            <span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">m_matrix</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">i_inner</span> <span class="o">+</span> <span class="n">l_matrix</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">k_matrix</span> <span class="o">@</span> <span class="n">l_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">))</span>
+        <span class="n">x_matrix</span> <span class="o">=</span> <span class="n">DenseSymmetricMatrix</span><span class="p">(</span>
+            <span class="n">l_matrix</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">((</span><span class="n">m_matrix</span> <span class="o">-</span> <span class="n">i_inner</span><span class="p">)</span> <span class="o">@</span> <span class="n">l_matrix</span><span class="o">.</span><span class="n">inv</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">w_matrix</span> <span class="o">@</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">(</span><span class="n">u_matrix</span><span class="p">,</span> <span class="n">i_outer</span><span class="p">,</span> <span class="n">x_matrix</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">grad_log_abs_det</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>

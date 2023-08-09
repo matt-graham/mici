@@ -53,7 +53,10 @@
 <li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">mici.interop module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.construct_pymc_model_functions"><code class="docutils literal notranslate"><span class="pre">construct_pymc_model_functions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.construct_stan_model_functions"><code class="docutils literal notranslate"><span class="pre">construct_stan_model_functions()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.interop.convert_to_inference_data"><code class="docutils literal notranslate"><span class="pre">convert_to_inference_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.interop.get_stan_model_unconstrained_param_dim"><code class="docutils literal notranslate"><span class="pre">get_stan_model_unconstrained_param_dim()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.interop.sample_pymc_model"><code class="docutils literal notranslate"><span class="pre">sample_pymc_model()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.interop.sample_stan_model"><code class="docutils literal notranslate"><span class="pre">sample_stan_model()</span></code></a></li>
 </ul>
@@ -103,6 +106,50 @@
 <span id="mici-interop-module"></span><h1>mici.interop module<a class="headerlink" href="#module-mici.interop" title="Permalink to this heading"></a></h1>
 <p>Utilities for interfacing with external probabilistic programming libraries.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.construct_pymc_model_functions">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">construct_pymc_model_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#construct_pymc_model_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.construct_pymc_model_functions" title="Permalink to this definition"></a></dt>
+<dd><p>Construct functions for sampling from PyMC model using Mici.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>pymc.Model</em>) – PyMC model to construct functions for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(neg_log_dens,</span> <span class="pre">grad_neg_log_dens,</span> <span class="pre">trace_func)</span></code> with
+<code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> a function for evaluating negative logarithm of
+unnormalized posterior density associated with model, <code class="code docutils literal notranslate"><span class="pre">grad_neg_log_dens</span></code>
+a function for evaluating gradient of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to
+position array argument and <code class="code docutils literal notranslate"><span class="pre">trace_func</span></code> a function which extract model
+parameter values from chain state for tracing during sampling.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[ScalarFunction, GradientFunction, TraceFunction]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.construct_stan_model_functions">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">construct_stan_model_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#construct_stan_model_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.construct_stan_model_functions" title="Permalink to this definition"></a></dt>
+<dd><p>Construct functions for sampling from Stan model using Mici.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>stan.Model</em>) – Stan model to construct functions for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(neg_log_dens,</span> <span class="pre">grad_neg_log_dens,</span> <span class="pre">trace_func)</span></code> with
+<code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> a function for evaluating negative logarithm of
+unnormalized posterior density associated with model, <code class="code docutils literal notranslate"><span class="pre">grad_neg_log_dens</span></code>
+a function for evaluating gradient of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to
+position array argument and <code class="code docutils literal notranslate"><span class="pre">trace_func</span></code> a function which extract model
+parameter values from chain state for tracing during sampling.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[ScalarFunction, GradientFunction, TraceFunction]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mici.interop.convert_to_inference_data">
 <span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">convert_to_inference_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energy_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'energy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lp_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lp'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#convert_to_inference_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.convert_to_inference_data" title="Permalink to this definition"></a></dt>
 <dd><p>Convert Mici <code class="code docutils literal notranslate"><span class="pre">sample_chains</span></code> output to <a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a>.</p>
@@ -140,8 +187,25 @@ group and additional chain statistics in the <cite>sample_stats</cite> group.</p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="mici.interop.get_stan_model_unconstrained_param_dim">
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">get_stan_model_unconstrained_param_dim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#get_stan_model_unconstrained_param_dim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.get_stan_model_unconstrained_param_dim" title="Permalink to this definition"></a></dt>
+<dd><p>Get total dimension of unconstrained parameters in Stan model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>stan.Model</em>) – Stan model to get dimension for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Non-negative integer specifying unconstrained parameter dimension.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="mici.interop.sample_pymc_model">
-<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">sample_pymc_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inferencedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_accept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_treedepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#sample_pymc_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.sample_pymc_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.interop.</span></span><span class="sig-name descname"><span class="pre">sample_pymc_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progressbar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter_max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_inferencedata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_accept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_treedepth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/interop.html#sample_pymc_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.interop.sample_pymc_model" title="Permalink to this definition"></a></dt>
 <dd><p>Generate approximate samples from posterior defined by a PyMC model.</p>
 <p>Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.</p>
 <p>This function replicates the interface of the <code class="xref py py-func docutils literal notranslate"><span class="pre">pymc.sample()</span></code> function to
@@ -174,14 +238,14 @@ jitter in [-1, 1] to the starting point in each chain. Also chosen if
 <code class="code docutils literal notranslate"><span class="pre">init=&quot;auto&quot;</span></code>.</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">&quot;adapt_full&quot;</span></code>: Adapt a dense mass matrix using the sample
 covariances.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">jitter+adapt_full</span></code>: Same as <code class="code docutils literal notranslate"><span class="pre">&quot;adapt_full&quot;</span></code>, but add uniform
+jitter in [-1, 1] to the starting point in each chain.d</p></li>
 </ul>
 </p></li>
 <li><p><strong>jitter_max_retries</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of repeated attempts (per chain) at creating
 an initial matrix with uniform jitter that yields a finite probability. This
 applies to <cite>“jitter+adapt_diag”</cite> and <code class="code docutils literal notranslate"><span class="pre">&quot;jitter+adapt_full&quot;</span></code>
 <code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code> methods.</p></li>
-<li><p><strong>trace</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>]</em>) – A list of variables to track. If :code`None`, then
-<code class="code docutils literal notranslate"><span class="pre">model.unobserved_RVs</span></code> is used.</p></li>
 <li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to return the traces as an
 <a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.16.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) object or a
 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">False</span></code>).</p></li>

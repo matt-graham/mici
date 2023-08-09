@@ -134,7 +134,7 @@ the total number of progress bars.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.DummyProgressBar.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#DummyProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.DummyProgressBar.update" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#DummyProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.DummyProgressBar.update" title="Permalink to this definition"></a></dt>
 <dd><p>Update progress bar state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -154,7 +154,7 @@ update postfix stats.</p></li>
 <dt class="sig sig-object py" id="mici.progressbars.FileDisplay">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.progressbars.</span></span><span class="sig-name descname"><span class="pre">FileDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#FileDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.FileDisplay" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Use file which supports ANSI escape sequences as an updatable display</p>
+<p>Use file which supports ANSI escape sequences as an updatable display.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -162,7 +162,7 @@ update postfix stats.</p></li>
 with first entry corresponding to zero-indexed line and the second entry
 the total number of lines.</p></li>
 <li><p><strong>file</strong> (<em>Optional</em><em>[</em><em>TextIO</em><em>]</em>) – File object to write updates to. Must support ANSI escape sequences
-<cite>x1b[A}</cite> (cursor up) and <cite>x1b[B</cite> (cursor down) for manipulating
+<cite>x1b[A}</cite> (cursor up) and <cite>\x1b[B</cite> (cursor down) for manipulating
 write position. Defaults to <cite>sys.stdout</cite> if <cite>None</cite>.</p></li>
 </ul>
 </dd>
@@ -292,8 +292,8 @@ passed a single argument corresponding to the current progress bar.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.LabelledSequenceProgressBar.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#LabelledSequenceProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.LabelledSequenceProgressBar.update" title="Permalink to this definition"></a></dt>
-<dd><p>Update progress bar state</p>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#LabelledSequenceProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.LabelledSequenceProgressBar.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update progress bar state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -338,7 +338,7 @@ the total number of progress bars.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.ProgressBar.update">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#ProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.ProgressBar.update" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#ProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.ProgressBar.update" title="Permalink to this definition"></a></dt>
 <dd><p>Update progress bar state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -522,8 +522,8 @@ bar visual representation.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.SequenceProgressBar.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#SequenceProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.SequenceProgressBar.update" title="Permalink to this definition"></a></dt>
-<dd><p>Update progress bar state</p>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iter_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#SequenceProgressBar.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.SequenceProgressBar.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update progress bar state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

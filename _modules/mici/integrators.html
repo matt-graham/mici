@@ -78,19 +78,24 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
 
 <span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">AdaptationError</span><span class="p">,</span> <span class="n">NonReversibleStepError</span>
-<span class="kn">from</span> <span class="nn">mici.solvers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FixedPointSolver</span><span class="p">,</span> <span class="n">ProjectionSolver</span><span class="p">,</span> <span class="n">maximum_norm</span><span class="p">,</span>
-                          <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-                          <span class="n">solve_projection_onto_manifold_newton</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mici.solvers</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FixedPointSolver</span><span class="p">,</span>
+    <span class="n">ProjectionSolver</span><span class="p">,</span>
+    <span class="n">maximum_norm</span><span class="p">,</span>
+    <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
+    <span class="n">solve_projection_onto_manifold_newton</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+
+    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
 
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span>
-                              <span class="n">TractableFlowSystem</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">TractableFlowSystem</span>
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">NormFunction</span>
 
 
@@ -137,10 +142,11 @@
 <span class="sd">            New object corresponding to stepped state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="s2">&quot;Integrator `step_size` is `None`. This value should only be used if a &quot;</span>
                 <span class="s2">&quot;step size adapter is being used to set the step size.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_size</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">state</span></div>
@@ -183,13 +189,15 @@
 <span class="sd">                :py:meth:`step` method.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s2">&quot;h1_flow&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="s2">&quot;h2_flow&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> can only be used for systems with explicit `h1_flow` and&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; `h2_flow` Hamiltonian component flow maps. For systems in which only&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; `h1_flow` is available the `ImplicitLeapfrogIntegrator` class may be&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; used instead and for systems in which neither `h1_flow` or `h2_flow`&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot; is available the `ImplicitMidpointIntegrator` class may be used.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> can only be used for systems with explicit `h1_flow` &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;and `h2_flow` Hamiltonian component flow maps. For systems in which &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;only `h1_flow` is available the `ImplicitLeapfrogIntegrator` class &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;may be used instead and for systems in which neither `h1_flow` or &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;`h2_flow` is available the `ImplicitMidpointIntegrator` class may be &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;used.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">step_size</span><span class="p">)</span></div>
 
 
@@ -225,7 +233,6 @@
 <span class="sd">    For more details see Sections 2.6 and 4.2.2 in Leimkuhler and Reich (2004).</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -290,7 +297,6 @@
 <span class="sd">    For more details see Section 6.2 in Leimkuhler and Reich (2004).</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -299,6 +305,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span>
         <span class="n">free_coefficients</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_h1_flow_step</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
@@ -324,10 +331,10 @@
         <span class="n">n_free_coefficients</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">)</span>
         <span class="n">coefficients</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">)</span>
         <span class="n">coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="mf">0.5</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">[(</span><span class="n">n_free_coefficients</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">::</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="mf">0.5</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">[(</span><span class="n">n_free_coefficients</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">::</span> <span class="mi">2</span><span class="p">]),</span>
         <span class="p">)</span>
         <span class="n">coefficients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">[(</span><span class="n">n_free_coefficients</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">::</span> <span class="mi">2</span><span class="p">])</span>
+            <span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">free_coefficients</span><span class="p">[(</span><span class="n">n_free_coefficients</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">::</span> <span class="mi">2</span><span class="p">]),</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span> <span class="o">+</span> <span class="n">coefficients</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">flow_a</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span> <span class="k">if</span> <span class="n">initial_h1_flow_step</span> <span class="k">else</span> <span class="n">system</span><span class="o">.</span><span class="n">h2_flow</span>
@@ -348,7 +355,6 @@
 <span class="sd">    :math:`S = 2` and free coefficient :math:`a_0 = (3 - \sqrt{3}) / 6`.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).</span>
 <span class="sd">         Numerical integrators for the Hybrid Monte Carlo method.</span>
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
@@ -364,7 +370,7 @@
 <span class="sd">                :py:meth:`step` method.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">a_0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">(</span><span class="n">a_0</span><span class="p">,),</span> <span class="n">step_size</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">(</span><span class="n">a_0</span><span class="p">,),</span> <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span> <span class="n">initial_h1_flow_step</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BCSSThreeStageIntegrator"><a class="viewcode-back" href="../../mici.integrators.html#mici.integrators.BCSSThreeStageIntegrator">[docs]</a><span class="k">class</span> <span class="nc">BCSSThreeStageIntegrator</span><span class="p">(</span><span class="n">SymmetricCompositionIntegrator</span><span class="p">):</span>
@@ -377,7 +383,6 @@
 <span class="sd">    :math:`b_1 = 0.29619504261126`.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).</span>
 <span class="sd">         Numerical integrators for the Hybrid Monte Carlo method.</span>
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
@@ -394,7 +399,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">a_0</span> <span class="o">=</span> <span class="mf">0.11888010966548</span>
         <span class="n">b_1</span> <span class="o">=</span> <span class="mf">0.29619504261126</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">(</span><span class="n">a_0</span><span class="p">,</span> <span class="n">b_1</span><span class="p">),</span> <span class="n">step_size</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">system</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">a_0</span><span class="p">,</span> <span class="n">b_1</span><span class="p">),</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span>
+            <span class="n">initial_h1_flow_step</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BCSSFourStageIntegrator"><a class="viewcode-back" href="../../mici.integrators.html#mici.integrators.BCSSFourStageIntegrator">[docs]</a><span class="k">class</span> <span class="nc">BCSSFourStageIntegrator</span><span class="p">(</span><span class="n">SymmetricCompositionIntegrator</span><span class="p">):</span>
@@ -407,7 +417,6 @@
 <span class="sd">    :math:`b_1 = 0.191667800000000000000` and :math:`a_1 = 268548791161230105820`.</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Blanes, S., Casas, F., &amp; Sanz-Serna, J. M. (2014).</span>
 <span class="sd">         Numerical integrators for the Hybrid Monte Carlo method.</span>
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
@@ -425,7 +434,12 @@
         <span class="n">a_0</span> <span class="o">=</span> <span class="mf">0.071353913450279725904</span>
         <span class="n">b_1</span> <span class="o">=</span> <span class="mf">0.191667800000000000000</span>
         <span class="n">a_1</span> <span class="o">=</span> <span class="mf">0.268548791161230105820</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">(</span><span class="n">a_0</span><span class="p">,</span> <span class="n">b_1</span><span class="p">,</span> <span class="n">a_1</span><span class="p">),</span> <span class="n">step_size</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">system</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">a_0</span><span class="p">,</span> <span class="n">b_1</span><span class="p">,</span> <span class="n">a_1</span><span class="p">),</span>
+            <span class="n">step_size</span><span class="o">=</span><span class="n">step_size</span><span class="p">,</span>
+            <span class="n">initial_h1_flow_step</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ImplicitLeapfrogIntegrator"><a class="viewcode-back" href="../../mici.integrators.html#mici.integrators.ImplicitLeapfrogIntegrator">[docs]</a><span class="k">class</span> <span class="nc">ImplicitLeapfrogIntegrator</span><span class="p">(</span><span class="n">Integrator</span><span class="p">):</span>
@@ -478,10 +492,9 @@
 <span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
-<span class="sd">      2. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">      2. Zappa, E., Holmes-Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
 <span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
 <span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -493,7 +506,7 @@
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
         <span class="n">fixed_point_solver</span><span class="p">:</span> <span class="n">FixedPointSolver</span> <span class="o">=</span> <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -531,10 +544,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span> <span class="o">=</span> <span class="n">fixed_point_solver_kwargs</span>
 
     <span class="k">def</span> <span class="nf">_solve_fixed_point</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">fixed_point_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span> <span class="n">x_init</span><span class="p">:</span> <span class="n">ArrayLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fixed_point_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span>
+        <span class="n">x_init</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver</span><span class="p">(</span>
-            <span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span>
+            <span class="n">fixed_point_func</span><span class="p">,</span>
+            <span class="n">x_init</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step_a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
@@ -555,10 +572,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_b_fwd</span><span class="p">(</span><span class="n">state_back</span><span class="p">,</span> <span class="o">-</span><span class="n">time_step</span><span class="p">)</span>
         <span class="n">rev_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_norm</span><span class="p">(</span><span class="n">state_back</span><span class="o">.</span><span class="n">mom</span> <span class="o">-</span> <span class="n">mom_init</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">rev_diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_tol</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;forward-backward integrated momentums = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and forward-backward &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;integrated momentums = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step_c_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="n">pos_init</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -567,10 +585,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_c_adj</span><span class="p">(</span><span class="n">state_back</span><span class="p">,</span> <span class="o">-</span><span class="n">time_step</span><span class="p">)</span>
         <span class="n">rev_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_norm</span><span class="p">(</span><span class="n">state_back</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">pos_init</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">rev_diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_tol</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;forward-backward integrated positions = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and forward-backward &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;integrated positions = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step_c_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
@@ -624,10 +643,9 @@
 <span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
-<span class="sd">      2. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">      2. Zappa, E., Holmes-Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
 <span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
 <span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -639,7 +657,7 @@
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
         <span class="n">fixed_point_solver</span><span class="p">:</span> <span class="n">FixedPointSolver</span> <span class="o">=</span> <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
@@ -677,10 +695,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span> <span class="o">=</span> <span class="n">fixed_point_solver_kwargs</span>
 
     <span class="k">def</span> <span class="nf">_solve_fixed_point</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">fixed_point_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span> <span class="n">x_init</span><span class="p">:</span> <span class="n">ArrayLike</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fixed_point_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ArrayLike</span><span class="p">],</span> <span class="n">ArrayLike</span><span class="p">],</span>
+        <span class="n">x_init</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver</span><span class="p">(</span>
-            <span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span>
+            <span class="n">fixed_point_func</span><span class="p">,</span>
+            <span class="n">x_init</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step_a_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
@@ -692,11 +714,12 @@
                 <span class="p">[</span>
                     <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
                     <span class="o">-</span><span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">),</span>
-                <span class="p">]</span>
+                <span class="p">],</span>
             <span class="p">)</span>
 
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_solve_fixed_point</span><span class="p">(</span><span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">pos_mom_init</span><span class="p">),</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_solve_fixed_point</span><span class="p">(</span><span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">pos_mom_init</span><span class="p">),</span>
+            <span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step_a_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
@@ -707,14 +730,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a_fwd</span><span class="p">(</span><span class="n">state_back</span><span class="p">,</span> <span class="o">-</span><span class="n">time_step</span><span class="p">)</span>
         <span class="n">rev_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_norm</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">state_back</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">state_prev</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">state_back</span><span class="o">.</span><span class="n">mom</span> <span class="o">-</span> <span class="n">state_prev</span><span class="o">.</span><span class="n">mom</span><span class="p">]</span>
-            <span class="p">)</span>
+                <span class="p">[</span><span class="n">state_back</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">state_prev</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">state_back</span><span class="o">.</span><span class="n">mom</span> <span class="o">-</span> <span class="n">state_prev</span><span class="o">.</span><span class="n">mom</span><span class="p">],</span>
+            <span class="p">),</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">rev_diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_tol</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;forward-backward integrated (pos, mom) pairs = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and forward-backward &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;integrated (pos, mom) pairs = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a_fwd</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
@@ -876,16 +900,15 @@
 <span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
-
 <span class="sd">      1. Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by</span>
 <span class="sd">         composition methods. SIAM journal on numerical analysis, 33(2), 475-491.</span>
 <span class="sd">      2. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
 <span class="sd">      3. Leimkuhler, B., &amp; Matthews, C. (2016). Efficient molecular dynamics using</span>
-<span class="sd">         geodesic integration and solvent–solute splitting. Proceedings of the Royal</span>
+<span class="sd">         geodesic integration and solvent-solute splitting. Proceedings of the Royal</span>
 <span class="sd">         Society A: Mathematical, Physical and Engineering Sciences, 472(2189),</span>
 <span class="sd">         20160138.</span>
-<span class="sd">      4. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">      4. Zappa, E., Holmes-Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
 <span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
 <span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
 <span class="sd">      5. Lelievre, T., Rousset, M., &amp; Stoltz, G. (2019). Hybrid Monte Carlo methods for</span>
@@ -939,7 +962,7 @@
 <span class="sd">            projection_solver: Function which given two states :code:`state` and</span>
 <span class="sd">                :code:`state_prev`, floating point time step :code:`time_step` and a</span>
 <span class="sd">                Hamiltonian system object :code:`system` solves the non-linear system of</span>
-<span class="sd">                equations in :code:`λ`</span>
+<span class="sd">                equations in :code:`λ`.</span>
 
 <span class="sd">                .. code::</span>
 
@@ -968,11 +991,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">projection_solver_kwargs</span> <span class="o">=</span> <span class="n">projection_solver_kwargs</span>
 
     <span class="k">def</span> <span class="nf">_h2_flow_retraction_onto_manifold</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h2_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">projection_solver</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="n">state_prev</span><span class="p">,</span> <span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">projection_solver_kwargs</span>
+            <span class="n">state</span><span class="p">,</span>
+            <span class="n">state_prev</span><span class="p">,</span>
+            <span class="n">time_step</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">projection_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_project_onto_cotangent_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">):</span>
@@ -1006,10 +1036,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_h2_flow_retraction_onto_manifold</span><span class="p">(</span><span class="n">state_back</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="o">-</span><span class="n">time_step_inner</span><span class="p">)</span>
             <span class="n">rev_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_norm</span><span class="p">(</span><span class="n">state_back</span><span class="o">.</span><span class="n">pos</span> <span class="o">-</span> <span class="n">state_prev</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rev_diff</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_check_tol</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Non-reversible step. Distance between initial and &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;forward-backward integrated positions = </span><span class="si">{</span><span class="n">rev_diff</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span>
