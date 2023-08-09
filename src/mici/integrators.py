@@ -391,17 +391,27 @@ class ImplicitLeapfrogIntegrator(Integrator):
         C(t)(q, p) = (q + t \nabla_2 h_2(q, p), p), \\
         C^*(t)(q, p) = \lbrace (q', p) : q' = q + t \nabla_2 h_2(q', p) \rbrace.
 
-    Fixed-point iterations are used to solve the non-linear systems of equations in the
-    implicit component updates (:math:`B` and :math:`C^*`).
-
     The resulting implicit integrator is a symmetric second-order method corresponding
     to a symplectic partitioned Runge-Kutta method. See Section 6.3.2 in Leimkuhler and
     Reich (2004) for more details.
+
+    Fixed-point iterations are used to solve the non-linear systems of equations in the
+    implicit component updates (:math:`B` and :math:`C^*`). As the iterative solves may
+    fail to converge, or may converge to one of multiple solutions, following the
+    approach proposed by Zappa, Holmes-Cerfon and Goodman (2018), an explicit
+    *reversibility check* is performed to ensure the overall integrator step is
+    time-reversible. If the reversibility check fails or the iterative solver fails to
+    converge an appropriate error is raised
+    (:py:exc:`mici.errors.NonReversibleStepError` and
+    :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
 
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
+      2. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+         sampling densities and integrating functions. Communications on Pure and
+         Applied Mathematics, 71(12), 2609-2647.
     """
 
     def __init__(
@@ -528,17 +538,26 @@ class ImplicitMidpointIntegrator(Integrator):
         \rbrace, \\
         A^*(t)(q, p) = (q +  t \nabla_2 h(q, p), p - t \nabla_1 h(q, p)).
 
-    A fixed-point iteration is used to solve the non-linear system of equations in the
-    implicit Euler step :math:`A`.
-
     The resulting implicit integrator is a second-order method corresponding to a
     symplectic one-stage Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler
     and Reich (2004) for more details.
+
+    A fixed-point iteration is used to solve the non-linear system of equations in the
+    implicit Euler step :math:`A`. As the iterative solve may fail to converge, or may
+    converge to one of multiple solutions, following the approach proposed by
+    Zappa, Holmes-Cerfon and Goodman (2018), an explicit *reversibility check* is
+    performed to ensure the overall integrator step is time-reversible. If the
+    reversibility check fails or the iterative solver fails to converge an appropriate
+    error is raised (:py:exc:`mici.errors.NonReversibleStepError` and
+    :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
 
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
+      2. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+         sampling densities and integrating functions. Communications on Pure and
+         Applied Mathematics, 71(12), 2609-2647.
     """
 
     def __init__(
@@ -640,7 +659,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        h(q, p) = h_1(q) + h_2(q, p)
+        h(q, p) = h_1(q) + h_2(q, p),
 
     where :math:`q` and :math:`p` are the position and momentum variables respectively,
     and :math:`h_1` and :math:`h_2` Hamiltonian component functions for which the exact
@@ -679,7 +698,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        \partial c(q) \nabla_2 h(q, p) = \nabla_2 h_2(q, p) = 0.
+        \partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.
 
     The set of momentum variables satisfying the above for given position variables is
     termed the cotangent space of the manifold (at a position), and the set of
@@ -739,7 +758,8 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) = 0
+        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) 
+        = c((\Phi_2(t)(q, p + \partial c(q)^T \lambda))_1) = 0,
 
     i.e. solving for the values of the Lagrange multipliers such that the position
     component of the output of :math:`\Phi_2(t) \circ \Pi(\lambda)` is on the manifold,
@@ -748,6 +768,8 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     \circ \Pi(\lambda)` is then projected in to the cotangent space to compute the final
     state pair, with this projection step as noted above typically having an analytic
     solution.
+    
+    For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).
 
     The overall second-order integrator is then defined as the symmetric composition
 
@@ -756,12 +778,30 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
         \Psi(t) = A(t / 2) \circ B(t / N)^N \circ A(t / 2),
 
     where :math:`N` is a positive integer corresponding to the number of 'inner'
-    :math:`h_2` flow steps. This integrator exactly preserves the constraints at all
-    steps, such that if an initial position momentum pair :math:`(q, p)` are in the
-    cotangent bundle, the corresponding pair after calling the :py:meth:`step` method of
-    the integrator will also be in the cotangent bundle.
+    :math:`h_2` flow steps, following the 'geodesic integrator' formulation proposed by
+    Leimkuhler and Matthews (2016). The additional flexibility introduced by having
+    the possibility of :math:`N > 1` is particularly of use when evaluation of
+    :math:`\Phi_1` is significantly more expensive than evaluation of :math:`\Phi_2`; in
+    this case using :math:`N > 1` can allow a larger time step :math:`t` to be used than
+    may be otherwise possible due to the need to ensure the iterative solver used in
+    :math:`B` does not diverge, with a smaller step size :math:`t / N` used for the
+    steps involving the iterative solves with the (cheaper) :math:`\Phi_2` flow map
+    and a larger step size :math:`t` used for the steps involving the (more expensive)
+    :math:`\Phi_1` flow map.
 
-    For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).
+    This integrator exactly preserves the constraints at all steps, such that if an
+    initial position momentum pair :math:`(q, p)` are in the cotangent bundle, the
+    corresponding pair after calling the :py:meth:`step` method of the integrator will
+    also be in the cotangent bundle, *providing the iterative solver converges*.
+
+    As the iterative solves may fail to converge, or may converge to one of multiple
+    solutions, following the approach proposed by Zappa, Holmes-Cerfon and Goodman
+    (2018), an explicit *reversibility check* is performed to ensure the overall
+    integrator step is time-reversible; see also Lelievre, Rousset and Stoltz (2019) for
+    an analysis of this approach specifically in the context of Hamiltonian Monte Carlo.
+    If the reversibility check fails or the iterative solver fails to converge an
+    appropriate error is raised (:py:exc:`mici.errors.NonReversibleStepError` and
+    :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
 
@@ -769,6 +809,16 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
          composition methods. SIAM journal on numerical analysis, 33(2), 475-491.
       2. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
+      3. Leimkuhler, B., & Matthews, C. (2016). Efficient molecular dynamics using
+         geodesic integration and solvent–solute splitting. Proceedings of the Royal
+         Society A: Mathematical, Physical and Engineering Sciences, 472(2189),
+         20160138.
+      4. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+         sampling densities and integrating functions. Communications on Pure and
+         Applied Mathematics, 71(12), 2609-2647.
+      5. Lelievre, T., Rousset, M., & Stoltz, G. (2019). Hybrid Monte Carlo methods for
+         sampling probability measures on submanifolds. Numerische Mathematik, 143,
+         379-421.
     """
 
     def __init__(
@@ -830,7 +880,9 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 the derivative of the action of the (linear) :code:`system.h2_flow` map
                 on the state momentum component with respect to the position component.
                 This is used to project the state position component back on to the
-                manifold after an unconstrained :code:`system.h2_flow` update.
+                manifold after an unconstrained :code:`system.h2_flow` update. If the
+                solver fails to convege a :py:exc:`mici.errors.ConvergenceError`
+                exception is raised.
             projection_solver_kwargs: Dictionary of any keyword arguments to
                 :code:`projection_solver`.
         """
