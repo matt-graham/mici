@@ -12,7 +12,8 @@ from mici.errors import AdaptationError, IntegratorError
 from mici.matrices import DensePositiveDefiniteMatrix, PositiveDiagonalMatrix
 
 if TYPE_CHECKING:
-    from typing import Collection, Iterable, Optional, Union
+    from collections.abc import Collection, Iterable
+    from typing import Optional, Union
 
     from numpy.random import Generator
     from numpy.typing import ArrayLike
@@ -21,8 +22,12 @@ if TYPE_CHECKING:
     from mici.states import ChainState
     from mici.systems import System
     from mici.transitions import Transition
-    from mici.types import (AdaptationStatisticFunction, AdapterState,
-                            ReducerFunction, TransitionStatistics)
+    from mici.types import (
+        AdaptationStatisticFunction,
+        AdapterState,
+        ReducerFunction,
+        TransitionStatistics,
+    )
 
 
 class Adapter(ABC):
@@ -38,7 +43,9 @@ class Adapter(ABC):
 
     @abstractmethod
     def initialize(
-        self, chain_state: ChainState, transition: Transition
+        self,
+        chain_state: ChainState,
+        transition: Transition,
     ) -> AdapterState:
         """Initialize adapter state prior to starting adaptive transitions.
 
@@ -123,7 +130,7 @@ def arithmetic_mean_log_step_size_reducer(log_step_sizes: Collection[float]) -> 
     Args:
         log_step_sizes: Logarithms of per-chain estimated step sizes.
 
-    Returns
+    Returns:
         Arithmetic mean of estimated step sizes.
     """
     return sum(exp(x) for x in log_step_sizes) / len(log_step_sizes)
@@ -135,7 +142,7 @@ def geometric_mean_log_step_size_reducer(log_step_sizes: Collection[float]) -> f
     Args:
         log_step_sizes: Logarithms of per-chain estimated step sizes.
 
-    Returns
+    Returns:
         Geometric mean of estimated step sizes.
     """
     return exp(sum(x for x in log_step_sizes) / len(log_step_sizes))
@@ -147,7 +154,7 @@ def min_log_step_size_reducer(log_step_sizes: Collection[float]) -> float:
     Args:
         log_step_sizes: Logarithms of per-chain estimated step sizes.
 
-    Returns
+    Returns:
         Minimum of estimated step sizes.
     """
     return exp(min(log_step_sizes))
@@ -176,7 +183,6 @@ class DualAveragingStepSizeAdapter(Adapter):
     :code:`adapt_stat_func`.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -255,7 +261,9 @@ class DualAveragingStepSizeAdapter(Adapter):
         )
 
     def initialize(
-        self, chain_state: ChainState, transition: Transition
+        self,
+        chain_state: ChainState,
+        transition: Transition,
     ) -> AdapterState:
         integrator = transition.integrator
         system = transition.system
@@ -265,7 +273,9 @@ class DualAveragingStepSizeAdapter(Adapter):
             "adapt_stat_error": 0.0,
         }
         init_step_size = self._find_and_set_init_step_size(
-            chain_state, system, integrator
+            chain_state,
+            system,
+            integrator,
         )
         if self.log_step_size_reg_target is None:
             adapt_state["log_step_size_reg_target"] = log(10 * init_step_size)
@@ -274,7 +284,10 @@ class DualAveragingStepSizeAdapter(Adapter):
         return adapt_state
 
     def _find_and_set_init_step_size(
-        self, state: ChainState, system: System, integrator: Integrator
+        self,
+        state: ChainState,
+        system: System,
+        integrator: Integrator,
     ) -> float:
         """Find initial step size by coarse search using single step statistics.
 
@@ -305,7 +318,8 @@ class DualAveragingStepSizeAdapter(Adapter):
         init_state = state.copy()
         h_init = system.h(init_state)
         if np.isnan(h_init):
-            raise AdaptationError("Hamiltonian evaluating to NaN at initial state.")
+            msg = "Hamiltonian evaluating to NaN at initial state."
+            raise AdaptationError(msg)
         integrator.step_size = 1
         delta_h_threshold = log(2)
         for s in range(self.max_init_step_size_iters):
@@ -325,15 +339,16 @@ class DualAveragingStepSizeAdapter(Adapter):
             except IntegratorError:
                 step_size_too_big = True
                 integrator.step_size /= 2
-        raise AdaptationError(
+        msg = (
             f"Could not find reasonable initial step size in "
             f"{self.max_init_step_size_iters} iterations (final step size "
-            f"{integrator.step_size}). A very large final step size may "
-            f"indicate that the target distribution is improper such that the "
-            f"negative log density is flat in one or more directions while a "
-            f"very small final step size may indicate that the density function"
-            f" is insufficiently smooth at the point initialized at."
+            f"{integrator.step_size}). A very large final step size may indicate that "
+            f"the target distribution is improper such that the negative log density "
+            f"is flat in one or more directions while a very small final step size may "
+            f"indicate that the density function is insufficiently smooth at the point "
+            f"initialized at."
         )
+        raise AdaptationError(msg)
 
     def update(
         self,
@@ -367,11 +382,11 @@ class DualAveragingStepSizeAdapter(Adapter):
     ):
         if isinstance(adapt_states, dict):
             transition.integrator.step_size = exp(
-                adapt_states["smoothed_log_step_size"]
+                adapt_states["smoothed_log_step_size"],
             )
         else:
             transition.integrator.step_size = self.log_step_size_reducer(
-                [adapt_state["smoothed_log_step_size"] for adapt_state in adapt_states]
+                [adapt_state["smoothed_log_step_size"] for adapt_state in adapt_states],
             )
 
 
@@ -390,9 +405,8 @@ class OnlineVarianceMetricAdapter(Adapter):
     corresponding to the reciprocal of the (regularized) variance estimates.
 
     References:
-
       1. Welford, B. P. (1962). Note on a method for calculating corrected sums of
-         squares and products. Technometrics, 4(3), pp. 419–420.
+         squares and products. Technometrics, 4(3), pp. 419-420.
       2. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
          pairwise algorithm for computing sample variances. Technical Report
          STAN-CS-79-773, Department of Computer Science, Stanford University.
@@ -418,7 +432,9 @@ class OnlineVarianceMetricAdapter(Adapter):
         self.reg_scale = reg_scale
 
     def initialize(
-        self, chain_state: ChainState, transition: Transition
+        self,
+        chain_state: ChainState,
+        transition: Transition,
     ) -> AdapterState:
         return {
             "iter": 0,
@@ -489,10 +505,8 @@ class OnlineVarianceMetricAdapter(Adapter):
                         mean_diff**2 * (adapt_state["iter"] * n_iter_prev) / n_iter
                     )
         if n_iter < 2:
-            raise AdaptationError(
-                "At least two chain samples required to compute a variance "
-                "estimates."
-            )
+            msg = "At least two chain samples required to compute a variance estimates."
+            raise AdaptationError(msg)
         var_est /= n_iter - 1
         self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
@@ -518,9 +532,8 @@ class OnlineCovarianceMetricAdapter(Adapter):
 
 
     References:
-
       1. Welford, B. P. (1962). Note on a method for calculating corrected sums of
-         squares and products. Technometrics, 4(3), pp. 419–420.
+         squares and products. Technometrics, 4(3), pp. 419-420.
       2. Schubert, E. and Gertz, M. (2018). Numerically stable parallel computation of
          (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.
       3. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
@@ -547,7 +560,9 @@ class OnlineCovarianceMetricAdapter(Adapter):
         self.reg_scale = reg_scale
 
     def initialize(
-        self, chain_state: ChainState, transition: Transition
+        self,
+        chain_state: ChainState,
+        transition: Transition,
     ) -> AdapterState:
         dim_pos = chain_state.pos.shape[0]
         dtype = chain_state.pos.dtype
@@ -620,10 +635,8 @@ class OnlineCovarianceMetricAdapter(Adapter):
                         / n_iter
                     )
         if n_iter < 2:
-            raise AdaptationError(
-                "At least two chain samples required to compute a variance "
-                "estimates."
-            )
+            msg = "At least two chain samples required to compute a variance estimates."
+            raise AdaptationError(msg)
         covar_est /= n_iter - 1
         self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv

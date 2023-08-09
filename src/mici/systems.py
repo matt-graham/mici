@@ -7,23 +7,33 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-import mici.matrices as matrices
+from mici import matrices
 from mici.autodiff import autodiff_fallback
 from mici.states import cache_in_state, cache_in_state_with_aux
 
 if TYPE_CHECKING:
-    from typing import Any, Optional, Type
+    from typing import Any, Optional
 
     from numpy.random import Generator
 
     from mici.states import ChainState
-    from mici.types import (ArrayFunction, ArrayLike, GradientFunction,
-                            HessianFunction, JacobianFunction,
-                            MatrixHessianProduct, MatrixHessianProductFunction,
-                            MatrixLike, MatrixTressianProduct,
-                            MatrixTressianProductFunction, MetricLike,
-                            ScalarFunction, ScalarLike, VectorJacobianProduct,
-                            VectorJacobianProductFunction)
+    from mici.types import (
+        ArrayFunction,
+        ArrayLike,
+        GradientFunction,
+        HessianFunction,
+        JacobianFunction,
+        MatrixHessianProduct,
+        MatrixHessianProductFunction,
+        MatrixLike,
+        MatrixTressianProduct,
+        MatrixTressianProductFunction,
+        MetricLike,
+        ScalarFunction,
+        ScalarLike,
+        VectorJacobianProduct,
+        VectorJacobianProductFunction,
+    )
 
 
 class System(ABC):
@@ -50,6 +60,7 @@ class System(ABC):
     def __init__(
         self,
         neg_log_dens: ScalarFunction,
+        *,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
         """
@@ -70,7 +81,10 @@ class System(ABC):
         """
         self._neg_log_dens = neg_log_dens
         self._grad_neg_log_dens = autodiff_fallback(
-            grad_neg_log_dens, neg_log_dens, "grad_and_value", "grad_neg_log_dens"
+            grad_neg_log_dens,
+            neg_log_dens,
+            "grad_and_value",
+            "grad_neg_log_dens",
         )
 
     @cache_in_state("pos")
@@ -183,7 +197,6 @@ class System(ABC):
         Returns:
             Value of `h(state)` derivative with respect to `state.pos`.
         """
-
         return self.dh1_dpos(state) + self.dh2_dpos(state)
 
     def dh_dmom(self, state: ChainState) -> ArrayLike:
@@ -269,6 +282,7 @@ class EuclideanMetricSystem(TractableFlowSystem):
     def __init__(
         self,
         neg_log_dens: ScalarFunction,
+        *,
         metric: Optional[MetricLike] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -298,7 +312,7 @@ class EuclideanMetricSystem(TractableFlowSystem):
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
         """
-        super().__init__(neg_log_dens, grad_neg_log_dens)
+        super().__init__(neg_log_dens=neg_log_dens, grad_neg_log_dens=grad_neg_log_dens)
         if metric is None:
             self.metric = matrices.IdentityMatrix()
         elif isinstance(metric, np.ndarray):
@@ -307,10 +321,11 @@ class EuclideanMetricSystem(TractableFlowSystem):
             elif metric.ndim == 2:
                 self.metric = matrices.DensePositiveDefiniteMatrix(metric)
             else:
-                raise ValueError(
+                msg = (
                     "If NumPy ndarray value is used for `metric` must be either 1D "
                     "(diagonal matrix) or 2D (dense positive definite matrix)."
                 )
+                raise ValueError(msg)
         else:
             self.metric = metric
 
@@ -367,7 +382,6 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     integrator to be defined using this alternative splitting of the Hamiltonian [1].
 
     References:
-
       1. Shahbaba, B., Lan, S., Johnson, W.O. and Neal, R.M., 2014. Split Hamiltonian
          Monte Carlo. Statistics and Computing, 24(3), pp.339-349.
     """
@@ -375,6 +389,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def __init__(
         self,
         neg_log_dens: ScalarFunction,
+        *,
         metric: Optional[MetricLike] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -404,7 +419,11 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
         """
-        super().__init__(neg_log_dens, metric, grad_neg_log_dens)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            metric=metric,
+            grad_neg_log_dens=grad_neg_log_dens,
+        )
 
     def h2(self, state: ChainState) -> ScalarLike:
         return (
@@ -422,13 +441,13 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def h2_flow(self, state: ChainState, dt: ScalarLike):
         omega = 1.0 / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-        eigvec_T_pos = self.metric.eigvec.T @ state.pos
-        eigvec_T_mom = self.metric.eigvec.T @ state.mom
+        eigvec_trans_pos = self.metric.eigvec.T @ state.pos
+        eigvec_trans_mom = self.metric.eigvec.T @ state.mom
         state.pos = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_pos + (sin_omega_dt * omega) * eigvec_T_mom
+            cos_omega_dt * eigvec_trans_pos + (sin_omega_dt * omega) * eigvec_trans_mom
         )
         state.mom = self.metric.eigvec @ (
-            cos_omega_dt * eigvec_T_mom - (sin_omega_dt / omega) * eigvec_T_pos
+            cos_omega_dt * eigvec_trans_mom - (sin_omega_dt / omega) * eigvec_trans_pos
         )
 
 
@@ -526,14 +545,16 @@ class ConstrainedTractableFlowSystem(TractableFlowSystem):
             jacob_constr_2: Second constraint Jacobian in product. Defaults to
                 :code:`jacob_constr_1` if set to :code:`None`.
 
-        Returns
+        Returns:
             Object corresponding to computed inner products of the constraint Jacobian
             rows.
         """
 
     @abstractmethod
     def dh2_flow_dmom(
-        self, state: ChainState, dt: ScalarLike
+        self,
+        state: ChainState,
+        dt: ScalarLike,
     ) -> tuple[matrices.Matrix, matrices.Matrix]:
         """Derivatives of :py:meth:`h2_flow` flow map with respect to momentum argument.
 
@@ -552,7 +573,9 @@ class ConstrainedTractableFlowSystem(TractableFlowSystem):
 
     @abstractmethod
     def project_onto_cotangent_space(
-        self, mom: ArrayLike, state: ChainState
+        self,
+        mom: ArrayLike,
+        state: ChainState,
     ) -> ArrayLike:
         """Project a momentum on to the co-tangent space at a position.
 
@@ -567,12 +590,12 @@ class ConstrainedTractableFlowSystem(TractableFlowSystem):
 
     def sample_momentum(self, state: ChainState, rng: Generator) -> ArrayLike:
         mom = super().sample_momentum(state, rng)
-        mom = self.project_onto_cotangent_space(mom, state)
-        return mom
+        return self.project_onto_cotangent_space(mom, state)
 
 
 class ConstrainedEuclideanMetricSystem(
-    ConstrainedTractableFlowSystem, EuclideanMetricSystem
+    ConstrainedTractableFlowSystem,
+    EuclideanMetricSystem,
 ):
     r"""Base class for Euclidean Hamiltonian systems subject to constraints.
 
@@ -627,7 +650,6 @@ class ConstrainedEuclideanMetricSystem(
     :py:class:`mici.integrators.ConstrainedLeapfrogIntegrator`.
 
     References:
-
       1. Lelièvre, T., Rousset, M. and Stoltz, G., 2019. Hybrid Monte Carlo methods for
          sampling probability measures on submanifolds. Numerische Mathematik, 143(2),
          pp.379-421.
@@ -640,6 +662,7 @@ class ConstrainedEuclideanMetricSystem(
         self,
         neg_log_dens: ScalarFunction,
         constr: ArrayFunction,
+        *,
         metric: Optional[MetricLike] = None,
         dens_wrt_hausdorff: bool = True,
         grad_neg_log_dens: Optional[GradientFunction] = None,
@@ -723,7 +746,10 @@ class ConstrainedEuclideanMetricSystem(
         self._constr = constr
         self.dens_wrt_hausdorff = dens_wrt_hausdorff
         self._jacob_constr = autodiff_fallback(
-            jacob_constr, constr, "jacobian_and_value", "jacob_constr"
+            jacob_constr,
+            constr,
+            "jacobian_and_value",
+            "jacob_constr",
         )
 
     @cache_in_state("pos")
@@ -735,7 +761,9 @@ class ConstrainedEuclideanMetricSystem(
         return self._jacob_constr(state.pos)
 
     def dh2_flow_dmom(
-        self, state: ChainState, dt: ScalarLike
+        self,
+        state: ChainState,
+        dt: ScalarLike,
     ) -> tuple[matrices.Matrix, matrices.Matrix]:
         return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))
 
@@ -760,7 +788,8 @@ class ConstrainedEuclideanMetricSystem(
             Gram matrix as matrix object.
         """
         return self.jacob_constr_inner_product(
-            self.jacob_constr(state), self.metric.inv
+            self.jacob_constr(state),
+            self.metric.inv,
         )
 
     def inv_gram(self, state: ChainState) -> matrices.PositiveDefiniteMatrix:
@@ -780,7 +809,7 @@ class ConstrainedEuclideanMetricSystem(
 
     @abstractmethod
     def grad_log_det_sqrt_gram(self, state: ChainState) -> ArrayLike:
-        """Derivative of half of log-determinant of Gram matrix with respect to position
+        """Derivative of half log-determinant of Gram matrix with respect to position.
 
         Args:
             state: State to compute value at.
@@ -803,7 +832,9 @@ class ConstrainedEuclideanMetricSystem(
             return self.grad_neg_log_dens(state) + self.grad_log_det_sqrt_gram(state)
 
     def project_onto_cotangent_space(
-        self, mom: ArrayLike, state: ChainState
+        self,
+        mom: ArrayLike,
+        state: ChainState,
     ) -> ArrayLike:
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
@@ -824,6 +855,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         self,
         neg_log_dens: ScalarFunction,
         constr: ArrayFunction,
+        *,
         metric: Optional[MetricLike] = None,
         dens_wrt_hausdorff: bool = True,
         grad_neg_log_dens: Optional[GradientFunction] = None,
@@ -928,7 +960,10 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         )
         if not dens_wrt_hausdorff:
             self._mhp_constr = autodiff_fallback(
-                mhp_constr, constr, "mhp_jacobian_and_value", "mhp_constr"
+                mhp_constr,
+                constr,
+                "mhp_jacobian_and_value",
+                "mhp_constr",
             )
 
     @cache_in_state_with_aux("pos", ("jacob_constr", "constr"))
@@ -943,11 +978,11 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
     ) -> MatrixLike:
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DensePositiveDefiniteMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
             )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T),
             )
 
     @cache_in_state("pos")
@@ -956,12 +991,13 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         # will potentially be computed in 'forward' pass and cached
         mhp_constr = self.mhp_constr(state)
         return mhp_constr(
-            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv
+            self.inv_gram(state) @ self.jacob_constr(state) @ self.metric.inv,
         )
 
 
 class GaussianDenseConstrainedEuclideanMetricSystem(
-    GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem
+    GaussianEuclideanMetricSystem,
+    DenseConstrainedEuclideanMetricSystem,
 ):
     """Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.
 
@@ -974,6 +1010,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
         self,
         neg_log_dens: ScalarFunction,
         constr: ArrayFunction,
+        *,
         metric: Optional[MetricLike] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
         jacob_constr: Optional[JacobianFunction] = None,
@@ -992,7 +1029,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 equation, with density with respect to the Hausdorff measure on the
                 manifold corresponding to the ratio of the prior density (specified by
                 `neg_log_dens`) and the square-root of the determinant of the Gram
-                matrix defined by
+                matrix defined by.
 
                 .. code-block::
 
@@ -1082,21 +1119,24 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
     ) -> MatrixLike:
         if jacob_constr_2 is None or jacob_constr_2 is jacob_constr_1:
             return matrices.DenseSymmetricMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_1.T),
             )
         else:
             return matrices.DenseSquareMatrix(
-                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
+                jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T),
             )
 
     def dh2_flow_dmom(
-        self, state: ChainState, dt: ScalarLike
+        self,
+        state: ChainState,
+        dt: ScalarLike,
     ) -> tuple[matrices.Matrix, matrices.Matrix]:
         omega = 1.0 / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         return (
             matrices.EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, sin_omega_dt * omega
+                self.metric.eigvec,
+                sin_omega_dt * omega,
             ),
             matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
         )
@@ -1138,7 +1178,6 @@ class RiemannianMetricSystem(System):
     e.g. `mici.integrators.ImplicitLeapfrogIntegrator`.
 
     References:
-
       1. Girolami, M. and Calderhead, B., 2011. Riemann manifold Langevin and
          Hamiltonian Monte Varlo methods. Journal of the Royal Statistical Society:
          Series B (Statistical Methodology), 73(2), pp.123-214.
@@ -1147,8 +1186,9 @@ class RiemannianMetricSystem(System):
     def __init__(
         self,
         neg_log_dens: ScalarFunction,
-        metric_matrix_class: Type[matrices.PositiveDefiniteMatrix],
+        metric_matrix_class: type[matrices.PositiveDefiniteMatrix],
         metric_func: ArrayFunction,
+        *,
         vjp_metric_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
         metric_kwargs: Optional[dict[str, Any]] = None,
@@ -1168,7 +1208,7 @@ class RiemannianMetricSystem(System):
                 of a `mici.matrices.DiagonalMatrix`). The class initializer may also
                 optionally take one or more keyword arguments, with the `metric_kwargs`
                 argument used to specify the value of these, if any. Together this means
-                the metric matrix representation at a position `pos` is constructed as
+                the metric matrix representation at a position `pos` is constructed as.
 
                 .. code-block::
 
@@ -1222,10 +1262,13 @@ class RiemannianMetricSystem(System):
         self._metric_matrix_class = metric_matrix_class
         self._metric_func = metric_func
         self._vjp_metric_func = autodiff_fallback(
-            vjp_metric_func, metric_func, "vjp_and_value", "vjp_metric_func"
+            vjp_metric_func,
+            metric_func,
+            "vjp_and_value",
+            "vjp_metric_func",
         )
         self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
-        super().__init__(neg_log_dens, grad_neg_log_dens)
+        super().__init__(neg_log_dens, grad_neg_log_dens=grad_neg_log_dens)
 
     @cache_in_state("pos")
     def metric_func(self, state: ChainState) -> ArrayLike:
@@ -1294,7 +1337,7 @@ class RiemannianMetricSystem(System):
         # potentially be computed in forward pass and cached
         vjp_metric = self.vjp_metric_func(state)
         return self.grad_neg_log_dens(state) + 0.5 * vjp_metric(
-            self.metric(state).grad_log_abs_det
+            self.metric(state).grad_log_abs_det,
         )
 
     def h2(self, state: ChainState) -> ScalarLike:
@@ -1330,6 +1373,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         self,
         neg_log_dens: ScalarFunction,
         metric_scalar_func: ScalarFunction,
+        *,
         vjp_metric_scalar_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -1347,7 +1391,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
                 another function which takes a scalar as an argument and returns the
                 *vector-Jacobian-product* (VJP) of `metric_scalar_func` with respect to
                 the position array argument. The VJP is here defined as a function of a
-                scalar `v`
+                scalar `v`.
 
                 .. code-block::
 
@@ -1377,19 +1421,19 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
         """
-
         super().__init__(
-            neg_log_dens,
-            matrices.PositiveScaledIdentityMatrix,
-            metric_scalar_func,
-            vjp_metric_scalar_func,
-            grad_neg_log_dens,
+            neg_log_dens=neg_log_dens,
+            metric_matrix_class=matrices.PositiveScaledIdentityMatrix,
+            metric_func=metric_scalar_func,
+            vjp_metric_func=vjp_metric_scalar_func,
+            grad_neg_log_dens=grad_neg_log_dens,
         )
 
     @cache_in_state("pos")
     def metric(self, state: ChainState) -> matrices.PositiveDefiniteMatrix:
         return self._metric_matrix_class(
-            self.metric_func(state), size=state.pos.shape[0]
+            self.metric_func(state),
+            size=state.pos.shape[0],
         )
 
 
@@ -1410,6 +1454,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
         self,
         neg_log_dens: ScalarFunction,
         metric_diagonal_func: ArrayFunction,
+        *,
         vjp_metric_diagonal_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -1427,7 +1472,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 another function which takes a 1D array as an argument and returns the
                 *vector-Jacobian-product* (VJP) of `metric_diagonal_func` with respect
                 to the position array argument. The VJP is here defined as a function of
-                a 1D array `v`
+                a 1D array `v`.
 
                 .. code-block::
 
@@ -1458,11 +1503,11 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens,
-            matrices.PositiveDiagonalMatrix,
-            metric_diagonal_func,
-            vjp_metric_diagonal_func,
-            grad_neg_log_dens,
+            neg_log_dens=neg_log_dens,
+            metric_matrix_class=matrices.PositiveDiagonalMatrix,
+            metric_func=metric_diagonal_func,
+            vjp_metric_func=vjp_metric_diagonal_func,
+            grad_neg_log_dens=grad_neg_log_dens,
         )
 
 
@@ -1482,6 +1527,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
         self,
         neg_log_dens: ScalarFunction,
         metric_chol_func: ArrayFunction,
+        *,
         vjp_metric_chol_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -1500,7 +1546,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 values in the array above the diagonal are ignored) and returns the
                 *vector-Jacobian-product* (VJP) of `metric_chol_func` with respect to
                 the position array argument. The VJP is here defined as a function of a
-                2D array `v`
+                2D array `v`.
 
                 .. code-block::
 
@@ -1531,11 +1577,11 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens,
-            matrices.TriangularFactoredPositiveDefiniteMatrix,
-            metric_chol_func,
-            vjp_metric_chol_func,
-            grad_neg_log_dens,
+            neg_log_dens=neg_log_dens,
+            metric_matrix_class=matrices.TriangularFactoredPositiveDefiniteMatrix,
+            metric_func=metric_chol_func,
+            vjp_metric_func=vjp_metric_chol_func,
+            grad_neg_log_dens=grad_neg_log_dens,
             metric_kwargs={"factor_is_lower": True},
         )
 
@@ -1556,6 +1602,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
         self,
         neg_log_dens: ScalarFunction,
         metric_func: ArrayFunction,
+        *,
         vjp_metric_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
     ):
@@ -1575,7 +1622,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 function which takes a 2D array as an argument and returns the
                 *vector-Jacobian-product* (VJP) of `metric_func` with respect to the
                 position array argument. The VJP is here defined as a function of a 2D
-                array `v`
+                array `v`.
 
                 .. code-block::
 
@@ -1605,11 +1652,11 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 derivative of `neg_log_dens` automatically.
         """
         super().__init__(
-            neg_log_dens,
-            matrices.DensePositiveDefiniteMatrix,
-            metric_func,
-            vjp_metric_func,
-            grad_neg_log_dens,
+            neg_log_dens=neg_log_dens,
+            metric_matrix_class=matrices.DensePositiveDefiniteMatrix,
+            metric_func=metric_func,
+            vjp_metric_func=vjp_metric_func,
+            grad_neg_log_dens=grad_neg_log_dens,
         )
 
 
@@ -1647,7 +1694,6 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     Riemannian-metric Hamiltonian systems.
 
     References:
-
       1. Betancourt, M., 2013. A general metric for Riemannian manifold Hamiltonian
          Monte Carlo. In Geometric science of information (pp. 327-334).
     """
@@ -1655,6 +1701,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     def __init__(
         self,
         neg_log_dens: ScalarFunction,
+        *,
         grad_neg_log_dens: Optional[GradientFunction] = None,
         hess_neg_log_dens: Optional[HessianFunction] = None,
         mtp_neg_log_dens: Optional[MatrixTressianProductFunction] = None,
@@ -1689,7 +1736,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 function which takes a 2D array (matrix) as an argument and returns the
                 *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the
                 position array argument. The MTP is here defined as a function of a
-                matrix `m` corresponding to
+                matrix `m` corresponding to.
 
                 .. code-block::
 
@@ -1717,7 +1764,10 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 becomes increasingly close to the absolute function.
         """
         self._hess_neg_log_dens = autodiff_fallback(
-            hess_neg_log_dens, neg_log_dens, "hessian_grad_and_value", "neg_log_dens"
+            hess_neg_log_dens,
+            neg_log_dens,
+            "hessian_grad_and_value",
+            "neg_log_dens",
         )
         self._mtp_neg_log_dens = autodiff_fallback(
             mtp_neg_log_dens,
@@ -1726,11 +1776,11 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
             "mtp_neg_log_dens",
         )
         super().__init__(
-            neg_log_dens,
-            matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
-            self._hess_neg_log_dens,
-            self._mtp_neg_log_dens,
-            grad_neg_log_dens,
+            neg_log_dens=neg_log_dens,
+            metric_matrix_class=matrices.SoftAbsRegularizedPositiveDefiniteMatrix,
+            metric_func=self._hess_neg_log_dens,
+            vjp_metric_func=self._mtp_neg_log_dens,
+            grad_neg_log_dens=grad_neg_log_dens,
             metric_kwargs={"softabs_coeff": softabs_coeff},
         )
 
@@ -1755,7 +1805,8 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         return self._hess_neg_log_dens(state.pos)
 
     @cache_in_state_with_aux(
-        "pos", ("hess_neg_log_dens", "grad_neg_log_dens", "neg_log_dens")
+        "pos",
+        ("hess_neg_log_dens", "grad_neg_log_dens", "neg_log_dens"),
     )
     def mtp_neg_log_dens(self, state: ChainState) -> MatrixTressianProduct:
         """Generate MTP of negative log density with respect to position.

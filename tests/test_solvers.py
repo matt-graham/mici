@@ -1,4 +1,4 @@
-from collections import namedtuple
+from typing import Callable, NamedTuple
 
 import numpy as np
 import pytest
@@ -12,11 +12,13 @@ def fixed_point_solver(request):
         return mici.solvers.solve_fixed_point_direct
     elif request.param == "steffensen":
         return mici.solvers.solve_fixed_point_steffensen
+    return None
 
 
-FixedPointProblem = namedtuple(
-    "FixedPointProblem", ("function", "fixed_point", "initial_point")
-)
+class FixedPointProblem(NamedTuple):
+    function: Callable
+    fixed_point: np.typing.ArrayLike
+    initial_point: np.typing.ArrayLike
 
 
 @pytest.fixture(params=("babylonian", "cosine", "ratio"))
@@ -29,8 +31,11 @@ def convergent_fixed_point_problem(request):
         return FixedPointProblem(lambda x: (x + y) / (x + 1), y**0.5, np.ones_like(y))
     elif request.param == "cosine":
         return FixedPointProblem(
-            lambda x: np.cos(x), np.array([0.7390851332151607]), np.array([1.0])
+            lambda x: np.cos(x),
+            np.array([0.7390851332151607]),
+            np.array([1.0]),
         )
+    return None
 
 
 @pytest.fixture(params=("doubling", "quadratic"))
@@ -39,6 +44,7 @@ def divergent_fixed_point_problem(request):
         return FixedPointProblem(lambda x: 2 * x, None, np.arange(3))
     elif request.param == "quadratic":
         return FixedPointProblem(lambda x: 1 + x**2, None, np.arange(3))
+    return None
 
 
 @pytest.fixture(params=(1e-6, 1e-8, 1e-10))
@@ -52,11 +58,15 @@ def norm(request):
         return mici.solvers.maximum_norm
     elif request.param == "euclidean":
         return mici.solvers.euclidean_norm
+    return None
 
 
-@pytest.mark.parametrize("convergence_tol", (1e-6, 1e-8, 1e-10))
+@pytest.mark.parametrize("convergence_tol", [1e-6, 1e-8, 1e-10])
 def test_fixed_point_solver_convergence(
-    fixed_point_solver, convergent_fixed_point_problem, convergence_tol, norm
+    fixed_point_solver,
+    convergent_fixed_point_problem,
+    convergence_tol,
+    norm,
 ):
     fixed_point = fixed_point_solver(
         func=convergent_fixed_point_problem.function,
@@ -70,7 +80,8 @@ def test_fixed_point_solver_convergence(
 
 
 def test_fixed_point_solver_divergence(
-    fixed_point_solver, divergent_fixed_point_problem
+    fixed_point_solver,
+    divergent_fixed_point_problem,
 ):
     with pytest.raises(mici.errors.ConvergenceError):
         fixed_point_solver(
@@ -81,7 +92,8 @@ def test_fixed_point_solver_divergence(
 
 
 def test_fixed_point_solver_max_iters_exceeded_convergence_error(
-    fixed_point_solver, convergent_fixed_point_problem
+    fixed_point_solver,
+    convergent_fixed_point_problem,
 ):
     with pytest.raises(mici.errors.ConvergenceError):
         fixed_point_solver(
@@ -93,16 +105,16 @@ def test_fixed_point_solver_max_iters_exceeded_convergence_error(
 
 
 def test_fixed_point_solver_handle_value_error(fixed_point_solver):
-    def func(x):
-        raise ValueError()
+    def func(_):
+        raise ValueError
 
     with pytest.raises(mici.errors.ConvergenceError):
         fixed_point_solver(func=func, x0=np.array([1.0]))
 
 
 def test_fixed_point_solver_handle_linalg_error(fixed_point_solver):
-    def func(x):
-        raise mici.errors.LinAlgError()
+    def func(_):
+        raise mici.errors.LinAlgError
 
     with pytest.raises(mici.errors.ConvergenceError):
         fixed_point_solver(func=func, x0=np.array([1.0]))

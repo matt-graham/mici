@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import queue
 import signal
 import tempfile
@@ -18,21 +17,27 @@ from numpy.random import default_rng
 
 from mici.adapters import DualAveragingStepSizeAdapter
 from mici.errors import AdaptationError
-from mici.progressbars import (DummyProgressBar, LabelledSequenceProgressBar,
-                               SequenceProgressBar, _ProxySequenceProgressBar)
+from mici.progressbars import (
+    DummyProgressBar,
+    LabelledSequenceProgressBar,
+    SequenceProgressBar,
+    _ProxySequenceProgressBar,
+)
 from mici.stagers import WarmUpStager, WindowedWarmUpStager
 from mici.states import ChainState
-from mici.transitions import (IndependentMomentumTransition,
-                              MetropolisRandomIntegrationTransition,
-                              MetropolisStaticIntegrationTransition,
-                              MultinomialDynamicIntegrationTransition,
-                              SliceDynamicIntegrationTransition,
-                              euclidean_no_u_turn_criterion,
-                              riemannian_no_u_turn_criterion)
+from mici.transitions import (
+    IndependentMomentumTransition,
+    MetropolisRandomIntegrationTransition,
+    MetropolisStaticIntegrationTransition,
+    MultinomialDynamicIntegrationTransition,
+    SliceDynamicIntegrationTransition,
+    euclidean_no_u_turn_criterion,
+    riemannian_no_u_turn_criterion,
+)
 
 if TYPE_CHECKING:
-    from typing import (Container, Generator, Iterable, Optional, Sequence,
-                        Union)
+    from collections.abc import Container, Generator, Iterable, Sequence
+    from typing import Optional, Union
 
     from numpy.typing import ArrayLike, DTypeLike, NDArray
 
@@ -41,10 +46,15 @@ if TYPE_CHECKING:
     from mici.progressbars import ProgressBar
     from mici.stagers import Stager
     from mici.systems import System
-    from mici.transitions import (IntegrationTransition, MomentumTransition,
-                                  Transition)
-    from mici.types import (AdapterState, ChainIterator, PyTree, ScalarLike,
-                            TerminationCriterion, TraceFunction)
+    from mici.transitions import IntegrationTransition, MomentumTransition, Transition
+    from mici.types import (
+        AdapterState,
+        ChainIterator,
+        PyTree,
+        ScalarLike,
+        TerminationCriterion,
+        TraceFunction,
+    )
 
 # Preferentially import from multiprocess library if available as able to
 # serialize much wider range of types including autograd functions
@@ -122,13 +132,15 @@ def _get_valid_filename(string: str) -> str:
 
 
 def _generate_memmap_filenames(
-    dir_path: str, prefix: str, key: str, indices: list[int]
+    dir_path: str,
+    prefix: str,
+    key: str,
+    indices: list[int],
 ) -> list[str]:
     """Generate new memory-map filenames."""
     key_str = _get_valid_filename(str(key))
-    return [
-        os.path.join(dir_path, f"{prefix}_{index}_{key_str}.npy") for index in indices
-    ]
+    dir_path = Path(dir_path)
+    return [dir_path / f"{prefix}_{index}_{key_str}.npy" for index in indices]
 
 
 def _open_new_memmap(
@@ -146,7 +158,7 @@ def _open_new_memmap(
             `dtype`.
         dtype: NumPy data-type for array.
 
-    Returns
+    Returns:
         Memory-mapped array object.
     """
     if isinstance(shape, int):
@@ -225,18 +237,21 @@ def _zip_dict(**kwargs) -> Generator[dict, None, None]:
 
 
 def _check_and_process_init_state(
-    state: Union[ChainState, dict], transitions: dict[str, Transition]
+    state: Union[ChainState, dict],
+    transitions: dict[str, Transition],
 ) -> ChainState:
     """Check initial chain state is valid and convert dict to ChainState."""
     for trans_key, transition in transitions.items():
         for var_key in transition.state_variables:
             if var_key not in state:
-                raise ValueError(
-                    f"init_state does contain have {var_key} value required by"
-                    f" {trans_key} transition."
+                msg = (
+                    f"init_state does contain have {var_key} value required by "
+                    f"{trans_key} transition."
                 )
+                raise ValueError(msg)
     if not isinstance(state, (ChainState, dict)):
-        raise TypeError("init_state should be a dictionary or ChainState.")
+        msg = "init_state should be a dictionary or ChainState."
+        raise TypeError(msg)
     return ChainState(**state) if isinstance(state, dict) else state
 
 
@@ -244,6 +259,7 @@ def _init_stats(
     transitions: dict[str, Transition],
     n_chain: int,
     n_iter: int,
+    *,
     use_memmap: bool,
     memmap_path: Union[str, Path],
 ) -> dict[str, dict[str, list[ArrayLike]]]:
@@ -257,7 +273,10 @@ def _init_stats(
                     stats[trans_key][key] = [
                         _open_new_memmap(filename, n_iter, val, dtype)
                         for filename in _generate_memmap_filenames(
-                            memmap_path, "stats", f"{trans_key}_{key}", range(n_chain)
+                            memmap_path,
+                            "stats",
+                            f"{trans_key}_{key}",
+                            range(n_chain),
                         )
                     ]
                 else:
@@ -269,6 +288,7 @@ def _init_traces(
     trace_funcs: TraceFunction,
     init_states: Sequence[ChainState],
     n_iter: int,
+    *,
     use_memmap: bool,
     memmap_path: Union[str, Path],
 ) -> dict[str, list[ArrayLike]]:
@@ -277,26 +297,30 @@ def _init_traces(
     n_chain = len(init_states)
     for trace_func in trace_funcs:
         for key, val in trace_func(init_states[0]).items():
-            val = np.array(val) if np.isscalar(val) else val
-            init = np.nan if np.issubdtype(val.dtype, np.inexact) else 0
+            array_val = np.array(val) if np.isscalar(val) else val
+            init = np.nan if np.issubdtype(array_val.dtype, np.inexact) else 0
             if use_memmap:
                 traces[key] = [
-                    _open_new_memmap(filename, (n_iter,) + val.shape, init, val.dtype)
+                    _open_new_memmap(
+                        filename,
+                        (n_iter, *array_val.shape),
+                        init,
+                        array_val.dtype,
+                    )
                     for filename in _generate_memmap_filenames(
-                        memmap_path, "trace", key, range(n_chain)
+                        memmap_path,
+                        "trace",
+                        key,
+                        range(n_chain),
                     )
                 ]
             else:
                 traces[key] = list(
                     np.full(
-                        (
-                            n_chain,
-                            n_iter,
-                        )
-                        + val.shape,
+                        (n_chain, n_iter, *array_val.shape),
                         init,
-                        val.dtype,
-                    )
+                        array_val.dtype,
+                    ),
                 )
     return traces
 
@@ -341,11 +365,12 @@ def _update_monitor_stats(
         for stats_key in monitor_stats[trans_key]:
             try:
                 val = trans_stats[stats_key]
-            except KeyError:
-                raise KeyError(
+            except KeyError as e:
+                msg = (
                     f"Monitored statistics key {stats_key} is not present in "
                     f"statistics returned by transition {trans_key}."
                 )
+                raise KeyError(msg) from e
             if stats_key not in monitor_dict:
                 monitor_dict[stats_key] = val
             else:
@@ -353,7 +378,8 @@ def _update_monitor_stats(
 
 
 def _flush_memmap_chain_data(
-    chain_traces: dict[str, ArrayLike], chain_stats: dict[str, dict[str, ArrayLike]]
+    chain_traces: dict[str, ArrayLike],
+    chain_stats: dict[str, dict[str, ArrayLike]],
 ):
     """Flush all pending writes to memory-mapped chain data arrays to disk."""
     if chain_traces is not None:
@@ -372,6 +398,7 @@ def _sample_chain(
     chain_iterator: ChainIterator,
     rng: Generator,
     transitions: dict[str, Transition],
+    *,
     trace_funcs: Optional[Sequence[TraceFunction]] = None,
     chain_traces: Optional[dict[str, Union[ArrayLike, str, Path]]] = None,
     chain_stats: Optional[dict[str, dict[str, Union[ArrayLike, str, Path]]]] = None,
@@ -464,12 +491,12 @@ def _sample_chain(
                 adapter_states[trans_key] = []
                 for adapter in adapter_list:
                     adapter_states[trans_key].append(
-                        adapter.initialize(state, transitions[trans_key])
+                        adapter.initialize(state, transitions[trans_key]),
                     )
     except AdaptationError as exception:
         logger.error(
             f"Initialisation of {type(adapter).__name__} for chain "
-            f"{chain_index + 1} failed: {exception}"
+            f"{chain_index + 1} failed: {exception}",
         )
         return state, adapter_states, exception
     try:
@@ -480,10 +507,14 @@ def _sample_chain(
                     state, trans_stats = transition.sample(state, rng)
                     if adapters is not None and trans_key in adapters:
                         for adapter, adapter_state in zip(
-                            adapters[trans_key], adapter_states[trans_key]
+                            adapters[trans_key],
+                            adapter_states[trans_key],
                         ):
                             adapter.update(
-                                adapter_state, state, trans_stats, transition
+                                adapter_state,
+                                state,
+                                trans_stats,
+                                transition,
                             )
                     if chain_stats is not None:
                         _update_chain_stats(
@@ -494,7 +525,10 @@ def _sample_chain(
                         )
                     if monitor_stats is not None:
                         _update_monitor_stats(
-                            monitor_stats, monitor_dict, trans_key, trans_stats
+                            monitor_stats,
+                            monitor_dict,
+                            trans_key,
+                            trans_stats,
                         )
                 if chain_traces is not None and trace_funcs is not None:
                     for trace_func in trace_funcs:
@@ -507,7 +541,7 @@ def _sample_chain(
         logger.error(
             f"Sampling manually interrupted for chain {chain_index + 1} at"
             f" iteration {sample_index}. Arrays containing chain traces and"
-            f" statistics computed before interruption will be returned."
+            f" statistics computed before interruption will be returned.",
         )
     else:
         exception = None
@@ -518,7 +552,7 @@ def _sample_chain(
 
 
 def _collate_chain_outputs(
-    chain_outputs: list[tuple[ChainState, dict[str, list[AdapterState]]]]
+    chain_outputs: list[tuple[ChainState, dict[str, list[AdapterState]]]],
 ) -> tuple[list[ChainState], dict[str, list[list[AdapterState]]]]:
     """Unzip list of tuples of chain outputs in to tuple of stacked outputs."""
     final_states_stack = []
@@ -553,7 +587,8 @@ def _get_per_chain_rngs(base_rng: Generator, n_chain: int) -> list[Generator]:
         seed_sequence = bit_generator._seed_seq
         return [default_rng(seed) for seed in seed_sequence.spawn(n_chain)]
     else:
-        raise ValueError(f"Unsupported random number generator type {type(base_rng)}.")
+        msg = f"Unsupported random number generator type {type(base_rng)}."
+        raise ValueError(msg)
 
 
 def _sample_chains_sequential(
@@ -565,7 +600,7 @@ def _sample_chains_sequential(
     chain_outputs = []
     exception = None
     for chain_index, (chain_iterator, chain_kwargs) in enumerate(
-        zip(chain_iterators, per_chain_kwargs)
+        zip(chain_iterators, per_chain_kwargs),
     ):
         *outputs, exception = _sample_chain(
             chain_iterator=chain_iterator,
@@ -585,7 +620,9 @@ def _sample_chains_sequential(
 
 
 def _sample_chains_worker(
-    chain_queue: Queue, iter_queue: Queue, common_kwargs
+    chain_queue: Queue,
+    iter_queue: Queue,
+    common_kwargs,
 ) -> list[tuple[int, tuple[ChainState, dict[str, list[AdapterState]]]]]:
     """Worker process function for parallel sampling of chains.
 
@@ -606,7 +643,9 @@ def _sample_chains_worker(
                 *outputs, exception = _sample_chain(
                     chain_index=chain_index,
                     chain_iterator=_ProxySequenceProgressBar(
-                        range(n_iter), chain_index, iter_queue
+                        range(n_iter),
+                        chain_index,
+                        iter_queue,
                     ),
                     load_memmaps=True,
                     **chain_kwargs,
@@ -627,10 +666,11 @@ def _sample_chains_worker(
                 break
         except queue.Empty:
             pass
-        except Exception as exception:
+        except Exception as exception:  # noqa: BLE001
             # Log exception here so that correct traceback is logged
             logger.error(
-                "Exception encountered in chain worker process:", exc_info=exception
+                "Exception encountered in chain worker process:",
+                exc_info=exception,
             )
             # Put exception on iteration queue to be reraised in parent process
             iter_queue.put(exception)
@@ -666,10 +706,10 @@ def _sample_chains_parallel(
                 # Map memmaps to their filepaths prior to putting on argument queue to
                 # avoid serializing potentially large memory mapped arrays
                 chain_kwargs["chain_stats"] = _memmaps_to_file_paths(
-                    chain_kwargs["chain_stats"]
+                    chain_kwargs["chain_stats"],
                 )
                 chain_kwargs["chain_traces"] = _memmaps_to_file_paths(
-                    chain_kwargs["chain_traces"]
+                    chain_kwargs["chain_traces"],
                 )
                 chain_queue.put((c, n_iter, chain_kwargs))
             # Start n_process worker processes which each have access to the
@@ -707,9 +747,8 @@ def _sample_chains_parallel(
                         break
                     # Re raise any other exception passed from worker processes
                     elif isinstance(iter_queue_item, Exception):
-                        raise RuntimeError(
-                            "Unhandled exception in chain worker process."
-                        ) from iter_queue_item
+                        msg = "Unhandled exception in chain worker process."
+                        raise RuntimeError(msg) from iter_queue_item
                     else:
                         # Otherwise unpack and update progress bar
                         chain_index, sample_index, data_dict = iter_queue_item
@@ -720,22 +759,20 @@ def _sample_chains_parallel(
             if not MULTIPROCESS_AVAILABLE and (
                 isinstance(e, PicklingError) or "pickle" in str(e)
             ):
-                raise RuntimeError(
-                    "Error encountered while trying to run chains on multiple"
-                    "processes in parallel. The inbuilt multiprocessing module"
-                    " uses pickle to communicate between processes and pickle "
-                    "does support pickling anonymous or nested functions. If "
-                    "you use anonymous or nested functions in your model "
-                    "functions or are using autograd to automatically compute "
-                    "derivatives (autograd uses anonymous and nested "
-                    "functions) then installing the Python package "
-                    "multiprocess, which is able to serialise anonymous and "
-                    "nested functions and will be used in preference to "
-                    "multiprocessing by this package when available, may "
-                    "resolve this error."
-                ) from e
-            else:
-                raise e
+                msg = (
+                    "Error encountered while trying to run chains on multipleprocesses "
+                    "in parallel. The inbuilt multiprocessing module uses pickle to "
+                    "communicate between processes and pickle does support pickling "
+                    "anonymous or nested functions. If you use anonymous or nested "
+                    "functions in your model functions or are using autograd to "
+                    "automatically compute derivatives (autograd uses anonymous and "
+                    "nested functions) then installing the Python package "
+                    "multiprocess, which is able to serialise anonymous and nested "
+                    "functions and will be used in preference to multiprocessing by "
+                    "this package when available, may resolve this error."
+                )
+                raise RuntimeError(msg) from e
+            raise e
         except KeyboardInterrupt as e:
             # Interrupts handled in child processes therefore ignore here
             exception = e
@@ -801,6 +838,7 @@ class MarkovChainMonteCarloMethod:
                 "deprecated. Please use a numpy.random.Generator instance "
                 "instead for example from a call to numpy.random.default_rng.",
                 DeprecationWarning,
+                stacklevel=2,
             )
             rng = np.random.Generator(rng._bit_generator)
         self._rng = rng
@@ -834,7 +872,7 @@ class MarkovChainMonteCarloMethod:
         display_progress: bool = True,
         progress_bar_class: Optional[ProgressBar] = None,
     ) -> MCMCSampleChainsOutputs:
-        """Sample Markov chains from given initial states with optional adaptive warm up
+        """Sample Markov chains from initial states with optional adaptive warm up.
 
         One or more Markov chains are sampled, with each chain iteration consisting of
         one or more Markov transitions. The chains are split into multiple *stages* with
@@ -955,22 +993,26 @@ class MarkovChainMonteCarloMethod:
                 None
                 if trace_funcs is None or len(trace_funcs) == 0
                 else _init_traces(
-                    trace_funcs, init_states, n_trace_iter, use_memmap, memmap_path
+                    trace_funcs,
+                    init_states,
+                    n_trace_iter,
+                    use_memmap=use_memmap,
+                    memmap_path=memmap_path,
                 )
             )
             stats = _init_stats(
                 self.transitions,
                 n_chain,
                 n_trace_iter,
-                use_memmap,
-                memmap_path,
+                use_memmap=use_memmap,
+                memmap_path=memmap_path,
             )
             per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
             per_chain_traces = (
                 [None] * n_chain if traces is None else list(_zip_dict(**traces))
             )
             per_chain_stats = list(
-                _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()})
+                _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()}),
             )
             common_kwargs = {
                 "transitions": self.transitions,
@@ -993,15 +1035,24 @@ class MarkovChainMonteCarloMethod:
                 else:
                     stager = WindowedWarmUpStager()
             sampling_stages = stager.stages(
-                n_warm_up_iter, n_main_iter, adapters, trace_funcs, trace_warm_up
+                n_warm_up_iter,
+                n_main_iter,
+                adapters,
+                trace_funcs,
+                trace_warm_up=trace_warm_up,
             )
             chain_states = init_states
             sampling_index_offset = 0
             with LabelledSequenceProgressBar(
-                sampling_stages, "Sampling stage", position=(0, n_chain + 1)
+                sampling_stages,
+                "Sampling stage",
+                position=(0, n_chain + 1),
             ) as sampling_stages_pb:
                 chain_iterators = _construct_chain_iterators(
-                    1, progress_bar_class, n_chain, 1
+                    1,
+                    progress_bar_class,
+                    n_chain,
+                    1,
                 )
                 for stage, _ in sampling_stages_pb:
                     for chain_it in chain_iterators:
@@ -1088,7 +1139,6 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
     of the momentum variables from their conditional distribution.
 
     References:
-
       1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
          Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.
       2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
@@ -1136,16 +1186,16 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
         return self._system
 
     def _preprocess_init_state(
-        self, init_state: Union[NDArray, ChainState, dict]
+        self,
+        init_state: Union[NDArray, ChainState, dict],
     ) -> ChainState:
         """Make sure initial state is a ChainState and has momentum."""
         if isinstance(init_state, np.ndarray):
             # If array use to set position component of new ChainState
             init_state = ChainState(pos=init_state, mom=None, dir=1)
         elif not isinstance(init_state, ChainState) or "mom" not in init_state:
-            raise TypeError(
-                "init_state should be an array or `ChainState` with " "`mom` attribute."
-            )
+            msg = "init_state should be an array or `ChainState` with `mom` attribute."
+            raise TypeError(msg)
         if init_state.mom is None:
             init_state.mom = self.system.sample_momentum(init_state, self.rng)
         return init_state
@@ -1196,7 +1246,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 conditional distribution. One chain will be run for each state in the
                 iterable.
 
-        Keyword args:
+        Keyword Args:
             trace_funcs: Sequence of functions which compute the variables to be
                 recorded at each chain iteration (during only the main non-adaptive
                 sampling stage if `trace_warm_up` is False), with each trace function
@@ -1279,7 +1329,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
         if "monitor_stats" in kwargs:
             if kwargs["monitor_stats"] is not None:
                 kwargs["monitor_stats"] = {
-                    "integration_transition": kwargs["monitor_stats"]
+                    "integration_transition": kwargs["monitor_stats"],
                 }
         else:
             kwargs["monitor_stats"] = {"integration_transition": ["accept_stat"]}
@@ -1288,7 +1338,10 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
         if "adapters" in kwargs and kwargs["adapters"] is not None:
             kwargs["adapters"] = {"integration_transition": kwargs["adapters"]}
         final_states, traces, stats = super().sample_chains(
-            n_warm_up_iter, n_main_iter, init_states, **kwargs
+            n_warm_up_iter,
+            n_main_iter,
+            init_states,
+            **kwargs,
         )
         stats = stats.get("integration_transition", {})
         return HMCSampleChainsOutputs(final_states, traces, stats)
@@ -1312,7 +1365,6 @@ class StaticMetropolisHMC(HamiltonianMonteCarlo):
     Monte Carlo) algorithm [1, 2].
 
     References:
-
       1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.
          Hybrid Monte Carlo. Physics letters B, 195(2), pp.216-222.
       2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
@@ -1343,7 +1395,9 @@ class StaticMetropolisHMC(HamiltonianMonteCarlo):
                 independently samples the momentum from its conditional distribution.
         """
         integration_transition = MetropolisStaticIntegrationTransition(
-            system, integrator, n_step
+            system=system,
+            integrator=integrator,
+            n_step=n_step,
         )
         super().__init__(system, rng, integration_transition, momentum_transition)
 
@@ -1354,7 +1408,9 @@ class StaticMetropolisHMC(HamiltonianMonteCarlo):
 
     @n_step.setter
     def n_step(self, value: int):
-        assert value > 0, "n_step must be non-negative"
+        if value <= 0:
+            msg = "n_step must be non-negative"
+            raise ValueError(msg)
         self.transitions["integration_transition"].n_step = value
 
 
@@ -1378,7 +1434,6 @@ class RandomMetropolisHMC(HamiltonianMonteCarlo):
     periodic systems [1, 2].
 
     References:
-
       1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.
          Handbook of Markov Chain Monte Carlo, 2(11), p.2.
       2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method.
@@ -1412,7 +1467,9 @@ class RandomMetropolisHMC(HamiltonianMonteCarlo):
                 independently samples the momentum from its conditional distribution.
         """
         integration_transition = MetropolisRandomIntegrationTransition(
-            system, integrator, n_step_range
+            system=system,
+            integrator=integrator,
+            n_step_range=n_step_range,
         )
         super().__init__(system, rng, integration_transition, momentum_transition)
 
@@ -1424,9 +1481,9 @@ class RandomMetropolisHMC(HamiltonianMonteCarlo):
     @n_step_range.setter
     def n_step_range(self, value: tuple[int, int]):
         n_step_lower, n_step_upper = value
-        assert (
-            n_step_lower > 0 and n_step_lower < n_step_upper
-        ), "Range bounds must be non-negative and first entry less than last"
+        if not (n_step_lower > 0 and n_step_lower < n_step_upper):
+            msg = "Range bounds must be non-negative and first entry less than last."
+            raise ValueError(msg)
         self.transitions["integration_transition"].n_step_range = value
 
 
@@ -1447,7 +1504,6 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
     [Stan](https://mc-stan.org/) as of version v2.23.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -1460,6 +1516,7 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
         system: System,
         integrator: Integrator,
         rng: Generator,
+        *,
         max_tree_depth: int = 10,
         max_delta_h: float = 1000,
         termination_criterion: TerminationCriterion = riemannian_no_u_turn_criterion,
@@ -1507,12 +1564,12 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
                 independently samples the momentum from its conditional distribution.
         """
         integration_transition = MultinomialDynamicIntegrationTransition(
-            system,
-            integrator,
-            max_tree_depth,
-            max_delta_h,
-            termination_criterion,
-            do_extra_subtree_checks,
+            system=system,
+            integrator=integrator,
+            max_tree_depth=max_tree_depth,
+            max_delta_h=max_delta_h,
+            termination_criterion=termination_criterion,
+            do_extra_subtree_checks=do_extra_subtree_checks,
         )
         super().__init__(system, rng, integration_transition, momentum_transition)
 
@@ -1523,7 +1580,9 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
 
     @max_tree_depth.setter
     def max_tree_depth(self, value: int):
-        assert value > 0, "max_tree_depth must be non-negative"
+        if value <= 0:
+            msg = "max_tree_depth must be non-negative"
+            raise ValueError(msg)
         self.transitions["integration_transition"].max_tree_depth = value
 
     @property
@@ -1552,7 +1611,6 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
     algorithm.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:
          adaptively setting path lengths in Hamiltonian Monte Carlo.
          Journal of Machine Learning Research, 15(1), pp.1593-1623.
@@ -1563,6 +1621,7 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
         system: System,
         integrator: Integrator,
         rng: Generator,
+        *,
         max_tree_depth: int = 10,
         max_delta_h: float = 1000.0,
         termination_criterion: TerminationCriterion = euclidean_no_u_turn_criterion,
@@ -1610,12 +1669,12 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
                 independently samples the momentum from its conditional distribution.
         """
         integration_transition = SliceDynamicIntegrationTransition(
-            system,
-            integrator,
-            max_tree_depth,
-            max_delta_h,
-            termination_criterion,
-            do_extra_subtree_checks,
+            system=system,
+            integrator=integrator,
+            max_tree_depth=max_tree_depth,
+            max_delta_h=max_delta_h,
+            termination_criterion=termination_criterion,
+            do_extra_subtree_checks=do_extra_subtree_checks,
         )
         super().__init__(system, rng, integration_transition, momentum_transition)
 
@@ -1626,7 +1685,9 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
 
     @max_tree_depth.setter
     def max_tree_depth(self, value: int):
-        assert value > 0, "max_tree_depth must be non-negative"
+        if value <= 0:
+            msg = "max_tree_depth must be non-negative"
+            raise ValueError(msg)
         self.transitions["integration_transition"].max_tree_depth = value
 
     @property

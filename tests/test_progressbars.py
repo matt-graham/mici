@@ -26,7 +26,7 @@ def test_stats_runnin_means():
         "SequenceProgressBar",
         "LabelledSequenceProgressBar",
         "_ProxySequenceProgressBar",
-    )
+    ),
 )
 def progress_bar_and_sequence(request):
     if request.param == "LabelledSequenceProgressBar":
@@ -49,6 +49,7 @@ def progress_bar_and_sequence(request):
                 mici.progressbars._ProxySequenceProgressBar(sequence, 0, SimpleQueue()),
                 sequence,
             )
+        return None
 
 
 def test_progress_bar_len(progress_bar_and_sequence):

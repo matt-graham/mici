@@ -1,5 +1,5 @@
 from copy import copy, deepcopy
-from functools import partial, reduce, wraps
+from functools import reduce
 from itertools import product
 
 import numpy as np
@@ -8,7 +8,7 @@ import numpy.testing as npt
 import pytest
 import scipy.linalg as sla
 
-import mici.matrices as matrices
+from mici import matrices
 
 AUTOGRAD_AVAILABLE = True
 try:
@@ -19,7 +19,7 @@ except ImportError:
     AUTOGRAD_AVAILABLE = False
     import warnings
 
-    warnings.warn("Autograd not available. Skipping gradient tests.")
+    warnings.warn("Autograd not available. Skipping gradient tests.", stacklevel=2)
 
 SEED = 3046987125
 NUM_SCALAR = 2
@@ -27,7 +27,7 @@ SIZES = {1, 10}
 ATOL = 1e-10
 
 
-@pytest.fixture
+@pytest.fixture()
 def rng():
     return np.random.default_rng(SEED)
 
@@ -37,12 +37,12 @@ def size(request):
     return request.param
 
 
-@pytest.fixture
+@pytest.fixture()
 def shape_0(size):
     return size
 
 
-@pytest.fixture
+@pytest.fixture()
 def shape_1(size):
     return size
 
@@ -65,24 +65,24 @@ def scalar(rng, request):
     return request.param * np.abs(rng.standard_normal())
 
 
-@pytest.fixture
+@pytest.fixture()
 def matrix(matrix_pair):
     return matrix_pair[0]
 
 
-@pytest.fixture
+@pytest.fixture()
 def np_matrix(matrix_pair):
     return matrix_pair[1]
 
 
-@pytest.fixture
+@pytest.fixture()
 def vector(rng, shape_0):
     return rng.standard_normal(shape_0)
 
 
 class MatrixTests:
     def test_self_equality(self, matrix):
-        assert matrix == matrix
+        assert matrix == matrix  # noqa: PLR0124
 
     def test_hashable(self, matrix):
         assert hash(matrix) == hash(matrix)
@@ -98,7 +98,7 @@ class MatrixTests:
         assert hash(matrix) == hash(matrix_copy)
 
     def test_shape(self, matrix, np_matrix):
-        assert matrix.shape == (None, None) or matrix.shape == np_matrix.shape
+        assert matrix.shape in {(None, None), np_matrix.shape}
 
     def test_lmult(self, matrix, np_matrix, postmultiplier):
         npt.assert_allclose(matrix @ postmultiplier, np_matrix @ postmultiplier)
@@ -117,27 +117,32 @@ class MatrixTests:
 
     def test_lmult_scalar_lmult(self, matrix, np_matrix, scalar, postmultiplier):
         npt.assert_allclose(
-            (scalar * matrix) @ postmultiplier, scalar * np_matrix @ postmultiplier
+            (scalar * matrix) @ postmultiplier,
+            scalar * np_matrix @ postmultiplier,
         )
 
     def test_rdiv_scalar_lmult(self, matrix, np_matrix, scalar, postmultiplier):
         npt.assert_allclose(
-            (matrix / scalar) @ postmultiplier, (np_matrix / scalar) @ postmultiplier
+            (matrix / scalar) @ postmultiplier,
+            (np_matrix / scalar) @ postmultiplier,
         )
 
     def test_rmult_scalar_lmult(self, matrix, np_matrix, scalar, postmultiplier):
         npt.assert_allclose(
-            (matrix * scalar) @ postmultiplier, (np_matrix * scalar) @ postmultiplier
+            (matrix * scalar) @ postmultiplier,
+            (np_matrix * scalar) @ postmultiplier,
         )
 
     def test_lmult_scalar_rmult(self, matrix, np_matrix, scalar, premultiplier):
         npt.assert_allclose(
-            premultiplier @ (scalar * matrix), premultiplier @ (scalar * np_matrix)
+            premultiplier @ (scalar * matrix),
+            premultiplier @ (scalar * np_matrix),
         )
 
     def test_rmult_scalar_rmult(self, matrix, np_matrix, scalar, premultiplier):
         npt.assert_allclose(
-            premultiplier @ (matrix * scalar), premultiplier @ (np_matrix * scalar)
+            premultiplier @ (matrix * scalar),
+            premultiplier @ (np_matrix * scalar),
         )
 
     def test_invalid_scalar_mult(self, matrix):
@@ -221,7 +226,8 @@ class SymmetricMatrixTests(SquareMatrixTests):
 
 
 class ExplicitShapeSymmetricMatrixTests(
-    SymmetricMatrixTests, ExplicitShapeSquareMatrixTests
+    SymmetricMatrixTests,
+    ExplicitShapeSquareMatrixTests,
 ):
     def test_symmetry_array(self, matrix, np_matrix):
         npt.assert_allclose(matrix.array, matrix.T.array)
@@ -242,12 +248,14 @@ class ExplicitShapeSymmetricMatrixTests(
 class InvertibleMatrixTests(MatrixTests):
     def test_lmult_inv(self, matrix, np_matrix, postmultiplier):
         npt.assert_allclose(
-            matrix.inv @ postmultiplier, nla.solve(np_matrix, postmultiplier)
+            matrix.inv @ postmultiplier,
+            nla.solve(np_matrix, postmultiplier),
         )
 
     def test_rmult_inv(self, matrix, np_matrix, premultiplier):
         npt.assert_allclose(
-            premultiplier @ matrix.inv, nla.solve(np_matrix.T, premultiplier.T).T
+            premultiplier @ matrix.inv,
+            nla.solve(np_matrix.T, premultiplier.T).T,
         )
 
     def test_lmult_scalar_inv_lmult(self, matrix, np_matrix, scalar, postmultiplier):
@@ -264,12 +272,14 @@ class InvertibleMatrixTests(MatrixTests):
 
     def test_quadratic_form_inv(self, matrix, np_matrix, vector):
         npt.assert_allclose(
-            vector @ matrix.inv @ vector, vector @ nla.solve(np_matrix, vector)
+            vector @ matrix.inv @ vector,
+            vector @ nla.solve(np_matrix, vector),
         )
 
 
 class ExplicitShapeInvertibleMatrixTests(
-    ExplicitShapeSquareMatrixTests, InvertibleMatrixTests
+    ExplicitShapeSquareMatrixTests,
+    InvertibleMatrixTests,
 ):
     def test_array_inv(self, matrix, np_matrix):
         npt.assert_allclose(matrix.inv.array, nla.inv(np_matrix), atol=ATOL)
@@ -279,7 +289,9 @@ class ExplicitShapeInvertibleMatrixTests(
 
     def test_log_abs_det_inv(self, matrix, np_matrix):
         npt.assert_allclose(
-            matrix.inv.log_abs_det, -nla.slogdet(np_matrix)[1], atol=ATOL
+            matrix.inv.log_abs_det,
+            -nla.slogdet(np_matrix)[1],
+            atol=ATOL,
         )
 
 
@@ -289,12 +301,14 @@ class PositiveDefiniteMatrixTests(SymmetricMatrixTests, InvertibleMatrixTests):
 
     def test_lmult_sqrt(self, matrix, np_matrix, postmultiplier):
         npt.assert_allclose(
-            matrix.sqrt @ (matrix.sqrt.T @ postmultiplier), np_matrix @ postmultiplier
+            matrix.sqrt @ (matrix.sqrt.T @ postmultiplier),
+            np_matrix @ postmultiplier,
         )
 
     def test_rmult_sqrt(self, matrix, np_matrix, premultiplier):
         npt.assert_allclose(
-            (premultiplier @ matrix.sqrt) @ matrix.sqrt.T, premultiplier @ np_matrix
+            (premultiplier @ matrix.sqrt) @ matrix.sqrt.T,
+            premultiplier @ np_matrix,
         )
 
     def test_inv_is_posdef(self, matrix, np_matrix):
@@ -316,18 +330,18 @@ class ExplicitShapePositiveDefiniteMatrixTests(
 class DifferentiableMatrixTests(MatrixTests):
     if AUTOGRAD_AVAILABLE:
 
-        @pytest.fixture
+        @pytest.fixture()
         def grad_log_abs_det(self, matrix):
             param = self.get_param(matrix)
             return grad(lambda p: anp.linalg.slogdet(self.param_func(p, matrix))[1])(
-                param
+                param,
             )
 
-        @pytest.fixture
+        @pytest.fixture()
         def grad_quadratic_form_inv(self, matrix):
             param = self.get_param(matrix)
             return lambda v: grad(
-                lambda p: v @ anp.linalg.solve(self.param_func(p, matrix), v)
+                lambda p: v @ anp.linalg.solve(self.param_func(p, matrix), v),
             )(param)
 
         def test_grad_log_abs_det(self, matrix, grad_log_abs_det):
@@ -346,26 +360,26 @@ class DifferentiableMatrixTests(MatrixTests):
 
 
 class TestImplicitIdentityMatrix(SymmetricMatrixTests, InvertibleMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, size):
         return matrices.IdentityMatrix(None), np.identity(size)
 
 
 class TestIdentityMatrix(ExplicitShapePositiveDefiniteMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, size):
         return matrices.IdentityMatrix(size), np.identity(size)
 
 
 class TestImplicitScaledIdentityMatrix(InvertibleMatrixTests, SymmetricMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         scalar = rng.normal()
         return (matrices.ScaledIdentityMatrix(scalar, None), scalar * np.identity(size))
 
 
 class DifferentiableScaledIdentityMatrixTests(DifferentiableMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         scalar = self.generate_scalar(rng)
         return self.matrix_class(scalar, size), scalar * np.identity(size)
@@ -392,7 +406,8 @@ class TestScaledIdentityMatrix(
 
 
 class TestPositiveScaledIdentityMatrix(
-    DifferentiableScaledIdentityMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
+    DifferentiableScaledIdentityMatrixTests,
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
     matrix_class = matrices.PositiveScaledIdentityMatrix
 
@@ -402,13 +417,13 @@ class TestPositiveScaledIdentityMatrix(
 
 
 class DifferentiableDiagonalMatrixTests(DifferentiableMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         diagonal = self.generate_diagonal(size, rng)
         return self.matrix_class(diagonal), np.diag(diagonal)
 
     @staticmethod
-    def param_func(param, matrix):
+    def param_func(param, _matrix):
         return anp.diag(param)
 
     @staticmethod
@@ -429,7 +444,8 @@ class TestDiagonalMatrix(
 
 
 class TestPositiveDiagonalMatrix(
-    DifferentiableDiagonalMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
+    DifferentiableDiagonalMatrixTests,
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
     matrix_class = matrices.PositiveDiagonalMatrix
 
@@ -444,7 +460,7 @@ class TestTriangularMatrix(ExplicitShapeInvertibleMatrixTests):
         lower = request.param
         array = rng.standard_normal((size, size))
         tri_array = np.tril(array) if lower else np.triu(array)
-        return matrices.TriangularMatrix(tri_array, lower), tri_array
+        return matrices.TriangularMatrix(tri_array, lower=lower), tri_array
 
 
 class TestInverseTriangularMatrix(ExplicitShapeInvertibleMatrixTests):
@@ -454,7 +470,7 @@ class TestInverseTriangularMatrix(ExplicitShapeInvertibleMatrixTests):
         array = rng.standard_normal((size, size))
         inv_tri_array = np.tril(array) if lower else np.triu(array)
         return (
-            matrices.InverseTriangularMatrix(inv_tri_array, lower),
+            matrices.InverseTriangularMatrix(inv_tri_array, lower=lower),
             nla.inv(inv_tri_array),
         )
 
@@ -466,7 +482,7 @@ class DifferentiableTriangularFactoredDefiniteMatrixTests(DifferentiableMatrixTe
         array = rng.standard_normal((size, size))
         tri_array = sla.cholesky(array @ array.T, factor_is_lower)
         return (
-            self.matrix_class(tri_array, sign, factor_is_lower),
+            self.matrix_class(tri_array, sign, factor_is_lower=factor_is_lower),
             sign * tri_array @ tri_array.T,
         )
 
@@ -497,25 +513,26 @@ class TestTriangularFactoredPositiveDefiniteMatrix(
     ExplicitShapePositiveDefiniteMatrixTests,
 ):
     @staticmethod
-    def matrix_class(factor, sign, factor_is_lower):
+    def matrix_class(factor, _sign, factor_is_lower):
         return matrices.TriangularFactoredPositiveDefiniteMatrix(
-            factor, factor_is_lower
+            factor,
+            factor_is_lower=factor_is_lower,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def sign(self):
         return 1
 
 
 class DifferentiableDenseDefiniteMatrixTests(DifferentiableMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, sign):
         sqrt_array = rng.standard_normal((size, size))
         array = sign * sqrt_array @ sqrt_array.T
         return self.matrix_class(array, is_posdef=(sign == 1)), array
 
     @staticmethod
-    def param_func(param, matrix):
+    def param_func(param, _matrix):
         return param
 
     @staticmethod
@@ -536,25 +553,27 @@ class TestDenseDefiniteMatrix(
 
 
 class TestDensePositiveDefiniteMatrix(
-    DifferentiableDenseDefiniteMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
+    DifferentiableDenseDefiniteMatrixTests,
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
     @staticmethod
     def matrix_class(array, is_posdef):
         return matrices.DensePositiveDefiniteMatrix(array)
 
-    @pytest.fixture
+    @pytest.fixture()
     def sign(self):
         return 1
 
 
 class TestDensePositiveDefiniteProductMatrix(
-    DifferentiableMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
+    DifferentiableMatrixTests,
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
     @pytest.fixture(params=(lambda s: s + 1, lambda s: s * 2))
     def size_inner(self, size, request):
         return request.param(size)
 
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, size_inner):
         rect_matrix = rng.standard_normal((size, size_inner))
         pos_def_matrix = rng.standard_normal((size_inner, size_inner))
@@ -575,7 +594,7 @@ class TestDensePositiveDefiniteProductMatrix(
 
 
 class TestDenseSquareMatrix(ExplicitShapeInvertibleMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         array = rng.standard_normal((size, size))
         return matrices.DenseSquareMatrix(array), array
@@ -587,21 +606,24 @@ class TestInverseLUFactoredSquareMatrix(ExplicitShapeInvertibleMatrixTests):
         transposed = request.param
         inverse_array = rng.standard_normal((size, size))
         inverse_lu_and_piv = sla.lu_factor(
-            inverse_array.T if transposed else inverse_array
+            inverse_array.T if transposed else inverse_array,
         )
         array = nla.inv(inverse_array)
         return (
             matrices.InverseLUFactoredSquareMatrix(
-                inverse_array, inverse_lu_and_piv, transposed
+                inverse_array,
+                inv_lu_and_piv=inverse_lu_and_piv,
+                inv_lu_transposed=transposed,
             ),
             array,
         )
 
 
 class TestDenseSymmetricMatrix(
-    ExplicitShapeInvertibleMatrixTests, ExplicitShapeSymmetricMatrixTests
+    ExplicitShapeInvertibleMatrixTests,
+    ExplicitShapeSymmetricMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         array = rng.standard_normal((size, size))
         array = array + array.T
@@ -609,14 +631,14 @@ class TestDenseSymmetricMatrix(
 
 
 class TestOrthogonalMatrix(ExplicitShapeInvertibleMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         array = nla.qr(rng.standard_normal((size, size)))[0]
         return matrices.OrthogonalMatrix(array), array
 
 
 class TestScaledOrthogonalMatrix(ExplicitShapeInvertibleMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         orth_array = nla.qr(rng.standard_normal((size, size)))[0]
         scalar = rng.standard_normal()
@@ -627,9 +649,10 @@ class TestScaledOrthogonalMatrix(ExplicitShapeInvertibleMatrixTests):
 
 
 class TestEigendecomposedSymmetricMatrix(
-    ExplicitShapeInvertibleMatrixTests, ExplicitShapeSymmetricMatrixTests
+    ExplicitShapeInvertibleMatrixTests,
+    ExplicitShapeSymmetricMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         eigvec = nla.qr(rng.standard_normal((size, size)))[0]
         eigval = rng.standard_normal(size)
@@ -640,9 +663,9 @@ class TestEigendecomposedSymmetricMatrix(
 
 
 class TestEigendecomposedPositiveDefiniteMatrix(
-    ExplicitShapePositiveDefiniteMatrixTests
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size):
         eigvec = nla.qr(rng.standard_normal((size, size)))[0]
         eigval = np.abs(rng.standard_normal(size))
@@ -653,7 +676,8 @@ class TestEigendecomposedPositiveDefiniteMatrix(
 
 
 class TestSoftAbsRegularizedPositiveDefiniteMatrix(
-    DifferentiableMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
+    DifferentiableMatrixTests,
+    ExplicitShapePositiveDefiniteMatrixTests,
 ):
     @pytest.fixture(params=(0.5, 1.0, 1.5))
     def matrix_pair(self, rng, size, request):
@@ -687,7 +711,7 @@ class TestMatrixProduct(ExplicitShapeMatrixTests):
         n_terms, explicit = request.param
         arrays = [
             rng.standard_normal(
-                (size if t % 2 == 0 else 2 * size, 2 * size if t % 2 == 0 else size)
+                (size if t % 2 == 0 else 2 * size, 2 * size if t % 2 == 0 else size),
             )
             for t in range(n_terms)
         ]
@@ -705,7 +729,7 @@ class TestSquareMatrixProduct(ExplicitShapeSquareMatrixTests):
         n_terms = request.param
         arrays = [rng.standard_normal((size, size)) for _ in range(n_terms)]
         matrix = matrices.SquareMatrixProduct(
-            [matrices.DenseSquareMatrix(a) for a in arrays]
+            [matrices.DenseSquareMatrix(a) for a in arrays],
         )
         return matrix, nla.multi_dot(arrays)
 
@@ -728,17 +752,17 @@ class InvertibleBlockMatrixTests(ExplicitShapeInvertibleMatrixTests):
     def n_block(self, request):
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture()
     def shape_0(self, size, n_block):
         return size * n_block
 
-    @pytest.fixture
+    @pytest.fixture()
     def shape_1(self, size, n_block):
         return size * n_block
 
 
 class TestSquareBlockDiagonalMatrix(InvertibleBlockMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, n_block):
         arrays = [rng.standard_normal((size, size)) for _ in range(n_block)]
         return (
@@ -750,30 +774,16 @@ class TestSquareBlockDiagonalMatrix(InvertibleBlockMatrixTests):
 
 
 class TestSymmetricBlockDiagonalMatrix(
-    InvertibleBlockMatrixTests, ExplicitShapeSymmetricMatrixTests
+    InvertibleBlockMatrixTests,
+    ExplicitShapeSymmetricMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, n_block):
         arrays = [rng.standard_normal((size, size)) for _ in range(n_block)]
         arrays = [arr + arr.T for arr in arrays]
         return (
             matrices.SymmetricBlockDiagonalMatrix(
                 matrices.DenseSymmetricMatrix(arr) for arr in arrays
-            ),
-            sla.block_diag(*arrays),
-        )
-
-
-class TestPositiveDefiniteBlockDiagonalMatrix(
-    InvertibleBlockMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
-):
-    @pytest.fixture
-    def matrix_pair(self, rng, size, n_block):
-        arrays = [rng.standard_normal((size, size)) for _ in range(n_block)]
-        arrays = [arr @ arr.T for arr in arrays]
-        return (
-            matrices.PositiveDefiniteBlockDiagonalMatrix(
-                matrices.DensePositiveDefiniteMatrix(arr) for arr in arrays
             ),
             sla.block_diag(*arrays),
         )
@@ -786,7 +796,7 @@ if AUTOGRAD_AVAILABLE:
     def block_diag(blocks):
         return sla.block_diag(*blocks)
 
-    def vjp_block_diag(ans, blocks):
+    def vjp_block_diag(_ans, blocks):
         blocks = tuple(blocks)
 
         def vjp(g):
@@ -808,7 +818,7 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
     DifferentiableMatrixTests,
     ExplicitShapePositiveDefiniteMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, n_block):
         arrays = [rng.standard_normal((size, size)) for _ in range(n_block)]
         arrays = [arr @ arr.T for arr in arrays]
@@ -824,7 +834,7 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
         return tuple(block.array for block in matrix._blocks)
 
     @staticmethod
-    def param_func(param, matrix):
+    def param_func(param, _matrix):
         return block_diag(param)
 
 
@@ -833,7 +843,7 @@ class TestDenseRectangularMatrix(ExplicitShapeMatrixTests):
     def shape_1(self, request):
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, shape_0, shape_1):
         array = rng.standard_normal((shape_0, shape_1))
         return matrices.DenseRectangularMatrix(array), array
@@ -844,11 +854,11 @@ class TestBlockRowMatrix(ExplicitShapeMatrixTests):
     def n_block(self, request):
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture()
     def shape_1(self, size, n_block):
         return size * n_block
 
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, n_block):
         blocks = [rng.standard_normal((size, size)) for _ in range(n_block)]
         return (
@@ -864,11 +874,11 @@ class TestBlockColumnMatrix(ExplicitShapeMatrixTests):
     def n_block(self, request):
         return request.param
 
-    @pytest.fixture
+    @pytest.fixture()
     def shape_0(self, size, n_block):
         return size * n_block
 
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, n_block):
         blocks = [rng.standard_normal((size, size)) for _ in range(n_block)]
         return (
@@ -881,14 +891,14 @@ class TestBlockColumnMatrix(ExplicitShapeMatrixTests):
 
 class SquareLowRankUpdateMatrixTests(ExplicitShapeSquareMatrixTests):
     @pytest.fixture(
-        params=(lambda size: max(1, size // 2), lambda size: max(1, size - 1))
+        params=(lambda size: max(1, size // 2), lambda size: max(1, size - 1)),
     )
     def size_inner(self, size, request):
         return request.param(size)
 
 
 class TestSquareLowRankUpdateMatrix(SquareLowRankUpdateMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, size_inner):
         left_factor_matrix = rng.standard_normal((size, size_inner))
         right_factor_matrix = rng.standard_normal((size_inner, size))
@@ -907,7 +917,7 @@ class TestSquareLowRankUpdateMatrix(SquareLowRankUpdateMatrixTests):
 
 
 class TestNoInnerMatrixSquareLowRankUpdateMatrix(SquareLowRankUpdateMatrixTests):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, size_inner):
         left_factor_matrix = rng.standard_normal((size, size_inner))
         right_factor_matrix = rng.standard_normal((size_inner, size))
@@ -923,9 +933,10 @@ class TestNoInnerMatrixSquareLowRankUpdateMatrix(SquareLowRankUpdateMatrixTests)
 
 
 class TestSymmetricLowRankUpdateMatrix(
-    ExplicitShapeSymmetricMatrixTests, SquareLowRankUpdateMatrixTests
+    ExplicitShapeSymmetricMatrixTests,
+    SquareLowRankUpdateMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, size_inner):
         factor_matrix = rng.standard_normal((size, size_inner))
         inner_symmetric_matrix = rng.standard_normal((size_inner, size_inner))
@@ -948,7 +959,7 @@ class TestPositiveDefiniteLowRankUpdateMatrix(
     DifferentiableMatrixTests,
     ExplicitShapePositiveDefiniteMatrixTests,
 ):
-    @pytest.fixture
+    @pytest.fixture()
     def matrix_pair(self, rng, size, size_inner):
         factor_matrix = rng.standard_normal((size, size_inner))
         inner_pos_def_matrix = rng.standard_normal((size_inner, size_inner))

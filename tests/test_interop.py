@@ -1,3 +1,5 @@
+import importlib
+
 import numpy as np
 import pytest
 
@@ -6,7 +8,7 @@ import mici
 try:
     import arviz
 
-    ARVIZ_AVAILABLE = True
+    ARVIZ_AVAILABLE = importlib.util.find_spec("arviz") is not None
 except ImportError:
     ARVIZ_AVAILABLE = False
 
@@ -19,7 +21,7 @@ except ImportError:
 
 
 try:
-    import stan
+    import stan  # noqa: F401
 
     STAN_AVAILABLE = True
 except ImportError:
@@ -31,7 +33,7 @@ NUM_CHAIN = 2
 NUM_SAMPLE = 10
 
 
-@pytest.fixture
+@pytest.fixture()
 def rng():
     return np.random.default_rng(SEED)
 
@@ -52,7 +54,8 @@ if ARVIZ_AVAILABLE:
         inference_data = mici.interop.convert_to_inference_data(traces, stats)
         assert isinstance(inference_data, arviz.InferenceData)
         groups = inference_data.groups()
-        assert "posterior" in groups and "sample_stats" in groups
+        assert "posterior" in groups
+        assert "sample_stats" in groups
         for group in groups:
             assert inference_data[group].coords["chain"].size == NUM_CHAIN
             assert inference_data[group].coords["draw"].size == NUM_SAMPLE
@@ -67,15 +70,15 @@ if ARVIZ_AVAILABLE:
 
 if PYMC_AVAILABLE:
 
-    @pytest.fixture
+    @pytest.fixture()
     def pymc_model():
         with pymc.Model() as model:
             pymc.Normal("x", mu=0, sigma=1)
             pymc.Uniform("y", lower=0, upper=1)
         return model
 
-    @pytest.mark.parametrize("init", ("adapt_diag", "jitter+adapt_diag", "adapt_full"))
-    @pytest.mark.parametrize("progressbar", (True, False))
+    @pytest.mark.parametrize("init", ["adapt_diag", "jitter+adapt_diag", "adapt_full"])
+    @pytest.mark.parametrize("progressbar", [True, False])
     def test_sample_pymc_model(pymc_model, init, progressbar):
         traces = mici.interop.sample_pymc_model(
             model=pymc_model,
@@ -113,7 +116,7 @@ if PYMC_AVAILABLE:
 
 if STAN_AVAILABLE:
 
-    @pytest.fixture
+    @pytest.fixture()
     def stan_model_code_data_and_params():
         model_code = """
         parameters {
@@ -127,8 +130,8 @@ if STAN_AVAILABLE:
         """
         return model_code, {}, {"x", "y"}
 
-    @pytest.mark.parametrize("metric", ("unit_e", "diag_e", "dense_e"))
-    @pytest.mark.parametrize("adapt_engaged", (True, False))
+    @pytest.mark.parametrize("metric", ["unit_e", "diag_e", "dense_e"])
+    @pytest.mark.parametrize("adapt_engaged", [True, False])
     def test_sample_stan_model(stan_model_code_data_and_params, metric, adapt_engaged):
         model_code, data, params = stan_model_code_data_and_params
         traces = mici.interop.sample_stan_model(

@@ -97,18 +97,20 @@ class LogRepFloat:
     def __init__(self, val: Optional[float] = None, log_val: Optional[float] = None):
         if log_val is None:
             if val is None:
-                raise ValueError("One of val or log_val must be specified.")
-            elif val > 0:
+                msg = "One of val or log_val must be specified."
+                raise ValueError(msg)
+            if val > 0:
                 self.log_val = log(val)
             elif val == 0.0:
                 self.log_val = -inf
             else:
-                raise ValueError("val must be non-negative.")
+                msg = "val must be non-negative."
+                raise ValueError(msg)
         else:
             if val is not None:
-                raise ValueError("Specify only one of val and log_val.")
-            else:
-                self.log_val = log_val
+                msg = "Specify only one of val and log_val."
+                raise ValueError(msg)
+            self.log_val = log_val
 
     @property
     def val(self) -> float:
@@ -126,7 +128,7 @@ class LogRepFloat:
     def __radd__(self, other: ScalarLike) -> ScalarLike:
         return self.__add__(other)
 
-    def __iadd__(self, other: ScalarLike) -> ScalarLike:
+    def __iadd__(self, other: ScalarLike):
         if other == 0:
             return self
         elif isinstance(other, LogRepFloat):
@@ -208,7 +210,7 @@ class LogRepFloat:
         return str(self.val)
 
     def __repr__(self) -> str:
-        return "LogRepFloat(val={0})".format(self.val)
+        return f"LogRepFloat(val={self.val})"
 
     def __array__(self) -> np.ndarray:
         return np.array(self.val)

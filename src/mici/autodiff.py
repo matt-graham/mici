@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import mici.autograd_wrapper as autograd_wrapper
+from mici import autograd_wrapper
 
 if TYPE_CHECKING:
     from typing import Callable, Optional
@@ -33,7 +33,10 @@ DIFF_OPS = [
 
 
 def autodiff_fallback(
-    diff_func: Optional[Callable], func: Callable, diff_op_name: str, name: str
+    diff_func: Optional[Callable],
+    func: Callable,
+    diff_op_name: str,
+    name: str,
 ) -> Callable:
     """Generate derivative function automatically if not provided.
 
@@ -57,8 +60,11 @@ def autodiff_fallback(
     if diff_func is not None:
         return diff_func
     elif diff_op_name not in DIFF_OPS:
-        raise ValueError(f"Differential operator {diff_op_name} is not defined.")
+        msg = f"Differential operator {diff_op_name} is not defined."
+        raise ValueError(msg)
     elif autograd_wrapper.AUTOGRAD_AVAILABLE:
         return getattr(autograd_wrapper, diff_op_name)(func)
     elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
-        raise ValueError(f"Autograd not available therefore {name} must be provided.")
+        msg = f"Autograd not available therefore {name} must be provided."
+        raise ValueError(msg)
+    return None

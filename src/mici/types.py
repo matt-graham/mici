@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Collection, Iterable, TypeVar, Union
+from collections.abc import Collection, Iterable
+from typing import Any, Callable, TypeVar, Union
 
 from numpy import number
 from numpy.typing import ArrayLike
@@ -27,7 +28,8 @@ ArrayFunction = Callable[[ArrayLike], ArrayLike]
 
 GradientFunction = Callable[[ArrayLike], Union[ArrayLike, tuple[ArrayLike, ScalarLike]]]
 HessianFunction = Callable[
-    [ArrayLike], Union[ArrayLike, tuple[ArrayLike, ArrayLike, ScalarLike]]
+    [ArrayLike],
+    Union[ArrayLike, tuple[ArrayLike, ArrayLike, ScalarLike]],
 ]
 MatrixTressianProduct = Callable[[ArrayLike], ArrayLike]
 MatrixTressianProductFunction = Callable[
@@ -42,12 +44,14 @@ MatrixHessianProduct = Callable[[ArrayLike], ArrayLike]
 MatrixHessianProductFunction = Callable[
     [ArrayLike],
     Union[
-        MatrixHessianProduct, tuple[Union[MatrixHessianProduct, ArrayLike, ArrayLike]]
+        MatrixHessianProduct,
+        tuple[MatrixHessianProduct, ArrayLike, ArrayLike],
     ],
 ]
 VectorJacobianProduct = Callable[[ArrayLike], ArrayLike]
 VectorJacobianProductFunction = Callable[
-    [ArrayLike], Union[VectorJacobianProduct, tuple[VectorJacobianProduct, ArrayLike]]
+    [ArrayLike],
+    Union[VectorJacobianProduct, tuple[VectorJacobianProduct, ArrayLike]],
 ]
 
 T = TypeVar("T")

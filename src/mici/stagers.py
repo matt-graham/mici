@@ -6,7 +6,8 @@ import abc
 from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
-    from typing import Iterable, Optional
+    from collections.abc import Iterable
+    from typing import Optional
 
     from mici.adapters import Adapter
     from mici.types import TraceFunction
@@ -38,6 +39,7 @@ class Stager(abc.ABC):
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
         trace_funcs: Iterable[TraceFunction],
+        *,
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
         """Create dictionary specifying labels and parameters of chain sampling stages.
@@ -100,9 +102,10 @@ class WarmUpStager(Stager):
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
         trace_funcs: Iterable[TraceFunction],
+        *,
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
-        sampling_stages = dict()
+        sampling_stages = {}
         trace_funcs = tuple(trace_funcs) if trace_funcs is not None else trace_funcs
         # adaptive warm up stage
         if n_warm_up_iter > 0:
@@ -197,6 +200,7 @@ class WindowedWarmUpStager(Stager):
         n_main_iter: int,
         adapters: dict[str, Iterable[Adapter]],
         trace_funcs: Iterable[TraceFunction],
+        *,
         trace_warm_up: bool = False,
     ) -> dict[str, ChainStage]:
         trace_funcs = tuple(trace_funcs) if trace_funcs is not None else trace_funcs
@@ -218,7 +222,7 @@ class WindowedWarmUpStager(Stager):
             n_init_slow_window_iter = self.n_init_slow_window_iter
             n_init_fast_stage_iter = self.n_init_fast_stage_iter
             n_final_fast_stage_iter = self.n_final_fast_stage_iter
-        sampling_stages = dict()
+        sampling_stages = {}
         # adaptive warm-up stages
         if n_warm_up_iter > 0:
             warm_up_trace_funcs = trace_funcs if trace_warm_up else None
@@ -243,7 +247,7 @@ class WindowedWarmUpStager(Stager):
                 # of iterations in current window to be equal to all remaining warm up
                 # iterations
                 counter_next = counter + int(
-                    (1 + self.slow_window_multiplier) * n_window_iter
+                    (1 + self.slow_window_multiplier) * n_window_iter,
                 )
                 if counter_next > n_slow_stage_iter:
                     n_window_iter = n_slow_stage_iter - counter

@@ -10,8 +10,10 @@ from mici.errors import ConvergenceError, LinAlgError
 
 if TYPE_CHECKING:
     from mici.states import ChainState
-    from mici.systems import (ConstrainedEuclideanMetricSystem,
-                              ConstrainedTractableFlowSystem)
+    from mici.systems import (
+        ConstrainedEuclideanMetricSystem,
+        ConstrainedTractableFlowSystem,
+    )
     from mici.types import ArrayFunction, ArrayLike, ScalarFunction
 
 
@@ -74,21 +76,20 @@ def solve_fixed_point_direct(
             x = func(x0)
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
-                raise ConvergenceError(
+                msg = (
                     f"Fixed point iteration diverged on iteration {i}. "
                     f"Last error={error:.1e}."
                 )
+                raise ConvergenceError(msg)
             if error < convergence_tol:
                 return x
             x0 = x
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
-            raise ConvergenceError(
-                f"{type(e)} at iteration {i} of fixed point solver ({e})."
-            )
-    raise ConvergenceError(
-        f"Fixed point iteration did not converge. Last error={error:.1e}."
-    )
+            msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
+            raise ConvergenceError(msg) from e
+    msg = f"Fixed point iteration did not converge. Last error={error:.1e}."
+    raise ConvergenceError(msg)
 
 
 def solve_fixed_point_steffensen(
@@ -135,21 +136,20 @@ def solve_fixed_point_steffensen(
             x = x0 - (x1 - x0) ** 2 / denom
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
-                raise ConvergenceError(
+                msg = (
                     f"Fixed point iteration diverged on iteration {i}. "
                     f"Last error={error:.1e}."
                 )
+                raise ConvergenceError(msg)
             if error < convergence_tol:
                 return x
             x0 = x
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
-            raise ConvergenceError(
-                f"{type(e)} at iteration {i} of fixed point solver ({e})."
-            )
-    raise ConvergenceError(
-        f"Fixed point iteration did not converge. Last error={error:.1e}."
-    )
+            msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
+            raise ConvergenceError(msg) from e
+    msg = f"Fixed point iteration did not converge. Last error={error:.1e}."
+    raise ConvergenceError(msg)
 
 
 class ProjectionSolver(Protocol):
@@ -306,10 +306,12 @@ def solve_projection_onto_manifold_quasi_newton(
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
-        state_prev, abs(time_step)
+        state_prev,
+        abs(time_step),
     )
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
-        jacob_constr_prev, dh2_flow_pos_dmom
+        jacob_constr_prev,
+        dh2_flow_pos_dmom,
     ).inv
     for i in range(max_iters):
         try:
@@ -318,25 +320,25 @@ def solve_projection_onto_manifold_quasi_newton(
             delta_mu = jacob_constr_prev.T @ (inv_jacob_constr_inner_product @ constr)
             delta_pos = dh2_flow_pos_dmom @ delta_mu
             if error > divergence_tol or np.isnan(error):
-                raise ConvergenceError(
+                msg = (
                     f"Quasi-Newton solver diverged on iteration {i}. "
-                    f"Last |constr|={error:.1e}, "
-                    f"|delta_pos|={norm(delta_pos):.1e}."
+                    f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos):.1e}."
                 )
-            elif error < constraint_tol and norm(delta_pos) < position_tol:
+                raise ConvergenceError(msg)
+            if error < constraint_tol and norm(delta_pos) < position_tol:
                 state.mom -= np.sign(time_step) * dh2_flow_mom_dmom @ mu
                 return state
             mu += delta_mu
             state.pos -= delta_pos
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
-            raise ConvergenceError(
-                f"{type(e)} at iteration {i} of quasi-Newton solver ({e})."
-            )
-    raise ConvergenceError(
+            msg = f"{type(e)} at iteration {i} of quasi-Newton solver ({e})."
+            raise ConvergenceError(msg) from e
+    msg = (
         f"Quasi-Newton solver did not converge with {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
     )
+    raise ConvergenceError(msg)
 
 
 def solve_projection_onto_manifold_newton(
@@ -426,7 +428,8 @@ def solve_projection_onto_manifold_newton(
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
-        state_prev, abs(time_step)
+        state_prev,
+        abs(time_step),
     )
     for i in range(max_iters):
         try:
@@ -435,17 +438,19 @@ def solve_projection_onto_manifold_newton(
             error = norm(constr)
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(
-                    jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev
+                    jacob_constr,
+                    dh2_flow_pos_dmom,
+                    jacob_constr_prev,
                 ).inv
                 @ constr
             )
             delta_pos = dh2_flow_pos_dmom @ delta_mu
             if error > divergence_tol or np.isnan(error):
-                raise ConvergenceError(
+                msg = (
                     f"Newton solver diverged at iteration {i}. "
-                    f"Last |constr|={error:.1e}, "
-                    f"|delta_pos|={norm(delta_pos):.1e}."
+                    f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos):.1e}."
                 )
+                raise ConvergenceError(msg)
             if error < constraint_tol and norm(delta_pos) < position_tol:
                 state.mom -= np.sign(time_step) * dh2_flow_mom_dmom @ mu
                 return state
@@ -453,13 +458,13 @@ def solve_projection_onto_manifold_newton(
             state.pos -= delta_pos
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
-            raise ConvergenceError(
-                f"{type(e)} at iteration {i} of Newton solver ({e})."
-            )
-    raise ConvergenceError(
+            msg = f"{type(e)} at iteration {i} of Newton solver ({e})."
+            raise ConvergenceError(msg) from e
+    msg = (
         f"Newton solver did not converge in {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
     )
+    raise ConvergenceError(msg)
 
 
 def solve_projection_onto_manifold_newton_with_line_search(
@@ -557,7 +562,8 @@ def solve_projection_onto_manifold_newton_with_line_search(
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
     dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
-        state_prev, abs(time_step)
+        state_prev,
+        abs(time_step),
     )
     # Initialize with dummy values to avoid undefined name linter errors
     delta_pos, step_size = None, None
@@ -567,11 +573,11 @@ def solve_projection_onto_manifold_newton_with_line_search(
             constr = system.constr(state)
             error = norm(constr)
             if i > 0 and (error > divergence_tol or np.isnan(error)):
-                raise ConvergenceError(
+                msg = (
                     f"Newton solver diverged at iteration {i}. "
-                    f"Last |constr|={error:.1e}, "
-                    f"|delta_pos|={norm(delta_pos):.1e}."
+                    f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos):.1e}."
                 )
+                raise ConvergenceError(msg)
             if error < constraint_tol and (
                 i == 0 or norm(step_size * delta_pos) < position_tol
             ):
@@ -579,7 +585,9 @@ def solve_projection_onto_manifold_newton_with_line_search(
                 return state
             delta_mu = jacob_constr_prev.T @ (
                 system.jacob_constr_inner_product(
-                    jacob_constr, dh2_flow_pos_dmom, jacob_constr_prev
+                    jacob_constr,
+                    dh2_flow_pos_dmom,
+                    jacob_constr_prev,
                 ).inv
                 @ constr
             )
@@ -595,10 +603,10 @@ def solve_projection_onto_manifold_newton_with_line_search(
             mu += step_size * delta_mu
         except (ValueError, LinAlgError) as e:
             # Make robust to errors in intermediate linear algebra ops
-            raise ConvergenceError(
-                f"{type(e)} at iteration {i} of Newton solver ({e})."
-            )
-    raise ConvergenceError(
+            msg = f"{type(e)} at iteration {i} of Newton solver ({e})."
+            raise ConvergenceError(msg) from e
+    msg = (
         f"Newton solver did not converge in {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(step_size * delta_pos)}."
     )
+    raise ConvergenceError(msg)

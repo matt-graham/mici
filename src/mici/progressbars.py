@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import html
+import importlib
 import sys
 from timeit import default_timer as timer
 from typing import TYPE_CHECKING
@@ -16,16 +17,16 @@ try:
 except ImportError:
     IPYTHON_AVAILABLE = False
 
-try:
-    import google.colab
-
-    ON_COLAB = True
-except ImportError:
-    ON_COLAB = False
-
 if TYPE_CHECKING:
+    from collections.abc import Collection, Generator
     from queue import Queue
-    from typing import Any, Collection, Generator, Optional, TextIO
+    from typing import Any, Optional, TextIO
+
+
+ON_COLAB = (
+    importlib.util.find_spec("google") is not None
+    and importlib.util.find_spec("google.colab") is not None
+)
 
 
 def _in_zmq_interactive_shell() -> bool:
@@ -66,7 +67,7 @@ def _create_display(obj, position: tuple[int, int]):
 
 
 def _format_time(total_seconds: float) -> str:
-    """Format a time interval in seconds as a colon-delimited string [h:]m:s"""
+    """Format a time interval in seconds as a colon-delimited string [h:]m:s."""
     total_mins, seconds = divmod(int(total_seconds), 60)
     hours, mins = divmod(total_mins, 60)
     if hours != 0:
@@ -76,14 +77,16 @@ def _format_time(total_seconds: float) -> str:
 
 
 def _update_stats_running_means(
-    iter: int, means: dict[str, float], new_vals: dict[str, float]
+    iter_: int,
+    means: dict[str, float],
+    new_vals: dict[str, float],
 ):
     """Update dictionary of running statistics means with latest values."""
-    if iter == 1:
+    if iter_ == 1:
         means.update({key: float(val) for key, val in new_vals.items()})
     else:
         for key, val in new_vals.items():
-            means[key] += (float(val) - means[key]) / iter
+            means[key] += (float(val) - means[key]) / iter_
 
 
 class ProgressBar(abc.ABC):
@@ -118,10 +121,10 @@ class ProgressBar(abc.ABC):
     @sequence.setter
     def sequence(self, value: Collection):
         if self._active:
-            raise RuntimeError("Cannot set sequence of active progress bar.")
-        else:
-            self._sequence = value
-            self._n_iter = len(value)
+            msg = "Cannot set sequence of active progress bar."
+            raise RuntimeError(msg)
+        self._sequence = value
+        self._n_iter = len(value)
 
     @property
     def n_iter(self) -> int:
@@ -141,6 +144,7 @@ class ProgressBar(abc.ABC):
         self,
         iter_count: int,
         iter_dict: Optional[dict[str, float]],
+        *,
         refresh: bool = True,
     ):
         """Update progress bar state.
@@ -152,7 +156,7 @@ class ProgressBar(abc.ABC):
             refresh: Whether to refresh display(s).
         """
 
-    def __enter__(self) -> ProgressBar:
+    def __enter__(self):
         """Set up progress bar and any associated resource."""
         self._active = True
         return self
@@ -170,6 +174,7 @@ class DummyProgressBar(ProgressBar):
         self,
         iter_count: int,
         iter_dict: Optional[dict[str, float]],
+        *,
         refresh: bool = True,
     ):
         pass
@@ -358,9 +363,10 @@ class SequenceProgressBar(ProgressBar):
         self,
         iter_count: int,
         iter_dict: Optional[dict[str, float]] = None,
+        *,
         refresh: bool = True,
     ):
-        """Update progress bar state
+        """Update progress bar state.
 
         Args:
             iter_count: New value for iteration counter.
@@ -421,7 +427,7 @@ class SequenceProgressBar(ProgressBar):
         </div>
         """
 
-    def __enter__(self) -> SequenceProgressBar:
+    def __enter__(self):
         super().__enter__()
         self.reset()
         if self._displays is None:
@@ -503,7 +509,8 @@ class LabelledSequenceProgressBar(ProgressBar):
         return [
             f"{label} [{_format_time(time)}]"
             for label, time in zip(
-                self._labels[: self._counter], self._iter_times[: self._counter]
+                self._labels[: self._counter],
+                self._iter_times[: self._counter],
             )
         ]
 
@@ -536,9 +543,10 @@ class LabelledSequenceProgressBar(ProgressBar):
         self,
         iter_count: int,
         iter_dict: Optional[dict[str, float]] = None,
+        *,
         refresh: bool = True,
     ):
-        """Update progress bar state
+        """Update progress bar state.
 
         Args:
             iter_count: New value for iteration counter.
@@ -591,7 +599,9 @@ class LabelledSequenceProgressBar(ProgressBar):
         """
         for label in self.completed_labels:
             html_string += template_string.format(
-                label=label, foreground_color="white", background_color="#4caf50"
+                label=label,
+                foreground_color="white",
+                background_color="#4caf50",
             )
         if self.counter != self.n_iter:
             html_string += template_string.format(
@@ -601,7 +611,9 @@ class LabelledSequenceProgressBar(ProgressBar):
             )
         for label in self.unstarted_labels:
             html_string += template_string.format(
-                label=label, foreground_color="#aaa", background_color="white"
+                label=label,
+                foreground_color="#aaa",
+                background_color="white",
             )
         if self.postfix != "":
             html_string += f"""
@@ -614,7 +626,7 @@ class LabelledSequenceProgressBar(ProgressBar):
         html_string += "</div>"
         return html_string
 
-    def __enter__(self) -> LabelledSequenceProgressBar:
+    def __enter__(self):
         super().__enter__()
         self.reset()
         if self._displays is None:
@@ -630,7 +642,7 @@ class LabelledSequenceProgressBar(ProgressBar):
 
 
 class FileDisplay:
-    """Use file which supports ANSI escape sequences as an updatable display"""
+    """Use file which supports ANSI escape sequences as an updatable display."""
 
     CURSOR_UP = "\x1b[A"
     """ANSI escape sequence to move cursor up one line."""
@@ -639,15 +651,17 @@ class FileDisplay:
     """ANSI escape sequence to move cursor down one line."""
 
     def __init__(
-        self, position: tuple[int, int] = (0, 1), file: Optional[TextIO] = None
+        self,
+        position: tuple[int, int] = (0, 1),
+        file: Optional[TextIO] = None,
     ):
-        """
+        r"""
         Args:
             position: Tuple specifying position of display line within a sequence lines
                 with first entry corresponding to zero-indexed line and the second entry
                 the total number of lines.
             file: File object to write updates to. Must support ANSI escape sequences
-                `\\x1b[A}` (cursor up) and `\\x1b[B` (cursor down) for manipulating
+                `\x1b[A}` (cursor up) and `\\x1b[B` (cursor down) for manipulating
                 write position. Defaults to `sys.stdout` if `None`.
         """
         self._position = position
@@ -699,7 +713,7 @@ class _ProxySequenceProgressBar:
     def __len__(self) -> int:
         return self._n_iter
 
-    def __enter__(self) -> _ProxySequenceProgressBar:
+    def __enter__(self):
         self._iter_queue.put((self._job_id, 0, None))
         return self
 

@@ -8,8 +8,13 @@ from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 
-from mici.errors import (ConvergenceError, Error, HamiltonianDivergenceError,
-                         IntegratorError, NonReversibleStepError)
+from mici.errors import (
+    ConvergenceError,
+    Error,
+    HamiltonianDivergenceError,
+    IntegratorError,
+    NonReversibleStepError,
+)
 from mici.utils import LogRepFloat
 
 if TYPE_CHECKING:
@@ -65,7 +70,9 @@ class Transition(ABC):
 
     @abstractmethod
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         """Sample a new chain state from the Markov transition kernel.
 
@@ -101,7 +108,9 @@ class MomentumTransition(Transition):
 
     @abstractmethod
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         """Sample a new momentum component to state.
 
@@ -127,7 +136,9 @@ class IndependentMomentumTransition(MomentumTransition):
     """
 
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         state.mom = self.system.sample_momentum(state, rng)
         return state, None
@@ -157,7 +168,6 @@ class CorrelatedMomentumTransition(MomentumTransition):
     post update momentums.
 
     References:
-
       1. Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. Phys. Lett.
          B, 268(CERN-TH-6172-91), pp.247-252.
     """
@@ -171,13 +181,15 @@ class CorrelatedMomentumTransition(MomentumTransition):
                 coefficient.
         """
         super().__init__(system)
-        assert (
-            mom_resample_coeff >= 0 and mom_resample_coeff <= 1
-        ), "mom_resample_coeff should have a value in the interval [0, 1]."
+        if not (mom_resample_coeff >= 0 and mom_resample_coeff <= 1):
+            msg = "mom_resample_coeff should have a value in the interval [0, 1]."
+            raise ValueError(msg)
         self.mom_resample_coeff = mom_resample_coeff
 
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         if state.mom is None or self.mom_resample_coeff == 1:
             state.mom = self.system.sample_momentum(state, rng)
@@ -223,7 +235,9 @@ class IntegrationTransition(Transition):
 
     @abstractmethod
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         """Sample a position-momentum pair using integration based proposal(s).
 
@@ -261,7 +275,10 @@ class MetropolisIntegrationTransition(IntegrationTransition):
         self._statistic_types["metrop_accept_prob"] = (np.float64, np.nan)
 
     def _sample_n_step(
-        self, state: ChainState, n_step: int, rng: Generator
+        self,
+        state: ChainState,
+        n_step: int,
+        rng: Generator,
     ) -> tuple[ChainState, dict[str, ScalarLike]]:
         h_init = self.system.h(state)
         state_p = state
@@ -272,11 +289,11 @@ class MetropolisIntegrationTransition(IntegrationTransition):
             "step_size": self.integrator.step_size,
         }
         try:
-            for s in range(n_step):
+            for _s in range(n_step):
                 state_p = self.integrator.step(state_p)
         except IntegratorError as e:
             integration_error = True
-            stats["n_step"] = s
+            stats["n_step"] = _s
             _process_integrator_error(e, stats)
         else:
             stats["n_step"] = n_step
@@ -307,7 +324,6 @@ class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
     (often now instead termed Hamiltonian Monte Carlo) algorithm [1,2].
 
     References:
-
       1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte
          Carlo. Physics letters B, 195(2), pp.216-222.
       2. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
@@ -323,11 +339,15 @@ class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
             n_step: Number of integrator steps to simulate in each transition.
         """
         super().__init__(system, integrator)
-        assert n_step > 0, "Number of integrator steps must be positive"
+        if n_step <= 0:
+            msg = "Number of integrator steps must be positive."
+            raise ValueError(msg)
         self.n_step = n_step
 
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         return self._sample_n_step(state, self.n_step, rng)
 
@@ -342,7 +362,6 @@ class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
     using an integration time close to the period of (near) periodic systems [1,2].
 
     References:
-
       1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
          Monte Carlo, 2(11), p.2.
       2. Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. Physics Letters
@@ -350,7 +369,10 @@ class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
     """
 
     def __init__(
-        self, system: System, integrator: Integrator, n_step_range: tuple[int, int]
+        self,
+        system: System,
+        integrator: Integrator,
+        n_step_range: tuple[int, int],
     ):
         """
         Args:
@@ -364,20 +386,25 @@ class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
         """
         super().__init__(system, integrator)
         n_step_lower, n_step_upper = n_step_range
-        assert (
-            n_step_lower > 0 and n_step_lower < n_step_upper
-        ), "Range bounds must be non-negative and first entry less than last"
+        if not (n_step_lower > 0 and n_step_lower < n_step_upper):
+            msg = "Range bounds must be non-negative and first entry less than last."
+            raise ValueError(msg)
         self.n_step_range = n_step_range
 
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
         n_step = rng.integers(*self.n_step_range)
         return self._sample_n_step(state, n_step, rng)
 
 
 def euclidean_no_u_turn_criterion(
-    system: System, state_1: ChainState, state_2: ChainState, sum_mom: ArrayLike
+    system: System,
+    state_1: ChainState,
+    state_2: ChainState,
+    _sum_mom: ArrayLike,
 ) -> bool:
     """No-U-turn termination criterion for Euclidean manifolds [1].
 
@@ -391,13 +418,12 @@ def euclidean_no_u_turn_criterion(
         system: Hamiltonian system being integrated.
         state_1: First terminal state of trajectory.
         state_2: Second terminal state of trajectory.
-        sum_mom: Sum of momentums of trajectory states.
+        _sum_mom: Sum of momentums of trajectory states (unused).
 
     Returns:
         Whether termination criterion is satisfied.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -409,7 +435,10 @@ def euclidean_no_u_turn_criterion(
 
 
 def riemannian_no_u_turn_criterion(
-    system: System, state_1: ChainState, state_2: ChainState, sum_mom: ArrayLike
+    system: System,
+    state_1: ChainState,
+    state_2: ChainState,
+    sum_mom: ArrayLike,
 ) -> bool:
     """Generalized no-U-turn termination criterion on Riemannian manifolds [2].
 
@@ -430,7 +459,6 @@ def riemannian_no_u_turn_criterion(
         Whether termination criterion is satisfied.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -464,7 +492,6 @@ class DynamicIntegrationTransition(IntegrationTransition):
     towards states further from the current state [1, 2].
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -476,6 +503,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         self,
         system: System,
         integrator: Integrator,
+        *,
         max_tree_depth: int = 10,
         max_delta_h: float = 1000.0,
         termination_criterion: TerminationCriterion = riemannian_no_u_turn_criterion,
@@ -513,7 +541,9 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 models and some overhead from additional checks.
         """
         super().__init__(system, integrator)
-        assert max_tree_depth > 0, "max_tree_depth must be non-negative"
+        if max_tree_depth <= 0:
+            msg = "max_tree_depth must be non-negative."
+            raise ValueError(msg)
         self.max_tree_depth = max_tree_depth
         self.max_delta_h = max_delta_h
         self.termination_criterion = termination_criterion
@@ -524,35 +554,41 @@ class DynamicIntegrationTransition(IntegrationTransition):
         self._statistic_types["diverging"] = (bool, False)
 
     def _termination_criterion(
-        self, tree: _SubTree, neg_subtree: _SubTree, pos_subtree: _SubTree
+        self,
+        tree: _SubTree,
+        neg_subtree: _SubTree,
+        pos_subtree: _SubTree,
     ) -> bool:
         # If performing extra subtree checks evaluate lazily i.e. only evaluate
         # if initial whole tree check fails. Extra subtree checks also only
         # performed for trees of depth 2 and above (i.e. containing at least
         # 4 states) as for trees of depth 1 they are redundant.
         if self.termination_criterion(
-            self.system, tree.negative, tree.positive, tree.sum_mom
+            self.system,
+            tree.negative,
+            tree.positive,
+            tree.sum_mom,
         ):
             return True
         elif tree.depth > 1 and self.do_extra_subtree_checks:
-            if self.termination_criterion(
+            return self.termination_criterion(
                 self.system,
                 neg_subtree.negative,
                 pos_subtree.negative,
                 neg_subtree.sum_mom + pos_subtree.negative.mom,
-            ):
-                return True
-            elif self.termination_criterion(
+            ) or self.termination_criterion(
                 self.system,
                 neg_subtree.positive,
                 pos_subtree.positive,
                 pos_subtree.sum_mom + neg_subtree.positive.mom,
-            ):
-                return True
+            )
         return False
 
     def _new_leave(
-        self, state: ChainState, h: ScalarLike, aux_vars: dict[str, ArrayLike]
+        self,
+        state: ChainState,
+        h: ScalarLike,
+        aux_vars: dict[str, ArrayLike],
     ) -> _SubTree:
         return _SubTree(
             negative=state,
@@ -563,9 +599,9 @@ class DynamicIntegrationTransition(IntegrationTransition):
         )
 
     def _merge_subtrees(self, neg_subtree: _SubTree, pos_subtree: _SubTree) -> _SubTree:
-        assert (
-            neg_subtree.depth == pos_subtree.depth
-        ), "Cannot merge subtrees of different depths"
+        if neg_subtree.depth != pos_subtree.depth:
+            msg = "Cannot merge subtrees of different depths."
+            raise ValueError(msg)
         return _SubTree(
             negative=neg_subtree.negative,
             positive=pos_subtree.positive,
@@ -575,13 +611,17 @@ class DynamicIntegrationTransition(IntegrationTransition):
         )
 
     def _init_aux_vars(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> dict[str, ScalarLike]:
         return {"h_init": self.system.h(state)}
 
     @abstractmethod
     def _weight_function(
-        self, h: ScalarLike, aux_vars: dict[str, ScalarLike]
+        self,
+        h: ScalarLike,
+        aux_vars: dict[str, ScalarLike],
     ) -> ScalarLike:
         pass
 
@@ -617,7 +657,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 proposal = state
                 # accumulate stats
                 stats["sum_metrop_accept_prob"] += np.exp(
-                    min(0, aux_vars["h_init"] - h)
+                    min(0, aux_vars["h_init"] - h),
                 )
                 stats["n_step"] += 1
                 # default to assuming valid and then check for divergence
@@ -629,14 +669,22 @@ class DynamicIntegrationTransition(IntegrationTransition):
             return terminate, tree, proposal
         # build 'inner' subtree, i.e. starting from current state
         terminate, inner_tree, inner_proposal = self._build_tree(
-            depth - 1, state, stats, rng, aux_vars
+            depth - 1,
+            state,
+            stats,
+            rng,
+            aux_vars,
         )
         if terminate:
             return terminate, None, None
         # build 'outer' subtree, i.e. starting from terminus of inner subtree
         state = inner_tree.positive if state.dir == 1 else inner_tree.negative
         terminate, outer_tree, outer_proposal = self._build_tree(
-            depth - 1, state, stats, rng, aux_vars
+            depth - 1,
+            state,
+            stats,
+            rng,
+            aux_vars,
         )
         if terminate:
             return terminate, None, None
@@ -654,7 +702,9 @@ class DynamicIntegrationTransition(IntegrationTransition):
         return terminate, tree, proposal
 
     def sample(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> tuple[ChainState, dict[str, ScalarLike]]:
         stats = {
             "n_step": 0,
@@ -675,7 +725,11 @@ class DynamicIntegrationTransition(IntegrationTransition):
             state.dir = direction
             # expand tree by building new subtree of current depth
             terminate, new_tree, new_proposal = self._build_tree(
-                depth, state, stats, rng, aux_vars
+                depth,
+                state,
+                stats,
+                rng,
+                aux_vars,
             )
             if terminate:
                 break
@@ -724,7 +778,6 @@ class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
     state.
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
@@ -733,18 +786,23 @@ class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
     """
 
     def _weight_function(
-        self, h: ScalarLike, aux_vars: dict[str, ScalarLike]
+        self,
+        h: ScalarLike,
+        aux_vars: dict[str, ScalarLike],
     ) -> ScalarLike:
         return LogRepFloat(log_val=-h)
 
     def _weight_ratio(
-        self, numerator: ScalarLike, denominator: ScalarLike
+        self,
+        numerator: ScalarLike,
+        denominator: ScalarLike,
     ) -> ScalarLike:
         return min(numerator / denominator, 1)
 
     def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]):
         if h - aux_vars["h_init"] > self.max_delta_h:
-            raise HamiltonianDivergenceError(f'delta_h = {h - aux_vars["h_init"]}')
+            msg = f"delta_h = {h - aux_vars['h_init']}"
+            raise HamiltonianDivergenceError(msg)
 
 
 class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
@@ -761,29 +819,35 @@ class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
     the transitions in 'Algorithm 3: Efficient No-U-Turn Sampler' in [1].
 
     References:
-
       1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
     """
 
     def _init_aux_vars(
-        self, state: ChainState, rng: Generator
+        self,
+        state: ChainState,
+        rng: Generator,
     ) -> dict[str, ScalarLike]:
         aux_vars = super()._init_aux_vars(state, rng)
         aux_vars["log_u"] = np.log(rng.uniform()) - aux_vars["h_init"]
         return aux_vars
 
     def _weight_function(
-        self, h: ScalarLike, aux_vars: dict[str, ScalarLike]
+        self,
+        h: ScalarLike,
+        aux_vars: dict[str, ScalarLike],
     ) -> ScalarLike:
         return (aux_vars["log_u"] <= -h) * 1
 
     def _weight_ratio(
-        self, numerator: ScalarLike, denominator: ScalarLike
+        self,
+        numerator: ScalarLike,
+        denominator: ScalarLike,
     ) -> ScalarLike:
         return min(numerator / denominator, 1) if denominator > 0 else min(numerator, 1)
 
     def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]):
         if h + aux_vars["log_u"] > self.max_delta_h:
-            raise HamiltonianDivergenceError(f'delta_h = {h + aux_vars["log_u"]}')
+            msg = f"delta_h = {h + aux_vars['log_u']}"
+            raise HamiltonianDivergenceError(msg)

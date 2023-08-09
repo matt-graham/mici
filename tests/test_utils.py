@@ -6,7 +6,7 @@ import mici
 SEED = 3046987125
 
 
-@pytest.fixture
+@pytest.fixture()
 def rng():
     return np.random.default_rng(SEED)
 
@@ -83,17 +83,19 @@ class TestLogRepFloat:
             assert (val_pair[0] == other_pair[1]) == (val_pair[1] == other_pair[0])
 
     def test_not_equal_to(self, val_pair, other_pair):
-        assert not (val_pair[0] != val_pair[0])
+        assert val_pair[0] == val_pair[0]
         if val_pair[1] != other_pair[1]:
             assert (val_pair[0] != other_pair[0]) == (val_pair[1] != other_pair[1])
             assert (val_pair[0] != other_pair[1]) == (val_pair[1] != other_pair[0])
 
     def test_mult(self, val_pair, other_pair):
         assert np.isclose(
-            get_val(val_pair[0] * other_pair[0]), get_val(val_pair[1] * other_pair[1])
+            get_val(val_pair[0] * other_pair[0]),
+            get_val(val_pair[1] * other_pair[1]),
         )
         assert np.isclose(
-            get_val(val_pair[0] * other_pair[1]), get_val(val_pair[1] * other_pair[0])
+            get_val(val_pair[0] * other_pair[1]),
+            get_val(val_pair[1] * other_pair[0]),
         )
 
     def test_div(self, val_pair, other_pair):
@@ -109,30 +111,34 @@ class TestLogRepFloat:
 
     def test_add(self, val_pair, other_pair):
         assert np.isclose(
-            get_val(val_pair[0] + other_pair[0]), get_val(val_pair[1] + other_pair[1])
+            get_val(val_pair[0] + other_pair[0]),
+            get_val(val_pair[1] + other_pair[1]),
         )
         assert np.isclose(
-            get_val(val_pair[0] + other_pair[1]), get_val(val_pair[1] + other_pair[0])
+            get_val(val_pair[0] + other_pair[1]),
+            get_val(val_pair[1] + other_pair[0]),
         )
 
     def test_sub(self, val_pair, other_pair):
         assert np.isclose(
-            get_val(val_pair[0] - other_pair[0]), get_val(val_pair[1] - other_pair[1])
+            get_val(val_pair[0] - other_pair[0]),
+            get_val(val_pair[1] - other_pair[1]),
         )
         assert np.isclose(
-            get_val(val_pair[0] - other_pair[1]), get_val(val_pair[1] - other_pair[0])
+            get_val(val_pair[0] - other_pair[1]),
+            get_val(val_pair[1] - other_pair[0]),
         )
 
     def test_neg(self, val_pair):
         assert np.isclose(-val_pair[0], -val_pair[1])
 
     def test_iadd(self, val_pair, other_pair):
-        sum = val_pair[0]
-        sum += other_pair[0]
-        assert np.isclose(get_val(sum), val_pair[1] + other_pair[1])
-        sum = other_pair[0]
-        sum += val_pair[1]
-        assert np.isclose(get_val(sum), val_pair[1] + other_pair[1])
+        sum_ = val_pair[0]
+        sum_ += other_pair[0]
+        assert np.isclose(get_val(sum_), val_pair[1] + other_pair[1])
+        sum_ = other_pair[0]
+        sum_ += val_pair[1]
+        assert np.isclose(get_val(sum_), val_pair[1] + other_pair[1])
 
     def test_str(self, val_pair):
         assert isinstance(str(val_pair[0]), str)
@@ -147,13 +153,13 @@ class TestLogRepFloat:
         assert mici.utils.LogRepFloat(log_val=-1e6) == 0.0
 
     def test_neg_init(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="non-negative"):
             mici.utils.LogRepFloat(val=-1)
 
     def test_no_init(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="One of val or log_val must be specified"):
             mici.utils.LogRepFloat()
 
     def test_both_init(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Specify only one of val and log_val."):
             mici.utils.LogRepFloat(val=1.0, log_val=0.0)

@@ -6,19 +6,24 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from mici.errors import AdaptationError, NonReversibleStepError
-from mici.solvers import (FixedPointSolver, ProjectionSolver, maximum_norm,
-                          solve_fixed_point_direct,
-                          solve_projection_onto_manifold_newton)
+from mici.solvers import (
+    FixedPointSolver,
+    ProjectionSolver,
+    maximum_norm,
+    solve_fixed_point_direct,
+    solve_projection_onto_manifold_newton,
+)
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Optional, Sequence
+    from collections.abc import Sequence
+    from typing import Any, Callable, Optional
+
+    from numpy.typing import ArrayLike
 
     from mici.states import ChainState
-    from mici.systems import (ConstrainedTractableFlowSystem, System,
-                              TractableFlowSystem)
+    from mici.systems import ConstrainedTractableFlowSystem, System, TractableFlowSystem
     from mici.types import NormFunction
 
 
@@ -65,10 +70,11 @@ class Integrator(ABC):
             New object corresponding to stepped state.
         """
         if self.step_size is None:
-            raise AdaptationError(
+            msg = (
                 "Integrator `step_size` is `None`. This value should only be used if a "
                 "step size adapter is being used to set the step size."
             )
+            raise AdaptationError(msg)
         state = state.copy()
         self._step(state, state.dir * self.step_size)
         return state
@@ -111,13 +117,15 @@ class TractableFlowIntegrator(Integrator):
                 :py:meth:`step` method.
         """
         if not hasattr(system, "h1_flow") or not hasattr(system, "h2_flow"):
-            raise ValueError(
-                f"{type(self)} can only be used for systems with explicit `h1_flow` and"
-                f" `h2_flow` Hamiltonian component flow maps. For systems in which only"
-                f" `h1_flow` is available the `ImplicitLeapfrogIntegrator` class may be"
-                f" used instead and for systems in which neither `h1_flow` or `h2_flow`"
-                f" is available the `ImplicitMidpointIntegrator` class may be used."
+            msg = (
+                f"{type(self)} can only be used for systems with explicit `h1_flow` "
+                f"and `h2_flow` Hamiltonian component flow maps. For systems in which "
+                f"only `h1_flow` is available the `ImplicitLeapfrogIntegrator` class "
+                f"may be used instead and for systems in which neither `h1_flow` or "
+                f"`h2_flow` is available the `ImplicitMidpointIntegrator` class may be "
+                f"used."
             )
+            raise ValueError(msg)
         super().__init__(system, step_size)
 
 
@@ -153,7 +161,6 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
     For more details see Sections 2.6 and 4.2.2 in Leimkuhler and Reich (2004).
 
     References:
-
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
     """
@@ -218,7 +225,6 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
     For more details see Section 6.2 in Leimkuhler and Reich (2004).
 
     References:
-
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
     """
@@ -227,6 +233,7 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         self,
         system: TractableFlowSystem,
         free_coefficients: Sequence[float],
+        *,
         step_size: Optional[float] = None,
         initial_h1_flow_step: bool = True,
     ):
@@ -252,10 +259,10 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         n_free_coefficients = len(free_coefficients)
         coefficients = list(free_coefficients)
         coefficients.append(
-            0.5 - sum(free_coefficients[(n_free_coefficients) % 2 :: 2])
+            0.5 - sum(free_coefficients[(n_free_coefficients) % 2 :: 2]),
         )
         coefficients.append(
-            1 - 2 * sum(free_coefficients[(n_free_coefficients + 1) % 2 :: 2])
+            1 - 2 * sum(free_coefficients[(n_free_coefficients + 1) % 2 :: 2]),
         )
         self.coefficients = coefficients + coefficients[-2::-1]
         flow_a = system.h1_flow if initial_h1_flow_step else system.h2_flow
@@ -276,7 +283,6 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
     :math:`S = 2` and free coefficient :math:`a_0 = (3 - \sqrt{3}) / 6`.
 
     References:
-
       1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
          Numerical integrators for the Hybrid Monte Carlo method.
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
@@ -292,7 +298,7 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
                 :py:meth:`step` method.
         """
         a_0 = (3 - 3**0.5) / 6
-        super().__init__(system, (a_0,), step_size, True)
+        super().__init__(system, (a_0,), step_size=step_size, initial_h1_flow_step=True)
 
 
 class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
@@ -305,7 +311,6 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
     :math:`b_1 = 0.29619504261126`.
 
     References:
-
       1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
          Numerical integrators for the Hybrid Monte Carlo method.
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
@@ -322,7 +327,12 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
         """
         a_0 = 0.11888010966548
         b_1 = 0.29619504261126
-        super().__init__(system, (a_0, b_1), step_size, True)
+        super().__init__(
+            system,
+            (a_0, b_1),
+            step_size=step_size,
+            initial_h1_flow_step=True,
+        )
 
 
 class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
@@ -335,7 +345,6 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
     :math:`b_1 = 0.191667800000000000000` and :math:`a_1 = 268548791161230105820`.
 
     References:
-
       1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
          Numerical integrators for the Hybrid Monte Carlo method.
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
@@ -353,7 +362,12 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
         a_0 = 0.071353913450279725904
         b_1 = 0.191667800000000000000
         a_1 = 0.268548791161230105820
-        super().__init__(system, (a_0, b_1, a_1), step_size, True)
+        super().__init__(
+            system,
+            (a_0, b_1, a_1),
+            step_size=step_size,
+            initial_h1_flow_step=True,
+        )
 
 
 class ImplicitLeapfrogIntegrator(Integrator):
@@ -406,10 +420,9 @@ class ImplicitLeapfrogIntegrator(Integrator):
     :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
-
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
-      2. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+      2. Zappa, E., Holmes-Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
          sampling densities and integrating functions. Communications on Pure and
          Applied Mathematics, 71(12), 2609-2647.
     """
@@ -421,7 +434,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: dict[str, Any] = None,
+        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
     ):
         """
         Args:
@@ -459,10 +472,14 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
     def _solve_fixed_point(
-        self, fixed_point_func: Callable[[ArrayLike], ArrayLike], x_init: ArrayLike
+        self,
+        fixed_point_func: Callable[[ArrayLike], ArrayLike],
+        x_init: ArrayLike,
     ) -> ArrayLike:
         return self.fixed_point_solver(
-            fixed_point_func, x_init, **self.fixed_point_solver_kwargs
+            fixed_point_func,
+            x_init,
+            **self.fixed_point_solver_kwargs,
         )
 
     def _step_a(self, state: ChainState, time_step: float):
@@ -483,10 +500,11 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self._step_b_fwd(state_back, -time_step)
         rev_diff = self.reverse_check_norm(state_back.mom - mom_init)
         if rev_diff > self.reverse_check_tol:
-            raise NonReversibleStepError(
-                f"Non-reversible step. Distance between initial and "
-                f"forward-backward integrated momentums = {rev_diff:.1e}."
+            msg = (
+                f"Non-reversible step. Distance between initial and forward-backward "
+                f"integrated momentums = {rev_diff:.1e}."
             )
+            raise NonReversibleStepError(msg)
 
     def _step_c_fwd(self, state: ChainState, time_step: float):
         pos_init = state.pos.copy()
@@ -495,10 +513,11 @@ class ImplicitLeapfrogIntegrator(Integrator):
         self._step_c_adj(state_back, -time_step)
         rev_diff = self.reverse_check_norm(state_back.pos - pos_init)
         if rev_diff > self.reverse_check_tol:
-            raise NonReversibleStepError(
-                f"Non-reversible step. Distance between initial and "
-                f"forward-backward integrated positions = {rev_diff:.1e}."
+            msg = (
+                f"Non-reversible step. Distance between initial and forward-backward "
+                f"integrated positions = {rev_diff:.1e}."
             )
+            raise NonReversibleStepError(msg)
 
     def _step_c_adj(self, state: ChainState, time_step: float):
         def fixed_point_func(pos):
@@ -552,10 +571,9 @@ class ImplicitMidpointIntegrator(Integrator):
     :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
-
       1. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
-      2. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+      2. Zappa, E., Holmes-Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
          sampling densities and integrating functions. Communications on Pure and
          Applied Mathematics, 71(12), 2609-2647.
     """
@@ -567,7 +585,7 @@ class ImplicitMidpointIntegrator(Integrator):
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: dict[str, Any] = None,
+        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
     ):
         """
         Args:
@@ -605,10 +623,14 @@ class ImplicitMidpointIntegrator(Integrator):
         self.fixed_point_solver_kwargs = fixed_point_solver_kwargs
 
     def _solve_fixed_point(
-        self, fixed_point_func: Callable[[ArrayLike], ArrayLike], x_init: ArrayLike
+        self,
+        fixed_point_func: Callable[[ArrayLike], ArrayLike],
+        x_init: ArrayLike,
     ) -> ArrayLike:
         return self.fixed_point_solver(
-            fixed_point_func, x_init, **self.fixed_point_solver_kwargs
+            fixed_point_func,
+            x_init,
+            **self.fixed_point_solver_kwargs,
         )
 
     def _step_a_fwd(self, state: ChainState, time_step: float):
@@ -620,11 +642,12 @@ class ImplicitMidpointIntegrator(Integrator):
                 [
                     time_step * self.system.dh_dmom(state),
                     -time_step * self.system.dh_dpos(state),
-                ]
+                ],
             )
 
         state.pos, state.mom = np.split(
-            self._solve_fixed_point(fixed_point_func, pos_mom_init), 2
+            self._solve_fixed_point(fixed_point_func, pos_mom_init),
+            2,
         )
 
     def _step_a_adj(self, state: ChainState, time_step: float):
@@ -635,14 +658,15 @@ class ImplicitMidpointIntegrator(Integrator):
         self._step_a_fwd(state_back, -time_step)
         rev_diff = self.reverse_check_norm(
             np.concatenate(
-                [state_back.pos - state_prev.pos, state_back.mom - state_prev.mom]
-            )
+                [state_back.pos - state_prev.pos, state_back.mom - state_prev.mom],
+            ),
         )
         if rev_diff > self.reverse_check_tol:
-            raise NonReversibleStepError(
-                f"Non-reversible step. Distance between initial and "
-                f"forward-backward integrated (pos, mom) pairs = {rev_diff:.1e}."
+            msg = (
+                f"Non-reversible step. Distance between initial and forward-backward "
+                f"integrated (pos, mom) pairs = {rev_diff:.1e}."
             )
+            raise NonReversibleStepError(msg)
 
     def _step(self, state: ChainState, time_step: float):
         self._step_a_fwd(state, time_step / 2)
@@ -804,16 +828,15 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     :py:exc:`mici.errors.ConvergenceError` respectively).
 
     References:
-
       1. Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by
          composition methods. SIAM journal on numerical analysis, 33(2), 475-491.
       2. Leimkuhler, B., & Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
          Cambridge University Press.
       3. Leimkuhler, B., & Matthews, C. (2016). Efficient molecular dynamics using
-         geodesic integration and solvent–solute splitting. Proceedings of the Royal
+         geodesic integration and solvent-solute splitting. Proceedings of the Royal
          Society A: Mathematical, Physical and Engineering Sciences, 472(2189),
          20160138.
-      4. Zappa, E., Holmes‐Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
+      4. Zappa, E., Holmes-Cerfon, M., & Goodman, J. (2018). Monte Carlo on manifolds:
          sampling densities and integrating functions. Communications on Pure and
          Applied Mathematics, 71(12), 2609-2647.
       5. Lelievre, T., Rousset, M., & Stoltz, G. (2019). Hybrid Monte Carlo methods for
@@ -867,7 +890,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
             projection_solver: Function which given two states :code:`state` and
                 :code:`state_prev`, floating point time step :code:`time_step` and a
                 Hamiltonian system object :code:`system` solves the non-linear system of
-                equations in :code:`λ`
+                equations in :code:`λ`.
 
                 .. code::
 
@@ -896,11 +919,18 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
         self.projection_solver_kwargs = projection_solver_kwargs
 
     def _h2_flow_retraction_onto_manifold(
-        self, state: ChainState, state_prev: ChainState, time_step: float
+        self,
+        state: ChainState,
+        state_prev: ChainState,
+        time_step: float,
     ):
         self.system.h2_flow(state, time_step)
         self.projection_solver(
-            state, state_prev, time_step, self.system, **self.projection_solver_kwargs
+            state,
+            state_prev,
+            time_step,
+            self.system,
+            **self.projection_solver_kwargs,
         )
 
     def _project_onto_cotangent_space(self, state: ChainState):
@@ -934,10 +964,11 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
             self._h2_flow_retraction_onto_manifold(state_back, state, -time_step_inner)
             rev_diff = self.reverse_check_norm(state_back.pos - state_prev.pos)
             if rev_diff > self.reverse_check_tol:
-                raise NonReversibleStepError(
+                msg = (
                     f"Non-reversible step. Distance between initial and "
                     f"forward-backward integrated positions = {rev_diff:.1e}."
                 )
+                raise NonReversibleStepError(msg)
 
     def _step(self, state: ChainState, time_step: float):
         self._step_a(state, 0.5 * time_step)

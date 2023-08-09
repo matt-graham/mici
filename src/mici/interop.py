@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
     import arviz
     import pymc
+    import stan
     from numpy.typing import ArrayLike
+
+    from mici.types import GradientFunction, ScalarFunction, TraceFunction
 
 
 def convert_to_inference_data(
@@ -65,6 +68,60 @@ def convert_to_inference_data(
     )
 
 
+def construct_pymc_model_functions(
+    model: pymc.Model,
+) -> tuple[ScalarFunction, GradientFunction, TraceFunction]:
+    """Construct functions for sampling from PyMC model using Mici.
+
+    Args:
+        model: PyMC model to construct functions for.
+
+    Returns:
+        Tuple :code:`(neg_log_dens, grad_neg_log_dens, trace_func)` with
+        :code:`neg_log_dens` a function for evaluating negative logarithm of
+        unnormalized posterior density associated with model, :code:`grad_neg_log_dens`
+        a function for evaluating gradient of :code:`neg_log_dens` with respect to
+        position array argument and :code:`trace_func` a function which extract model
+        parameter values from chain state for tracing during sampling.
+    """
+    import pymc
+
+    initial_point = model.initial_point()
+    raveled_initial_point = pymc.blocking.DictToArrayBijection.map(initial_point)
+
+    val_and_grad_log_dens = model.logp_dlogp_function()
+    val_and_grad_log_dens.set_extra_values({})
+
+    def grad_neg_log_dens(pos):
+        val, grad = val_and_grad_log_dens(pos)
+        return -grad, -val
+
+    def neg_log_dens(pos):
+        val, _ = val_and_grad_log_dens(pos)
+        return -val
+
+    def trace_func(state):
+        raveled_vars = pymc.blocking.RaveledVars(
+            state.pos,
+            raveled_initial_point.point_map_info,
+        )
+        var_dict = pymc.blocking.DictToArrayBijection.rmap(raveled_vars)
+        trace_dict = {}
+        for rv in model.unobserved_RVs:
+            if rv.name in var_dict:
+                trace_dict[rv.name] = var_dict[rv.name]
+            else:
+                transform = model.rvs_to_transforms[rv]
+                trace_dict[rv.name] = transform.backward(
+                    var_dict[f"{rv.name}_{transform.name}__"],
+                    *rv.owner.inputs,
+                ).eval()
+        trace_dict["lp"] = -neg_log_dens(state.pos)
+        return trace_dict
+
+    return neg_log_dens, grad_neg_log_dens, trace_func
+
+
 def sample_pymc_model(
     draws: int = 1000,
     *,
@@ -75,7 +132,6 @@ def sample_pymc_model(
     progressbar: bool = True,
     init: Literal["auto", "adapt_diag", "jitter+adapt_diag", "adapt_full"] = "auto",
     jitter_max_retries: int = 10,
-    trace: Optional[list] = None,
     return_inferencedata: bool = False,
     model: Optional[pymc.Model] = None,
     target_accept: float = 0.8,
@@ -114,13 +170,13 @@ def sample_pymc_model(
               :code:`init="auto"`.
             * :code:`"adapt_full"`: Adapt a dense mass matrix using the sample
               covariances.
+            * :code:`jitter+adapt_full`: Same as :code:`"adapt_full"`, but add uniform
+              jitter in [-1, 1] to the starting point in each chain.d
 
         jitter_max_retries: Maximum number of repeated attempts (per chain) at creating
             an initial matrix with uniform jitter that yields a finite probability. This
             applies to `"jitter+adapt_diag"` and :code:`"jitter+adapt_full"`
             :py:obj:`init` methods.
-        trace: A list of variables to track. If :code`None`, then
-            :code:`model.unobserved_RVs` is used.
         return_inferencedata: Whether to return the traces as an
             :py:class:`arviz.InferenceData` (:code:`True`) object or a
             :py:class:`dict` (:code:`False`).
@@ -145,77 +201,40 @@ def sample_pymc_model(
         data stored in the :code:`posterior` group and additional chain statistics in
         the :code:`sample_stats` group.
     """
-
     import pymc
 
     if return_inferencedata and importlib.util.find_spec("arviz") is None:
-        raise ValueError("Cannot return InferenceData as ArviZ is not installed")
+        msg = "Cannot return InferenceData as ArviZ is not installed"
+        raise ValueError(msg)
 
     model = pymc.modelcontext(model)
 
-    if cores is None:
-        cores = min(4, os.cpu_count() // 2)  # assume 2 threads per CPU core
+    # assume 2 threads per CPU core
+    cores = min(4, os.cpu_count() // 2) if cores is None else cores
+    chains = max(2, cores) if chains is None else chains
 
-    if chains is None:
-        chains = max(2, cores)
-
-    if trace is None:
-        trace = model.unobserved_RVs
-
-    if init == "auto" or "jitter+adapt_diag":
-        use_dense_metric = False
-        jitter_init = True
-    elif init == "adapt_diag":
-        use_dense_metric = False
-        jitter_init = False
-    elif init == "adapt_full":
-        use_dense_metric = True
-        jitter_init = False
+    init = "jitter+adapt_diag" if init == "auto" else init
+    if init in ("jitter+adapt_diag", "jitter+adapt_full", "adapt_diag", "adapt_full"):
+        use_dense_metric = "adapt_full" in init
+        jitter_init = "jitter" in init
     else:
-        raise ValueError(
-            'init must be "auto", "jitter+adapt_diag", "adapt_diag" or "adapt_full"'
-        )
+        msg = 'init must be "auto", "jitter+adapt_diag", "adapt_diag" or "adapt_full"'
+        raise ValueError(msg)
 
-    initial_point = model.initial_point()
-    raveled_initial_point = pymc.blocking.DictToArrayBijection.map(initial_point)
-
-    val_and_grad_log_dens = model.logp_dlogp_function()
-    val_and_grad_log_dens.set_extra_values({})
-
-    def grad_neg_log_dens(pos):
-        val, grad = val_and_grad_log_dens(pos)
-        return -grad, -val
-
-    def neg_log_dens(pos):
-        val, _ = val_and_grad_log_dens(pos)
-        return -val
-
-    def trace_func(state):
-        raveled_vars = pymc.blocking.RaveledVars(
-            state.pos, raveled_initial_point.point_map_info
-        )
-        var_dict = pymc.blocking.DictToArrayBijection.rmap(raveled_vars)
-        trace_dict = {}
-        for rv in trace:
-            if rv.name in var_dict:
-                trace_dict[rv.name] = var_dict[rv.name]
-            else:
-                transform = model.rvs_to_transforms[rv]
-                trace_dict[rv.name] = transform.backward(
-                    var_dict[f"{rv.name}_{transform.name}__"], *rv.owner.inputs
-                ).eval()
-        trace_dict["lp"] = -system.neg_log_dens(state)
-        trace_dict["energy"] = system.h(state)
-        return trace_dict
+    neg_log_dens, grad_neg_log_dens, trace_func = construct_pymc_model_functions(model)
 
     system = mici.systems.EuclideanMetricSystem(
-        neg_log_dens=neg_log_dens, grad_neg_log_dens=grad_neg_log_dens
+        neg_log_dens=neg_log_dens,
+        grad_neg_log_dens=grad_neg_log_dens,
     )
 
     integrator = mici.integrators.LeapfrogIntegrator(system)
     rng = np.random.default_rng(random_seed)
     sampler = mici.samplers.DynamicMultinomialHMC(
-        system, integrator, rng, max_tree_depth=max_treedepth
+        system,
+        integrator,
+        rng,
+        max_tree_depth=max_treedepth,
     )
 
     step_size_adapter = mici.adapters.DualAveragingStepSizeAdapter(target_accept)
@@ -224,15 +243,17 @@ def sample_pymc_model(
         if use_dense_metric
         else mici.adapters.OnlineVarianceMetricAdapter()
     )
-    adapters = [step_size_adapter, metric_adapter]
+
+    initial_point = model.initial_point()
+    raveled_initial_point = pymc.blocking.DictToArrayBijection.map(initial_point)
 
     if jitter_init:
         mean = raveled_initial_point.data.copy()
         init_states = []
-        for c in range(chains):
-            for t in range(jitter_max_retries):
+        for _c in range(chains):
+            for _t in range(jitter_max_retries):
                 pos = mean + rng.uniform(-1, 1, mean.shape)
-                if np.isfinite(val_and_grad_log_dens(pos)[0]):
+                if np.isfinite(neg_log_dens(pos)):
                     break
             init_states.append(pos)
     else:
@@ -242,7 +263,7 @@ def sample_pymc_model(
         n_warm_up_iter=tune,
         n_main_iter=draws,
         init_states=init_states,
-        adapters=adapters,
+        adapters=[step_size_adapter, metric_adapter],
         trace_funcs=[trace_func],
         n_process=cores,
         display_progress=progressbar,
@@ -255,7 +276,15 @@ def sample_pymc_model(
         return {k: np.stack(v) for k, v in traces.items()}
 
 
-def _get_stan_model_unconstrained_param_dim(model):
+def get_stan_model_unconstrained_param_dim(model: stan.Model) -> int:
+    """Get total dimension of unconstrained parameters in Stan model.
+
+    Args:
+        model: Stan model to get dimension for.
+
+    Returns:
+        Non-negative integer specifying unconstrained parameter dimension.
+    """
     param_size_list = [np.prod(dim, dtype=np.int64) for dim in model.dims]
     n_dim = sum(param_size_list)
     while True:
@@ -265,6 +294,47 @@ def _get_stan_model_unconstrained_param_dim(model):
         except RuntimeError:
             param_size_list.pop()
             n_dim = sum(param_size_list)
+
+
+def construct_stan_model_functions(
+    model: stan.Model,
+) -> tuple[ScalarFunction, GradientFunction, TraceFunction]:
+    """Construct functions for sampling from Stan model using Mici.
+
+    Args:
+        model: Stan model to construct functions for.
+
+    Returns:
+        Tuple :code:`(neg_log_dens, grad_neg_log_dens, trace_func)` with
+        :code:`neg_log_dens` a function for evaluating negative logarithm of
+        unnormalized posterior density associated with model, :code:`grad_neg_log_dens`
+        a function for evaluating gradient of :code:`neg_log_dens` with respect to
+        position array argument and :code:`trace_func` a function which extract model
+        parameter values from chain state for tracing during sampling.
+    """
+
+    def neg_log_dens(u):
+        return -model.log_prob(list(u))
+
+    def grad_neg_log_dens(u):
+        return -np.array(model.grad_log_prob(list(u)))
+
+    param_size_list = [np.prod(dim, dtype=np.int64) for dim in model.dims]
+
+    def trace_func(state):
+        param_array = np.array(model.constrain_pars(list(state.pos)))
+        trace_dict = {
+            name: val.reshape(shape)
+            for name, val, shape in zip(
+                model.param_names,
+                np.split(param_array, np.cumsum(param_size_list)[:-1]),
+                model.dims,
+            )
+        }
+        trace_dict["lp"] = -neg_log_dens(state.pos)
+        return trace_dict
+
+    return neg_log_dens, grad_neg_log_dens, trace_func
 
 
 def sample_stan_model(
@@ -340,44 +410,28 @@ def sample_stan_model(
         with traced chain data stored in the `posterior` group and additional chain
         statistics in the `sample_stats` group.
     """
-
     import stan
 
     if return_inferencedata and importlib.util.find_spec("arviz") is None:
-        raise ValueError("Cannot return InferenceData as ArviZ is not installed")
+        msg = "Cannot return InferenceData as ArviZ is not installed"
+        raise ValueError(msg)
 
     model = stan.build(model_code, data=data)
 
-    def neg_log_dens(u):
-        return -model.log_prob(list(u))
-
-    def grad_neg_log_dens(u):
-        return -np.array(model.grad_log_prob(list(u)))
-
-    param_size_list = [np.prod(dim, dtype=np.int64) for dim in model.dims]
-
-    def trace_func(state):
-        param_array = np.array(model.constrain_pars(list(state.pos)))
-        trace_dict = {
-            name: val.reshape(shape)
-            for name, val, shape in zip(
-                model.param_names,
-                np.split(param_array, np.cumsum(param_size_list)[:-1]),
-                model.dims,
-            )
-        }
-        trace_dict["lp"] = -system.neg_log_dens(state)
-        trace_dict["energy"] = system.h(state)
-        return trace_dict
+    neg_log_dens, grad_neg_log_dens, trace_func = construct_stan_model_functions(model)
 
     system = mici.systems.EuclideanMetricSystem(
-        neg_log_dens=neg_log_dens, grad_neg_log_dens=grad_neg_log_dens
+        neg_log_dens=neg_log_dens,
+        grad_neg_log_dens=grad_neg_log_dens,
     )
 
     integrator = mici.integrators.LeapfrogIntegrator(system, step_size=stepsize)
     rng = np.random.default_rng(seed)
     sampler = mici.samplers.DynamicMultinomialHMC(
-        system, integrator, rng, max_tree_depth=max_depth
+        system,
+        integrator,
+        rng,
+        max_tree_depth=max_depth,
     )
 
     if adapt_engaged:
@@ -406,7 +460,7 @@ def sample_stan_model(
         adapters = None
         stager = None
 
-    dim_u = _get_stan_model_unconstrained_param_dim(model)
+    dim_u = get_stan_model_unconstrained_param_dim(model)
     init_states = rng.uniform(-2, 2, size=(num_chains, dim_u))
 
     _, traces, stats = sampler.sample_chains(

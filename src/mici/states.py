@@ -10,7 +10,8 @@ from typing import TYPE_CHECKING
 from mici.errors import ReadOnlyStateError
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Iterable, Optional
+    from collections.abc import Iterable
+    from typing import Any, Callable, Optional
 
     from numpy.typing import ArrayLike
 
@@ -69,7 +70,8 @@ def cache_in_state(
 
 
 def cache_in_state_with_aux(
-    depends_on: Iterable[str], auxiliary_outputs: Iterable[str]
+    depends_on: Iterable[str],
+    auxiliary_outputs: Iterable[str],
 ) -> Callable[
     [Callable[[System, ChainState], ArrayLike]],
     Callable[[System, ChainState], ArrayLike],
@@ -130,7 +132,7 @@ def cache_in_state_with_aux(
         def wrapper(self, state):
             prim_key = _cache_key_func(self, method)
             keys = [prim_key] + [_cache_key_func(self, a) for a in auxiliary_outputs]
-            for i, key in enumerate(keys):
+            for _i, key in enumerate(keys):
                 if key not in state._cache:
                     for dep in depends_on:
                         state._dependencies[dep].add(key)
@@ -236,25 +238,26 @@ class ChainState:
         if name in self._variables:
             return self._variables[name]
         else:
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{name}'"
-            )
+            msg = f"'{type(self).__name__}' object has no attribute '{name}'"
+            raise AttributeError(msg)
 
     def __setattr__(self, name: str, value: ArrayLike):
         if self._read_only:
-            raise ReadOnlyStateError("ChainState instance is read-only.")
+            msg = "ChainState instance is read-only."
+            raise ReadOnlyStateError(msg)
         if name in self._variables:
             self._variables[name] = value
             # clear any dependent cached values
             for dep in self._dependencies[name]:
                 self._cache[dep] = None
+            return None
         else:
             return super().__setattr__(name, value)
 
     def __contains__(self, name: str) -> bool:
         return name in self._variables
 
-    def copy(self, read_only: bool = False) -> ChainState:
+    def copy(self, *, read_only: bool = False) -> ChainState:
         """Create a deep copy of the state object.
 
         Args:
