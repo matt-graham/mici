@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from typing import Literal, Optional, Union
     from numpy.typing import ArrayLike
     import arviz
-    import pymc3
+    import pymc
 
 
 def convert_to_inference_data(
@@ -21,10 +21,10 @@ def convert_to_inference_data(
     energy_key: Optional[str] = "energy",
     lp_key: Optional[str] = "lp",
 ) -> arviz.InferenceData:
-    """Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData` object.
+    """Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData`.
 
     Args:
-        traces: Traces output from Mici 
+        traces: Traces output from Mici
             :py:meth:`mici.samplers.MarkovChainMonteCarloMethod.sample_chains` call. A
             dictionary of variables traced over sampled chains with the dictionary keys
             the variable names and the values a list of arrays, one array per sampled
@@ -62,7 +62,7 @@ def convert_to_inference_data(
     )
 
 
-def sample_pymc3_model(
+def sample_pymc_model(
     draws: int = 1000,
     *,
     tune: int = 1000,
@@ -74,16 +74,16 @@ def sample_pymc3_model(
     jitter_max_retries: int = 10,
     trace: Optional[list] = None,
     return_inferencedata: bool = False,
-    model: Optional[pymc3.model.Model] = None,
+    model: Optional[pymc.Model] = None,
     target_accept: float = 0.8,
     max_treedepth: int = 10,
 ) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
-    """Generate approximate samples from posterior defined by a PyMC3 model.
+    """Generate approximate samples from posterior defined by a PyMC model.
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
 
-    This function replicates the interface of the :py:func:`pymc3.sampling.sample`
-    function to allow using as a (partial) drop-in replacement.
+    This function replicates the interface of the :py:func:`pymc.sample` function to
+    allow using as a (partial) drop-in replacement.
 
     Args:
         draws: The number of samples to draw.
@@ -121,7 +121,7 @@ def sample_pymc3_model(
         return_inferencedata: Whether to return the traces as an
             :py:class:`arviz.InferenceData` (:code:`True`) object or a
             :py:class:`dict` (:code:`False`).
-        model: PyMC3 model defining posterior distribution to sample from. May be 
+        model: PyMC model defining posterior distribution to sample from. May be
             :code:`None` if function is called from within model context manager.
         target_accept: Target value for the acceptance statistic being controlled during
             adaptive warm-up.
@@ -143,7 +143,7 @@ def sample_pymc3_model(
         the :code:`sample_stats` group.
     """
 
-    import pymc3
+    import pymc
 
     if return_inferencedata and importlib.util.find_spec("arviz") is None:
         raise ValueError("Cannot return InferenceData as ArviZ is not installed")
@@ -173,6 +173,9 @@ def sample_pymc3_model(
             'init must be "auto", "jitter+adapt_diag", "adapt_diag" or "adapt_full"'
         )
 
+    initial_point = model.initial_point()
+    raveled_initial_point = pymc.blocking.DictToArrayBijection.map(initial_point)
+
     val_and_grad_log_dens = model.logp_dlogp_function()
     val_and_grad_log_dens.set_extra_values({})
 
@@ -185,14 +188,18 @@ def sample_pymc3_model(
         return -val
 
     def trace_func(state):
-        var_dict = val_and_grad_log_dens.array_to_dict(state.pos)
+        raveled_vars = pymc.blocking.RaveledVars(
+            state.pos, raveled_initial_point.point_map_info
+        )
+        var_dict = pymc.blocking.DictToArrayBijection.rmap(raveled_vars)
         trace_dict = {}
         for rv in trace:
             if rv.name in var_dict:
                 trace_dict[rv.name] = var_dict[rv.name]
             else:
-                trace_dict[rv.name] = rv.transformation.backward(
-                    var_dict[rv.transformed.name]
+                transform = model.rvs_to_transforms[rv]
+                trace_dict[rv.name] = transform.backward(
+                    var_dict[f"{rv.name}_{transform.name}__"], *rv.owner.inputs
                 ).eval()
         trace_dict["lp"] = -system.neg_log_dens(state)
         trace_dict["energy"] = system.h(state)
@@ -205,7 +212,7 @@ def sample_pymc3_model(
     integrator = mici.integrators.LeapfrogIntegrator(system)
     rng = np.random.default_rng(random_seed)
     sampler = mici.samplers.DynamicMultinomialHMC(
-        system, integrator, rng, max_treedepth=max_treedepth
+        system, integrator, rng, max_tree_depth=max_treedepth
     )
 
     step_size_adapter = mici.adapters.DualAveragingStepSizeAdapter(target_accept)
@@ -217,7 +224,7 @@ def sample_pymc3_model(
     adapters = [step_size_adapter, metric_adapter]
 
     if jitter_init:
-        mean = val_and_grad_log_dens.dict_to_array(model.test_point)
+        mean = raveled_initial_point.data.copy()
         init_states = []
         for c in range(chains):
             for t in range(jitter_max_retries):
@@ -226,9 +233,7 @@ def sample_pymc3_model(
                     break
             init_states.append(pos)
     else:
-        init_states = [
-            val_and_grad_log_dens.dict_to_array(model.test_point) for c in range(chains)
-        ]
+        init_states = [raveled_initial_point.data.copy() for c in range(chains)]
 
     _, traces, stats = sampler.sample_chains(
         n_warm_up_iter=tune,

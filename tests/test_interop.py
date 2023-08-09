@@ -10,11 +10,11 @@ except ImportError:
     ARVIZ_AVAILABLE = False
 
 try:
-    import pymc3
+    import pymc
 
-    PYMC3_AVAILABLE = True
+    PYMC_AVAILABLE = True
 except ImportError:
-    PYMC3_AVAILABLE = False
+    PYMC_AVAILABLE = False
 
 
 try:
@@ -45,7 +45,7 @@ if ARVIZ_AVAILABLE:
             "lp": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
         }
         stats = {
-            "accept_stat": list(rng.uniform(9, 1, (NUM_CHAIN, NUM_SAMPLE))),
+            "accept_stat": list(rng.uniform(0, 1, (NUM_CHAIN, NUM_SAMPLE))),
             "n_step": list(rng.integers(0, 10, (NUM_CHAIN, NUM_SAMPLE))),
         }
         inference_data = mici.interop.convert_to_inference_data(traces, stats)
@@ -64,20 +64,20 @@ if ARVIZ_AVAILABLE:
         }
 
 
-if PYMC3_AVAILABLE:
+if PYMC_AVAILABLE:
 
     @pytest.fixture
-    def pymc3_model():
-        with pymc3.Model() as model:
-            pymc3.Normal("x", mu=0, sigma=1)
-            pymc3.Uniform("y", lower=0, upper=1)
+    def pymc_model():
+        with pymc.Model() as model:
+            pymc.Normal("x", mu=0, sigma=1)
+            pymc.Uniform("y", lower=0, upper=1)
         return model
 
     @pytest.mark.parametrize("init", ("adapt_diag", "jitter+adapt_diag", "adapt_full"))
     @pytest.mark.parametrize("progressbar", (True, False))
-    def test_sample_pymc3_model(pymc3_model, init, progressbar):
-        traces = mici.interop.sample_pymc3_model(
-            pymc3_model,
+    def test_sample_pymc_model(pymc_model, init, progressbar):
+        traces = mici.interop.sample_pymc_model(
+            model=pymc_model,
             draws=NUM_SAMPLE,
             tune=NUM_SAMPLE,
             random_seed=SEED,
@@ -86,16 +86,16 @@ if PYMC3_AVAILABLE:
             cores=1,
         )
         assert isinstance(traces, dict)
-        for var in pymc3_model.unobserved_RVs:
+        for var in pymc_model.unobserved_RVs:
             assert var.name in traces
             assert traces[var.name].shape[1] == NUM_SAMPLE
             assert not np.any(np.isnan(traces[var.name]))
 
     if ARVIZ_AVAILABLE:
 
-        def test_sample_pymc3_model_inference_data(pymc3_model):
-            inference_data = mici.interop.sample_pymc3_model(
-                pymc3_model,
+        def test_sample_pymc_model_inference_data(pymc_model):
+            inference_data = mici.interop.sample_pymc_model(
+                model=pymc_model,
                 chains=NUM_CHAIN,
                 draws=NUM_SAMPLE,
                 random_seed=SEED,
@@ -103,7 +103,7 @@ if PYMC3_AVAILABLE:
                 cores=1,
             )
             assert isinstance(inference_data, arviz.InferenceData)
-            for var in pymc3_model.unobserved_RVs:
+            for var in pymc_model.unobserved_RVs:
                 assert var.name in inference_data.posterior
                 assert not np.any(np.isnan(inference_data.posterior[var.name]))
             assert inference_data.posterior.coords["chain"].size == NUM_CHAIN
