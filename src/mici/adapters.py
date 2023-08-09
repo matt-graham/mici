@@ -141,7 +141,7 @@ def geometric_mean_log_step_size_reducer(log_step_sizes: Collection[float]) -> f
     return exp(sum(x for x in log_step_sizes) / len(log_step_sizes))
 
 
-def min_log_step_size_reducer(log_step_sizes: Iterable[float]) -> float:
+def min_log_step_size_reducer(log_step_sizes: Collection[float]) -> float:
     """Compute minimum of step sizes from their logs.
 
     Args:
@@ -154,7 +154,7 @@ def min_log_step_size_reducer(log_step_sizes: Iterable[float]) -> float:
 
 
 def default_adapt_stat_func(stats: TransitionStatistics) -> float:
-    """Function to extract default acceptance statistic used for step-size adaptation.
+    """Function to extract default statistic used for step-size adaptation.
 
     Args:
         stats: Dictionary of transition statistics.
@@ -169,18 +169,18 @@ class DualAveragingStepSizeAdapter(Adapter):
     """Dual averaging integrator step size adapter.
 
     Implementation of the dual algorithm step size adaptation algorithm described in
-    [1], a modified version of the stochastic optimisation scheme of [2]. By default the
-    adaptation is performed to control the `accept_prob` statistic of an integration
-    transition to be close to a target value but the statistic adapted on can be altered
-    by changing the `adapt_stat_func`.
-
+    Hoffman and Gelman (2014), a modified version of the stochastic optimisation scheme
+    of Nesterov (2009). By default the adaptation is performed to control the
+    :code:`accept_stat` statistic of an integration transition to be close to a target
+    value but the statistic adapted on can be altered by changing the
+    :code:`adapt_stat_func`.
 
     References:
 
-      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+      1. Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
          path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
          15(1), pp.1593-1623.
-      2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex problems.
+      2. Nesterov, Y. (2009). Primal-dual subgradient methods for convex problems.
          Mathematical programming 120(1), pp.221-259.
     """
 
@@ -203,19 +203,19 @@ class DualAveragingStepSizeAdapter(Adapter):
                 being controlled during adaptation.
             adapt_stat_func: Function which given a dictionary of transition statistics
                 outputs the value of the statistic to control during adaptation. By
-                default this is set to a function which simply selects the 'accept_stat'
-                value in the statistics dictionary.
+                default this is set to a function which simply selects the
+                :code:'accept_stat' value in the statistics dictionary.
             log_step_size_reg_target: Value to regularize the controlled output
-                (logarithm of the integrator step size) towards. If `None` set to
-                `log(10 * init_step_size)` where `init_step_size` is the initial
-                'reasonable' step size found by a coarse search as recommended in
-                Hoffman and Gelman (2014). This has the effect of giving the dual
+                (logarithm of the integrator step size) towards. If :code:`None` set to
+                :code:`log(10 * init_step_size)` where :code:`init_step_size` is the
+                initial 'reasonable' step size found by a coarse search as recommended
+                in Hoffman and Gelman (2014). This has the effect of giving the dual
                 averaging algorithm a tendency towards testing step sizes larger than
                 the initial value, with typically integrating with a larger step size
                 having a lower computational cost.
             log_step_size_reg_coefficient: Coefficient controlling amount of
                 regularisation of controlled output (logarithm of the integrator step
-                size) towards `log_step_size_reg_target`. Defaults to 0.05 as
+                size) towards :code:`log_step_size_reg_target`. Defaults to 0.05 as
                 recommended in Hoffman and Gelman (2014).
             iter_decay_coeff: Coefficient controlling exponent of decay in schedule
                 weighting stochastic updates to smoothed log step size estimate. Should
@@ -229,15 +229,15 @@ class DualAveragingStepSizeAdapter(Adapter):
                 > 0 has the effect of stabilising early iterations. Defaults to the
                 value of 10 as recommended in Hoffman and Gelman (2014).
             max_init_step_size_iters: Maximum number of iterations to use in initial
-                search for a reasonable step size with an `AdaptationError` exception
-                raised if a suitable step size is not found within this many iterations.
+                search for a reasonable step size with an
+                :py:exc:`mici.errors.AdaptationError` exception raised if a suitable
+                step size is not found within this many iterations.
             log_step_size_reducer: Reduction to apply to final per-chain step sizes
                 estimates to produce overall integrator step size for main chain stages.
                 The specified function should accept a sequence of logarithms of
                 estimated step sizes and output a non-negative step size to use. If
-                `None`, the default, a function which computes the arithmetic mean of
-                the step sizes is used.
-
+                :code:`None`, the default, a function which computes the arithmetic mean
+                of the per-chain step sizes is used.
         """
         self.adapt_stat_target = adapt_stat_target
         self.adapt_stat_func = (
@@ -378,27 +378,27 @@ class DualAveragingStepSizeAdapter(Adapter):
 class OnlineVarianceMetricAdapter(Adapter):
     """Diagonal metric adapter using online variance estimates.
 
-    Uses Welford's algorithm [1] to stably compute an online estimate of the sample
-    variances of the chain state position components during sampling. If online
+    Uses Welford's algorithm (Welford, 1962) to stably compute an online estimate of the
+    sample variances of the chain state position components during sampling. If online
     estimates are available from multiple independent chains, the final variance
     estimate is calculated from the per-chain statistics using the parallel / batched
-    incremental variance algorithm described by Chan et al. [2]. The variance estimates
-    are optionally regularized towards a common scalar value, with increasing weight for
-    small number of samples, to decrease the effect of noisy estimates for small sample
-    sizes, following the approach in Stan [3]. The metric matrix representation is set
-    to a diagonal matrix with diagonal elements corresponding to the reciprocal of the
-    (regularized) variance estimates.
+    incremental variance algorithm described by Chan et al. (1979). The variance
+    estimates are optionally regularized towards a common scalar value, with increasing
+    weight for small number of samples, to decrease the effect of noisy estimates for
+    small sample sizes, following the approach in Stan (Carpenter et al., 2017). The
+    metric matrix representation is set to a diagonal matrix with diagonal elements
+    corresponding to the reciprocal of the (regularized) variance estimates.
 
     References:
 
-      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of
+      1. Welford, B. P. (1962). Note on a method for calculating corrected sums of
          squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+      2. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
          pairwise algorithm for computing sample variances. Technical Report
          STAN-CS-79-773, Department of Computer Science, Stanford University.
       3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
-         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
-         programming language. Journal of Statistical Software, 76(1).
+         M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A
+         probabilistic programming language. Journal of Statistical Software, 76(1).
     """
 
     is_fast = False
@@ -504,31 +504,31 @@ class OnlineVarianceMetricAdapter(Adapter):
 class OnlineCovarianceMetricAdapter(Adapter):
     """Dense metric adapter using online covariance estimates.
 
-    Uses Welford's algorithm [1] to stably compute an online estimate of the sample
-    covariance matrix of the chain state position components during sampling. If online
-    estimates are available from multiple independent chains, the final covariance
-    matrix estimate is calculated from the per-chain statistics using a covariance
-    variant due to Schubert and Gertz [2] of the parallel / batched incremental variance
-    algorithm described by Chan et al. [3]. The covariance matrix estimates are
-    optionally regularized towards a scaled identity matrix, with increasing weight for
-    small number of samples, to decrease the effect of noisy estimates for small sample
-    sizes, following the approach in Stan [4]. The metric matrix representation is set
-    to a dense positive definite matrix corresponding to the inverse of the
-    (regularized) covariance matrix estimate.
+    Uses Welford's algorithm (Welford, 1962) to stably compute an online estimate of the
+    sample covariance matrix of the chain state position components during sampling. If
+    online estimates are available from multiple independent chains, the final
+    covariance matrix estimate is calculated from the per-chain statistics using a
+    covariance variant due to Schubert and Gertz (2018) of the parallel / batched
+    incremental variance algorithm described by Chan et al. (1979). The covariance
+    matrix estimates are optionally regularized towards a scaled identity matrix, with
+    increasing weight for small number of samples, to decrease the effect of noisy
+    estimates for small sample sizes, following the approach in Stan (Carpenter et al.,
+    2017). The metric matrix representation is set to a dense positive definite matrix
+    corresponding to the inverse of the (regularized) covariance matrix estimate.
 
 
     References:
 
-      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of
+      1. Welford, B. P. (1962). Note on a method for calculating corrected sums of
          squares and products. Technometrics, 4(3), pp. 419–420.
-      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel computation of
+      2. Schubert, E. and Gertz, M. (2018). Numerically stable parallel computation of
          (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.
-      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+      3. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
          pairwise algorithm for computing sample variances. Technical Report
          STAN-CS-79-773, Department of Computer Science, Stanford University.
       4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
-         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
-         programming language. Journal of Statistical Software, 76(1).
+         M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A
+         probabilistic programming language. Journal of Statistical Software, 76(1).
     """
 
     is_fast = False
