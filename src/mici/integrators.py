@@ -10,7 +10,7 @@ from mici.errors import NonReversibleStepError, AdaptationError
 from mici.solvers import (
     maximum_norm,
     solve_fixed_point_direct,
-    solve_projection_onto_manifold_quasi_newton,
+    solve_projection_onto_manifold_newton,
     FixedPointSolver,
     ProjectionSolver,
 )
@@ -778,7 +778,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
         n_inner_step: int = 1,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
-        projection_solver: ProjectionSolver = solve_projection_onto_manifold_quasi_newton,
+        projection_solver: ProjectionSolver = solve_projection_onto_manifold_newton,
         projection_solver_kwargs: Optional[dict[str, Any]] = None,
     ):
         """
@@ -822,7 +822,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 .. code::
 
                     system.constr(
-                        state.pos 
+                        state.pos
                         + dh2_flow_pos_dmom @ system.jacob_constr(state_prev).T @ λ
                     ) == 0
 
