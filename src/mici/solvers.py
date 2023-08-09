@@ -8,13 +8,16 @@ import numpy as np
 
 if TYPE_CHECKING:
     from mici.states import ChainState
-    from mici.systems import System
+    from mici.systems import (
+        ConstrainedEuclideanMetricSystem,
+        ConstrainedTractableFlowSystem,
+    )
     from mici.types import ScalarFunction, ArrayFunction, ArrayLike
 
 
 def euclidean_norm(vct):
     """Calculate the Euclidean (L-2) norm of a vector."""
-    return (vct ** 2).sum() ** 0.5
+    return (vct**2).sum() ** 0.5
 
 
 def maximum_norm(vct):
@@ -117,7 +120,7 @@ def solve_fixed_point_steffensen(
         :code:`norm(func(x) - x) < convergence_tol`.
 
     Raises:
-        mici.errors.ConvergenceError: If solver does not converge within 
+        mici.errors.ConvergenceError: If solver does not converge within
             :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`
             during the iteration.
     """
@@ -162,7 +165,7 @@ class ProjectionSolver(Protocol):
     manifold defined by the zero level set of a constraint function :math:`c`, with
     :math:`\Phi_{2,1}` the flow map for the :math:`h_2` Hamiltonian component for the
     system restricted to the position component output. The map :math:`\Phi_{2,1}` is
-    assumed to be linear in its second (momentum) argument. 
+    assumed to be linear in its second (momentum) argument.
     """
 
     def __call__(
@@ -170,7 +173,7 @@ class ProjectionSolver(Protocol):
         state: ChainState,
         state_prev: ChainState,
         time_step: float,
-        system: System,
+        system: ConstrainedTractableFlowSystem,
         **kwargs,
     ) -> ChainState:
         """Solve for projection on to manifold step.
@@ -179,7 +182,7 @@ class ProjectionSolver(Protocol):
             state: Current chain state after unconstrained step.
             state_prev: Previous chain state on manifold.
             time_step: Integrator time step for unconstrained step.
-            system: Hamiltonian system dynamics are being simulated for.
+            system: Hamiltonian system constrained dynamics are being simulated for.
 
         Returns:
             Chain state after projection on to manifold.
@@ -191,7 +194,7 @@ def solve_projection_onto_manifold_quasi_newton(
     state: ChainState,
     state_prev: ChainState,
     time_step: float,
-    system: System,
+    system: ConstrainedEuclideanMetricSystem,
     constraint_tol: float = 1e-9,
     position_tol: float = 1e-8,
     divergence_tol: float = 1e10,
@@ -302,7 +305,9 @@ def solve_projection_onto_manifold_quasi_newton(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
+        state_prev, abs(time_step)
+    )
     inv_jacob_constr_inner_product = system.jacob_constr_inner_product(
         jacob_constr_prev, dh2_flow_pos_dmom
     ).inv
@@ -338,7 +343,7 @@ def solve_projection_onto_manifold_newton(
     state: ChainState,
     state_prev: ChainState,
     time_step: float,
-    system: System,
+    system: ConstrainedEuclideanMetricSystem,
     constraint_tol: float = 1e-9,
     position_tol: float = 1e-8,
     divergence_tol: float = 1e10,
@@ -420,7 +425,9 @@ def solve_projection_onto_manifold_newton(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
+        state_prev, abs(time_step)
+    )
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)
@@ -459,7 +466,7 @@ def solve_projection_onto_manifold_newton_with_line_search(
     state: ChainState,
     state_prev: ChainState,
     time_step: float,
-    system: System,
+    system: ConstrainedEuclideanMetricSystem,
     constraint_tol: float = 1e-9,
     position_tol: float = 1e-8,
     divergence_tol: float = 1e10,
@@ -549,7 +556,11 @@ def solve_projection_onto_manifold_newton_with_line_search(
     mu = np.zeros_like(state.pos)
     jacob_constr_prev = system.jacob_constr(state_prev)
     # Use absolute value of dt and adjust for sign of dt in mom update below
-    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(abs(time_step))
+    dh2_flow_pos_dmom, dh2_flow_mom_dmom = system.dh2_flow_dmom(
+        state_prev, abs(time_step)
+    )
+    # Initialize with dummy values to avoid undefined name linter errors
+    delta_pos, step_size = None, None
     for i in range(max_iters):
         try:
             jacob_constr = system.jacob_constr(state)

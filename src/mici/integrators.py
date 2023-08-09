@@ -18,7 +18,7 @@ from mici.solvers import (
 if TYPE_CHECKING:
     from typing import Any, Callable, Optional, Sequence
     from mici.states import ChainState
-    from mici.systems import System, TractableFlowSystem
+    from mici.systems import ConstrainedTractableFlowSystem, System, TractableFlowSystem
     from mici.types import NormFunction
 
 
@@ -291,7 +291,7 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
                 step size adapter will be used to set the step size before calling the
                 :py:meth:`step` method.
         """
-        a_0 = (3 - 3 ** 0.5) / 6
+        a_0 = (3 - 3**0.5) / 6
         super().__init__(system, (a_0,), step_size, True)
 
 
@@ -758,7 +758,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     .. math::
 
-        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) 
+        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1)
         = c((\Phi_2(t)(q, p + \partial c(q)^T \lambda))_1) = 0,
 
     i.e. solving for the values of the Lagrange multipliers such that the position
@@ -768,7 +768,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     \circ \Pi(\lambda)` is then projected in to the cotangent space to compute the final
     state pair, with this projection step as noted above typically having an analytic
     solution.
-    
+
     For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).
 
     The overall second-order integrator is then defined as the symmetric composition
@@ -823,7 +823,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
 
     def __init__(
         self,
-        system: System,
+        system: ConstrainedTractableFlowSystem,
         step_size: Optional[float] = None,
         n_inner_step: int = 1,
         reverse_check_tol: float = 2e-8,
@@ -833,7 +833,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     ):
         """
         Args:
-            system: Hamiltonian system to integrate the dynamics of.
+            system: Hamiltonian system to integrate the constrained dynamics of.
             step_size: Integrator time step. If set to :code:`None` it is assumed that a
                 step size adapter will be used to set the step size before calling the
                 :py:meth:`step` method.

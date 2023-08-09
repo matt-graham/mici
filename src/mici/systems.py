@@ -229,7 +229,7 @@ class TractableFlowSystem(System):
     and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact
     Hamiltonian flows for both the :math:`h_1` and :math:`h_2` components are assumed to
     be tractable for subclasses of this class.
-    
+
     By default :math:`h_1` is assumed to correspond to the negative logarithm of an
     unnormalized density on the position variables with respect to a reference measure,
     with the corresponding distribution on the position space being the target
@@ -245,22 +245,6 @@ class TractableFlowSystem(System):
         Args:
             state: State to start flow at.
             dt: Time interval to simulate flow for.
-        """
-
-    @abstractmethod
-    def dh2_flow_dmom(self, dt: ScalarLike) -> tuple[matrices.Matrix, matrices.Matrix]:
-        """Derivatives of `h2_flow` flow map with respect to momentum argument.
-
-        Args:
-            dt: Time interval flow simulated for.
-
-        Returns:
-            Tuple `(dpos_dmom, dmom_dmom)` with :code:`dpos_dmom` a matrix representing
-            derivative (Jacobian) of position output of :py:meth:`h2_flow` with respect
-            to the value of the momentum component of the initial input state and
-            :code:`dmom_dmom` a matrix representing derivative (Jacobian) of momentum
-            output of :py:meth:`h2_flow` with respect to the value of the momentum
-            component of the initial input state.
         """
 
 
@@ -353,9 +337,6 @@ class EuclideanMetricSystem(TractableFlowSystem):
     def h2_flow(self, state: ChainState, dt: ScalarLike):
         state.pos += dt * self.dh2_dmom(state)
 
-    def dh2_flow_dmom(self, dt: ScalarLike) -> tuple[matrices.Matrix, matrices.Matrix]:
-        return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))
-
     def sample_momentum(self, state: ChainState, rng: Generator) -> ArrayLike:
         return self.metric.sqrt @ rng.standard_normal(state.pos.shape)
 
@@ -445,7 +426,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
         return state.pos
 
     def h2_flow(self, state: ChainState, dt: ScalarLike):
-        omega = 1.0 / self.metric.eigval ** 0.5
+        omega = 1.0 / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         eigvec_T_pos = self.metric.eigvec.T @ state.pos
         eigvec_T_mom = self.metric.eigvec.T @ state.mom
@@ -456,18 +437,149 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
             cos_omega_dt * eigvec_T_mom - (sin_omega_dt / omega) * eigvec_T_pos
         )
 
-    def dh2_flow_dmom(self, dt: ScalarLike) -> tuple[matrices.Matrix, matrices.Matrix]:
-        omega = 1.0 / self.metric.eigval ** 0.5
-        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
-        return (
-            matrices.EigendecomposedSymmetricMatrix(
-                self.metric.eigvec, sin_omega_dt * omega
-            ),
-            matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
-        )
+
+class ConstrainedTractableFlowSystem(TractableFlowSystem):
+    r"""Base class for Hamiltonian systems subject to constraints with tractable flows.
+
+    The (constrained) position space is assumed to be a differentiable manifold embedded
+    with a :math:`Q`-dimensional ambient Euclidean space. The :math:`Q-C` dimensional
+    manifold :math:`\mathcal{M}` is implicitly defined by an equation
+
+    .. math::
+
+        \mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace`
+
+    with :math:`c: \mathbb{R}^Q \to \mathbb{R}^C` the differentiable and surjective
+    vector-valued *constraint function*.
+
+    The Hamiltonian function :math:`h` is assumed to have the general form
+
+    .. math::
+
+        h(q, p) = h_1(q) + h_2(q, p)
+
+    where :math:`q` and :math:`p` are the position and momentum variables respectively,
+    and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact
+    *unconstrained* Hamiltonian flows for both the :math:`h_1` and :math:`h_2`
+    components, respectively :math:`\Phi_1` and :math:`\Phi_2` are assumed to be
+    tractable for subclasses of this class.
+
+    The *constrained* Hamiltonian dynamics are described by the system of differential
+    algebraic equations
+
+    .. math::
+
+        \dot{q} = \nabla_2 h(q, p), \quad
+        \dot{p} = -\nabla_1 h(q, p) - \partial c(q)^T\lambda, \quad
+        c(q) = 0.
+
+    where math:`\lambda` is a set of Lagrange multipliers of dimension equal to number
+    of constraints, :math:`C`, and which are implicitly defined by the condition that
+    the constraint equation :math:`c(q) = 0` applies at all times.
+
+    The dynamics implicitly define a set of constraints on the momentum variables,
+    differentiating the constraint equation with respect to time giving that
+
+    .. math::
+
+        \partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.
+
+    The set of momentum variables satisfying the above for given position variables is
+    termed the cotangent space of the manifold (at a position). Here we assume that the
+    operation of projecting a momentum vector onto the cotangent space at a given
+    position is tractable to compute.
+    """
+
+    @abstractmethod
+    def constr(self, state: ChainState) -> ArrayLike:
+        """Constraint function at the current position.
+
+        Args:
+            state: State to compute value at.
+
+        Returns:
+            Value of :code:`constr(state.pos)` as 1D array.
+        """
+
+    @abstractmethod
+    def jacob_constr(self, state: ChainState) -> ArrayLike:
+        """Jacobian of constraint function at the current position.
+
+        Args:
+            state: State to compute value at.
+
+        Returns:
+            Value of Jacobian of :code:`constr(state.pos)` as 2D array.
+        """
+
+    @abstractmethod
+    def jacob_constr_inner_product(
+        self,
+        jacob_constr_1: MatrixLike,
+        inner_product_matrix: matrices.PositiveDefiniteMatrix,
+        jacob_constr_2: Optional[MatrixLike] = None,
+    ) -> MatrixLike:
+        """Compute inner product of rows of constraint Jacobian matrices.
+
+        Computes :code:`jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
+        potentially exploiting any structure / sparsity in :code:`jacob_constr_1`,
+        :code:`jacob_constr_2` and :code:`inner_product_matrix`.
+
+        Args:
+            jacob_constr_1: First constraint Jacobian in product.
+            inner_product_matrix: Positive-definite matrix defining inner-product
+                between rows of two constraint Jacobians.
+            jacob_constr_2: Second constraint Jacobian in product. Defaults to
+                :code:`jacob_constr_1` if set to :code:`None`.
+
+        Returns
+            Object corresponding to computed inner products of the constraint Jacobian
+            rows.
+        """
+
+    @abstractmethod
+    def dh2_flow_dmom(
+        self, state: ChainState, dt: ScalarLike
+    ) -> tuple[matrices.Matrix, matrices.Matrix]:
+        """Derivatives of :py:meth:`h2_flow` flow map with respect to momentum argument.
+
+        Args:
+            state: State to evaluate derivatives of flow map at.
+            dt: Time interval flow simulated for.
+
+        Returns:
+            Tuple :code:`(dpos_dmom, dmom_dmom)` with :code:`dpos_dmom` a matrix
+            representing derivative (Jacobian) of position output of :py:meth:`h2_flow`
+            with respect to the value of the momentum component of the initial input
+            state and :code:`dmom_dmom` a matrix representing derivative (Jacobian) of
+            momentum output of :py:meth:`h2_flow` with respect to the value of the
+            momentum component of the initial input state.
+        """
+
+    @abstractmethod
+    def project_onto_cotangent_space(
+        self, mom: ArrayLike, state: ChainState
+    ) -> ArrayLike:
+        """Project a momentum on to the co-tangent space at a position.
+
+        Args:
+            mom: Momentum (co-)vector as 1D array to project on to co-tangent space.
+            state: State definining position on the  manifold to project in to the
+                co-tangent space of.
+
+        Returns:
+            Projected momentum in the co-tangent space at :code:`state.pos`.
+        """
+
+    def sample_momentum(self, state: ChainState, rng: Generator) -> ArrayLike:
+        mom = super().sample_momentum(state, rng)
+        mom = self.project_onto_cotangent_space(mom, state)
+        return mom
 
 
-class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
+class ConstrainedEuclideanMetricSystem(
+    ConstrainedTractableFlowSystem, EuclideanMetricSystem
+):
     r"""Base class for Euclidean Hamiltonian systems subject to constraints.
 
     The (constrained) position space is assumed to be a differentiable manifold embedded
@@ -487,7 +599,7 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
         h_2(q, p) = \frac{1}{2} p^T M^{-1} p.
 
     The time-derivative of the constraint equation implies a further set of constraints
-    on the momentum :math:`q` with :math:`\partial c(q) M^{-1} p = 0` at all time
+    on the momentum :math:`p` with :math:`\partial c(q) M^{-1} p = 0` at all time
     points, corresponding to the momentum (velocity) being in the co-tangent space
     (tangent space) to the manifold.
 
@@ -622,52 +734,16 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
 
     @cache_in_state("pos")
     def constr(self, state: ChainState) -> ArrayLike:
-        """Constraint function at the current position.
-
-        Args:
-            state: State to compute value at.
-
-        Returns:
-            Value of :code:`constr(state.pos)` as 1D array.
-        """
         return self._constr(state.pos)
 
     @cache_in_state_with_aux("pos", "constr")
     def jacob_constr(self, state: ChainState) -> ArrayLike:
-        """Jacobian of constraint function at the current position.
-
-        Args:
-            state: State to compute value at.
-
-        Returns:
-            Value of Jacobian of :code:`constr(state.pos)` as 2D array.
-        """
         return self._jacob_constr(state.pos)
 
-    @abstractmethod
-    def jacob_constr_inner_product(
-        self,
-        jacob_constr_1: MatrixLike,
-        inner_product_matrix: matrices.PositiveDefiniteMatrix,
-        jacob_constr_2: Optional[MatrixLike] = None,
-    ) -> MatrixLike:
-        """Compute inner product of rows of constraint Jacobian matrices.
-
-        Computes :code:`jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`
-        potentially exploiting any structure / sparsity in :code:`jacob_constr_1`,
-        :code:`jacob_constr_2` and :code:`inner_product_matrix`.
-
-        Args:
-            jacob_constr_1: First constraint Jacobian in product.
-            inner_product_matrix: Positive-definite matrix defining inner-product
-                between rows of two constraint Jacobians.
-            jacob_constr_2: Second constraint Jacobian in product. Defaults to
-                :code:`jacob_constr_1` if set to :code:`None`.
-
-        Returns
-            Object corresponding to computed inner products of the constraint Jacobian
-            rows.
-        """
+    def dh2_flow_dmom(
+        self, state: ChainState, dt: ScalarLike
+    ) -> tuple[matrices.Matrix, matrices.Matrix]:
+        return (dt * self.metric.inv, matrices.IdentityMatrix(self.metric.shape[0]))
 
     @cache_in_state("pos")
     def gram(self, state: ChainState) -> matrices.PositiveDefiniteMatrix:
@@ -735,26 +811,11 @@ class ConstrainedEuclideanMetricSystem(EuclideanMetricSystem):
     def project_onto_cotangent_space(
         self, mom: ArrayLike, state: ChainState
     ) -> ArrayLike:
-        """Project a momentum on to the co-tangent space at a position.
-
-        Args:
-            mom: Momentum (co-)vector as 1D array to project on to co-tangent space.
-            state: State definining position on the  manifold to project in to the
-                co-tangent space of.
-
-        Returns:
-            Projected momentum in the co-tangent space at :code:`state.pos`.
-        """
         # Use parenthesis to force right-to-left evaluation to avoid
         # matrix-matrix products
         mom -= self.jacob_constr(state).T @ (
             self.inv_gram(state) @ (self.jacob_constr(state) @ (self.metric.inv @ mom))
         )
-        return mom
-
-    def sample_momentum(self, state: ChainState, rng: Generator) -> ArrayLike:
-        mom = super().sample_momentum(state, rng)
-        mom = self.project_onto_cotangent_space(mom, state)
         return mom
 
 
@@ -908,10 +969,10 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
 class GaussianDenseConstrainedEuclideanMetricSystem(
     GaussianEuclideanMetricSystem, DenseConstrainedEuclideanMetricSystem
 ):
-    r"""Gaussian Euclidean Hamiltonian system st. a dense set of constraints.
+    """Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.
 
-    See `ConstrainedEuclideanMetricSystem` for more details about constrained
-    systems and `GaussianEuclideanMetricSystem` for Gaussian Euclidean metric
+    See :py:class:`ConstrainedEuclideanMetricSystem` for more details about constrained
+    systems and :py:class:`GaussianEuclideanMetricSystem` for Gaussian Euclidean metric
     systems.
     """
 
@@ -938,7 +999,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 manifold corresponding to the ratio of the prior density (specified by
                 `neg_log_dens`) and the square-root of the determinant of the Gram
                 matrix defined by
-                
+
                 .. code-block::
 
                     gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T
@@ -987,7 +1048,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 *matrix-Hessian-product* (MHP) of the constraint function `constr` with
                 respect to the position array argument. The MHP is here defined as a
                 function of a `(dim_constr, dim_pos)` shaped 2D array `m`
-                
+
                 .. code-block::
 
                     mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))
@@ -1033,6 +1094,18 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
             return matrices.DenseSquareMatrix(
                 jacob_constr_1 @ (inner_product_matrix @ jacob_constr_2.T)
             )
+
+    def dh2_flow_dmom(
+        self, state: ChainState, dt: ScalarLike
+    ) -> tuple[matrices.Matrix, matrices.Matrix]:
+        omega = 1.0 / self.metric.eigval**0.5
+        sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
+        return (
+            matrices.EigendecomposedSymmetricMatrix(
+                self.metric.eigvec, sin_omega_dt * omega
+            ),
+            matrices.EigendecomposedSymmetricMatrix(self.metric.eigvec, cos_omega_dt),
+        )
 
 
 class RiemannianMetricSystem(System):
@@ -1509,7 +1582,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 *vector-Jacobian-product* (VJP) of `metric_func` with respect to the
                 position array argument. The VJP is here defined as a function of a 2D
                 array `v`
-                
+
                 .. code-block::
 
                     vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))
@@ -1517,7 +1590,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `M
                 = metric_func(q)` with respect to `q` i.e. the array of partial
                 derivatives of the function such that
-                
+
                 .. code-block::
 
                     jacob[i, j, k] = ∂M[i, j] / ∂q[k]
@@ -1564,7 +1637,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
     1D array of real eigenvalues, and `eigvec` the corresponding 2D array (orthogonal
     matrix) with eigenvectors as columns, then the resulting positive-definite metric
     matrix representation `M` is computed as
-    
+
     .. code-block::
 
         M = eigvec @ diag(softabs(eigval, softabs_coeff)) @ eigvec.T
@@ -1623,7 +1696,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the
                 position array argument. The MTP is here defined as a function of a
                 matrix `m` corresponding to
-                
+
                 .. code-block::
 
                     mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))
@@ -1631,7 +1704,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 where `tress` is the 'Tressian' of `f = neg_log_dens(q)` wrt `q` i.e.
                 the 3D array of third-order partial derivatives of the scalar-valued
                 function such that
-                
+
                 .. code-block::
 
                     tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
@@ -1695,7 +1768,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
 
         The matrix-Tressian-product (MTP) is here defined as a function of a matrix `m`
         corresponding to
-        
+
         .. code-block::
 
             mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))
@@ -1703,7 +1776,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         where `tress` is the 'Tressian' of `f = neg_log_dens(q)` with respect to `q =
         state.pos` i.e. the 3D array of third-order partial derivatives of the
         scalar-valued function such that
-        
+
         .. code-block::
 
             tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])
