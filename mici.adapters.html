@@ -208,16 +208,17 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dual averaging integrator step size adapter.</p>
 <p>Implementation of the dual algorithm step size adaptation algorithm described in
-[1], a modified version of the stochastic optimisation scheme of [2]. By default the
-adaptation is performed to control the <cite>accept_prob</cite> statistic of an integration
-transition to be close to a target value but the statistic adapted on can be altered
-by changing the <cite>adapt_stat_func</cite>.</p>
+Hoffman and Gelman (2014), a modified version of the stochastic optimisation scheme
+of Nesterov (2009). By default the adaptation is performed to control the
+<code class="code docutils literal notranslate"><span class="pre">accept_stat</span></code> statistic of an integration transition to be close to a target
+value but the statistic adapted on can be altered by changing the
+<code class="code docutils literal notranslate"><span class="pre">adapt_stat_func</span></code>.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+<li><p>Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
 path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 15(1), pp.1593-1623.</p></li>
-<li><p>Nesterov, Y., 2009. Primal-dual subgradient methods for convex problems.
+<li><p>Nesterov, Y. (2009). Primal-dual subgradient methods for convex problems.
 Mathematical programming 120(1), pp.221-259.</p></li>
 </ol>
 <dl class="field-list simple">
@@ -227,19 +228,19 @@ Mathematical programming 120(1), pp.221-259.</p></li>
 being controlled during adaptation.</p></li>
 <li><p><strong>adapt_stat_func</strong> (<em>Optional</em><em>[</em><em>AdaptationStatisticFunction</em><em>]</em>) – Function which given a dictionary of transition statistics
 outputs the value of the statistic to control during adaptation. By
-default this is set to a function which simply selects the ‘accept_stat’
-value in the statistics dictionary.</p></li>
+default this is set to a function which simply selects the
+:code:’accept_stat’ value in the statistics dictionary.</p></li>
 <li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Value to regularize the controlled output
-(logarithm of the integrator step size) towards. If <cite>None</cite> set to
-<cite>log(10 * init_step_size)</cite> where <cite>init_step_size</cite> is the initial
-‘reasonable’ step size found by a coarse search as recommended in
-Hoffman and Gelman (2014). This has the effect of giving the dual
+(logarithm of the integrator step size) towards. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> set to
+<code class="code docutils literal notranslate"><span class="pre">log(10</span> <span class="pre">*</span> <span class="pre">init_step_size)</span></code> where <code class="code docutils literal notranslate"><span class="pre">init_step_size</span></code> is the
+initial ‘reasonable’ step size found by a coarse search as recommended
+in Hoffman and Gelman (2014). This has the effect of giving the dual
 averaging algorithm a tendency towards testing step sizes larger than
 the initial value, with typically integrating with a larger step size
 having a lower computational cost.</p></li>
 <li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling amount of
 regularisation of controlled output (logarithm of the integrator step
-size) towards <cite>log_step_size_reg_target</cite>. Defaults to 0.05 as
+size) towards <code class="code docutils literal notranslate"><span class="pre">log_step_size_reg_target</span></code>. Defaults to 0.05 as
 recommended in Hoffman and Gelman (2014).</p></li>
 <li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
 weighting stochastic updates to smoothed log step size estimate. Should
@@ -253,14 +254,15 @@ statistic error estimate. Should be set to a non-negative value. A value
 &gt; 0 has the effect of stabilising early iterations. Defaults to the
 value of 10 as recommended in Hoffman and Gelman (2014).</p></li>
 <li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to use in initial
-search for a reasonable step size with an <cite>AdaptationError</cite> exception
-raised if a suitable step size is not found within this many iterations.</p></li>
+search for a reasonable step size with an
+<a class="reference internal" href="mici.errors.html#mici.errors.AdaptationError" title="mici.errors.AdaptationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.AdaptationError</span></code></a> exception raised if a suitable
+step size is not found within this many iterations.</p></li>
 <li><p><strong>log_step_size_reducer</strong> (<em>Optional</em><em>[</em><em>ReducerFunction</em><em>]</em>) – Reduction to apply to final per-chain step sizes
 estimates to produce overall integrator step size for main chain stages.
 The specified function should accept a sequence of logarithms of
 estimated step sizes and output a non-negative step size to use. If
-<cite>None</cite>, the default, a function which computes the arithmetic mean of
-the step sizes is used.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">None</span></code>, the default, a function which computes the arithmetic mean
+of the per-chain step sizes is used.</p></li>
 </ul>
 </dd>
 </dl>
@@ -348,29 +350,29 @@ child objects may be updated in-place by the method.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineCovarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dense metric adapter using online covariance estimates.</p>
-<p>Uses Welford’s algorithm [1] to stably compute an online estimate of the sample
-covariance matrix of the chain state position components during sampling. If online
-estimates are available from multiple independent chains, the final covariance
-matrix estimate is calculated from the per-chain statistics using a covariance
-variant due to Schubert and Gertz [2] of the parallel / batched incremental variance
-algorithm described by Chan et al. [3]. The covariance matrix estimates are
-optionally regularized towards a scaled identity matrix, with increasing weight for
-small number of samples, to decrease the effect of noisy estimates for small sample
-sizes, following the approach in Stan [4]. The metric matrix representation is set
-to a dense positive definite matrix corresponding to the inverse of the
-(regularized) covariance matrix estimate.</p>
+<p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
+sample covariance matrix of the chain state position components during sampling. If
+online estimates are available from multiple independent chains, the final
+covariance matrix estimate is calculated from the per-chain statistics using a
+covariance variant due to Schubert and Gertz (2018) of the parallel / batched
+incremental variance algorithm described by Chan et al. (1979). The covariance
+matrix estimates are optionally regularized towards a scaled identity matrix, with
+increasing weight for small number of samples, to decrease the effect of noisy
+estimates for small sample sizes, following the approach in Stan (Carpenter et al.,
+2017). The metric matrix representation is set to a dense positive definite matrix
+corresponding to the inverse of the (regularized) covariance matrix estimate.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Welford, B. P., 1962. Note on a method for calculating corrected sums of
+<li><p>Welford, B. P. (1962). Note on a method for calculating corrected sums of
 squares and products. Technometrics, 4(3), pp. 419–420.</p></li>
-<li><p>Schubert, E. and Gertz, M., 2018. Numerically stable parallel computation of
+<li><p>Schubert, E. and Gertz, M. (2018). Numerically stable parallel computation of
 (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.</p></li>
-<li><p>Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+<li><p>Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
 pairwise algorithm for computing sample variances. Technical Report
 STAN-CS-79-773, Department of Computer Science, Stanford University.</p></li>
 <li><p>Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
-M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
-programming language. Journal of Statistical Software, 76(1).</p></li>
+M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A
+probabilistic programming language. Journal of Statistical Software, 76(1).</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -468,26 +470,26 @@ child objects may be updated in-place by the method.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineVarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Diagonal metric adapter using online variance estimates.</p>
-<p>Uses Welford’s algorithm [1] to stably compute an online estimate of the sample
-variances of the chain state position components during sampling. If online
+<p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
+sample variances of the chain state position components during sampling. If online
 estimates are available from multiple independent chains, the final variance
 estimate is calculated from the per-chain statistics using the parallel / batched
-incremental variance algorithm described by Chan et al. [2]. The variance estimates
-are optionally regularized towards a common scalar value, with increasing weight for
-small number of samples, to decrease the effect of noisy estimates for small sample
-sizes, following the approach in Stan [3]. The metric matrix representation is set
-to a diagonal matrix with diagonal elements corresponding to the reciprocal of the
-(regularized) variance estimates.</p>
+incremental variance algorithm described by Chan et al. (1979). The variance
+estimates are optionally regularized towards a common scalar value, with increasing
+weight for small number of samples, to decrease the effect of noisy estimates for
+small sample sizes, following the approach in Stan (Carpenter et al., 2017). The
+metric matrix representation is set to a diagonal matrix with diagonal elements
+corresponding to the reciprocal of the (regularized) variance estimates.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Welford, B. P., 1962. Note on a method for calculating corrected sums of
+<li><p>Welford, B. P. (1962). Note on a method for calculating corrected sums of
 squares and products. Technometrics, 4(3), pp. 419–420.</p></li>
-<li><p>Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a
+<li><p>Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a
 pairwise algorithm for computing sample variances. Technical Report
 STAN-CS-79-773, Department of Computer Science, Stanford University.</p></li>
 <li><p>Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,
-M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic
-programming language. Journal of Statistical Software, 76(1).</p></li>
+M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A
+probabilistic programming language. Journal of Statistical Software, 76(1).</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -602,7 +604,7 @@ child objects may be updated in-place by the method.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.adapters.default_adapt_stat_func">
 <span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">default_adapt_stat_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#default_adapt_stat_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.default_adapt_stat_func" title="Permalink to this definition"></a></dt>
-<dd><p>Function to extract default acceptance statistic used for step-size adaptation.</p>
+<dd><p>Function to extract default statistic used for step-size adaptation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>stats</strong> (<em>TransitionStatistics</em>) – Dictionary of transition statistics.</p>
@@ -640,7 +642,7 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Compute minimum of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>

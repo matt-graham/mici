@@ -77,15 +77,19 @@
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">nla</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span> <span class="k">as</span> <span class="nn">sla</span>
+
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">hash_array</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">MatrixLike</span><span class="p">,</span> <span class="n">ScalarLike</span>
 
 
@@ -720,7 +724,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span>
 
 <div class="viewcode-block" id="ScaledIdentityMatrix.grad_quadratic_form_inv"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.ScaledIdentityMatrix.grad_quadratic_form_inv">[docs]</a>    <span class="k">def</span> <span class="nf">grad_quadratic_form_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">vector</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">**</span> <span class="mi">2</span></div>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">vector</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="o">**</span><span class="mi">2</span></div>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;(shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, scalar=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="si">}</span><span class="s2">)&quot;</span>
@@ -753,7 +757,7 @@
         <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="o">**</span><span class="mf">0.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="DiagonalMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.DiagonalMatrix">[docs]</a><span class="k">class</span> <span class="nc">DiagonalMatrix</span><span class="p">(</span><span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">,</span> <span class="n">ImplicitArrayMatrix</span><span class="p">):</span>
@@ -838,7 +842,7 @@
         <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_make_array_triangular</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
@@ -1114,7 +1118,7 @@
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularFactoredDefiniteMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">(</span>
-                <span class="n">factor</span><span class="o">=</span><span class="n">scalar</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span>
+                <span class="n">factor</span><span class="o">=</span><span class="n">scalar</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
@@ -1614,7 +1618,7 @@
         <span class="k">return</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SoftAbsRegularizedPositiveDefiniteMatrix"><a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.SoftAbsRegularizedPositiveDefiniteMatrix">[docs]</a><span class="k">class</span> <span class="nc">SoftAbsRegularizedPositiveDefiniteMatrix</span><span class="p">(</span>

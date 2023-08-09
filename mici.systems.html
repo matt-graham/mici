@@ -63,6 +63,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">mici.systems module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem"><code class="docutils literal notranslate"><span class="pre">CholeskyFactoredRiemannianMetricSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem"><code class="docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem"><code class="docutils literal notranslate"><span class="pre">ConstrainedTractableFlowSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem"><code class="docutils literal notranslate"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.DenseRiemannianMetricSystem"><code class="docutils literal notranslate"><span class="pre">DenseRiemannianMetricSystem</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mici.systems.DiagonalRiemannianMetricSystem"><code class="docutils literal notranslate"><span class="pre">DiagonalRiemannianMetricSystem</span></code></a></li>
@@ -442,7 +443,7 @@ partial derivatives of the function such that</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#mici.systems.EuclideanMetricSystem" title="mici.systems.EuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanMetricSystem</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem" title="mici.systems.ConstrainedTractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedTractableFlowSystem</span></code></a>, <a class="reference internal" href="#mici.systems.EuclideanMetricSystem" title="mici.systems.EuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanMetricSystem</span></code></a></p>
 <p>Base class for Euclidean Hamiltonian systems subject to constraints.</p>
 <p>The (constrained) position space is assumed to be a differentiable manifold embedded
 with a <span class="math notranslate nohighlight">\(Q\)</span>-dimensional ambient Euclidean space. The <span class="math notranslate nohighlight">\(Q-C\)</span> dimensional
@@ -457,7 +458,7 @@ Hamiltonian component defined as</p>
 <div class="math notranslate nohighlight">
 \[h_2(q, p) = \frac{1}{2} p^T M^{-1} p.\]</div>
 <p>The time-derivative of the constraint equation implies a further set of constraints
-on the momentum <span class="math notranslate nohighlight">\(q\)</span> with <span class="math notranslate nohighlight">\(\partial c(q) M^{-1} p = 0\)</span> at all time
+on the momentum <span class="math notranslate nohighlight">\(p\)</span> with <span class="math notranslate nohighlight">\(\partial c(q) M^{-1} p = 0\)</span> at all time
 points, corresponding to the momentum (velocity) being in the co-tangent space
 (tangent space) to the manifold.</p>
 <p>The target distribution is either assumed to be directly specified with unnormalized
@@ -633,19 +634,22 @@ automatically.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom">
-<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
+<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivatives of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(dpos_dmom,</span> <span class="pre">dmom_dmom)</span></code> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix
+representing derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a>
+with respect to the value of the momentum component of the initial input
+state and <code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of
+momentum output of <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.ConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the
+momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
@@ -863,7 +867,7 @@ the ambient space.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
 <p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
 potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
@@ -943,7 +947,393 @@ co-tangent space of.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum">
-<span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.sample_momentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum" title="Permalink to this definition"></a></dt>
+<dd><p>Sample a momentum from its conditional distribution given a position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State defining position to condition on.</p></li>
+<li><p><strong>rng</strong> (<em>Generator</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sampled momentum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedTractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mici.systems.TractableFlowSystem" title="mici.systems.TractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowSystem</span></code></a></p>
+<p>Base class for Hamiltonian systems subject to constraints with tractable flows.</p>
+<p>The (constrained) position space is assumed to be a differentiable manifold embedded
+with a <span class="math notranslate nohighlight">\(Q\)</span>-dimensional ambient Euclidean space. The <span class="math notranslate nohighlight">\(Q-C\)</span> dimensional
+manifold <span class="math notranslate nohighlight">\(\mathcal{M}\)</span> is implicitly defined by an equation</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace`\]</div>
+<p>with <span class="math notranslate nohighlight">\(c: \mathbb{R}^Q \to \mathbb{R}^C\)</span> the differentiable and surjective
+vector-valued <em>constraint function</em>.</p>
+<p>The Hamiltonian function <span class="math notranslate nohighlight">\(h\)</span> is assumed to have the general form</p>
+<div class="math notranslate nohighlight">
+\[h(q, p) = h_1(q) + h_2(q, p)\]</div>
+<p>where <span class="math notranslate nohighlight">\(q\)</span> and <span class="math notranslate nohighlight">\(p\)</span> are the position and momentum variables respectively,
+and <span class="math notranslate nohighlight">\(h_1\)</span> and <span class="math notranslate nohighlight">\(h_2\)</span> Hamiltonian component functions. The exact
+<em>unconstrained</em> Hamiltonian flows for both the <span class="math notranslate nohighlight">\(h_1\)</span> and <span class="math notranslate nohighlight">\(h_2\)</span>
+components, respectively <span class="math notranslate nohighlight">\(\Phi_1\)</span> and <span class="math notranslate nohighlight">\(\Phi_2\)</span> are assumed to be
+tractable for subclasses of this class.</p>
+<p>The <em>constrained</em> Hamiltonian dynamics are described by the system of differential
+algebraic equations</p>
+<div class="math notranslate nohighlight">
+\[\dot{q} = \nabla_2 h(q, p), \quad
+\dot{p} = -\nabla_1 h(q, p) - \partial c(q)^T\lambda, \quad
+c(q) = 0.\]</div>
+<p>where math:<cite>lambda</cite> is a set of Lagrange multipliers of dimension equal to number
+of constraints, <span class="math notranslate nohighlight">\(C\)</span>, and which are implicitly defined by the condition that
+the constraint equation <span class="math notranslate nohighlight">\(c(q) = 0\)</span> applies at all times.</p>
+<p>The dynamics implicitly define a set of constraints on the momentum variables,
+differentiating the constraint equation with respect to time giving that</p>
+<div class="math notranslate nohighlight">
+\[\partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.\]</div>
+<p>The set of momentum variables satisfying the above for given position variables is
+termed the cotangent space of the manifold (at a position). Here we assume that the
+operation of projecting a momentum vector onto the cotangent space at a given
+position is tractable to compute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+logarithm of an unnormalized probability density on the position space
+with respect to a reference measure, with the corresponding
+distribution on the position space being the target distribution it is
+wished to draw approximate samples from.</p></li>
+<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+derivative of <cite>neg_log_dens</cite> with respect to the position array
+argument. Optionally the function may instead return a 2-tuple of values
+with the first being the array corresponding to the derivative and the
+second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
+position array. If <cite>None</cite> is passed (the default) an automatic
+differentiation fallback will be used to attempt to construct the
+derivative of <cite>neg_log_dens</cite> automatically.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.constr">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.constr" title="Permalink to this definition"></a></dt>
+<dd><p>Constraint function at the current position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 1D array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh1_dpos">
+<span class="sig-name descname"><span class="pre">dh1_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh1_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h1</cite> Hamiltonian component with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_dmom">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2(state)</cite> derivative with respect to <cite>state.mom</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_dpos">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivatives of <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="mici.systems.ConstrainedTractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> flow map with respect to momentum argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(dpos_dmom,</span> <span class="pre">dmom_dmom)</span></code> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix
+representing derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="mici.systems.ConstrainedTractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a>
+with respect to the value of the momentum component of the initial input
+state and <code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of
+momentum output of <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="mici.systems.ConstrainedTractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the
+momentum component of the initial input state.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh_dmom">
+<span class="sig-name descname"><span class="pre">dh_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of Hamiltonian with respect to momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h(state)</cite> derivative with respect to <cite>state.mom</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh_dpos">
+<span class="sig-name descname"><span class="pre">dh_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh_dpos" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of Hamiltonian with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.grad_neg_log_dens">
+<span class="sig-name descname"><span class="pre">grad_neg_log_dens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.grad_neg_log_dens" title="Permalink to this definition"></a></dt>
+<dd><p>Derivative of negative log density with respect to position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>neg_log_dens(state)</cite> derivative with respect to <cite>state.pos</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h">
+<span class="sig-name descname"><span class="pre">h</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian function for system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of Hamiltonian.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h1">
+<span class="sig-name descname"><span class="pre">h1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h1" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian component depending only on position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h1_flow">
+<span class="sig-name descname"><span class="pre">h1_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h1_flow" title="Permalink to this definition"></a></dt>
+<dd><p>Apply exact flow map corresponding to <cite>h1</cite> Hamiltonian component.</p>
+<p><cite>state</cite> argument is modified in place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h2">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2" title="Permalink to this definition"></a></dt>
+<dd><p>Hamiltonian component depending on momentum and optionally position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h2_flow">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="Permalink to this definition"></a></dt>
+<dd><p>Apply exact flow map corresponding to <cite>h2</cite> Hamiltonian component.</p>
+<p><cite>state</cite> argument is modified in place.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.jacob_constr">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr" title="Permalink to this definition"></a></dt>
+<dd><p>Jacobian of constraint function at the current position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of Jacobian of <code class="code docutils literal notranslate"><span class="pre">constr(state.pos)</span></code> as 2D array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product" title="Permalink to this definition"></a></dt>
+<dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
+<p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
+potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_2</span></code> and <code class="code docutils literal notranslate"><span class="pre">inner_product_matrix</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
+<li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
+between rows of two constraint Jacobians.</p></li>
+<li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
+<code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>MatrixLike</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>Object corresponding to computed inner products of the constraint Jacobian
+rows.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.neg_log_dens">
+<span class="sig-name descname"><span class="pre">neg_log_dens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.neg_log_dens" title="Permalink to this definition"></a></dt>
+<dd><p>Negative logarithm of unnormalized density of target distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to compute value at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value of computed negative log density.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ScalarLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">project_onto_cotangent_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.project_onto_cotangent_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space" title="Permalink to this definition"></a></dt>
+<dd><p>Project a momentum on to the co-tangent space at a position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mom</strong> (<em>ArrayLike</em>) – Momentum (co-)vector as 1D array to project on to co-tangent space.</p></li>
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State definining position on the  manifold to project in to the
+co-tangent space of.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Projected momentum in the co-tangent space at <code class="code docutils literal notranslate"><span class="pre">state.pos</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ArrayLike</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.sample_momentum">
+<span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.sample_momentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.sample_momentum" title="Permalink to this definition"></a></dt>
 <dd><p>Sample a momentum from its conditional distribution given a position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1131,19 +1521,22 @@ automatically.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">
-<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
+<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivatives of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(dpos_dmom,</span> <span class="pre">dmom_dmom)</span></code> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix
+representing derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a>
+with respect to the value of the momentum component of the initial input
+state and <code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of
+momentum output of <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.DenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the
+momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
@@ -2224,28 +2617,6 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="mici.systems.EuclideanMetricSystem.dh2_flow_dmom">
-<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#EuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.EuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.EuclideanMetricSystem.h2_flow" title="mici.systems.EuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.EuclideanMetricSystem.h2_flow" title="mici.systems.EuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.EuclideanMetricSystem.dh_dmom">
 <span class="sig-name descname"><span class="pre">dh_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.EuclideanMetricSystem.dh_dmom" title="Permalink to this definition"></a></dt>
 <dd><p>Derivative of Hamiltonian with respect to momentum.</p>
@@ -2420,9 +2791,9 @@ component of the initial input state.</p>
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">GaussianDenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianDenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem" title="mici.systems.GaussianEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussianEuclideanMetricSystem</span></code></a>, <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem" title="mici.systems.DenseConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></code></a></p>
-<p>Gaussian Euclidean Hamiltonian system st. a dense set of constraints.</p>
-<p>See <cite>ConstrainedEuclideanMetricSystem</cite> for more details about constrained
-systems and <cite>GaussianEuclideanMetricSystem</cite> for Gaussian Euclidean metric
+<p>Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.</p>
+<p>See <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a> for more details about constrained
+systems and <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem" title="mici.systems.GaussianEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussianEuclideanMetricSystem</span></code></a> for Gaussian Euclidean metric
 systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2576,19 +2947,22 @@ Jacobian and value) of <cite>constr</cite> automatically.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">
-<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
+<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
+<dd><p>Derivatives of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
+<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
+<dd class="field-even"><p>Tuple <code class="code docutils literal notranslate"><span class="pre">(dpos_dmom,</span> <span class="pre">dmom_dmom)</span></code> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix
+representing derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a>
+with respect to the value of the momentum component of the initial input
+state and <code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of
+momentum output of <a class="reference internal" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the
+momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
@@ -3025,28 +3399,6 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom">
-<span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianEuclideanMetricSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem.h2_flow" title="mici.systems.GaussianEuclideanMetricSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4652,28 +5004,6 @@ derivative of <cite>neg_log_dens</cite> automatically.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>ArrayLike</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_flow_dmom">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_flow_dmom" title="Permalink to this definition"></a></dt>
-<dd><p>Derivatives of <cite>h2_flow</cite> flow map with respect to momentum argument.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Tuple <cite>(dpos_dmom, dmom_dmom)</cite> with <code class="code docutils literal notranslate"><span class="pre">dpos_dmom</span></code> a matrix representing
-derivative (Jacobian) of position output of <a class="reference internal" href="#mici.systems.TractableFlowSystem.h2_flow" title="mici.systems.TractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect
-to the value of the momentum component of the initial input state and
-<code class="code docutils literal notranslate"><span class="pre">dmom_dmom</span></code> a matrix representing derivative (Jacobian) of momentum
-output of <a class="reference internal" href="#mici.systems.TractableFlowSystem.h2_flow" title="mici.systems.TractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> with respect to the value of the momentum
-component of the initial input state.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>

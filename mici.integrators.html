@@ -246,7 +246,7 @@ step size adapter will be used to set the step size before calling the
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.integrators.ConstrainedLeapfrogIntegrator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">ConstrainedLeapfrogIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_inner_step=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_tol=2e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver=&lt;function</span> <span class="pre">solve_projection_onto_manifold_quasi_newton&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver_kwargs=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#ConstrainedLeapfrogIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.ConstrainedLeapfrogIntegrator" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.integrators.</span></span><span class="sig-name descname"><span class="pre">ConstrainedLeapfrogIntegrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_inner_step=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_tol=2e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_check_norm=&lt;function</span> <span class="pre">maximum_norm&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver=&lt;function</span> <span class="pre">solve_projection_onto_manifold_newton&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection_solver_kwargs=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/integrators.html#ConstrainedLeapfrogIntegrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.integrators.ConstrainedLeapfrogIntegrator" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.integrators.TractableFlowIntegrator" title="mici.integrators.TractableFlowIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowIntegrator</span></code></a></p>
 <p>Leapfrog integrator for constrained Hamiltonian systems.</p>
 <p>The Hamiltonian function is assumed to be expressible as the sum of two components
@@ -254,7 +254,7 @@ for which the corresponding (unconstrained) Hamiltonian flows can be exactly
 simulated. Specifically it is assumed that the Hamiltonian function <cite>h</cite> takes the
 form</p>
 <div class="math notranslate nohighlight">
-\[h(q, p) = h_1(q) + h_2(q, p)\]</div>
+\[h(q, p) = h_1(q) + h_2(q, p),\]</div>
 <p>where <span class="math notranslate nohighlight">\(q\)</span> and <span class="math notranslate nohighlight">\(p\)</span> are the position and momentum variables respectively,
 and <span class="math notranslate nohighlight">\(h_1\)</span> and <span class="math notranslate nohighlight">\(h_2\)</span> Hamiltonian component functions for which the exact
 flows, respectively <span class="math notranslate nohighlight">\(\Phi_1\)</span> and <span class="math notranslate nohighlight">\(\Phi_2\)</span>, can be computed.</p>
@@ -279,7 +279,7 @@ c(q) = 0.\]</div>
 <p>The dynamics implicitly define a set of constraints on the momentum variables,
 differentiating the constraint equation with respect to time giving that</p>
 <div class="math notranslate nohighlight">
-\[\partial c(q) \nabla_2 h(q, p) = \nabla_2 h_2(q, p) = 0.\]</div>
+\[\partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.\]</div>
 <p>The set of momentum variables satisfying the above for given position variables is
 termed the cotangent space of the manifold (at a position), and the set of
 position-momentum pairs for which the position is on the constraint manifold and the
@@ -319,7 +319,8 @@ such that <span class="math notranslate nohighlight">\(c(q') = 0\)</span> and <s
 <span class="math notranslate nohighlight">\(\partial c(q') \nabla_2 h(q', p') = 0\)</span>.</p>
 <p>This can be decomposed as first solving for <span class="math notranslate nohighlight">\(\lambda\)</span> such that</p>
 <div class="math notranslate nohighlight">
-\[c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) = 0\]</div>
+\[c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1)
+= c((\Phi_2(t)(q, p + \partial c(q)^T \lambda))_1) = 0,\]</div>
 <p>i.e. solving for the values of the Lagrange multipliers such that the position
 component of the output of <span class="math notranslate nohighlight">\(\Phi_2(t) \circ \Pi(\lambda)\)</span> is on the manifold,
 with this typically a non-linear system of equations that will need to be solved
@@ -327,26 +328,54 @@ iteratively e.g. using Newton’s method. The momentum output of <span class="ma
 \circ \Pi(\lambda)\)</span> is then projected in to the cotangent space to compute the final
 state pair, with this projection step as noted above typically having an analytic
 solution.</p>
+<p>For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).</p>
 <p>The overall second-order integrator is then defined as the symmetric composition</p>
 <div class="math notranslate nohighlight">
 \[\Psi(t) = A(t / 2) \circ B(t / N)^N \circ A(t / 2),\]</div>
 <p>where <span class="math notranslate nohighlight">\(N\)</span> is a positive integer corresponding to the number of ‘inner’
-<span class="math notranslate nohighlight">\(h_2\)</span> flow steps. This integrator exactly preserves the constraints at all
-steps, such that if an initial position momentum pair <span class="math notranslate nohighlight">\((q, p)\)</span> are in the
-cotangent bundle, the corresponding pair after calling the <a class="reference internal" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step" title="mici.integrators.ConstrainedLeapfrogIntegrator.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> method of
-the integrator will also be in the cotangent bundle.</p>
-<p>For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).</p>
+<span class="math notranslate nohighlight">\(h_2\)</span> flow steps, following the ‘geodesic integrator’ formulation proposed by
+Leimkuhler and Matthews (2016). The additional flexibility introduced by having
+the possibility of <span class="math notranslate nohighlight">\(N &gt; 1\)</span> is particularly of use when evaluation of
+<span class="math notranslate nohighlight">\(\Phi_1\)</span> is significantly more expensive than evaluation of <span class="math notranslate nohighlight">\(\Phi_2\)</span>; in
+this case using <span class="math notranslate nohighlight">\(N &gt; 1\)</span> can allow a larger time step <span class="math notranslate nohighlight">\(t\)</span> to be used than
+may be otherwise possible due to the need to ensure the iterative solver used in
+<span class="math notranslate nohighlight">\(B\)</span> does not diverge, with a smaller step size <span class="math notranslate nohighlight">\(t / N\)</span> used for the
+steps involving the iterative solves with the (cheaper) <span class="math notranslate nohighlight">\(\Phi_2\)</span> flow map
+and a larger step size <span class="math notranslate nohighlight">\(t\)</span> used for the steps involving the (more expensive)
+<span class="math notranslate nohighlight">\(\Phi_1\)</span> flow map.</p>
+<p>This integrator exactly preserves the constraints at all steps, such that if an
+initial position momentum pair <span class="math notranslate nohighlight">\((q, p)\)</span> are in the cotangent bundle, the
+corresponding pair after calling the <a class="reference internal" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step" title="mici.integrators.ConstrainedLeapfrogIntegrator.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> method of the integrator will
+also be in the cotangent bundle, <em>providing the iterative solver converges</em>.</p>
+<p>As the iterative solves may fail to converge, or may converge to one of multiple
+solutions, following the approach proposed by Zappa, Holmes-Cerfon and Goodman
+(2018), an explicit <em>reversibility check</em> is performed to ensure the overall
+integrator step is time-reversible; see also Lelievre, Rousset and Stoltz (2019) for
+an analysis of this approach specifically in the context of Hamiltonian Monte Carlo.
+If the reversibility check fails or the iterative solver fails to converge an
+appropriate error is raised (<a class="reference internal" href="mici.errors.html#mici.errors.NonReversibleStepError" title="mici.errors.NonReversibleStepError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.NonReversibleStepError</span></code></a> and
+<a class="reference internal" href="mici.errors.html#mici.errors.ConvergenceError" title="mici.errors.ConvergenceError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.ConvergenceError</span></code></a> respectively).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p>Reich, S. (1996). Symplectic integration of constrained Hamiltonian systems by
 composition methods. SIAM journal on numerical analysis, 33(2), 475-491.</p></li>
 <li><p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
 Cambridge University Press.</p></li>
+<li><p>Leimkuhler, B., &amp; Matthews, C. (2016). Efficient molecular dynamics using
+geodesic integration and solvent–solute splitting. Proceedings of the Royal
+Society A: Mathematical, Physical and Engineering Sciences, 472(2189),
+20160138.</p></li>
+<li><p>Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:
+sampling densities and integrating functions. Communications on Pure and
+Applied Mathematics, 71(12), 2609-2647.</p></li>
+<li><p>Lelievre, T., Rousset, M., &amp; Stoltz, G. (2019). Hybrid Monte Carlo methods for
+sampling probability measures on submanifolds. Numerische Mathematik, 143,
+379-421.</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to integrate the dynamics of.</p></li>
+<li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.ConstrainedTractableFlowSystem" title="mici.systems.ConstrainedTractableFlowSystem"><em>ConstrainedTractableFlowSystem</em></a>) – Hamiltonian system to integrate the constrained dynamics of.</p></li>
 <li><p><strong>step_size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Integrator time step. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> it is assumed that a
 step size adapter will be used to set the step size before calling the
 <a class="reference internal" href="#mici.integrators.ConstrainedLeapfrogIntegrator.step" title="mici.integrators.ConstrainedLeapfrogIntegrator.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> method.</p></li>
@@ -391,7 +420,9 @@ equations in <code class="code docutils literal notranslate"><span class="pre">�
 the derivative of the action of the (linear) <code class="code docutils literal notranslate"><span class="pre">system.h2_flow</span></code> map
 on the state momentum component with respect to the position component.
 This is used to project the state position component back on to the
-manifold after an unconstrained <code class="code docutils literal notranslate"><span class="pre">system.h2_flow</span></code> update.</p>
+manifold after an unconstrained <code class="code docutils literal notranslate"><span class="pre">system.h2_flow</span></code> update. If the
+solver fails to convege a <a class="reference internal" href="mici.errors.html#mici.errors.ConvergenceError" title="mici.errors.ConvergenceError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.ConvergenceError</span></code></a>
+exception is raised.</p>
 </p></li>
 <li><p><strong>projection_solver_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – Dictionary of any keyword arguments to
 <code class="code docutils literal notranslate"><span class="pre">projection_solver</span></code>.</p></li>
@@ -443,15 +474,25 @@ B(t)(q, p) = \lbrace (q, p') : p' = p - t \nabla_1 h_2(q, p') \rbrace, \\
 B^*(t)(q, p) = (q, p - t \nabla_1 h_2(q, p)), \\
 C(t)(q, p) = (q + t \nabla_2 h_2(q, p), p), \\
 C^*(t)(q, p) = \lbrace (q', p) : q' = q + t \nabla_2 h_2(q', p) \rbrace.\end{split}\]</div>
-<p>Fixed-point iterations are used to solve the non-linear systems of equations in the
-implicit component updates (<span class="math notranslate nohighlight">\(B\)</span> and <span class="math notranslate nohighlight">\(C^*\)</span>).</p>
 <p>The resulting implicit integrator is a symmetric second-order method corresponding
 to a symplectic partitioned Runge-Kutta method. See Section 6.3.2 in Leimkuhler and
 Reich (2004) for more details.</p>
+<p>Fixed-point iterations are used to solve the non-linear systems of equations in the
+implicit component updates (<span class="math notranslate nohighlight">\(B\)</span> and <span class="math notranslate nohighlight">\(C^*\)</span>). As the iterative solves may
+fail to converge, or may converge to one of multiple solutions, following the
+approach proposed by Zappa, Holmes-Cerfon and Goodman (2018), an explicit
+<em>reversibility check</em> is performed to ensure the overall integrator step is
+time-reversible. If the reversibility check fails or the iterative solver fails to
+converge an appropriate error is raised
+(<a class="reference internal" href="mici.errors.html#mici.errors.NonReversibleStepError" title="mici.errors.NonReversibleStepError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.NonReversibleStepError</span></code></a> and
+<a class="reference internal" href="mici.errors.html#mici.errors.ConvergenceError" title="mici.errors.ConvergenceError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.ConvergenceError</span></code></a> respectively).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
 Cambridge University Press.</p></li>
+<li><p>Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:
+sampling densities and integrating functions. Communications on Pure and
+Applied Mathematics, 71(12), 2609-2647.</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -521,15 +562,24 @@ q' = q +  t \nabla_2 h(q', p'),
 p' = p - t \nabla_1 h(q', p'))
 \rbrace, \\
 A^*(t)(q, p) = (q +  t \nabla_2 h(q, p), p - t \nabla_1 h(q, p)).\end{split}\]</div>
-<p>A fixed-point iteration is used to solve the non-linear system of equations in the
-implicit Euler step <span class="math notranslate nohighlight">\(A\)</span>.</p>
 <p>The resulting implicit integrator is a second-order method corresponding to a
 symplectic one-stage Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler
 and Reich (2004) for more details.</p>
+<p>A fixed-point iteration is used to solve the non-linear system of equations in the
+implicit Euler step <span class="math notranslate nohighlight">\(A\)</span>. As the iterative solve may fail to converge, or may
+converge to one of multiple solutions, following the approach proposed by
+Zappa, Holmes-Cerfon and Goodman (2018), an explicit <em>reversibility check</em> is
+performed to ensure the overall integrator step is time-reversible. If the
+reversibility check fails or the iterative solver fails to converge an appropriate
+error is raised (<a class="reference internal" href="mici.errors.html#mici.errors.NonReversibleStepError" title="mici.errors.NonReversibleStepError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.NonReversibleStepError</span></code></a> and
+<a class="reference internal" href="mici.errors.html#mici.errors.ConvergenceError" title="mici.errors.ConvergenceError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.ConvergenceError</span></code></a> respectively).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p>Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).
 Cambridge University Press.</p></li>
+<li><p>Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:
+sampling densities and integrating functions. Communications on Pure and
+Applied Mathematics, 71(12), 2609-2647.</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

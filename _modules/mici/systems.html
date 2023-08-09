@@ -76,32 +76,26 @@
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">cache_in_state</span><span class="p">,</span> <span class="n">cache_in_state_with_aux</span>
+
 <span class="kn">import</span> <span class="nn">mici.matrices</span> <span class="k">as</span> <span class="nn">matrices</span>
 <span class="kn">from</span> <span class="nn">mici.autodiff</span> <span class="kn">import</span> <span class="n">autodiff_fallback</span>
+<span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">cache_in_state</span><span class="p">,</span> <span class="n">cache_in_state_with_aux</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span>
+
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
+
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">ScalarLike</span><span class="p">,</span>
-        <span class="n">ArrayLike</span><span class="p">,</span>
-        <span class="n">MatrixLike</span><span class="p">,</span>
-        <span class="n">MetricLike</span><span class="p">,</span>
-        <span class="n">ArrayFunction</span><span class="p">,</span>
-        <span class="n">ScalarFunction</span><span class="p">,</span>
-        <span class="n">GradientFunction</span><span class="p">,</span>
-        <span class="n">HessianFunction</span><span class="p">,</span>
-        <span class="n">MatrixTressianProduct</span><span class="p">,</span>
-        <span class="n">MatrixTressianProductFunction</span><span class="p">,</span>
-        <span class="n">JacobianFunction</span><span class="p">,</span>
-        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
-        <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
-        <span class="n">VectorJacobianProduct</span><span class="p">,</span>
-        <span class="n">VectorJacobianProductFunction</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">GradientFunction</span><span class="p">,</span>
+                            <span class="n">HessianFunction</span><span class="p">,</span> <span class="n">JacobianFunction</span><span class="p">,</span>
+                            <span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
+                            <span class="n">MatrixLike</span><span class="p">,</span> <span class="n">MatrixTressianProduct</span><span class="p">,</span>
+                            <span class="n">MatrixTressianProductFunction</span><span class="p">,</span> <span class="n">MetricLike</span><span class="p">,</span>
+                            <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">VectorJacobianProduct</span><span class="p">,</span>
+                            <span class="n">VectorJacobianProductFunction</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="System"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.System">[docs]</a><span class="k">class</span> <span class="nc">System</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -301,7 +295,7 @@
 <span class="sd">    and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact</span>
 <span class="sd">    Hamiltonian flows for both the :math:`h_1` and :math:`h_2` components are assumed to</span>
 <span class="sd">    be tractable for subclasses of this class.</span>
-<span class="sd">    </span>
+
 <span class="sd">    By default :math:`h_1` is assumed to correspond to the negative logarithm of an</span>
 <span class="sd">    unnormalized density on the position variables with respect to a reference measure,</span>
 <span class="sd">    with the corresponding distribution on the position space being the target</span>
@@ -317,22 +311,6 @@
 <span class="sd">        Args:</span>
 <span class="sd">            state: State to start flow at.</span>
 <span class="sd">            dt: Time interval to simulate flow for.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-
-<div class="viewcode-block" id="TractableFlowSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.TractableFlowSystem.dh2_flow_dmom">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivatives of `h2_flow` flow map with respect to momentum argument.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            dt: Time interval flow simulated for.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Tuple `(dpos_dmom, dmom_dmom)` with :code:`dpos_dmom` a matrix representing</span>
-<span class="sd">            derivative (Jacobian) of position output of :py:meth:`h2_flow` with respect</span>
-<span class="sd">            to the value of the momentum component of the initial input state and</span>
-<span class="sd">            :code:`dmom_dmom` a matrix representing derivative (Jacobian) of momentum</span>
-<span class="sd">            output of :py:meth:`h2_flow` with respect to the value of the momentum</span>
-<span class="sd">            component of the initial input state.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div></div>
 
 
@@ -425,9 +403,6 @@
 <div class="viewcode-block" id="EuclideanMetricSystem.h2_flow"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.h2_flow">[docs]</a>    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">+=</span> <span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh2_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="EuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
-
 <div class="viewcode-block" id="EuclideanMetricSystem.sample_momentum"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.sample_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">sqrt</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div></div>
 
@@ -517,7 +492,7 @@
         <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span></div>
 
 <div class="viewcode-block" id="GaussianEuclideanMetricSystem.h2_flow"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianEuclideanMetricSystem.h2_flow">[docs]</a>    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span> <span class="o">**</span> <span class="mf">0.5</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
         <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
         <span class="n">eigvec_T_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span>
         <span class="n">eigvec_T_mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span>
@@ -526,20 +501,151 @@
         <span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">@</span> <span class="p">(</span>
             <span class="n">cos_omega_dt</span> <span class="o">*</span> <span class="n">eigvec_T_mom</span> <span class="o">-</span> <span class="p">(</span><span class="n">sin_omega_dt</span> <span class="o">/</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">eigvec_T_pos</span>
-        <span class="p">)</span></div>
-
-<div class="viewcode-block" id="GaussianEuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span> <span class="o">**</span> <span class="mf">0.5</span>
-        <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span>
-            <span class="p">),</span>
-            <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">cos_omega_dt</span><span class="p">),</span>
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">ConstrainedEuclideanMetricSystem</span><span class="p">(</span><span class="n">EuclideanMetricSystem</span><span class="p">):</span>
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem">[docs]</a><span class="k">class</span> <span class="nc">ConstrainedTractableFlowSystem</span><span class="p">(</span><span class="n">TractableFlowSystem</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for Hamiltonian systems subject to constraints with tractable flows.</span>
+
+<span class="sd">    The (constrained) position space is assumed to be a differentiable manifold embedded</span>
+<span class="sd">    with a :math:`Q`-dimensional ambient Euclidean space. The :math:`Q-C` dimensional</span>
+<span class="sd">    manifold :math:`\mathcal{M}` is implicitly defined by an equation</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace`</span>
+
+<span class="sd">    with :math:`c: \mathbb{R}^Q \to \mathbb{R}^C` the differentiable and surjective</span>
+<span class="sd">    vector-valued *constraint function*.</span>
+
+<span class="sd">    The Hamiltonian function :math:`h` is assumed to have the general form</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        h(q, p) = h_1(q) + h_2(q, p)</span>
+
+<span class="sd">    where :math:`q` and :math:`p` are the position and momentum variables respectively,</span>
+<span class="sd">    and :math:`h_1` and :math:`h_2` Hamiltonian component functions. The exact</span>
+<span class="sd">    *unconstrained* Hamiltonian flows for both the :math:`h_1` and :math:`h_2`</span>
+<span class="sd">    components, respectively :math:`\Phi_1` and :math:`\Phi_2` are assumed to be</span>
+<span class="sd">    tractable for subclasses of this class.</span>
+
+<span class="sd">    The *constrained* Hamiltonian dynamics are described by the system of differential</span>
+<span class="sd">    algebraic equations</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \dot{q} = \nabla_2 h(q, p), \quad</span>
+<span class="sd">        \dot{p} = -\nabla_1 h(q, p) - \partial c(q)^T\lambda, \quad</span>
+<span class="sd">        c(q) = 0.</span>
+
+<span class="sd">    where math:`\lambda` is a set of Lagrange multipliers of dimension equal to number</span>
+<span class="sd">    of constraints, :math:`C`, and which are implicitly defined by the condition that</span>
+<span class="sd">    the constraint equation :math:`c(q) = 0` applies at all times.</span>
+
+<span class="sd">    The dynamics implicitly define a set of constraints on the momentum variables,</span>
+<span class="sd">    differentiating the constraint equation with respect to time giving that</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.</span>
+
+<span class="sd">    The set of momentum variables satisfying the above for given position variables is</span>
+<span class="sd">    termed the cotangent space of the manifold (at a position). Here we assume that the</span>
+<span class="sd">    operation of projecting a momentum vector onto the cotangent space at a given</span>
+<span class="sd">    position is tractable to compute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.constr">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">constr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constraint function at the current position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: State to compute value at.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Value of :code:`constr(state.pos)` as 1D array.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.jacob_constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.jacob_constr">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">jacob_constr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Jacobian of constraint function at the current position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: State to compute value at.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Value of Jacobian of :code:`constr(state.pos)` as 2D array.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.jacob_constr_inner_product"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">jacob_constr_inner_product</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">jacob_constr_1</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">,</span>
+        <span class="n">inner_product_matrix</span><span class="p">:</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
+        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute inner product of rows of constraint Jacobian matrices.</span>
+
+<span class="sd">        Computes :code:`jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`</span>
+<span class="sd">        potentially exploiting any structure / sparsity in :code:`jacob_constr_1`,</span>
+<span class="sd">        :code:`jacob_constr_2` and :code:`inner_product_matrix`.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            jacob_constr_1: First constraint Jacobian in product.</span>
+<span class="sd">            inner_product_matrix: Positive-definite matrix defining inner-product</span>
+<span class="sd">                between rows of two constraint Jacobians.</span>
+<span class="sd">            jacob_constr_2: Second constraint Jacobian in product. Defaults to</span>
+<span class="sd">                :code:`jacob_constr_1` if set to :code:`None`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">            Object corresponding to computed inner products of the constraint Jacobian</span>
+<span class="sd">            rows.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Derivatives of :py:meth:`h2_flow` flow map with respect to momentum argument.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: State to evaluate derivatives of flow map at.</span>
+<span class="sd">            dt: Time interval flow simulated for.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple :code:`(dpos_dmom, dmom_dmom)` with :code:`dpos_dmom` a matrix</span>
+<span class="sd">            representing derivative (Jacobian) of position output of :py:meth:`h2_flow`</span>
+<span class="sd">            with respect to the value of the momentum component of the initial input</span>
+<span class="sd">            state and :code:`dmom_dmom` a matrix representing derivative (Jacobian) of</span>
+<span class="sd">            momentum output of :py:meth:`h2_flow` with respect to the value of the</span>
+<span class="sd">            momentum component of the initial input state.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.project_onto_cotangent_space"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">project_onto_cotangent_space</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Project a momentum on to the co-tangent space at a position.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            mom: Momentum (co-)vector as 1D array to project on to co-tangent space.</span>
+<span class="sd">            state: State definining position on the  manifold to project in to the</span>
+<span class="sd">                co-tangent space of.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Projected momentum in the co-tangent space at :code:`state.pos`.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ConstrainedTractableFlowSystem.sample_momentum"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedTractableFlowSystem.sample_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+        <span class="n">mom</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_onto_cotangent_space</span><span class="p">(</span><span class="n">mom</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mom</span></div></div>
+
+
+<div class="viewcode-block" id="ConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">ConstrainedEuclideanMetricSystem</span><span class="p">(</span>
+    <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span> <span class="n">EuclideanMetricSystem</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Base class for Euclidean Hamiltonian systems subject to constraints.</span>
 
 <span class="sd">    The (constrained) position space is assumed to be a differentiable manifold embedded</span>
@@ -559,7 +665,7 @@
 <span class="sd">        h_2(q, p) = \frac{1}{2} p^T M^{-1} p.</span>
 
 <span class="sd">    The time-derivative of the constraint equation implies a further set of constraints</span>
-<span class="sd">    on the momentum :math:`q` with :math:`\partial c(q) M^{-1} p = 0` at all time</span>
+<span class="sd">    on the momentum :math:`p` with :math:`\partial c(q) M^{-1} p = 0` at all time</span>
 <span class="sd">    points, corresponding to the momentum (velocity) being in the co-tangent space</span>
 <span class="sd">    (tangent space) to the manifold.</span>
 
@@ -694,52 +800,16 @@
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.constr">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">constr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constraint function at the current position.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            state: State to compute value at.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Value of :code:`constr(state.pos)` as 1D array.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.jacob_constr"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr">[docs]</a>    <span class="nd">@cache_in_state_with_aux</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;constr&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">jacob_constr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Jacobian of constraint function at the current position.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            state: State to compute value at.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Value of Jacobian of :code:`constr(state.pos)` as 2D array.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.jacob_constr_inner_product"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">jacob_constr_inner_product</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">jacob_constr_1</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">,</span>
-        <span class="n">inner_product_matrix</span><span class="p">:</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
-        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute inner product of rows of constraint Jacobian matrices.</span>
-
-<span class="sd">        Computes :code:`jacob_constr_1 @ inner_product_matrix @ jacob_constr_2.T`</span>
-<span class="sd">        potentially exploiting any structure / sparsity in :code:`jacob_constr_1`,</span>
-<span class="sd">        :code:`jacob_constr_2` and :code:`inner_product_matrix`.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            jacob_constr_1: First constraint Jacobian in product.</span>
-<span class="sd">            inner_product_matrix: Positive-definite matrix defining inner-product</span>
-<span class="sd">                between rows of two constraint Jacobians.</span>
-<span class="sd">            jacob_constr_2: Second constraint Jacobian in product. Defaults to</span>
-<span class="sd">                :code:`jacob_constr_1` if set to :code:`None`.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">            Object corresponding to computed inner products of the constraint Jacobian</span>
-<span class="sd">            rows.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.gram"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.gram">[docs]</a>    <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">gram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">:</span>
@@ -807,26 +877,11 @@
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.project_onto_cotangent_space"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.project_onto_cotangent_space">[docs]</a>    <span class="k">def</span> <span class="nf">project_onto_cotangent_space</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Project a momentum on to the co-tangent space at a position.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            mom: Momentum (co-)vector as 1D array to project on to co-tangent space.</span>
-<span class="sd">            state: State definining position on the  manifold to project in to the</span>
-<span class="sd">                co-tangent space of.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Projected momentum in the co-tangent space at :code:`state.pos`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Use parenthesis to force right-to-left evaluation to avoid</span>
         <span class="c1"># matrix-matrix products</span>
         <span class="n">mom</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inv_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span> <span class="o">@</span> <span class="n">mom</span><span class="p">))</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">mom</span></div>
-
-<div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.sample_momentum"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.sample_momentum">[docs]</a>    <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-        <span class="n">mom</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
-        <span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_onto_cotangent_space</span><span class="p">(</span><span class="n">mom</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mom</span></div></div>
 
 
@@ -980,10 +1035,10 @@
 <div class="viewcode-block" id="GaussianDenseConstrainedEuclideanMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">GaussianDenseConstrainedEuclideanMetricSystem</span><span class="p">(</span>
     <span class="n">GaussianEuclideanMetricSystem</span><span class="p">,</span> <span class="n">DenseConstrainedEuclideanMetricSystem</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Gaussian Euclidean Hamiltonian system st. a dense set of constraints.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.</span>
 
-<span class="sd">    See `ConstrainedEuclideanMetricSystem` for more details about constrained</span>
-<span class="sd">    systems and `GaussianEuclideanMetricSystem` for Gaussian Euclidean metric</span>
+<span class="sd">    See :py:class:`ConstrainedEuclideanMetricSystem` for more details about constrained</span>
+<span class="sd">    systems and :py:class:`GaussianEuclideanMetricSystem` for Gaussian Euclidean metric</span>
 <span class="sd">    systems.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1010,7 +1065,7 @@
 <span class="sd">                manifold corresponding to the ratio of the prior density (specified by</span>
 <span class="sd">                `neg_log_dens`) and the square-root of the determinant of the Gram</span>
 <span class="sd">                matrix defined by</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    gram(q) = jacob_constr(q) @ inv(metric) @ jacob_constr(q).T</span>
@@ -1059,7 +1114,7 @@
 <span class="sd">                *matrix-Hessian-product* (MHP) of the constraint function `constr` with</span>
 <span class="sd">                respect to the position array argument. The MHP is here defined as a</span>
 <span class="sd">                function of a `(dim_constr, dim_pos)` shaped 2D array `m`</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))</span>
@@ -1104,7 +1159,19 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
                 <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
-            <span class="p">)</span></div></div>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>    <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
+        <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">sin_omega_dt</span> <span class="o">*</span> <span class="n">omega</span>
+            <span class="p">),</span>
+            <span class="n">matrices</span><span class="o">.</span><span class="n">EigendecomposedSymmetricMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="n">cos_omega_dt</span><span class="p">),</span>
+        <span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="RiemannianMetricSystem"><a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem">[docs]</a><span class="k">class</span> <span class="nc">RiemannianMetricSystem</span><span class="p">(</span><span class="n">System</span><span class="p">):</span>
@@ -1581,7 +1648,7 @@
 <span class="sd">                *vector-Jacobian-product* (VJP) of `metric_func` with respect to the</span>
 <span class="sd">                position array argument. The VJP is here defined as a function of a 2D</span>
 <span class="sd">                array `v`</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    vjp(v) = sum(v[:, :, None] * jacob[:, :, :], axis=(0, 1))</span>
@@ -1589,7 +1656,7 @@
 <span class="sd">                where `jacob` is the `(dim_pos, dim_pos, dim_pos)` shaped Jacobian of `M</span>
 <span class="sd">                = metric_func(q)` with respect to `q` i.e. the array of partial</span>
 <span class="sd">                derivatives of the function such that</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    jacob[i, j, k] = ∂M[i, j] / ∂q[k]</span>
@@ -1636,7 +1703,7 @@
 <span class="sd">    1D array of real eigenvalues, and `eigvec` the corresponding 2D array (orthogonal</span>
 <span class="sd">    matrix) with eigenvectors as columns, then the resulting positive-definite metric</span>
 <span class="sd">    matrix representation `M` is computed as</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. code-block::</span>
 
 <span class="sd">        M = eigvec @ diag(softabs(eigval, softabs_coeff)) @ eigvec.T</span>
@@ -1695,7 +1762,7 @@
 <span class="sd">                *matrix-Tressian-product* (MTP) of `neg_log_dens` with respect to the</span>
 <span class="sd">                position array argument. The MTP is here defined as a function of a</span>
 <span class="sd">                matrix `m` corresponding to</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))</span>
@@ -1703,7 +1770,7 @@
 <span class="sd">                where `tress` is the &#39;Tressian&#39; of `f = neg_log_dens(q)` wrt `q` i.e.</span>
 <span class="sd">                the 3D array of third-order partial derivatives of the scalar-valued</span>
 <span class="sd">                function such that</span>
-<span class="sd">                </span>
+
 <span class="sd">                .. code-block::</span>
 
 <span class="sd">                    tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])</span>
@@ -1767,7 +1834,7 @@
 
 <span class="sd">        The matrix-Tressian-product (MTP) is here defined as a function of a matrix `m`</span>
 <span class="sd">        corresponding to</span>
-<span class="sd">        </span>
+
 <span class="sd">        .. code-block::</span>
 
 <span class="sd">            mtp(m) = sum(m[:, :, None] * tress[:, :, :], axis=(0, 1))</span>
@@ -1775,7 +1842,7 @@
 <span class="sd">        where `tress` is the &#39;Tressian&#39; of `f = neg_log_dens(q)` with respect to `q =</span>
 <span class="sd">        state.pos` i.e. the 3D array of third-order partial derivatives of the</span>
 <span class="sd">        scalar-valued function such that</span>
-<span class="sd">        </span>
+
 <span class="sd">        .. code-block::</span>
 
 <span class="sd">            tress[i, j, k] = ∂³f / (∂q[i] ∂q[j] ∂q[k])</span>

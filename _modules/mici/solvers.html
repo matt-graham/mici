@@ -74,19 +74,22 @@
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">ConvergenceError</span><span class="p">,</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Protocol</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">ConvergenceError</span><span class="p">,</span> <span class="n">LinAlgError</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
+                              <span class="n">ConstrainedTractableFlowSystem</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarFunction</span>
 
 
 <div class="viewcode-block" id="euclidean_norm"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.euclidean_norm">[docs]</a><span class="k">def</span> <span class="nf">euclidean_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the Euclidean (L-2) norm of a vector.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">vct</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">**</span> <span class="mf">0.5</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">vct</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">**</span> <span class="mf">0.5</span></div>
 
 
 <div class="viewcode-block" id="maximum_norm"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.maximum_norm">[docs]</a><span class="k">def</span> <span class="nf">maximum_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">):</span>
@@ -95,7 +98,7 @@
 
 
 <div class="viewcode-block" id="FixedPointSolver"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver">[docs]</a><span class="k">class</span> <span class="nc">FixedPointSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver for fixed point equation, returning `x` such that `func(x) = x`.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver for fixed point equation :code:`func(x) = x`.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FixedPointSolver.__call__"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation.</span>
@@ -117,24 +120,26 @@
     <span class="n">max_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">ScalarFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation `func(x) = x` using direct iteration.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation :code:`func(x) = x` using direct iteration.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        func: Function to find fixed point of.</span>
 <span class="sd">        x0: Initial state (function argument).</span>
 <span class="sd">        convergence_tol: Convergence tolerance - solver successfully terminates when</span>
-<span class="sd">            `norm(func(x) - x) &lt; convergence_tol`.</span>
+<span class="sd">            :code:`norm(func(x) - x) &lt; convergence_tol`.</span>
 <span class="sd">        divergence_tol: Divergence tolerance - solver aborts if</span>
-<span class="sd">            `norm(func(x) - x) &gt; divergence_tol` on any iteration.</span>
+<span class="sd">            :code:`norm(func(x) - x) &gt; divergence_tol` on any iteration.</span>
 <span class="sd">        max_iters: Maximum number of iterations before raising exception.</span>
 <span class="sd">        norm: Norm to use to assess convergence.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Solution to fixed point equation with `norm(func(x) - x) &lt; convergence_tol`.</span>
+<span class="sd">        Solution to fixed point equation with</span>
+<span class="sd">        :code:`norm(func(x) - x) &lt; convergence_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
-<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within</span>
+<span class="sd">            :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`</span>
+<span class="sd">            during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -166,30 +171,30 @@
     <span class="n">max_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">ScalarFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation `func(x) = x` using Steffensen&#39;s method.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation :code:`func(x) = x` using Steffensen&#39;s method.</span>
 
-<span class="sd">    Steffennsen&#39;s method [1] achieves quadratic convergence but at the cost of two</span>
-<span class="sd">    function evaluations per iteration so for functions where convergence is achieved in</span>
-<span class="sd">    a small number of iterations, direct iteration may be cheaper.</span>
-
-<span class="sd">    [1] : https://en.wikipedia.org/wiki/Steffensen%27s_method</span>
+<span class="sd">    Steffennsen&#39;s method achieves quadratic convergence but at the cost of two function</span>
+<span class="sd">    evaluations per iteration so for functions where convergence is achieved in a small</span>
+<span class="sd">    number of iterations, direct iteration may be cheaper.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        func: Function to find fixed point of.</span>
 <span class="sd">        x0: Initial state (function argument).</span>
 <span class="sd">        convergence_tol: Convergence tolerance - solver successfully terminates</span>
-<span class="sd">            when `norm(func(x) - x) &lt; convergence_tol`.</span>
+<span class="sd">            when :code:`norm(func(x) - x) &lt; convergence_tol`.</span>
 <span class="sd">        divergence_tol: Divergence tolerance - solver aborts if</span>
-<span class="sd">            `norm(func(x) - x) &gt; divergence_tol` on any iteration.</span>
+<span class="sd">            :code:`norm(func(x) - x) &gt; divergence_tol` on any iteration.</span>
 <span class="sd">        max_iters: Maximum number of iterations before raising exception.</span>
 <span class="sd">        norm: Norm to use to assess convergence.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Solution to fixed point equation with `norm(func(x) - x) &lt; convergence_tol`.</span>
+<span class="sd">        Solution to fixed point equation with</span>
+<span class="sd">        :code:`norm(func(x) - x) &lt; convergence_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
-<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within</span>
+<span class="sd">            :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`</span>
+<span class="sd">            during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -220,18 +225,19 @@
 
 
 <div class="viewcode-block" id="ProjectionSolver"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver">[docs]</a><span class="k">class</span> <span class="nc">ProjectionSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver for projection on to manifold step in constrained integrator.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solver for projection on to manifold step in constrained integrator.</span>
 
 <span class="sd">    Solves an equation of the form</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
+<span class="sd">        r(\lambda) = c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda)) = 0,</span>
 
-<span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
-<span class="sd">    defined by the zero level set of a constraint function `c` (`system.constr`), with</span>
-<span class="sd">    `Φ₂,₁` the position component of a flow map for the `h₂` Hamiltonian component for</span>
-<span class="sd">    the system (i.e. `system.h2_flow`).</span>
+<span class="sd">    for the vector of Lagrange multipliers :math:`\lambda` to project a point on to the</span>
+<span class="sd">    manifold defined by the zero level set of a constraint function :math:`c`, with</span>
+<span class="sd">    :math:`\Phi_{2,1}` the flow map for the :math:`h_2` Hamiltonian component for the</span>
+<span class="sd">    system restricted to the position component output. The map :math:`\Phi_{2,1}` is</span>
+<span class="sd">    assumed to be linear in its second (momentum) argument.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ProjectionSolver.__call__"><a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
@@ -239,7 +245,7 @@
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve for projection on to manifold step.</span>
@@ -248,7 +254,7 @@
 <span class="sd">            state: Current chain state after unconstrained step.</span>
 <span class="sd">            state_prev: Previous chain state on manifold.</span>
 <span class="sd">            time_step: Integrator time step for unconstrained step.</span>
-<span class="sd">            system: Hamiltonian system dynamics are being simulated for.</span>
+<span class="sd">            system: Hamiltonian system constrained dynamics are being simulated for.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Chain state after projection on to manifold.</span>
@@ -260,93 +266,120 @@
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
     <span class="n">constraint_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">position_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
     <span class="n">divergence_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e10</span><span class="p">,</span>
     <span class="n">max_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">ScalarFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve constraint equation using symmetric quasi-Newton method.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solve constraint equation using symmetric quasi-Newton method.</span>
 
-<span class="sd">    Only requires re-evaluating the constraint function `system.constr` within the</span>
+<span class="sd">    Only requires re-evaluating the constraint function :code:`system.constr` within the</span>
 <span class="sd">    solver loop and no recomputation of matrix decompositions on each iteration.</span>
 
 <span class="sd">    Solves an equation of the form</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
+<span class="sd">        r(\lambda) = c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda)) = 0,</span>
 
-<span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
-<span class="sd">    defined by the zero level set of a constraint function `c` (`system.constr`), with</span>
-<span class="sd">    `Φ₂,₁` the position component of a flow map for the `h₂` Hamiltonian component for</span>
-<span class="sd">    the system (i.e. `system.h2_flow`).</span>
+<span class="sd">    for the vector of Lagrange multipliers :math:`\lambda` to project a point on to the</span>
+<span class="sd">    manifold defined by the zero level set of a constraint function :math:`c`, with</span>
+<span class="sd">    :math:`\Phi_{2,1}` the flow map for the :math:`h_2` Hamiltonian component for the</span>
+<span class="sd">    system restricted to the position component output.</span>
 
-<span class="sd">    The Jacobian of the residual function `r` is</span>
+<span class="sd">    The Jacobian of the residual function :math:`r` is</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
+<span class="sd">        \partial r(\lambda) =</span>
+<span class="sd">        \partial c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda))</span>
+<span class="sd">        \partial_2 (\Phi_{2,1}(t))(q, p + \partial c(q)^T \lambda)</span>
+<span class="sd">        \partial c(q)^T</span>
 
-<span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
-<span class="sd">    second (momentum argument), such that the full Newton update is</span>
+<span class="sd">    where :math:`\partial_2 (\Phi_{2,1}(t))` is the Jacobian of the (position</span>
+<span class="sd">    restricted) flow-map :math:`\Phi_{2,1}` with respect to its second (momentum)</span>
+<span class="sd">    argument. We assume here that :math:`\Phi_{2,1}(t)` is linear in its second</span>
+<span class="sd">    (momentum) argument, such that :math:`\partial_2 (\Phi_{2,1}(t))(q, p + \partial</span>
+<span class="sd">    c(q)^T \lambda)` is constant with respect to :math:`\lambda`, and henceforth use the</span>
+<span class="sd">    shorthand :math:`\partial_2 (\Phi_{2,1}(t))` to refer to this matrix.</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    The full Newton update is</span>
 
-<span class="sd">        λ_(α) = λ - ∂r(λ)⁻¹ r(λ)</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">    which requires evaluating `∂c` (`system.jacob_constr`) on each iteration and solving</span>
-<span class="sd">    a linear system in the residual Jacobian `∂r(λ)`.</span>
+<span class="sd">        \lambda&#39; = \lambda - \partial r(\lambda)^{-1} r(\lambda)</span>
+
+<span class="sd">    which requires evaluating :math:`\partial c` on each iteration and solving a linear</span>
+<span class="sd">    system in the residual Jacobian :math:`\partial r(\lambda)`.</span>
 
 <span class="sd">    The symmetric quasi-Newton iteration instead uses the approximation</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ ≈ ∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
+<span class="sd">        \partial c(\Phi_{2,1}(t)(q, p + \partial c(q)^T\lambda))</span>
+<span class="sd">        \partial_2 (\Phi_{2,1}(t))</span>
+<span class="sd">        \partial c(q)^T</span>
+<span class="sd">        \approx</span>
+<span class="sd">        \partial c(q)</span>
+<span class="sd">        \partial_2 (\Phi_{2,1}(t))</span>
+<span class="sd">        \partial c(q)^T</span>
 
 <span class="sd">    with the corresponding update</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        λ = λ - (∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ)⁻¹ r(λ)</span>
+<span class="sd">        \lambda&#39; =</span>
+<span class="sd">        \lambda</span>
+<span class="sd">        - (\partial c(q) \partial_2 (\Phi_{2,1}(t)) \partial c(q)^T)^{-1} r(\lambda)</span>
 
-<span class="sd">    allowing a previously computed decomposition of the matrix `∂c(q) ∂₂Φ₂,₁ ∂c(q)ᵀ` to</span>
-<span class="sd">    be used to solve the linear system in each iteration with no requirement to evaluate</span>
-<span class="sd">    `∂c` (`system.jacob_constr`) on each iteration.</span>
+<span class="sd">    allowing a previously computed decomposition of the matrix</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \partial c(q) \partial_2 (\Phi_{2,1}(t)) \partial c(q)^T,</span>
+
+<span class="sd">    to be used to solve the linear system in each iteration with no requirement to</span>
+<span class="sd">    evaluate :math:`\partial c` (:code:`system.jacob_constr`) on each iteration.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        state: Post `h2_flow` update state to project.</span>
-<span class="sd">        state_prev: Previous state in co-tangent bundle before `h2_flow` update which</span>
-<span class="sd">            defines the co-tangent space to perform  projection in.</span>
-<span class="sd">        time_step: Integrator time step used in `h2_flow` update.</span>
-<span class="sd">        system: Hamiltonian system defining `h2_flow` and `constr` functions used to</span>
-<span class="sd">            define constraint equation to solve.</span>
+<span class="sd">        state: Post :code:`h2_flow` update state to project.</span>
+<span class="sd">        state_prev: Previous state in co-tangent bundle before :code:`h2_flow` update</span>
+<span class="sd">            which defines the co-tangent space to perform  projection in.</span>
+<span class="sd">        time_step: Integrator time step used in :code:`h2_flow` update.</span>
+<span class="sd">        system: Hamiltonian system defining :code:`h2_flow` and :code:`constr` functions</span>
+<span class="sd">            used to define constraint equation to solve.</span>
 <span class="sd">        constraint_tol: Convergence tolerance in constraint space. Iteration will</span>
-<span class="sd">            continue until `norm(constr(pos)) &lt; constraint_tol` where `pos` is the</span>
-<span class="sd">            position at the current iteration.</span>
+<span class="sd">            continue until :code:`norm(constr(pos)) &lt; constraint_tol` where :code:`pos`</span>
+<span class="sd">            is the position at the current iteration.</span>
 <span class="sd">        position_tol: Convergence tolerance in position space. Iteration will continue</span>
-<span class="sd">            until `norm(delt_pos) &lt; position_tol` where `delta_pos` is the change in the</span>
-<span class="sd">            position in the current iteration.</span>
+<span class="sd">            until :code:`norm(delta_pos) &lt; position_tol` where :code:`delta_pos` is the</span>
+<span class="sd">            change in the position in the current iteration.</span>
 <span class="sd">        divergence_tol: Divergence tolerance - solver aborts if</span>
-<span class="sd">            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos` is the</span>
-<span class="sd">            position at the current iteration and raises `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :code:`norm(constr(pos)) &gt; divergence_tol` on any iteration where</span>
+<span class="sd">            :code:`pos` is the position at the current iteration and raises</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        max_iters: Maximum number of iterations to perform before aborting and raising</span>
-<span class="sd">            `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        norm: Norm to use to test for convergence.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Updated state object with position component satisfying constraint equation to</span>
-<span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
+<span class="sd">        within :code:`constraint_tol`, i.e.</span>
+<span class="sd">        :code:`norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
-<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within</span>
+<span class="sd">            :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`</span>
+<span class="sd">            during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
-    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">))</span>
+    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="n">inv_jacob_constr_inner_product</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr_inner_product</span><span class="p">(</span>
         <span class="n">jacob_constr_prev</span><span class="p">,</span> <span class="n">dh2_flow_pos_dmom</span>
     <span class="p">)</span><span class="o">.</span><span class="n">inv</span>
@@ -382,78 +415,91 @@
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
     <span class="n">constraint_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">position_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
     <span class="n">divergence_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e10</span><span class="p">,</span>
     <span class="n">max_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">ScalarFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve constraint equation using Newton&#39;s method.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solve constraint equation using Newton&#39;s method.</span>
 
-<span class="sd">    Requires re-evaluating both the constraint function `system.constr` and constraint</span>
-<span class="sd">    Jacobian `system.jacob_constr` within the solver loop and computation of matrix</span>
-<span class="sd">    decompositions on each iteration.</span>
+<span class="sd">    Requires re-evaluating both the constraint function :code:`system.constr` and</span>
+<span class="sd">    constraint Jacobian :code:`system.jacob_constr` within the solver loop and</span>
+<span class="sd">    computation of matrix decompositions on each iteration.</span>
 
 <span class="sd">    Solves an equation of the form</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
+<span class="sd">        r(\lambda) = c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda)) = 0,</span>
 
-<span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
-<span class="sd">    defined by the zero level set of a constraint function `c` (`system.constr`), with</span>
-<span class="sd">    `Φ₂,₁` the position component of a flow map for the `h₂` Hamiltonian component for</span>
-<span class="sd">    the system (i.e. `system.h2_flow`).</span>
+<span class="sd">    for the vector of Lagrange multipliers :math:`\lambda` to project a point on to the</span>
+<span class="sd">    manifold defined by the zero level set of a constraint function :math:`c`, with</span>
+<span class="sd">    :math:`\Phi_{2,1}` the flow map for the :math:`h_2` Hamiltonian component for the</span>
+<span class="sd">    system restricted to the position component output.</span>
 
-<span class="sd">    The Jacobian of the residual function `r` is</span>
+<span class="sd">    The Jacobian of the residual function :math:`r` is</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
+<span class="sd">        \partial r(\lambda) =</span>
+<span class="sd">        \partial c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda))</span>
+<span class="sd">        \partial_2 (\Phi_{2,1}(t))(q, p + \partial c(q)^T \lambda)</span>
+<span class="sd">        \partial c(q)^T</span>
 
-<span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
-<span class="sd">    second (momentum argument), such that the Newton update is</span>
+<span class="sd">    where :math:`\partial_2 (\Phi_{2,1}(t))` is the Jacobian of the (position</span>
+<span class="sd">    restricted) flow-map :math:`\Phi_{2,1}` with respect to its second (momentum)</span>
+<span class="sd">    argument. We assume here that :math:`\Phi_{2,1}(t)` is linear in its second</span>
+<span class="sd">    (momentum) argument, such that :math:`\partial_2 (\Phi_{2,1}(t))(q, p + \partial</span>
+<span class="sd">    c(q)^T \lambda)` is constant with respect to :math:`\lambda`.</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    The full Newton update is</span>
 
-<span class="sd">        λ = λ - ∂r(λ)⁻¹ r(λ)</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">    which requires evaluating `∂c` (`system.jacob_constr`) on each iteration and solving</span>
-<span class="sd">    a linear system in the residual Jacobian `∂r(λ)`.</span>
+<span class="sd">        \lambda&#39; = \lambda - \partial r(\lambda)^{-1} r(\lambda)</span>
+
+<span class="sd">    which requires evaluating :math:`\partial c` on each iteration and solving a linear</span>
+<span class="sd">    system in the residual Jacobian :math:`\partial r(\lambda)`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        state: Post `h2_flow` update state to project.</span>
-<span class="sd">        state_prev: Previous state in co-tangent bundle before `h2_flow` update which</span>
-<span class="sd">            defines the co-tangent space to perform projection in.</span>
-<span class="sd">        time_step: Integrator time step used in `h2_flow` update.</span>
-<span class="sd">        system: Hamiltonian system defining `h2_flow` and `constr` functions used to</span>
-<span class="sd">            define constraint equation to solve.</span>
+<span class="sd">        state: Post :code:`h2_flow` update state to project.</span>
+<span class="sd">        state_prev: Previous state in co-tangent bundle before :code:`h2_flow` update</span>
+<span class="sd">            which defines the co-tangent space to perform  projection in.</span>
+<span class="sd">        time_step: Integrator time step used in :code:`h2_flow` update.</span>
+<span class="sd">        system: Hamiltonian system defining :code:`h2_flow` and :code:`constr` functions</span>
+<span class="sd">            used to define constraint equation to solve.</span>
 <span class="sd">        constraint_tol: Convergence tolerance in constraint space. Iteration will</span>
-<span class="sd">            continue until `norm(constr(pos)) &lt; constraint_tol` where `pos` is the</span>
-<span class="sd">            position at the current iteration.</span>
+<span class="sd">            continue until :code:`norm(constr(pos)) &lt; constraint_tol` where :code:`pos`</span>
+<span class="sd">            is the position at the current iteration.</span>
 <span class="sd">        position_tol: Convergence tolerance in position space. Iteration will continue</span>
-<span class="sd">            until `norm(delt_pos) &lt; position_tol` where `delta_pos` is the change in the</span>
-<span class="sd">            position in the current iteration.</span>
+<span class="sd">            until :code:`norm(delta_pos) &lt; position_tol` where :code:`delta_pos` is the</span>
+<span class="sd">            change in the position in the current iteration.</span>
 <span class="sd">        divergence_tol: Divergence tolerance - solver aborts if</span>
-<span class="sd">            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos` is the</span>
-<span class="sd">            position at the current iteration and raises `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :code:`norm(constr(pos)) &gt; divergence_tol` on any iteration where</span>
+<span class="sd">            :code:`pos` is the position at the current iteration and raises</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        max_iters: Maximum number of iterations to perform before aborting and raising</span>
-<span class="sd">            `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        norm: Norm to use to test for convergence.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Updated `state` object with position component satisfying constraint equation to</span>
-<span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
+<span class="sd">        Updated state object with position component satisfying constraint equation to</span>
+<span class="sd">        within :code:`constraint_tol`, i.e.</span>
+<span class="sd">        :code:`norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
-<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within</span>
+<span class="sd">            :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`</span>
+<span class="sd">            during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
-    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">))</span>
+    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+    <span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">jacob_constr</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
@@ -492,7 +538,7 @@
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
     <span class="n">constraint_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
     <span class="n">position_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span><span class="p">,</span>
     <span class="n">divergence_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e10</span><span class="p">,</span>
@@ -500,60 +546,70 @@
     <span class="n">max_line_search_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
     <span class="n">norm</span><span class="p">:</span> <span class="n">ScalarFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve constraint equation using Newton&#39;s method with backtracking line-search.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solve constraint equation using Newton&#39;s method with backtracking line-search.</span>
 
-<span class="sd">    Requires re-evaluating both the constraint function `system.constr` and constraint</span>
-<span class="sd">    Jacobian `system.jacob_constr` within the solver loop and computation of matrix</span>
-<span class="sd">    decompositions on each iteration.</span>
+<span class="sd">    Requires re-evaluating both the constraint function :code:`system.constr` and</span>
+<span class="sd">    constraint Jacobian :code:`system.jacob_constr` within the solver loop and</span>
+<span class="sd">    computation of matrix decompositions on each iteration.</span>
 
 <span class="sd">    Solves an equation of the form</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        r(λ) = c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) = 0</span>
+<span class="sd">        r(\lambda) = c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda)) = 0,</span>
 
-<span class="sd">    for the vector of Lagrange multipliers `λ` to project a point on to the manifold</span>
-<span class="sd">    defined by the zero level set of a constraint function `c` (`system.constr`), with</span>
-<span class="sd">    `Φ₂,₁` the position component of a flow map for the `h₂` Hamiltonian component for</span>
-<span class="sd">    the system (i.e. `system.h2_flow`).</span>
+<span class="sd">    for the vector of Lagrange multipliers :math:`\lambda` to project a point on to the</span>
+<span class="sd">    manifold defined by the zero level set of a constraint function :math:`c`, with</span>
+<span class="sd">    :math:`\Phi_{2,1}` the flow map for the :math:`h_2` Hamiltonian component for the</span>
+<span class="sd">    system restricted to the position component output.</span>
 
-<span class="sd">    The Jacobian of the residual function `r` is</span>
+<span class="sd">    The Jacobian of the residual function :math:`r` is</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">        ∂r(λ) = ∂c(Φ₂,₁(q, p + ∂c(q)ᵀλ)) ∂₂Φ₂,₁ ∂c(q)ᵀ</span>
+<span class="sd">        \partial r(\lambda) =</span>
+<span class="sd">        \partial c(\Phi_{2,1}(t)(q, p + \partial c(q)^T \lambda))</span>
+<span class="sd">        \partial_2 (\Phi_{2,1}(t))(q, p + \partial c(q)^T \lambda)</span>
+<span class="sd">        \partial c(q)^T</span>
 
-<span class="sd">    where `∂₂Φ₂,₁` is the Jacobian of the (linear) flow-map `Φ₂,₁` with respect to the</span>
-<span class="sd">    second (momentum argument), such that the scaled Newton update is</span>
+<span class="sd">    where :math:`\partial_2 (\Phi_{2,1}(t))` is the Jacobian of the (position</span>
+<span class="sd">    restricted) flow-map :math:`\Phi_{2,1}` with respect to its second (momentum)</span>
+<span class="sd">    argument. We assume here that :math:`\Phi_{2,1}(t)` is linear in its second</span>
+<span class="sd">    (momentum) argument, such that :math:`\partial_2 (\Phi_{2,1}(t))(q, p + \partial</span>
+<span class="sd">    c(q)^T \lambda)` is constant with respect to :math:`\lambda`.</span>
 
-<span class="sd">    .. code::</span>
+<span class="sd">    The scaled Newton update is</span>
 
-<span class="sd">        λ_(α) = λ - α * ∂r(λ)⁻¹ r(λ)</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">    which requires evaluating `∂c` (`system.jacob_constr`) on each iteration and solving</span>
-<span class="sd">    a linear system in the residual Jacobian `∂r(λ)`.</span>
+<span class="sd">        \lambda&#39;(\alpha) = \lambda - \alpha \partial r(\lambda)^{-1} r(\lambda)</span>
 
-<span class="sd">    The step size `α ∈ [0, 1]` is initialised at `α = 1` with a backtracking line search</span>
-<span class="sd">    performed by multiplying `α` by 0.5 until `|r(λ_(α))| &lt; |r(λ)`.</span>
+<span class="sd">    which requires evaluating :math:`\partial c` on each iteration and solving a linear</span>
+<span class="sd">    system in the residual Jacobian :math:`\partial r(\lambda)`.</span>
+
+<span class="sd">    The step size :math:`\alpha \in [0, 1]` is initialised at :math:`\alpha = 1` with a</span>
+<span class="sd">    backtracking line search performed by multiplying :math:`\alpha` by 0.5 until</span>
+<span class="sd">    :math:`|r(\lambda&#39;(\alpha))| &lt; |r(\lambda)`.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        state: Post `h2_flow` update state to project.</span>
-<span class="sd">        state_prev: Previous state in co-tangent bundle before `h2_flow` update which</span>
-<span class="sd">            defines the co-tangent space to perform projection in.</span>
-<span class="sd">        time_step: Integrator time step used in `h2_flow` update.</span>
-<span class="sd">        system: Hamiltonian system defining `h2_flow` and `constr` functions used to</span>
-<span class="sd">            define constraint equation to solve.</span>
+<span class="sd">        state: Post :code:`h2_flow` update state to project.</span>
+<span class="sd">        state_prev: Previous state in co-tangent bundle before :code:`h2_flow` update</span>
+<span class="sd">            which defines the co-tangent space to perform  projection in.</span>
+<span class="sd">        time_step: Integrator time step used in :code:`h2_flow` update.</span>
+<span class="sd">        system: Hamiltonian system defining :code:`h2_flow` and :code:`constr` functions</span>
+<span class="sd">            used to define constraint equation to solve.</span>
 <span class="sd">        constraint_tol: Convergence tolerance in constraint space. Iteration will</span>
-<span class="sd">            continue until `norm(constr(pos)) &lt; constraint_tol` where `pos` is the</span>
-<span class="sd">            position at the current iteration.</span>
+<span class="sd">            continue until :code:`norm(constr(pos)) &lt; constraint_tol` where :code:`pos`</span>
+<span class="sd">            is the position at the current iteration.</span>
 <span class="sd">        position_tol: Convergence tolerance in position space. Iteration will continue</span>
-<span class="sd">           until `norm(delt_pos) &lt; position_tol` where `delta_pos` is the change in the</span>
-<span class="sd">           position in the current iteration.</span>
+<span class="sd">            until :code:`norm(delta_pos) &lt; position_tol` where :code:`delta_pos` is the</span>
+<span class="sd">            change in the position in the current iteration.</span>
 <span class="sd">        divergence_tol: Divergence tolerance - solver aborts if</span>
-<span class="sd">            `norm(constr(pos)) &gt; divergence_tol` on any iteration where `pos` is the</span>
-<span class="sd">            position at the current iteration and raises `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :code:`norm(constr(pos)) &gt; divergence_tol` on any iteration where</span>
+<span class="sd">            :code:`pos` is the position at the current iteration and raises</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        max_iters: Maximum number of iterations to perform before aborting and raising</span>
-<span class="sd">            `mici.errors.ConvergenceError`.</span>
+<span class="sd">            :py:exc:`mici.errors.ConvergenceError`.</span>
 <span class="sd">        max_line_search_iters: Maximum number of &#39;inner&#39; line search iterations to</span>
 <span class="sd">            perform to try to find step size along search direction which decreases</span>
 <span class="sd">            residual norm.</span>
@@ -561,16 +617,22 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Updated state object with position component satisfying constraint equation to</span>
-<span class="sd">        within `constraint_tol`, i.e. `norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
+<span class="sd">        within :code:`constraint_tol`, i.e.</span>
+<span class="sd">        :code:`norm(system.constr(state.pos)) &lt; constraint_tol`.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within `max_iters`</span>
-<span class="sd">            iterations, diverges or encounters a `ValueError` during the iteration.</span>
+<span class="sd">        mici.errors.ConvergenceError: If solver does not converge within</span>
+<span class="sd">            :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`</span>
+<span class="sd">            during the iteration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)</span>
     <span class="n">jacob_constr_prev</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
     <span class="c1"># Use absolute value of dt and adjust for sign of dt in mom update below</span>
-    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">))</span>
+    <span class="n">dh2_flow_pos_dmom</span><span class="p">,</span> <span class="n">dh2_flow_mom_dmom</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">dh2_flow_dmom</span><span class="p">(</span>
+        <span class="n">state_prev</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">time_step</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># Initialize with dummy values to avoid undefined name linter errors</span>
+    <span class="n">delta_pos</span><span class="p">,</span> <span class="n">step_size</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">jacob_constr</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">jacob_constr</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>

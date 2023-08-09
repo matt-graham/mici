@@ -79,24 +79,19 @@
 
 <span class="n">AUTOGRAD_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">autograd.wrap_util</span> <span class="kn">import</span> <span class="n">unary_to_nary</span>
+    <span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="kn">from</span> <span class="nn">autograd.builtins</span> <span class="kn">import</span> <span class="nb">tuple</span> <span class="k">as</span> <span class="n">atuple</span>
     <span class="kn">from</span> <span class="nn">autograd.core</span> <span class="kn">import</span> <span class="n">make_vjp</span>
     <span class="kn">from</span> <span class="nn">autograd.extend</span> <span class="kn">import</span> <span class="n">vspace</span>
-    <span class="kn">import</span> <span class="nn">autograd.numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">autograd.wrap_util</span> <span class="kn">import</span> <span class="n">unary_to_nary</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">AUTOGRAD_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">ScalarLike</span><span class="p">,</span>
-        <span class="n">ArrayLike</span><span class="p">,</span>
-        <span class="n">ScalarFunction</span><span class="p">,</span>
-        <span class="n">ArrayFunction</span><span class="p">,</span>
-        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
-        <span class="n">MatrixTressianProduct</span><span class="p">,</span>
-    <span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">MatrixHessianProduct</span><span class="p">,</span>
+                            <span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_wrapped_unary_to_nary</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>

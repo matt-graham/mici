@@ -76,21 +76,21 @@
 
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">NonReversibleStepError</span><span class="p">,</span> <span class="n">AdaptationError</span>
-<span class="kn">from</span> <span class="nn">mici.solvers</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">maximum_norm</span><span class="p">,</span>
-    <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-    <span class="n">solve_projection_onto_manifold_quasi_newton</span><span class="p">,</span>
-    <span class="n">FixedPointSolver</span><span class="p">,</span>
-    <span class="n">ProjectionSolver</span><span class="p">,</span>
-<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">AdaptationError</span><span class="p">,</span> <span class="n">NonReversibleStepError</span>
+<span class="kn">from</span> <span class="nn">mici.solvers</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FixedPointSolver</span><span class="p">,</span> <span class="n">ProjectionSolver</span><span class="p">,</span> <span class="n">maximum_norm</span><span class="p">,</span>
+                          <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
+                          <span class="n">solve_projection_onto_manifold_newton</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span><span class="p">,</span> <span class="n">TractableFlowSystem</span>
+    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span>
+                              <span class="n">TractableFlowSystem</span><span class="p">)</span>
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">NormFunction</span>
 
 
@@ -363,7 +363,7 @@
 <span class="sd">                step size adapter will be used to set the step size before calling the</span>
 <span class="sd">                :py:meth:`step` method.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">a_0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
+        <span class="n">a_0</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">3</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="p">(</span><span class="n">a_0</span><span class="p">,),</span> <span class="n">step_size</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
 
 
@@ -463,17 +463,27 @@
 <span class="sd">        C(t)(q, p) = (q + t \nabla_2 h_2(q, p), p), \\</span>
 <span class="sd">        C^*(t)(q, p) = \lbrace (q&#39;, p) : q&#39; = q + t \nabla_2 h_2(q&#39;, p) \rbrace.</span>
 
-<span class="sd">    Fixed-point iterations are used to solve the non-linear systems of equations in the</span>
-<span class="sd">    implicit component updates (:math:`B` and :math:`C^*`).</span>
-
 <span class="sd">    The resulting implicit integrator is a symmetric second-order method corresponding</span>
 <span class="sd">    to a symplectic partitioned Runge-Kutta method. See Section 6.3.2 in Leimkuhler and</span>
 <span class="sd">    Reich (2004) for more details.</span>
+
+<span class="sd">    Fixed-point iterations are used to solve the non-linear systems of equations in the</span>
+<span class="sd">    implicit component updates (:math:`B` and :math:`C^*`). As the iterative solves may</span>
+<span class="sd">    fail to converge, or may converge to one of multiple solutions, following the</span>
+<span class="sd">    approach proposed by Zappa, Holmes-Cerfon and Goodman (2018), an explicit</span>
+<span class="sd">    *reversibility check* is performed to ensure the overall integrator step is</span>
+<span class="sd">    time-reversible. If the reversibility check fails or the iterative solver fails to</span>
+<span class="sd">    converge an appropriate error is raised</span>
+<span class="sd">    (:py:exc:`mici.errors.NonReversibleStepError` and</span>
+<span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
 
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
+<span class="sd">      2. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
+<span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -600,17 +610,26 @@
 <span class="sd">        \rbrace, \\</span>
 <span class="sd">        A^*(t)(q, p) = (q +  t \nabla_2 h(q, p), p - t \nabla_1 h(q, p)).</span>
 
-<span class="sd">    A fixed-point iteration is used to solve the non-linear system of equations in the</span>
-<span class="sd">    implicit Euler step :math:`A`.</span>
-
 <span class="sd">    The resulting implicit integrator is a second-order method corresponding to a</span>
 <span class="sd">    symplectic one-stage Runge-Kutta method. See Sections 4.1 and 6.3.1 in Leimkuhler</span>
 <span class="sd">    and Reich (2004) for more details.</span>
+
+<span class="sd">    A fixed-point iteration is used to solve the non-linear system of equations in the</span>
+<span class="sd">    implicit Euler step :math:`A`. As the iterative solve may fail to converge, or may</span>
+<span class="sd">    converge to one of multiple solutions, following the approach proposed by</span>
+<span class="sd">    Zappa, Holmes-Cerfon and Goodman (2018), an explicit *reversibility check* is</span>
+<span class="sd">    performed to ensure the overall integrator step is time-reversible. If the</span>
+<span class="sd">    reversibility check fails or the iterative solver fails to converge an appropriate</span>
+<span class="sd">    error is raised (:py:exc:`mici.errors.NonReversibleStepError` and</span>
+<span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
 
 <span class="sd">      1. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
+<span class="sd">      2. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
+<span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -712,7 +731,7 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        h(q, p) = h_1(q) + h_2(q, p)</span>
+<span class="sd">        h(q, p) = h_1(q) + h_2(q, p),</span>
 
 <span class="sd">    where :math:`q` and :math:`p` are the position and momentum variables respectively,</span>
 <span class="sd">    and :math:`h_1` and :math:`h_2` Hamiltonian component functions for which the exact</span>
@@ -751,7 +770,7 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        \partial c(q) \nabla_2 h(q, p) = \nabla_2 h_2(q, p) = 0.</span>
+<span class="sd">        \partial c(q) \nabla_2 h(q, p) = \partial c(q) \nabla_2 h_2(q, p) = 0.</span>
 
 <span class="sd">    The set of momentum variables satisfying the above for given position variables is</span>
 <span class="sd">    termed the cotangent space of the manifold (at a position), and the set of</span>
@@ -811,7 +830,8 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1) = 0</span>
+<span class="sd">        c((\Phi_2(t) \circ \Pi(\lambda)(q, p))_1)</span>
+<span class="sd">        = c((\Phi_2(t)(q, p + \partial c(q)^T \lambda))_1) = 0,</span>
 
 <span class="sd">    i.e. solving for the values of the Lagrange multipliers such that the position</span>
 <span class="sd">    component of the output of :math:`\Phi_2(t) \circ \Pi(\lambda)` is on the manifold,</span>
@@ -821,6 +841,8 @@
 <span class="sd">    state pair, with this projection step as noted above typically having an analytic</span>
 <span class="sd">    solution.</span>
 
+<span class="sd">    For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).</span>
+
 <span class="sd">    The overall second-order integrator is then defined as the symmetric composition</span>
 
 <span class="sd">    .. math::</span>
@@ -828,12 +850,30 @@
 <span class="sd">        \Psi(t) = A(t / 2) \circ B(t / N)^N \circ A(t / 2),</span>
 
 <span class="sd">    where :math:`N` is a positive integer corresponding to the number of &#39;inner&#39;</span>
-<span class="sd">    :math:`h_2` flow steps. This integrator exactly preserves the constraints at all</span>
-<span class="sd">    steps, such that if an initial position momentum pair :math:`(q, p)` are in the</span>
-<span class="sd">    cotangent bundle, the corresponding pair after calling the :py:meth:`step` method of</span>
-<span class="sd">    the integrator will also be in the cotangent bundle.</span>
+<span class="sd">    :math:`h_2` flow steps, following the &#39;geodesic integrator&#39; formulation proposed by</span>
+<span class="sd">    Leimkuhler and Matthews (2016). The additional flexibility introduced by having</span>
+<span class="sd">    the possibility of :math:`N &gt; 1` is particularly of use when evaluation of</span>
+<span class="sd">    :math:`\Phi_1` is significantly more expensive than evaluation of :math:`\Phi_2`; in</span>
+<span class="sd">    this case using :math:`N &gt; 1` can allow a larger time step :math:`t` to be used than</span>
+<span class="sd">    may be otherwise possible due to the need to ensure the iterative solver used in</span>
+<span class="sd">    :math:`B` does not diverge, with a smaller step size :math:`t / N` used for the</span>
+<span class="sd">    steps involving the iterative solves with the (cheaper) :math:`\Phi_2` flow map</span>
+<span class="sd">    and a larger step size :math:`t` used for the steps involving the (more expensive)</span>
+<span class="sd">    :math:`\Phi_1` flow map.</span>
 
-<span class="sd">    For more details see Reich (1996) and section 7.5.1 in Leimkuhler and Reich (2004).</span>
+<span class="sd">    This integrator exactly preserves the constraints at all steps, such that if an</span>
+<span class="sd">    initial position momentum pair :math:`(q, p)` are in the cotangent bundle, the</span>
+<span class="sd">    corresponding pair after calling the :py:meth:`step` method of the integrator will</span>
+<span class="sd">    also be in the cotangent bundle, *providing the iterative solver converges*.</span>
+
+<span class="sd">    As the iterative solves may fail to converge, or may converge to one of multiple</span>
+<span class="sd">    solutions, following the approach proposed by Zappa, Holmes-Cerfon and Goodman</span>
+<span class="sd">    (2018), an explicit *reversibility check* is performed to ensure the overall</span>
+<span class="sd">    integrator step is time-reversible; see also Lelievre, Rousset and Stoltz (2019) for</span>
+<span class="sd">    an analysis of this approach specifically in the context of Hamiltonian Monte Carlo.</span>
+<span class="sd">    If the reversibility check fails or the iterative solver fails to converge an</span>
+<span class="sd">    appropriate error is raised (:py:exc:`mici.errors.NonReversibleStepError` and</span>
+<span class="sd">    :py:exc:`mici.errors.ConvergenceError` respectively).</span>
 
 <span class="sd">    References:</span>
 
@@ -841,21 +881,31 @@
 <span class="sd">         composition methods. SIAM journal on numerical analysis, 33(2), 475-491.</span>
 <span class="sd">      2. Leimkuhler, B., &amp; Reich, S. (2004). Simulating Hamiltonian Dynamics (No. 14).</span>
 <span class="sd">         Cambridge University Press.</span>
+<span class="sd">      3. Leimkuhler, B., &amp; Matthews, C. (2016). Efficient molecular dynamics using</span>
+<span class="sd">         geodesic integration and solvent–solute splitting. Proceedings of the Royal</span>
+<span class="sd">         Society A: Mathematical, Physical and Engineering Sciences, 472(2189),</span>
+<span class="sd">         20160138.</span>
+<span class="sd">      4. Zappa, E., Holmes‐Cerfon, M., &amp; Goodman, J. (2018). Monte Carlo on manifolds:</span>
+<span class="sd">         sampling densities and integrating functions. Communications on Pure and</span>
+<span class="sd">         Applied Mathematics, 71(12), 2609-2647.</span>
+<span class="sd">      5. Lelievre, T., Rousset, M., &amp; Stoltz, G. (2019). Hybrid Monte Carlo methods for</span>
+<span class="sd">         sampling probability measures on submanifolds. Numerische Mathematik, 143,</span>
+<span class="sd">         379-421.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
         <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_inner_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
-        <span class="n">projection_solver</span><span class="p">:</span> <span class="n">ProjectionSolver</span> <span class="o">=</span> <span class="n">solve_projection_onto_manifold_quasi_newton</span><span class="p">,</span>
+        <span class="n">projection_solver</span><span class="p">:</span> <span class="n">ProjectionSolver</span> <span class="o">=</span> <span class="n">solve_projection_onto_manifold_newton</span><span class="p">,</span>
         <span class="n">projection_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            system: Hamiltonian system to integrate the dynamics of.</span>
+<span class="sd">            system: Hamiltonian system to integrate the constrained dynamics of.</span>
 <span class="sd">            step_size: Integrator time step. If set to :code:`None` it is assumed that a</span>
 <span class="sd">                step size adapter will be used to set the step size before calling the</span>
 <span class="sd">                :py:meth:`step` method.</span>
@@ -894,7 +944,7 @@
 <span class="sd">                .. code::</span>
 
 <span class="sd">                    system.constr(</span>
-<span class="sd">                        state.pos </span>
+<span class="sd">                        state.pos</span>
 <span class="sd">                        + dh2_flow_pos_dmom @ system.jacob_constr(state_prev).T @ λ</span>
 <span class="sd">                    ) == 0</span>
 
@@ -902,7 +952,9 @@
 <span class="sd">                the derivative of the action of the (linear) :code:`system.h2_flow` map</span>
 <span class="sd">                on the state momentum component with respect to the position component.</span>
 <span class="sd">                This is used to project the state position component back on to the</span>
-<span class="sd">                manifold after an unconstrained :code:`system.h2_flow` update.</span>
+<span class="sd">                manifold after an unconstrained :code:`system.h2_flow` update. If the</span>
+<span class="sd">                solver fails to convege a :py:exc:`mici.errors.ConvergenceError`</span>
+<span class="sd">                exception is raised.</span>
 <span class="sd">            projection_solver_kwargs: Dictionary of any keyword arguments to</span>
 <span class="sd">                :code:`projection_solver`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

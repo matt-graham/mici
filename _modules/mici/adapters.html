@@ -77,24 +77,24 @@
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">IntegratorError</span><span class="p">,</span> <span class="n">AdaptationError</span>
-<span class="kn">from</span> <span class="nn">mici.matrices</span> <span class="kn">import</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">,</span> <span class="n">DensePositiveDefiniteMatrix</span>
+
+<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">AdaptationError</span><span class="p">,</span> <span class="n">IntegratorError</span>
+<span class="kn">from</span> <span class="nn">mici.matrices</span> <span class="kn">import</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">,</span> <span class="n">PositiveDiagonalMatrix</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
+
     <span class="kn">from</span> <span class="nn">mici.integrators</span> <span class="kn">import</span> <span class="n">Integrator</span>
     <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
     <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
     <span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="n">Transition</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">AdaptationStatisticFunction</span><span class="p">,</span>
-        <span class="n">AdapterState</span><span class="p">,</span>
-        <span class="n">ReducerFunction</span><span class="p">,</span>
-        <span class="n">TransitionStatistics</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">AdaptationStatisticFunction</span><span class="p">,</span> <span class="n">AdapterState</span><span class="p">,</span>
+                            <span class="n">ReducerFunction</span><span class="p">,</span> <span class="n">TransitionStatistics</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Adapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.Adapter">[docs]</a><span class="k">class</span> <span class="nc">Adapter</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -213,7 +213,7 @@
     <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">log_step_sizes</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="min_log_step_size_reducer"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.min_log_step_size_reducer">[docs]</a><span class="k">def</span> <span class="nf">min_log_step_size_reducer</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<div class="viewcode-block" id="min_log_step_size_reducer"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.min_log_step_size_reducer">[docs]</a><span class="k">def</span> <span class="nf">min_log_step_size_reducer</span><span class="p">(</span><span class="n">log_step_sizes</span><span class="p">:</span> <span class="n">Collection</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute minimum of step sizes from their logs.</span>
 
 <span class="sd">    Args:</span>
@@ -226,7 +226,7 @@
 
 
 <div class="viewcode-block" id="default_adapt_stat_func"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.default_adapt_stat_func">[docs]</a><span class="k">def</span> <span class="nf">default_adapt_stat_func</span><span class="p">(</span><span class="n">stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to extract default acceptance statistic used for step-size adaptation.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to extract default statistic used for step-size adaptation.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        stats: Dictionary of transition statistics.</span>
@@ -241,18 +241,18 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dual averaging integrator step size adapter.</span>
 
 <span class="sd">    Implementation of the dual algorithm step size adaptation algorithm described in</span>
-<span class="sd">    [1], a modified version of the stochastic optimisation scheme of [2]. By default the</span>
-<span class="sd">    adaptation is performed to control the `accept_prob` statistic of an integration</span>
-<span class="sd">    transition to be close to a target value but the statistic adapted on can be altered</span>
-<span class="sd">    by changing the `adapt_stat_func`.</span>
-
+<span class="sd">    Hoffman and Gelman (2014), a modified version of the stochastic optimisation scheme</span>
+<span class="sd">    of Nesterov (2009). By default the adaptation is performed to control the</span>
+<span class="sd">    :code:`accept_stat` statistic of an integration transition to be close to a target</span>
+<span class="sd">    value but the statistic adapted on can be altered by changing the</span>
+<span class="sd">    :code:`adapt_stat_func`.</span>
 
 <span class="sd">    References:</span>
 
-<span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
+<span class="sd">      1. Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting</span>
 <span class="sd">         path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,</span>
 <span class="sd">         15(1), pp.1593-1623.</span>
-<span class="sd">      2. Nesterov, Y., 2009. Primal-dual subgradient methods for convex problems.</span>
+<span class="sd">      2. Nesterov, Y. (2009). Primal-dual subgradient methods for convex problems.</span>
 <span class="sd">         Mathematical programming 120(1), pp.221-259.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -275,19 +275,19 @@
 <span class="sd">                being controlled during adaptation.</span>
 <span class="sd">            adapt_stat_func: Function which given a dictionary of transition statistics</span>
 <span class="sd">                outputs the value of the statistic to control during adaptation. By</span>
-<span class="sd">                default this is set to a function which simply selects the &#39;accept_stat&#39;</span>
-<span class="sd">                value in the statistics dictionary.</span>
+<span class="sd">                default this is set to a function which simply selects the</span>
+<span class="sd">                :code:&#39;accept_stat&#39; value in the statistics dictionary.</span>
 <span class="sd">            log_step_size_reg_target: Value to regularize the controlled output</span>
-<span class="sd">                (logarithm of the integrator step size) towards. If `None` set to</span>
-<span class="sd">                `log(10 * init_step_size)` where `init_step_size` is the initial</span>
-<span class="sd">                &#39;reasonable&#39; step size found by a coarse search as recommended in</span>
-<span class="sd">                Hoffman and Gelman (2014). This has the effect of giving the dual</span>
+<span class="sd">                (logarithm of the integrator step size) towards. If :code:`None` set to</span>
+<span class="sd">                :code:`log(10 * init_step_size)` where :code:`init_step_size` is the</span>
+<span class="sd">                initial &#39;reasonable&#39; step size found by a coarse search as recommended</span>
+<span class="sd">                in Hoffman and Gelman (2014). This has the effect of giving the dual</span>
 <span class="sd">                averaging algorithm a tendency towards testing step sizes larger than</span>
 <span class="sd">                the initial value, with typically integrating with a larger step size</span>
 <span class="sd">                having a lower computational cost.</span>
 <span class="sd">            log_step_size_reg_coefficient: Coefficient controlling amount of</span>
 <span class="sd">                regularisation of controlled output (logarithm of the integrator step</span>
-<span class="sd">                size) towards `log_step_size_reg_target`. Defaults to 0.05 as</span>
+<span class="sd">                size) towards :code:`log_step_size_reg_target`. Defaults to 0.05 as</span>
 <span class="sd">                recommended in Hoffman and Gelman (2014).</span>
 <span class="sd">            iter_decay_coeff: Coefficient controlling exponent of decay in schedule</span>
 <span class="sd">                weighting stochastic updates to smoothed log step size estimate. Should</span>
@@ -301,15 +301,15 @@
 <span class="sd">                &gt; 0 has the effect of stabilising early iterations. Defaults to the</span>
 <span class="sd">                value of 10 as recommended in Hoffman and Gelman (2014).</span>
 <span class="sd">            max_init_step_size_iters: Maximum number of iterations to use in initial</span>
-<span class="sd">                search for a reasonable step size with an `AdaptationError` exception</span>
-<span class="sd">                raised if a suitable step size is not found within this many iterations.</span>
+<span class="sd">                search for a reasonable step size with an</span>
+<span class="sd">                :py:exc:`mici.errors.AdaptationError` exception raised if a suitable</span>
+<span class="sd">                step size is not found within this many iterations.</span>
 <span class="sd">            log_step_size_reducer: Reduction to apply to final per-chain step sizes</span>
 <span class="sd">                estimates to produce overall integrator step size for main chain stages.</span>
 <span class="sd">                The specified function should accept a sequence of logarithms of</span>
 <span class="sd">                estimated step sizes and output a non-negative step size to use. If</span>
-<span class="sd">                `None`, the default, a function which computes the arithmetic mean of</span>
-<span class="sd">                the step sizes is used.</span>
-
+<span class="sd">                :code:`None`, the default, a function which computes the arithmetic mean</span>
+<span class="sd">                of the per-chain step sizes is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_target</span> <span class="o">=</span> <span class="n">adapt_stat_target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">adapt_stat_func</span> <span class="o">=</span> <span class="p">(</span>
@@ -450,27 +450,27 @@
 <div class="viewcode-block" id="OnlineVarianceMetricAdapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter">[docs]</a><span class="k">class</span> <span class="nc">OnlineVarianceMetricAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Diagonal metric adapter using online variance estimates.</span>
 
-<span class="sd">    Uses Welford&#39;s algorithm [1] to stably compute an online estimate of the sample</span>
-<span class="sd">    variances of the chain state position components during sampling. If online</span>
+<span class="sd">    Uses Welford&#39;s algorithm (Welford, 1962) to stably compute an online estimate of the</span>
+<span class="sd">    sample variances of the chain state position components during sampling. If online</span>
 <span class="sd">    estimates are available from multiple independent chains, the final variance</span>
 <span class="sd">    estimate is calculated from the per-chain statistics using the parallel / batched</span>
-<span class="sd">    incremental variance algorithm described by Chan et al. [2]. The variance estimates</span>
-<span class="sd">    are optionally regularized towards a common scalar value, with increasing weight for</span>
-<span class="sd">    small number of samples, to decrease the effect of noisy estimates for small sample</span>
-<span class="sd">    sizes, following the approach in Stan [3]. The metric matrix representation is set</span>
-<span class="sd">    to a diagonal matrix with diagonal elements corresponding to the reciprocal of the</span>
-<span class="sd">    (regularized) variance estimates.</span>
+<span class="sd">    incremental variance algorithm described by Chan et al. (1979). The variance</span>
+<span class="sd">    estimates are optionally regularized towards a common scalar value, with increasing</span>
+<span class="sd">    weight for small number of samples, to decrease the effect of noisy estimates for</span>
+<span class="sd">    small sample sizes, following the approach in Stan (Carpenter et al., 2017). The</span>
+<span class="sd">    metric matrix representation is set to a diagonal matrix with diagonal elements</span>
+<span class="sd">    corresponding to the reciprocal of the (regularized) variance estimates.</span>
 
 <span class="sd">    References:</span>
 
-<span class="sd">      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of</span>
+<span class="sd">      1. Welford, B. P. (1962). Note on a method for calculating corrected sums of</span>
 <span class="sd">         squares and products. Technometrics, 4(3), pp. 419–420.</span>
-<span class="sd">      2. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a</span>
+<span class="sd">      2. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a</span>
 <span class="sd">         pairwise algorithm for computing sample variances. Technical Report</span>
 <span class="sd">         STAN-CS-79-773, Department of Computer Science, Stanford University.</span>
 <span class="sd">      3. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,</span>
-<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic</span>
-<span class="sd">         programming language. Journal of Statistical Software, 76(1).</span>
+<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A</span>
+<span class="sd">         probabilistic programming language. Journal of Statistical Software, 76(1).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
@@ -558,7 +558,7 @@
                     <span class="n">mean_est</span> <span class="o">/=</span> <span class="n">n_iter</span>
                     <span class="n">var_est</span> <span class="o">+=</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">]</span>
                     <span class="n">var_est</span> <span class="o">+=</span> <span class="p">(</span>
-                        <span class="n">mean_diff</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_iter</span>
+                        <span class="n">mean_diff</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_iter</span>
                     <span class="p">)</span>
         <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span>
@@ -576,31 +576,31 @@
 <div class="viewcode-block" id="OnlineCovarianceMetricAdapter"><a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter">[docs]</a><span class="k">class</span> <span class="nc">OnlineCovarianceMetricAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dense metric adapter using online covariance estimates.</span>
 
-<span class="sd">    Uses Welford&#39;s algorithm [1] to stably compute an online estimate of the sample</span>
-<span class="sd">    covariance matrix of the chain state position components during sampling. If online</span>
-<span class="sd">    estimates are available from multiple independent chains, the final covariance</span>
-<span class="sd">    matrix estimate is calculated from the per-chain statistics using a covariance</span>
-<span class="sd">    variant due to Schubert and Gertz [2] of the parallel / batched incremental variance</span>
-<span class="sd">    algorithm described by Chan et al. [3]. The covariance matrix estimates are</span>
-<span class="sd">    optionally regularized towards a scaled identity matrix, with increasing weight for</span>
-<span class="sd">    small number of samples, to decrease the effect of noisy estimates for small sample</span>
-<span class="sd">    sizes, following the approach in Stan [4]. The metric matrix representation is set</span>
-<span class="sd">    to a dense positive definite matrix corresponding to the inverse of the</span>
-<span class="sd">    (regularized) covariance matrix estimate.</span>
+<span class="sd">    Uses Welford&#39;s algorithm (Welford, 1962) to stably compute an online estimate of the</span>
+<span class="sd">    sample covariance matrix of the chain state position components during sampling. If</span>
+<span class="sd">    online estimates are available from multiple independent chains, the final</span>
+<span class="sd">    covariance matrix estimate is calculated from the per-chain statistics using a</span>
+<span class="sd">    covariance variant due to Schubert and Gertz (2018) of the parallel / batched</span>
+<span class="sd">    incremental variance algorithm described by Chan et al. (1979). The covariance</span>
+<span class="sd">    matrix estimates are optionally regularized towards a scaled identity matrix, with</span>
+<span class="sd">    increasing weight for small number of samples, to decrease the effect of noisy</span>
+<span class="sd">    estimates for small sample sizes, following the approach in Stan (Carpenter et al.,</span>
+<span class="sd">    2017). The metric matrix representation is set to a dense positive definite matrix</span>
+<span class="sd">    corresponding to the inverse of the (regularized) covariance matrix estimate.</span>
 
 
 <span class="sd">    References:</span>
 
-<span class="sd">      1. Welford, B. P., 1962. Note on a method for calculating corrected sums of</span>
+<span class="sd">      1. Welford, B. P. (1962). Note on a method for calculating corrected sums of</span>
 <span class="sd">         squares and products. Technometrics, 4(3), pp. 419–420.</span>
-<span class="sd">      2. Schubert, E. and Gertz, M., 2018. Numerically stable parallel computation of</span>
+<span class="sd">      2. Schubert, E. and Gertz, M. (2018). Numerically stable parallel computation of</span>
 <span class="sd">         (co-)variance. ACM. p. 10. doi:10.1145/3221269.3223036.</span>
-<span class="sd">      3. Chan, T. F., Golub, G. H., LeVeque, R. J., 1979. Updating formulae and a</span>
+<span class="sd">      3. Chan, T. F., Golub, G. H. and LeVeque, R. J. (1979). Updating formulae and a</span>
 <span class="sd">         pairwise algorithm for computing sample variances. Technical Report</span>
 <span class="sd">         STAN-CS-79-773, Department of Computer Science, Stanford University.</span>
 <span class="sd">      4. Carpenter, B., Gelman, A., Hoffman, M.D., Lee, D., Goodrich, B., Betancourt,</span>
-<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A., 2017. Stan: A probabilistic</span>
-<span class="sd">         programming language. Journal of Statistical Software, 76(1).</span>
+<span class="sd">         M., Brubaker, M., Guo, J., Li, P. and Riddell, A.  (2017). Stan: A</span>
+<span class="sd">         probabilistic programming language. Journal of Statistical Software, 76(1).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
