@@ -4,21 +4,21 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy.typing import ArrayLike
-from mici.errors import NonReversibleStepError, AdaptationError
-from mici.solvers import (
-    maximum_norm,
-    solve_fixed_point_direct,
-    solve_projection_onto_manifold_newton,
-    FixedPointSolver,
-    ProjectionSolver,
-)
+
+from mici.errors import AdaptationError, NonReversibleStepError
+from mici.solvers import (FixedPointSolver, ProjectionSolver, maximum_norm,
+                          solve_fixed_point_direct,
+                          solve_projection_onto_manifold_newton)
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Optional, Sequence
+
     from mici.states import ChainState
-    from mici.systems import ConstrainedTractableFlowSystem, System, TractableFlowSystem
+    from mici.systems import (ConstrainedTractableFlowSystem, System,
+                              TractableFlowSystem)
     from mici.types import NormFunction
 
 

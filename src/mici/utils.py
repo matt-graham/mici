@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from math import exp, expm1, inf, log, log1p, nan
 from typing import TYPE_CHECKING
+
 import numpy as np
-from math import log, exp, log1p, expm1, inf, nan
 
 try:
     import xxhash
@@ -15,6 +16,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from typing import Optional
+
     from mici.types import ScalarLike
 
 

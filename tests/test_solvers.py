@@ -1,7 +1,9 @@
-import pytest
-import mici
-import numpy as np
 from collections import namedtuple
+
+import numpy as np
+import pytest
+
+import mici
 
 
 @pytest.fixture(params=("direct", "steffensen"))
@@ -21,10 +23,10 @@ FixedPointProblem = namedtuple(
 def convergent_fixed_point_problem(request):
     if request.param == "babylonian":
         y = np.array([3.0, 5.0, 7.0])
-        return FixedPointProblem(lambda x: (y / x + x) / 2, y ** 0.5, np.ones_like(y))
+        return FixedPointProblem(lambda x: (y / x + x) / 2, y**0.5, np.ones_like(y))
     elif request.param == "ratio":
         y = np.array([3.0, 5.0, 7.0])
-        return FixedPointProblem(lambda x: (x + y) / (x + 1), y ** 0.5, np.ones_like(y))
+        return FixedPointProblem(lambda x: (x + y) / (x + 1), y**0.5, np.ones_like(y))
     elif request.param == "cosine":
         return FixedPointProblem(
             lambda x: np.cos(x), np.array([0.7390851332151607]), np.array([1.0])
@@ -36,9 +38,7 @@ def divergent_fixed_point_problem(request):
     if request.param == "doubling":
         return FixedPointProblem(lambda x: 2 * x, None, np.arange(3))
     elif request.param == "quadratic":
-        return FixedPointProblem(
-            lambda x: 1 + x**2, None, np.arange(3)
-        )
+        return FixedPointProblem(lambda x: 1 + x**2, None, np.arange(3))
 
 
 @pytest.fixture(params=(1e-6, 1e-8, 1e-10))
@@ -106,4 +106,3 @@ def test_fixed_point_solver_handle_linalg_error(fixed_point_solver):
 
     with pytest.raises(mici.errors.ConvergenceError):
         fixed_point_solver(func=func, x0=np.array([1.0]))
-

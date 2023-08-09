@@ -4,32 +4,26 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
+
 import numpy as np
-from mici.states import cache_in_state, cache_in_state_with_aux
+
 import mici.matrices as matrices
 from mici.autodiff import autodiff_fallback
+from mici.states import cache_in_state, cache_in_state_with_aux
 
 if TYPE_CHECKING:
     from typing import Any, Optional, Type
+
     from numpy.random import Generator
+
     from mici.states import ChainState
-    from mici.types import (
-        ScalarLike,
-        ArrayLike,
-        MatrixLike,
-        MetricLike,
-        ArrayFunction,
-        ScalarFunction,
-        GradientFunction,
-        HessianFunction,
-        MatrixTressianProduct,
-        MatrixTressianProductFunction,
-        JacobianFunction,
-        MatrixHessianProduct,
-        MatrixHessianProductFunction,
-        VectorJacobianProduct,
-        VectorJacobianProductFunction,
-    )
+    from mici.types import (ArrayFunction, ArrayLike, GradientFunction,
+                            HessianFunction, JacobianFunction,
+                            MatrixHessianProduct, MatrixHessianProductFunction,
+                            MatrixLike, MatrixTressianProduct,
+                            MatrixTressianProductFunction, MetricLike,
+                            ScalarFunction, ScalarLike, VectorJacobianProduct,
+                            VectorJacobianProductFunction)
 
 
 class System(ABC):

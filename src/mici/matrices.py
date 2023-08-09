@@ -5,15 +5,19 @@ from __future__ import annotations
 import abc
 import numbers
 from typing import TYPE_CHECKING
+
 import numpy as np
-from mici.errors import LinAlgError
 import numpy.linalg as nla
 import scipy.linalg as sla
+
+from mici.errors import LinAlgError
 from mici.utils import hash_array
 
 if TYPE_CHECKING:
     from typing import Iterable, Literal, Optional, Tuple, Union
+
     from numpy.typing import NDArray
+
     from mici.types import MatrixLike, ScalarLike
 
 
@@ -648,7 +652,7 @@ class ScaledIdentityMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayM
         return self.shape[0] / self._scalar
 
     def grad_quadratic_form_inv(self, vector: NDArray) -> float:
-        return -np.sum(vector ** 2) / self._scalar ** 2
+        return -np.sum(vector**2) / self._scalar**2
 
     def __str__(self) -> str:
         return f"(shape={self.shape}, scalar={self._scalar})"
@@ -681,7 +685,7 @@ class PositiveScaledIdentityMatrix(ScaledIdentityMatrix, PositiveDefiniteMatrix)
         return PositiveScaledIdentityMatrix(1 / self._scalar, self.shape[0])
 
     def _construct_sqrt(self) -> PositiveScaledIdentityMatrix:
-        return PositiveScaledIdentityMatrix(self._scalar ** 0.5, self.shape[0])
+        return PositiveScaledIdentityMatrix(self._scalar**0.5, self.shape[0])
 
 
 class DiagonalMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
@@ -766,7 +770,7 @@ class PositiveDiagonalMatrix(DiagonalMatrix, PositiveDefiniteMatrix):
         return PositiveDiagonalMatrix(1.0 / self.diagonal)
 
     def _construct_sqrt(self) -> PositiveDiagonalMatrix:
-        return PositiveDiagonalMatrix(self.diagonal ** 0.5)
+        return PositiveDiagonalMatrix(self.diagonal**0.5)
 
 
 def _make_array_triangular(array: NDArray, lower: bool) -> NDArray:
@@ -1042,7 +1046,7 @@ class TriangularFactoredPositiveDefiniteMatrix(
     def _scalar_multiply(self, scalar: ScalarLike) -> TriangularFactoredDefiniteMatrix:
         if scalar > 0:
             return TriangularFactoredPositiveDefiniteMatrix(
-                factor=scalar ** 0.5 * self.factor
+                factor=scalar**0.5 * self.factor
             )
         else:
             return super()._scalar_multiply(scalar)
@@ -1542,7 +1546,7 @@ class EigendecomposedPositiveDefiniteMatrix(
         return EigendecomposedPositiveDefiniteMatrix(self.eigvec, 1 / self.eigval)
 
     def _construct_sqrt(self) -> EigendecomposedPositiveDefiniteMatrix:
-        return EigendecomposedPositiveDefiniteMatrix(self.eigvec, self.eigval ** 0.5)
+        return EigendecomposedPositiveDefiniteMatrix(self.eigvec, self.eigval**0.5)
 
 
 class SoftAbsRegularizedPositiveDefiniteMatrix(

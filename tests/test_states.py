@@ -1,8 +1,10 @@
-import pytest
-from unittest.mock import Mock
-from itertools import combinations
 import pickle
+from itertools import combinations
+from unittest.mock import Mock
+
 import numpy as np
+import pytest
+
 import mici
 
 

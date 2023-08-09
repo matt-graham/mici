@@ -1,11 +1,12 @@
-import pytest
 import copy
 from collections.abc import Mapping
-from types import MappingProxyType
 from math import exp
-import numpy as np
-import mici
+from types import MappingProxyType
 
+import numpy as np
+import pytest
+
+import mici
 
 SEED = 3046987125
 STATE_DIM = 10
@@ -126,7 +127,7 @@ class TestDualAveragingStepSizeAdapterWithEuclideanMetricSystem(
     @pytest.fixture
     def system(self):
         return mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos ** 2) / 2,
+            neg_log_dens=lambda pos: np.sum(pos**2) / 2,
             grad_neg_log_dens=lambda pos: pos,
         )
 
@@ -151,16 +152,16 @@ class TestDualAveragingStepSizeAdapterWithConstrainedEuclideanMetricSystem(
     @pytest.fixture
     def chain_state(self, rng):
         pos, mom = rng.standard_normal((2, STATE_DIM))
-        pos /= np.sum(pos ** 2) ** 0.5
+        pos /= np.sum(pos**2) ** 0.5
         mom -= (mom @ pos) * pos
         return mici.states.ChainState(pos=pos, mom=mom, dir=1)
 
     @pytest.fixture
     def system(self):
         return mici.systems.DenseConstrainedEuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos ** 2) / 2,
+            neg_log_dens=lambda pos: np.sum(pos**2) / 2,
             grad_neg_log_dens=lambda pos: pos,
-            constr=lambda pos: np.sum(pos ** 2)[None] - 1,
+            constr=lambda pos: np.sum(pos**2)[None] - 1,
             jacob_constr=lambda pos: 2 * pos[None],
         )
 
@@ -182,7 +183,7 @@ class TestOnlineVarianceMetricAdapter(GenericAdapterTests):
     def system(self, rng):
         var = np.exp(rng.standard_normal(STATE_DIM))
         return mici.systems.EuclideanMetricSystem(
-            neg_log_dens=lambda pos: np.sum(pos ** 2 / var) / 2,
+            neg_log_dens=lambda pos: np.sum(pos**2 / var) / 2,
             grad_neg_log_dens=lambda pos: pos / var,
         )
 

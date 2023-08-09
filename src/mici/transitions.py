@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod, abstractproperty
 import logging
-from typing import NamedTuple, TYPE_CHECKING
+from abc import ABC, abstractmethod, abstractproperty
+from typing import TYPE_CHECKING, NamedTuple
+
 import numpy as np
+
+from mici.errors import (ConvergenceError, Error, HamiltonianDivergenceError,
+                         IntegratorError, NonReversibleStepError)
 from mici.utils import LogRepFloat
-from mici.errors import (
-    Error,
-    IntegratorError,
-    NonReversibleStepError,
-    ConvergenceError,
-    HamiltonianDivergenceError,
-)
 
 if TYPE_CHECKING:
     from typing import Optional
+
     from numpy.random import Generator
     from numpy.typing import ArrayLike, DTypeLike
+
     from mici.integrators import Integrator
     from mici.states import ChainState
     from mici.systems import System
@@ -184,7 +183,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
             state.mom = self.system.sample_momentum(state, rng)
         elif self.mom_resample_coeff != 0:
             mom_ind = self.system.sample_momentum(state, rng)
-            state.mom *= (1.0 - self.mom_resample_coeff ** 2) ** 0.5
+            state.mom *= (1.0 - self.mom_resample_coeff**2) ** 0.5
             state.mom += self.mom_resample_coeff * mom_ind
         return state, None
 
@@ -198,7 +197,7 @@ class IntegrationTransition(Transition):
     """
 
     @property
-    def state_variables(self) -> Set[str]:
+    def state_variables(self) -> set[str]:
         return {"pos", "mom", "dir"}
 
     @property
@@ -588,7 +587,9 @@ class DynamicIntegrationTransition(IntegrationTransition):
 
     @abstractmethod
     def _weight_ratio(
-        self, numerator: ScalarLike, denominator: ScalarLike,
+        self,
+        numerator: ScalarLike,
+        denominator: ScalarLike,
     ) -> ScalarLike:
         pass
 

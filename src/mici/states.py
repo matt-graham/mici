@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import copy
-from functools import wraps
 from collections import Counter
+from functools import wraps
 from typing import TYPE_CHECKING
+
 from mici.errors import ReadOnlyStateError
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterable, Optional
+
     from numpy.typing import ArrayLike
+
     from mici.systems import System
 
 

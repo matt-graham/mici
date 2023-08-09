@@ -1,4 +1,5 @@
 import pytest
+
 import mici
 
 N_MAIN_ITER = 1

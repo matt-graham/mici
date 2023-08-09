@@ -1,7 +1,9 @@
-import pytest
-import mici
 from collections import OrderedDict
 from queue import SimpleQueue
+
+import pytest
+
+import mici
 
 
 def test_format_time():
@@ -60,4 +62,3 @@ def test_progress_bar_iter(progress_bar_and_sequence):
         for (val, iter_dict), val_orig in zip(progress_bar, sequence):
             assert val == val_orig
             assert isinstance(iter_dict, dict)
-

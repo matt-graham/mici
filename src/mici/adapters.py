@@ -5,24 +5,24 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import exp, log
 from typing import TYPE_CHECKING
+
 import numpy as np
-from mici.errors import IntegratorError, AdaptationError
-from mici.matrices import PositiveDiagonalMatrix, DensePositiveDefiniteMatrix
+
+from mici.errors import AdaptationError, IntegratorError
+from mici.matrices import DensePositiveDefiniteMatrix, PositiveDiagonalMatrix
 
 if TYPE_CHECKING:
-    from typing import Collection, Optional, Iterable, Union
+    from typing import Collection, Iterable, Optional, Union
+
     from numpy.random import Generator
     from numpy.typing import ArrayLike
+
     from mici.integrators import Integrator
     from mici.states import ChainState
     from mici.systems import System
     from mici.transitions import Transition
-    from mici.types import (
-        AdaptationStatisticFunction,
-        AdapterState,
-        ReducerFunction,
-        TransitionStatistics,
-    )
+    from mici.types import (AdaptationStatisticFunction, AdapterState,
+                            ReducerFunction, TransitionStatistics)
 
 
 class Adapter(ABC):
@@ -486,7 +486,7 @@ class OnlineVarianceMetricAdapter(Adapter):
                     mean_est /= n_iter
                     var_est += adapt_state["sum_diff_sq"]
                     var_est += (
-                        mean_diff ** 2 * (adapt_state["iter"] * n_iter_prev) / n_iter
+                        mean_diff**2 * (adapt_state["iter"] * n_iter_prev) / n_iter
                     )
         if n_iter < 2:
             raise AdaptationError(

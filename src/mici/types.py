@@ -2,22 +2,15 @@
 
 from __future__ import annotations
 
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    Iterable,
-    TypeVar,
-    Union,
-)
-from numpy.typing import ArrayLike
-from numpy import number
+from typing import Any, Callable, Collection, Iterable, TypeVar, Union
 
-from mici.states import ChainState
+from numpy import number
+from numpy.typing import ArrayLike
+
 from mici.matrices import Matrix, PositiveDefiniteMatrix
+from mici.states import ChainState
 from mici.systems import System
 from mici.utils import LogRepFloat
-
 
 ScalarLike = Union[bool, int, float, LogRepFloat, number]
 MatrixLike = Union[ArrayLike, Matrix]

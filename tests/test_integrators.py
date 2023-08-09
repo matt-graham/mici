@@ -1,11 +1,12 @@
-import pytest
 import numpy as np
+import pytest
+
 import mici.integrators as integrators
-import mici.systems as systems
 import mici.matrices as matrices
 import mici.solvers as solvers
-from mici.states import ChainState
+import mici.systems as systems
 from mici.errors import IntegratorError
+from mici.states import ChainState
 
 SEED = 3046987125
 N_STEPS = {1, 5, 20}
@@ -72,7 +73,6 @@ def _integrate_with_reversal(integrator, init_state, n_step):
 
 
 class IntegratorTests:
-
     h_diff_tol = 5e-3
 
     @pytest.mark.parametrize("n_step", N_STEPS)
@@ -234,7 +234,7 @@ class LinearEuclideanMetricSystemTests(LinearSystemIntegratorTests):
     @pytest.fixture
     def system(self, metric):
         return systems.EuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.5 * np.sum(q ** 2),
+            neg_log_dens=lambda q: 0.5 * np.sum(q**2),
             metric=metric,
             grad_neg_log_dens=lambda q: q,
         )
@@ -244,9 +244,9 @@ class NonLinearEuclideanMetricSystemTests(IntegratorTests):
     @pytest.fixture
     def system(self, metric):
         return systems.EuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.25 * np.sum(q ** 4),
+            neg_log_dens=lambda q: 0.25 * np.sum(q**4),
             metric=metric,
-            grad_neg_log_dens=lambda q: q ** 3,
+            grad_neg_log_dens=lambda q: q**3,
         )
 
 
@@ -262,9 +262,9 @@ class NonLinearGaussianEuclideanMetricSystem(IntegratorTests):
     @pytest.fixture
     def system(self, metric):
         return systems.GaussianEuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.125 * np.sum(q ** 4),
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
             metric=metric,
-            grad_neg_log_dens=lambda q: 0.5 * q ** 3,
+            grad_neg_log_dens=lambda q: 0.5 * q**3,
         )
 
 
@@ -277,7 +277,6 @@ class LeapfrogIntegratorTests:
 class TestLeapfrogIntegratorLinearEuclideanMetricSystem(
     LeapfrogIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 2e-3
     step_size = 0.25
 
@@ -285,7 +284,6 @@ class TestLeapfrogIntegratorLinearEuclideanMetricSystem(
 class TestLeapfrogIntegratorNonLinearEuclideanMetricSystem(
     LeapfrogIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 1e-3
     step_size = 0.05
 
@@ -293,7 +291,6 @@ class TestLeapfrogIntegratorNonLinearEuclideanMetricSystem(
 class TestLeapfrogIntegratorLinearGaussianEuclideanMetricSystem(
     LeapfrogIntegratorTests, LinearGaussianEuclideanMetricSystem
 ):
-
     h_diff_tol = 1e-10
     step_size = 0.5
 
@@ -301,7 +298,6 @@ class TestLeapfrogIntegratorLinearGaussianEuclideanMetricSystem(
 class TestLeapfrogIntegratorNonLinearGaussianEuclideanMetricSystem(
     LeapfrogIntegratorTests, NonLinearGaussianEuclideanMetricSystem
 ):
-
     h_diff_tol = 2e-3
     step_size = 0.1
 
@@ -315,7 +311,6 @@ class BCSSTwoStageIntegratorTests:
 class TestBCSSTwoStageIntegratorLinearEuclideanMetricSystem(
     BCSSTwoStageIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 2e-4
     step_size = 0.25
 
@@ -323,7 +318,6 @@ class TestBCSSTwoStageIntegratorLinearEuclideanMetricSystem(
 class TestBCSSTwoStageIntegratorNonLinearEuclideanMetricSystem(
     BCSSTwoStageIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 1e-3
     step_size = 0.05
 
@@ -331,15 +325,14 @@ class TestBCSSTwoStageIntegratorNonLinearEuclideanMetricSystem(
 class TestBCSSTwoStageIntegratorLinearGaussianEuclideanMetricSystem(
     BCSSTwoStageIntegratorTests, LinearGaussianEuclideanMetricSystem
 ):
-
     h_diff_tol = 1e-10
     step_size = 0.5
 
 
 class TestBCSSTwoStageIntegratorNonLinearGaussianEuclideanMetricSystem(
-    BCSSTwoStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+    BCSSTwoStageIntegratorTests,
+    NonLinearGaussianEuclideanMetricSystem,
 ):
-
     h_diff_tol = 2e-3
     step_size = 0.1
 
@@ -353,7 +346,6 @@ class BCSSThreeStageIntegratorTests:
 class TestBCSSThreeStageIntegratorLinearEuclideanMetricSystem(
     BCSSThreeStageIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 5e-5
     step_size = 0.25
 
@@ -361,7 +353,6 @@ class TestBCSSThreeStageIntegratorLinearEuclideanMetricSystem(
 class TestBCSSThreeStageIntegratorNonLinearEuclideanMetricSystem(
     BCSSThreeStageIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 5e-4
     step_size = 0.25
 
@@ -369,15 +360,14 @@ class TestBCSSThreeStageIntegratorNonLinearEuclideanMetricSystem(
 class TestBCSSThreeStageIntegratorLinearGaussianEuclideanMetricSystem(
     BCSSThreeStageIntegratorTests, LinearGaussianEuclideanMetricSystem
 ):
-
     h_diff_tol = 1e-10
     step_size = 0.5
 
 
 class TestBCSSThreeStageIntegratorNonLinearGaussianEuclideanMetricSystem(
-    BCSSThreeStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+    BCSSThreeStageIntegratorTests,
+    NonLinearGaussianEuclideanMetricSystem,
 ):
-
     h_diff_tol = 5e-4
     step_size = 0.5
 
@@ -391,7 +381,6 @@ class BCSSFourStageIntegratorTests:
 class TestBCSSFourStageIntegratorLinearEuclideanMetricSystem(
     BCSSFourStageIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 2e-5
     step_size = 1.0
 
@@ -399,7 +388,6 @@ class TestBCSSFourStageIntegratorLinearEuclideanMetricSystem(
 class TestBCSSFourStageIntegratorNonLinearEuclideanMetricSystem(
     BCSSFourStageIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 1e-3
     step_size = 0.25
 
@@ -407,15 +395,14 @@ class TestBCSSFourStageIntegratorNonLinearEuclideanMetricSystem(
 class TestBCSSFourStageIntegratorLinearGaussianEuclideanMetricSystem(
     BCSSFourStageIntegratorTests, LinearGaussianEuclideanMetricSystem
 ):
-
     h_diff_tol = 1e-10
     step_size = 1.0
 
 
 class TestBCSSFourStageIntegratorNonLinearGaussianEuclideanMetricSystem(
-    BCSSFourStageIntegratorTests, NonLinearGaussianEuclideanMetricSystem,
+    BCSSFourStageIntegratorTests,
+    NonLinearGaussianEuclideanMetricSystem,
 ):
-
     h_diff_tol = 5e-4
     step_size = 0.5
 
@@ -455,7 +442,6 @@ class ImplicitMidpointIntegratorTests(ImplicitIntegratorTests):
 class TestImplicitLeapfrogIntegratorLinearEuclideanMetricSystem(
     ImplicitLeapfrogIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 5e-3
     step_size = 0.25
 
@@ -463,7 +449,6 @@ class TestImplicitLeapfrogIntegratorLinearEuclideanMetricSystem(
 class TestImplicitMidpointIntegratorLinearEuclideanMetricSystem(
     ImplicitMidpointIntegratorTests, LinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 1e-7
     step_size = 0.25
 
@@ -471,7 +456,6 @@ class TestImplicitMidpointIntegratorLinearEuclideanMetricSystem(
 class TestImplicitLeapfrogIntegratorNonLinearEuclideanMetricSystem(
     ImplicitLeapfrogIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 6e-3
     step_size = 0.1
 
@@ -479,7 +463,6 @@ class TestImplicitLeapfrogIntegratorNonLinearEuclideanMetricSystem(
 class TestImplicitMidpointIntegratorNonLinearEuclideanMetricSystem(
     ImplicitMidpointIntegratorTests, NonLinearEuclideanMetricSystemTests
 ):
-
     h_diff_tol = 5e-3
     step_size = 0.1
 
@@ -488,9 +471,9 @@ class NonLinearDiagonalRiemannianMetricSystemTests(IntegratorTests):
     @pytest.fixture
     def system(self):
         return systems.DiagonalRiemannianMetricSystem(
-            lambda q: np.sum(q ** 2) / 2 + np.sum(q ** 4) / 12,
-            grad_neg_log_dens=lambda q: q + q ** 3 / 3,
-            metric_diagonal_func=lambda q: 1 + q ** 2,
+            lambda q: np.sum(q**2) / 2 + np.sum(q**4) / 12,
+            grad_neg_log_dens=lambda q: q + q**3 / 3,
+            metric_diagonal_func=lambda q: 1 + q**2,
             vjp_metric_diagonal_func=lambda q: lambda m: 2 * m * q,
         )
 
@@ -498,7 +481,6 @@ class NonLinearDiagonalRiemannianMetricSystemTests(IntegratorTests):
 class TestImplicitLeapfrogIntegratorNonLinearDiagonalRiemannianMetricSystem(
     ImplicitLeapfrogIntegratorTests, NonLinearDiagonalRiemannianMetricSystemTests
 ):
-
     h_diff_tol = 1e-3
     step_size = 0.1
 
@@ -506,7 +488,6 @@ class TestImplicitLeapfrogIntegratorNonLinearDiagonalRiemannianMetricSystem(
 class TestImplicitMidpointIntegratorNonLinearDiagonalRiemannianMetricSystem(
     ImplicitMidpointIntegratorTests, NonLinearDiagonalRiemannianMetricSystemTests
 ):
-
     h_diff_tol = 2e-4
     step_size = 0.1
 
@@ -514,13 +495,12 @@ class TestImplicitMidpointIntegratorNonLinearDiagonalRiemannianMetricSystem(
 class TestConstrainedLeapfrogIntegratorLinearSystem(
     ConstrainedLinearSystemIntegratorTests
 ):
-
     h_diff_tol = 1e-2
 
     @pytest.fixture
     def integrator(self, metric):
         system = systems.DenseConstrainedEuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.5 * np.sum(q ** 2),
+            neg_log_dens=lambda q: 0.5 * np.sum(q**2),
             metric=metric,
             grad_neg_log_dens=lambda q: q,
             constr=lambda q: q[:1],
@@ -532,15 +512,14 @@ class TestConstrainedLeapfrogIntegratorLinearSystem(
 class TestConstrainedLeapfrogIntegratorNonLinearSystem(
     ConstrainedNonLinearSystemIntegratorTests
 ):
-
     h_diff_tol = 1e-2
 
     @pytest.fixture
     def system(self, metric):
         return systems.DenseConstrainedEuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.125 * np.sum(q ** 4),
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
             metric=metric,
-            grad_neg_log_dens=lambda q: 0.5 * q ** 3,
+            grad_neg_log_dens=lambda q: 0.5 * q**3,
             constr=lambda q: q[0:1] ** 2 + q[1:2] ** 2 - 1.0,
             jacob_constr=lambda q: np.concatenate(
                 [2 * q[0:1], 2 * q[1:2], np.zeros(q.shape[0] - 2)]
@@ -563,7 +542,6 @@ class TestConstrainedLeapfrogIntegratorNonLinearSystem(
 class TestConstrainedLeapfrogIntegratorGaussianLinearSystem(
     ConstrainedLinearSystemIntegratorTests
 ):
-
     h_diff_tol = 1e-4
 
     @pytest.fixture
@@ -582,15 +560,14 @@ class TestConstrainedLeapfrogIntegratorGaussianLinearSystem(
 class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
     ConstrainedNonLinearSystemIntegratorTests
 ):
-
     h_diff_tol = 5e-2
 
     @pytest.fixture
     def system(self, metric):
         return systems.GaussianDenseConstrainedEuclideanMetricSystem(
-            neg_log_dens=lambda q: 0.125 * np.sum(q ** 4),
+            neg_log_dens=lambda q: 0.125 * np.sum(q**4),
             metric=metric,
-            grad_neg_log_dens=lambda q: 0.5 * q ** 3,
+            grad_neg_log_dens=lambda q: 0.5 * q**3,
             constr=lambda q: q[0:1] ** 2 + q[1:2] ** 2 - 1.0,
             jacob_constr=lambda q: np.concatenate(
                 [2 * q[0:1], 2 * q[1:2], np.zeros(q.shape[0] - 2)]

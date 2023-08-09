@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import importlib
 import os
-import mici
-import numpy as np
 from typing import TYPE_CHECKING
+
+import numpy as np
+
+import mici
 
 if TYPE_CHECKING:
     from typing import Literal, Optional, Union
-    from numpy.typing import ArrayLike
+
     import arviz
     import pymc
+    from numpy.typing import ArrayLike
 
 
 def convert_to_inference_data(

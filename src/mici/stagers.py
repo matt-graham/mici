@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import abc
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from typing import Iterable, Optional
+
     from mici.adapters import Adapter
     from mici.types import TraceFunction
 

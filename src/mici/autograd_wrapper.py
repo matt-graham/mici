@@ -7,24 +7,19 @@ from typing import TYPE_CHECKING
 
 AUTOGRAD_AVAILABLE = True
 try:
-    from autograd.wrap_util import unary_to_nary
+    import autograd.numpy as np
     from autograd.builtins import tuple as atuple
     from autograd.core import make_vjp
     from autograd.extend import vspace
-    import autograd.numpy as np
+    from autograd.wrap_util import unary_to_nary
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 
 if TYPE_CHECKING:
     from typing import Callable
-    from mici.types import (
-        ScalarLike,
-        ArrayLike,
-        ScalarFunction,
-        ArrayFunction,
-        MatrixHessianProduct,
-        MatrixTressianProduct,
-    )
+
+    from mici.types import (ArrayFunction, ArrayLike, MatrixHessianProduct,
+                            MatrixTressianProduct, ScalarFunction, ScalarLike)
 
 
 def _wrapped_unary_to_nary(func: Callable) -> Callable:

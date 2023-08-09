@@ -1,18 +1,20 @@
-import pytest
-from itertools import product
-from functools import partial, wraps, reduce
 from copy import copy, deepcopy
+from functools import partial, reduce, wraps
+from itertools import product
+
 import numpy as np
 import numpy.linalg as nla
-import scipy.linalg as sla
 import numpy.testing as npt
+import pytest
+import scipy.linalg as sla
+
 import mici.matrices as matrices
 
 AUTOGRAD_AVAILABLE = True
 try:
     import autograd.numpy as anp
     from autograd import grad
-    from autograd.core import primitive, defvjp
+    from autograd.core import defvjp, primitive
 except ImportError:
     AUTOGRAD_AVAILABLE = False
     import warnings
@@ -312,7 +314,6 @@ class ExplicitShapePositiveDefiniteMatrixTests(
 
 
 class DifferentiableMatrixTests(MatrixTests):
-
     if AUTOGRAD_AVAILABLE:
 
         @pytest.fixture
@@ -383,7 +384,6 @@ class TestScaledIdentityMatrix(
     ExplicitShapeSymmetricMatrixTests,
     ExplicitShapeInvertibleMatrixTests,
 ):
-
     matrix_class = matrices.ScaledIdentityMatrix
 
     @staticmethod
@@ -394,7 +394,6 @@ class TestScaledIdentityMatrix(
 class TestPositiveScaledIdentityMatrix(
     DifferentiableScaledIdentityMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
 ):
-
     matrix_class = matrices.PositiveScaledIdentityMatrix
 
     @staticmethod
@@ -422,7 +421,6 @@ class TestDiagonalMatrix(
     ExplicitShapeSymmetricMatrixTests,
     ExplicitShapeInvertibleMatrixTests,
 ):
-
     matrix_class = matrices.DiagonalMatrix
 
     @staticmethod
@@ -433,7 +431,6 @@ class TestDiagonalMatrix(
 class TestPositiveDiagonalMatrix(
     DifferentiableDiagonalMatrixTests, ExplicitShapePositiveDefiniteMatrixTests
 ):
-
     matrix_class = matrices.PositiveDiagonalMatrix
 
     @staticmethod
@@ -488,7 +485,6 @@ class TestTriangularFactoredDefiniteMatrix(
     ExplicitShapeSymmetricMatrixTests,
     ExplicitShapeInvertibleMatrixTests,
 ):
-
     matrix_class = matrices.TriangularFactoredDefiniteMatrix
 
     @pytest.fixture(params=(+1, -1))
@@ -532,7 +528,6 @@ class TestDenseDefiniteMatrix(
     ExplicitShapeSymmetricMatrixTests,
     ExplicitShapeInvertibleMatrixTests,
 ):
-
     matrix_class = matrices.DenseDefiniteMatrix
 
     @pytest.fixture(params=(+1, -1))
@@ -785,7 +780,6 @@ class TestPositiveDefiniteBlockDiagonalMatrix(
 
 
 if AUTOGRAD_AVAILABLE:
-
     # Define new block_diag primitive and corresponding vector-Jacobian-product
 
     @primitive
@@ -793,7 +787,6 @@ if AUTOGRAD_AVAILABLE:
         return sla.block_diag(*blocks)
 
     def vjp_block_diag(ans, blocks):
-
         blocks = tuple(blocks)
 
         def vjp(g):

@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
-import mici
+import pytest
 
+import mici
 
 SEED = 3046987125
 
@@ -41,7 +41,6 @@ def get_val(obj):
 
 
 class TestLogRepFloat:
-
     VALS = sorted((0.0, 0.9, 1, 1.1, 2.1, 120.0))
     FIXED = VALS[1]
 

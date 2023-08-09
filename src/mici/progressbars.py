@@ -225,7 +225,7 @@ class SequenceProgressBar(ProgressBar):
 
     @property
     def description(self) -> str:
-        """"Description of task being tracked."""
+        """Description of task being tracked."""
         return self._description
 
     @property

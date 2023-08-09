@@ -2,62 +2,49 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import queue
+import signal
+import tempfile
 from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from pickle import PicklingError
-import logging
-import tempfile
-import signal
-from warnings import warn
 from typing import TYPE_CHECKING, NamedTuple
+from warnings import warn
+
 import numpy as np
 from numpy.random import default_rng
-from mici.transitions import (
-    IndependentMomentumTransition,
-    MetropolisRandomIntegrationTransition,
-    MetropolisStaticIntegrationTransition,
-    MultinomialDynamicIntegrationTransition,
-    SliceDynamicIntegrationTransition,
-    euclidean_no_u_turn_criterion,
-    riemannian_no_u_turn_criterion,
-)
-from mici.states import ChainState
-from mici.progressbars import (
-    SequenceProgressBar,
-    LabelledSequenceProgressBar,
-    DummyProgressBar,
-    _ProxySequenceProgressBar,
-)
-from mici.errors import AdaptationError
+
 from mici.adapters import DualAveragingStepSizeAdapter
+from mici.errors import AdaptationError
+from mici.progressbars import (DummyProgressBar, LabelledSequenceProgressBar,
+                               SequenceProgressBar, _ProxySequenceProgressBar)
 from mici.stagers import WarmUpStager, WindowedWarmUpStager
+from mici.states import ChainState
+from mici.transitions import (IndependentMomentumTransition,
+                              MetropolisRandomIntegrationTransition,
+                              MetropolisStaticIntegrationTransition,
+                              MultinomialDynamicIntegrationTransition,
+                              SliceDynamicIntegrationTransition,
+                              euclidean_no_u_turn_criterion,
+                              riemannian_no_u_turn_criterion)
 
 if TYPE_CHECKING:
-    from typing import (
-        Container,
-        Generator,
-        Iterable,
-        Optional,
-        Sequence,
-        Union,
-    )
+    from typing import (Container, Generator, Iterable, Optional, Sequence,
+                        Union)
+
     from numpy.typing import ArrayLike, DTypeLike, NDArray
+
     from mici.adapters import Adapter
     from mici.integrators import Integrator
     from mici.progressbars import ProgressBar
     from mici.stagers import Stager
     from mici.systems import System
-    from mici.transitions import IntegrationTransition, MomentumTransition, Transition
-    from mici.types import (
-        AdapterState,
-        ChainIterator,
-        ScalarLike,
-        PyTree,
-        TraceFunction,
-        TerminationCriterion,
-    )
+    from mici.transitions import (IntegrationTransition, MomentumTransition,
+                                  Transition)
+    from mici.types import (AdapterState, ChainIterator, PyTree, ScalarLike,
+                            TerminationCriterion, TraceFunction)
 
 # Preferentially import from multiprocess library if available as able to
 # serialize much wider range of types including autograd functions
@@ -145,7 +132,10 @@ def _generate_memmap_filenames(
 
 
 def _open_new_memmap(
-    file_path: str, shape: tuple[int, ...], default_val: ScalarLike, dtype: DTypeLike,
+    file_path: str,
+    shape: tuple[int, ...],
+    default_val: ScalarLike,
+    dtype: DTypeLike,
 ) -> np.memmap:
     """Open a new memory-mapped array object and fill with a default-value.
 
@@ -298,7 +288,15 @@ def _init_traces(
                 ]
             else:
                 traces[key] = list(
-                    np.full((n_chain, n_iter,) + val.shape, init, val.dtype)
+                    np.full(
+                        (
+                            n_chain,
+                            n_iter,
+                        )
+                        + val.shape,
+                        init,
+                        val.dtype,
+                    )
                 )
     return traces
 
@@ -961,7 +959,11 @@ class MarkovChainMonteCarloMethod:
                 )
             )
             stats = _init_stats(
-                self.transitions, n_chain, n_trace_iter, use_memmap, memmap_path,
+                self.transitions,
+                n_chain,
+                n_trace_iter,
+                use_memmap,
+                memmap_path,
             )
             per_chain_rngs = _get_per_chain_rngs(self.rng, n_chain)
             per_chain_traces = (
@@ -1051,7 +1053,7 @@ class HMCSampleChainsOutputs(NamedTuple):
             and main sampling stages otherwise. The key for each value is the
             corresponding key in the dictionary returned by the trace function which
             computed the traced value.
-        statistics: Dictionary of chain transition statistic dictionaries. Values in 
+        statistics: Dictionary of chain transition statistic dictionaries. Values in
             dictionary are lists of arrays of chain statistic values with each array in
             the list corresponding to a single chain and the leading dimension of each
             array corresponding to the iteration (draw) index, within the main

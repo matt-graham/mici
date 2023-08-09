@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Protocol, TYPE_CHECKING
-from mici.errors import ConvergenceError, LinAlgError
+from typing import TYPE_CHECKING, Protocol
+
 import numpy as np
+
+from mici.errors import ConvergenceError, LinAlgError
 
 if TYPE_CHECKING:
     from mici.states import ChainState
-    from mici.systems import (
-        ConstrainedEuclideanMetricSystem,
-        ConstrainedTractableFlowSystem,
-    )
-    from mici.types import ScalarFunction, ArrayFunction, ArrayLike
+    from mici.systems import (ConstrainedEuclideanMetricSystem,
+                              ConstrainedTractableFlowSystem)
+    from mici.types import ArrayFunction, ArrayLike, ScalarFunction
 
 
 def euclidean_norm(vct):

@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
-import mici
+import pytest
 
+import mici
 
 SEED = 3046987125
 STATE_DIM = 2
@@ -14,7 +14,7 @@ def rng():
 
 
 def neg_log_dens(pos):
-    return np.sum(pos ** 2) / 2
+    return np.sum(pos**2) / 2
 
 
 def grad_neg_log_dens(pos):
@@ -333,7 +333,6 @@ class HamiltonianMCMCTests(MarkovChainMonteCarloMethodTests):
 
 
 class TestStaticMetropolisHMC(HamiltonianMCMCTests):
-
     n_step = 2
 
     def test_max_tree_depth(self, sampler):
@@ -351,7 +350,6 @@ class TestStaticMetropolisHMC(HamiltonianMCMCTests):
 
 
 class TestRandomMetropolisHMC(HamiltonianMCMCTests):
-
     n_step_range = (1, 3)
 
     def test_max_tree_depth(self, sampler):
@@ -374,7 +372,6 @@ class TestRandomMetropolisHMC(HamiltonianMCMCTests):
 
 
 class DynamicHMCTests(HamiltonianMCMCTests):
-
     max_tree_depth = 2
     max_delta_h = 1000
 
