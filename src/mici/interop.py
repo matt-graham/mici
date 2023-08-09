@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import os
 import mici
 import numpy as np
@@ -144,14 +145,10 @@ def sample_pymc3_model(
 
     import pymc3
 
-    if return_inferencedata:
+    if return_inferencedata and importlib.util.find_spec("arviz") is None:
+        raise ValueError("Cannot return InferenceData as ArviZ is not installed")
 
-        try:
-            import arviz
-        except ImportError:
-            raise ValueError("Cannot return InferenceData as ArviZ is not installed")
-
-    model = pymc3.modelcontext(model)
+    model = pymc.modelcontext(model)
 
     if cores is None:
         cores = min(4, os.cpu_count() // 2)  # assume 2 threads per CPU core
@@ -338,12 +335,8 @@ def sample_stan_model(
 
     import stan
 
-    if return_inferencedata:
-
-        try:
-            import arviz
-        except ImportError:
-            raise ValueError("Cannot return InferenceData as ArviZ is not installed")
+    if return_inferencedata and importlib.util.find_spec("arviz") is None:
+        raise ValueError("Cannot return InferenceData as ArviZ is not installed")
 
     model = stan.build(model_code, data=data)
 
