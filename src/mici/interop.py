@@ -409,7 +409,7 @@ def sample_stan_model(
         stager=stager,
         trace_funcs=[trace_func],
         monitor_stats=["accept_stat", "n_step", "diverging"],
-        trace_warmup=save_warmup,
+        trace_warm_up=save_warmup,
     )
 
     if return_inferencedata:
