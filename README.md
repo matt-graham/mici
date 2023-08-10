@@ -11,7 +11,9 @@
   <a href="https://zenodo.org/badge/latestdoi/52494384">
     <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
   </a>
-  <img src="https://github.com/matt-graham/mici/workflows/Tests/badge.svg" alt="Test status" />
+  <a href="https://github.com/matt-graham/mici/actions/workflows/tests.yml">
+    <img src="https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg" alt="Test status" />
+  </a>
 </p>
 
 **Mici** is a Python package providing implementations of *Markov chain Monte
@@ -69,12 +71,12 @@ packages provide extra functionality and features
     wider range of types, including of Autograd generated functions. Both
     Autograd and multiprocess can be installed alongside Mici by running `pip
     install mici[autodiff]`.
-  * [ArviZ](https://arviz-devs.github.io/arviz/index.html#): if ArviZ is
+  * [ArviZ](https://python.arviz.org/en/latest/index.html): if ArviZ is
     available the traces (dictionary) output of a sampling run can be directly
     converted to an `arviz.InferenceData` container object using
     `arviz.convert_to_inference_data` or implicitly converted by passing the
     traces dictionary as the `data` argument
-    [to ArviZ API functions](https://arviz-devs.github.io/arviz/api.html),
+    [to ArviZ API functions](https://python.arviz.org/en/latest/api/index.html),
     allowing straightforward use of the ArviZ's extensive visualisation and
     diagnostic functions.
 
@@ -91,17 +93,18 @@ first example of a Markov chain Monte Carlo method.
 ## Related projects
 
 Other Python packages for performing MCMC inference include
-[PyMC3](https://github.com/pymc-devs/pymc3),
+[PyMC](https://github.com/pymc-devs/pymc),
 [PyStan](https://github.com/stan-dev/pystan) (the Python interface to
 [Stan](http://mc-stan.org/)), [Pyro](https://github.com/pyro-ppl/pyro) /
 [NumPyro](https://github.com/pyro-ppl/numpyro), [TensorFlow
 Probability](https://github.com/tensorflow/probability),
-[emcee](https://github.com/dfm/emcee) and
-[Sampyl](https://github.com/mcleonard/sampyl).
+[emcee](https://github.com/dfm/emcee),
+[Sampyl](https://github.com/mcleonard/sampyl) and
+[BlackJAX](https://github.com/blackjax-devs/blackjax).
 
-Unlike PyMC3, PyStan, (Num)Pyro and TensorFlow Probability which are complete
+Unlike PyMC, PyStan, (Num)Pyro and TensorFlow Probability which are complete
 probabilistic programming frameworks including functionality for definining a
-probabilistic model / program, but like emcee and Sampyl, Mici is solely
+probabilistic model / program, but like emcee, Sampyl and BlackJAX, Mici is solely
 focussed on providing implementations of inference algorithms, with the user
 expected to be able to define at a minimum a function specifying the negative
 log (unnormalized) density of the distribution of interest.
@@ -118,12 +121,12 @@ implementation.
  ## Overview of package
 
 API documentation for the package is available
-[here](https://matt-graham.github.io/mici/docs). The three main user-facing
+[here](https://matt-graham.github.io/mici/). The three main user-facing
 modules within the `mici` package are the `systems`, `integrators` and
 `samplers` modules and you will generally need to create an instance of one
 class from each module.
 
- [`mici.systems`](https://matt-graham.github.io/mici/docs/systems.html) -
+ [`mici.systems`](https://matt-graham.github.io/mici/mici.systems.html) -
  Hamiltonian systems encapsulating model functions and their derivatives
 
    * `EuclideanMetricSystem` - systems with a metric on the position space with
@@ -146,7 +149,7 @@ class from each module.
       [Lelièvre, Rousset and Stoltz, 2019](#lelievre2019hybrid))
      with a dense constraint function Jacobian matrix,
 
-[`mici.integrators`](https://matt-graham.github.io/mici/docs/integrators.html) -
+[`mici.integrators`](https://matt-graham.github.io/mici/mici.integrators.html) -
 symplectic integrators for Hamiltonian dynamics
 
   * `LeapfrogIntegrator` - explicit leapfrog (Störmer-Verlet) integrator for
@@ -166,7 +169,7 @@ symplectic integrators for Hamiltonian dynamics
      ([Andersen, 1983](#andersen1983rattle);
      [Leimkuhler and Reich, 1994](#leimkuhler1994symplectic)).
 
-[`mici.samplers`](https://matt-graham.github.io/mici/docs/samplers.html) - MCMC
+[`mici.samplers`](https://matt-graham.github.io/mici/mici.samplers.html) - MCMC
 samplers for peforming inference
 
   * `StaticMetropolisHMC` - static integration time Hamiltonian Monte Carlo
