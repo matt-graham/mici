@@ -123,7 +123,7 @@ correlation with the previous value is used. It is assumed that the conditional
 distribution of the momenta is zero-mean Gaussian such that the Crank-Nicolson
 update leaves the momenta conditional distribution exactly invariant. This approach
 is sometimes known as partial momentum refreshing or updating, and was originally
-proposed in [1].</p>
+proposed in (Horowitz, 1991).</p>
 <p>If the resampling coefficient is equal to zero then the momentum is not randomized
 at all and succesive applications of the coupled integration transitions will
 continue along the same simulated Hamiltonian trajectory. When an integration
@@ -137,7 +137,7 @@ between zero and one correspond to varying levels of correlation between the pre
 post update momentums.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Horowitz, A.M., 1991. A generalized guided Monte Carlo algorithm. Phys. Lett.
+<li><p>Horowitz, A.M. (1991). A generalized guided Monte Carlo algorithm. Phys. Lett.
 B, 268(CERN-TH-6172-91), pp.247-252.</p></li>
 </ol>
 <dl class="field-list simple">
@@ -184,12 +184,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.CorrelatedMomentumTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.CorrelatedMomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.CorrelatedMomentumTransition.sample" title="mici.transitions.CorrelatedMomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.CorrelatedMomentumTransition.sample" title="mici.transitions.CorrelatedMomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -204,7 +204,7 @@ randomly forward and backward in time by a number of steps equal to the previous
 tree size until a termination criteria on the tree’s subtrees is met. The next chain
 state is chosen from the candidate states using a progressive sampling scheme based
 on relative weights of the different candidate states, with the sampling biased
-towards states further from the current state [1, 2].</p>
+towards states further from the current state.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
 <li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
@@ -220,7 +220,8 @@ arXiv preprint arXiv:1701.02434.</p></li>
 <li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
 system.</p></li>
 <li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
-maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+maximum number of integrator steps corresponds to
+<code class="code docutils literal notranslate"><span class="pre">2**max_tree_depth</span></code>.</p></li>
 <li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
 trajectory before signalling a divergence.</p></li>
 <li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
@@ -228,7 +229,7 @@ to terminate trajectory tree expansion. The function should take a
 Hamiltonian system as its first argument, a pair of states corresponding
 to the two edge nodes in the trajectory (sub-)tree being checked and an
 array containing the sum of the momentums over the trajectory
-(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
+(sub)-tree. Defaults to <a class="reference internal" href="#mici.transitions.riemannian_no_u_turn_criterion" title="mici.transitions.riemannian_no_u_turn_criterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">riemannian_no_u_turn_criterion</span></code></a>.</p></li>
 <li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
 checks on overlapping subtrees of the current tree to improve robustness
 in systems with dynamics which are well approximated by independent
@@ -238,12 +239,13 @@ representation) at certain step sizes a ‘resonant’ behaviour is seen by
 which the termination criterion fails to detect that the trajectory has
 expanded past a half-period i.e. has ‘U-turned’ resulting in
 trajectories continuing to expand, potentially up until the
-<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
-discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
-<cite>True</cite> additional termination criterion checks are performed on
-overlapping subtrees which help to reduce this resonant behaviour at the
-cost of more conservative trajectory termination in some correlated
-models and some overhead from additional checks.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">max_tree_depth</span></code> limit is hit. For more details see <a class="reference external" href="kutt.it/yAkIES">this Stan
+Discourse discussion</a>. If
+<code class="code docutils literal notranslate"><span class="pre">do_extra_subtree_checks</span></code> is set to <code class="code docutils literal notranslate"><span class="pre">True</span></code> additional
+termination criterion checks are performed on overlapping subtrees which
+help to reduce this resonant behaviour at the cost of more conservative
+trajectory termination in some correlated models and some overhead from
+additional checks.</p></li>
 </ul>
 </dd>
 </dl>
@@ -281,12 +283,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.DynamicIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.DynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.DynamicIntegrationTransition.sample" title="mici.transitions.DynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.DynamicIntegrationTransition.sample" title="mici.transitions.DynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -338,12 +340,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.IndependentMomentumTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.IndependentMomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.IndependentMomentumTransition.sample" title="mici.transitions.IndependentMomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.IndependentMomentumTransition.sample" title="mici.transitions.IndependentMomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -399,12 +401,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.IntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.IntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.IntegrationTransition.sample" title="mici.transitions.IntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.IntegrationTransition.sample" title="mici.transitions.IntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -466,12 +468,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.MetropolisIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.MetropolisIntegrationTransition.sample" title="mici.transitions.MetropolisIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.MetropolisIntegrationTransition.sample" title="mici.transitions.MetropolisIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -485,12 +487,13 @@ value to initialize this array with.</p>
 integration direction in time a random integer number of integrator steps sampled
 from the uniform distribution on an integer interval. The randomisation of the
 number of integration steps avoids the potential of the chain mixing poorly due to
-using an integration time close to the period of (near) periodic systems [1,2].</p>
+using an integration time close to the period of (near) periodic systems
+(Neal, 2011; Mackenzie, 1989).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
+<li><p>Neal, R.M. (2011). MCMC using Hamiltonian dynamics. Handbook of Markov Chain
 Monte Carlo, 2(11), p.2.</p></li>
-<li><p>Mackenzie, P.B., 1989. An improved hybrid Monte Carlo method. Physics Letters
+<li><p>Mackenzie, P.B. (1989). An improved hybrid Monte Carlo method. Physics Letters
 B, 226(3-4), pp.369-371.</p></li>
 </ol>
 <dl class="field-list simple">
@@ -499,10 +502,11 @@ B, 226(3-4), pp.369-371.</p></li>
 <li><p><strong>system</strong> (<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>) – Hamiltonian system to be simulated.</p></li>
 <li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
 system.</p></li>
-<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Tuple <cite>(lower, upper)</cite> with two positive integer entries
-<cite>lower</cite> and <cite>upper</cite> (with <cite>upper &gt; lower</cite>) specifying respectively the
-lower and upper bounds (inclusive) of integer interval to uniformly draw
-random number integrator steps to simulate in each transition.</p></li>
+<li><p><strong>n_step_range</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em>) – Tuple <code class="code docutils literal notranslate"><span class="pre">(lower,</span> <span class="pre">upper)</span></code> with two positive integer entries
+<code class="code docutils literal notranslate"><span class="pre">lower</span></code> and <code class="code docutils literal notranslate"><span class="pre">upper</span></code> (with <code class="code docutils literal notranslate"><span class="pre">upper</span> <span class="pre">&gt;</span> <span class="pre">lower</span></code>) specifying
+respectively the lower and upper bounds (inclusive) of integer interval
+to uniformly draw random number integrator steps to simulate in each
+transition.</p></li>
 </ul>
 </dd>
 </dl>
@@ -540,12 +544,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.MetropolisRandomIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisRandomIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.MetropolisRandomIntegrationTransition.sample" title="mici.transitions.MetropolisRandomIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.MetropolisRandomIntegrationTransition.sample" title="mici.transitions.MetropolisRandomIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -557,12 +561,13 @@ value to initialize this array with.</p>
 <p>Static integration transition with Metropolis sampling of new state.</p>
 <p>In this variant the trajectory is generated by integrating the state through time a
 fixed number of integrator steps. This is original proposed Hybrid Monte Carlo
-(often now instead termed Hamiltonian Monte Carlo) algorithm [1,2].</p>
+(often now instead termed Hamiltonian Monte Carlo) algorithm (Duane et al., 1987;
+Neal, 2011).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987. Hybrid Monte
+<li><p>Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D. (1987). Hybrid Monte
 Carlo. Physics letters B, 195(2), pp.216-222.</p></li>
-<li><p>Neal, R.M., 2011. MCMC using Hamiltonian dynamics. Handbook of Markov Chain
+<li><p>Neal, R.M. (2011). MCMC using Hamiltonian dynamics. Handbook of Markov Chain
 Monte Carlo, 2(11), p.2.</p></li>
 </ol>
 <dl class="field-list simple">
@@ -609,12 +614,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.MetropolisStaticIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MetropolisStaticIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.MetropolisStaticIntegrationTransition.sample" title="mici.transitions.MetropolisStaticIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.MetropolisStaticIntegrationTransition.sample" title="mici.transitions.MetropolisStaticIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -667,12 +672,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.MomentumTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.MomentumTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.MomentumTransition.sample" title="mici.transitions.MomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.MomentumTransition.sample" title="mici.transitions.MomentumTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -684,17 +689,17 @@ value to initialize this array with.</p>
 <p>Dynamic integration transition with multinomial sampling of new state.</p>
 <p>In each transition a binary tree of states is recursively computed by integrating
 randomly forward and backward in time by a number of steps equal to the previous
-tree size [1,2] until a termination criteria on the tree leaves is met. The next
-chain state is chosen from the candidate states using a progressive multinomial
-sampling scheme [2] based on the relative probability densities of the different
-candidate states, with the sampling biased towards states further from the current
-state.</p>
+tree size (Hoffman and Gelman, 2014; Betancourt, 2017) until a termination criteria
+on the tree leaves is met. The next chain state is chosen from the candidate states
+using a progressive multinomial sampling scheme (Betancourt, 2017) based on the
+relative probability densities of the different candidate states, with the sampling
+biased towards states further from the current state.</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+<li><p>Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
 path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 15(1), pp.1593-1623.</p></li>
-<li><p>Betancourt, M., 2017. A conceptual introduction to Hamiltonian Monte Carlo.
+<li><p>Betancourt, M. (2017). A conceptual introduction to Hamiltonian Monte Carlo.
 arXiv preprint arXiv:1701.02434.</p></li>
 </ol>
 <dl class="field-list simple">
@@ -704,7 +709,8 @@ arXiv preprint arXiv:1701.02434.</p></li>
 <li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
 system.</p></li>
 <li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
-maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+maximum number of integrator steps corresponds to
+<code class="code docutils literal notranslate"><span class="pre">2**max_tree_depth</span></code>.</p></li>
 <li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
 trajectory before signalling a divergence.</p></li>
 <li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
@@ -712,8 +718,8 @@ to terminate trajectory tree expansion. The function should take a
 Hamiltonian system as its first argument, a pair of states corresponding
 to the two edge nodes in the trajectory (sub-)tree being checked and an
 array containing the sum of the momentums over the trajectory
-(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
-<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
+(sub)-tree. Defaults to <a class="reference internal" href="#mici.transitions.riemannian_no_u_turn_criterion" title="mici.transitions.riemannian_no_u_turn_criterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">riemannian_no_u_turn_criterion</span></code></a>.</p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – <p>Whether to perform additional termination criterion
 checks on overlapping subtrees of the current tree to improve robustness
 in systems with dynamics which are well approximated by independent
 system of simple harmonic oscillators. In such systems (corresponding to
@@ -722,12 +728,14 @@ representation) at certain step sizes a ‘resonant’ behaviour is seen by
 which the termination criterion fails to detect that the trajectory has
 expanded past a half-period i.e. has ‘U-turned’ resulting in
 trajectories continuing to expand, potentially up until the
-<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
-discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
-<cite>True</cite> additional termination criterion checks are performed on
-overlapping subtrees which help to reduce this resonant behaviour at the
-cost of more conservative trajectory termination in some correlated
-models and some overhead from additional checks.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">max_tree_depth</span></code> limit is hit. For more details see <a class="reference external" href="kutt.it/yAkIES">this Stan
+Discourse discussion</a>. If
+<code class="code docutils literal notranslate"><span class="pre">do_extra_subtree_checks</span></code> is set to <code class="code docutils literal notranslate"><span class="pre">True</span></code> additional
+termination criterion checks are performed on overlapping subtrees which
+help to reduce this resonant behaviour at the cost of more conservative
+trajectory termination in some correlated models and some overhead from
+additional checks.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -765,12 +773,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.MultinomialDynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample" title="mici.transitions.MultinomialDynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.MultinomialDynamicIntegrationTransition.sample" title="mici.transitions.MultinomialDynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -786,11 +794,12 @@ tree size until a termination criteria on the tree leaves is met. The next chain
 state is chosen from the candidate states using a progressive slice sampling scheme
 based on the relative probability densities of the different candidate states, with
 the slice sampler biased towards states further from the current state.</p>
-<p>When used with the <cite>euclidean_no_u_turn_criterion</cite> this transition is equivalent to
-the transitions in ‘Algorithm 3: Efficient No-U-Turn Sampler’ in [1].</p>
+<p>When used with the <a class="reference internal" href="#mici.transitions.euclidean_no_u_turn_criterion" title="mici.transitions.euclidean_no_u_turn_criterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">euclidean_no_u_turn_criterion</span></code></a> this transition is
+equivalent to the transitions in ‘Algorithm 3: Efficient No-U-Turn Sampler’ in
+Hoffman and Gelman (2014).</p>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+<li><p>Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
 path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 15(1), pp.1593-1623.</p></li>
 </ol>
@@ -801,7 +810,8 @@ path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 <li><p><strong>integrator</strong> (<a class="reference internal" href="mici.integrators.html#mici.integrators.Integrator" title="mici.integrators.Integrator"><em>Integrator</em></a>) – Symplectic integrator appropriate to the specified Hamiltonian
 system.</p></li>
 <li><p><strong>max_tree_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum depth to expand trajectory binary tree to. The
-maximum number of integrator steps corresponds to <cite>2**max_tree_depth</cite>.</p></li>
+maximum number of integrator steps corresponds to
+<code class="code docutils literal notranslate"><span class="pre">2**max_tree_depth</span></code>.</p></li>
 <li><p><strong>max_delta_h</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Maximum change to tolerate in the Hamiltonian function over a
 trajectory before signalling a divergence.</p></li>
 <li><p><strong>termination_criterion</strong> (<em>TerminationCriterion</em>) – Function computing criterion to use to determine when
@@ -809,8 +819,8 @@ to terminate trajectory tree expansion. The function should take a
 Hamiltonian system as its first argument, a pair of states corresponding
 to the two edge nodes in the trajectory (sub-)tree being checked and an
 array containing the sum of the momentums over the trajectory
-(sub)-tree. Defaults to <cite>riemannian_no_u_turn_criterion</cite>.</p></li>
-<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Whether to perform additional termination criterion
+(sub)-tree. Defaults to <a class="reference internal" href="#mici.transitions.riemannian_no_u_turn_criterion" title="mici.transitions.riemannian_no_u_turn_criterion"><code class="xref py py-class docutils literal notranslate"><span class="pre">riemannian_no_u_turn_criterion</span></code></a>.</p></li>
+<li><p><strong>do_extra_subtree_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – <p>Whether to perform additional termination criterion
 checks on overlapping subtrees of the current tree to improve robustness
 in systems with dynamics which are well approximated by independent
 system of simple harmonic oscillators. In such systems (corresponding to
@@ -819,12 +829,14 @@ representation) at certain step sizes a ‘resonant’ behaviour is seen by
 which the termination criterion fails to detect that the trajectory has
 expanded past a half-period i.e. has ‘U-turned’ resulting in
 trajectories continuing to expand, potentially up until the
-<cite>max_tree_depth</cite> limit is hit. For more details see the Stan Discourse
-discussion at kutt.it/yAkIES If <cite>do_extra_subtree_checks</cite> is set to
-<cite>True</cite> additional termination criterion checks are performed on
-overlapping subtrees which help to reduce this resonant behaviour at the
-cost of more conservative trajectory termination in some correlated
-models and some overhead from additional checks.</p></li>
+<code class="code docutils literal notranslate"><span class="pre">max_tree_depth</span></code> limit is hit. For more details see <a class="reference external" href="kutt.it/yAkIES">this Stan
+Discourse discussion</a>. If
+<code class="code docutils literal notranslate"><span class="pre">do_extra_subtree_checks</span></code> is set to <code class="code docutils literal notranslate"><span class="pre">True</span></code> additional
+termination criterion checks are performed on overlapping subtrees which
+help to reduce this resonant behaviour at the cost of more conservative
+trajectory termination in some correlated models and some overhead from
+additional checks.</p>
+</p></li>
 </ul>
 </dd>
 </dl>
@@ -862,12 +874,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.SliceDynamicIntegrationTransition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.transitions.SliceDynamicIntegrationTransition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.SliceDynamicIntegrationTransition.sample" title="mici.transitions.SliceDynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.SliceDynamicIntegrationTransition.sample" title="mici.transitions.SliceDynamicIntegrationTransition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -891,7 +903,7 @@ value to initialize this array with.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Tuple of updated state object and any statistics computed during the
-transition or <cite>None</cite> if no statistics.</p>
+transition or <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><em>tuple</em></a>[<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>, <em>Optional</em>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>, ScalarLike]]]</p>
@@ -909,12 +921,12 @@ transition or <cite>None</cite> if no statistics.</p>
 <dt class="sig sig-object py" id="mici.transitions.Transition.statistic_types">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">statistic_types</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><span class="pre">DTypeLike</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ScalarLike</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.11)"><span class="pre">None</span></a></em><a class="headerlink" href="#mici.transitions.Transition.statistic_types" title="Permalink to this definition"></a></dt>
 <dd><p>A dictionary describing the statistics computed during transition.</p>
-<p>Either <cite>None</cite> if no statistics are returned by <cite>sample</cite> method or a dictionary
-with string keys and tuple values, with the keys defining the keys of the
-statistics returned in the <cite>trans_stats</cite> return value of the <cite>sample</cite> method and
-the first entry of the value tuples an appropriate NumPy <cite>dtype</cite> for the array
-used to store the corresponding statistic values and second entry the default
-value to initialize this array with.</p>
+<p>Either <code class="code docutils literal notranslate"><span class="pre">None</span></code> if no statistics are returned by <a class="reference internal" href="#mici.transitions.Transition.sample" title="mici.transitions.Transition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method or
+a dictionary with string keys and tuple values, with the keys defining the keys
+of the statistics returned in the <code class="code docutils literal notranslate"><span class="pre">trans_stats</span></code> return value of the
+<a class="reference internal" href="#mici.transitions.Transition.sample" title="mici.transitions.Transition.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> method and the first entry of the value tuples an appropriate
+NumPy <cite>dtype</cite> for the array used to store the corresponding statistic values and
+second entry the default value to initialize this array with.</p>
 </dd></dl>
 
 </dd></dl>
@@ -922,7 +934,7 @@ value to initialize this array with.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.transitions.euclidean_no_u_turn_criterion">
 <span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">euclidean_no_u_turn_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_sum_mom</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#euclidean_no_u_turn_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.euclidean_no_u_turn_criterion" title="Permalink to this definition"></a></dt>
-<dd><p>No-U-turn termination criterion for Euclidean manifolds [1].</p>
+<dd><p>No-U-turn termination criterion for Euclidean manifolds.</p>
 <p>Terminates trajectories when the velocities at the terminal states of the trajectory
 both have negative dot products with the vector from the position of the first
 terminal state to the position of the second terminal state, corresponding to
@@ -946,7 +958,7 @@ positions.</p>
 </dl>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+<li><p>Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
 path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 15(1), pp.1593-1623.</p></li>
 </ol>
@@ -955,13 +967,14 @@ path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.transitions.riemannian_no_u_turn_criterion">
 <span class="sig-prename descclassname"><span class="pre">mici.transitions.</span></span><span class="sig-name descname"><span class="pre">riemannian_no_u_turn_criterion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sum_mom</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/transitions.html#riemannian_no_u_turn_criterion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.transitions.riemannian_no_u_turn_criterion" title="Permalink to this definition"></a></dt>
-<dd><p>Generalized no-U-turn termination criterion on Riemannian manifolds [2].</p>
+<dd><p>Generalized no-U-turn termination criterion on Riemannian manifolds.</p>
 <p>Terminates trajectories when the velocities at the terminal states of the trajectory
 both have negative dot products with the sum of the the momentums across the
 trajectory from the first to second terminal state of the first terminal state to
-the position of the second terminal state. This generalizes the no-U-turn criterion
-of [1] to Riemannian manifolds where due to the intrinsic curvature of the space the
-geodesic between two points is general no longer a straight line.</p>
+the position of the second terminal state (Betancourt, 2013). This generalizes the
+no-U-turn criterion of Hoffman and Gelman (2014) to Riemannian manifolds where due
+to the intrinsic curvature of the space the geodesic between two points is general
+no longer a straight line.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -980,10 +993,10 @@ geodesic between two points is general no longer a straight line.</p>
 </dl>
 <p class="rubric">References</p>
 <ol class="arabic simple">
-<li><p>Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting
+<li><p>Hoffman, M.D. and Gelman, A. (2014). The No-U-turn sampler: adaptively setting
 path lengths in Hamiltonian Monte Carlo. Journal of Machine Learning Research,
 15(1), pp.1593-1623.</p></li>
-<li><p>Betancourt, M., 2013. Generalizing the no-U-turn sampler to Riemannian
+<li><p>Betancourt, M. (2013). Generalizing the no-U-turn sampler to Riemannian
 manifolds. arXiv preprint arXiv:1304.1920.</p></li>
 </ol>
 </dd></dl>

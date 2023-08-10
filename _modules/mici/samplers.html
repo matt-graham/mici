@@ -864,25 +864,25 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        final_states: States of chains after final iteration. May be used to resume</span>
-<span class="sd">            sampling a chain by passing as the initial states to a new `sample_chains`</span>
-<span class="sd">            call.</span>
+<span class="sd">            sampling a chain by passing as the initial states to a new</span>
+<span class="sd">            :py:meth:`MarkovChainMonteCarloMethod.sample_chains` call.</span>
 <span class="sd">        traces: Dictionary of chain trace arrays. Values in dictionary are list of</span>
-<span class="sd">            arrays of variables outputted by trace functions in `trace_funcs` with each</span>
-<span class="sd">            array in the list corresponding to a single chain and the leading dimension</span>
-<span class="sd">            of each array corresponding to the iteration (draw) index, within the main</span>
-<span class="sd">            non-adaptive sampling stage if `trace_warm_up=False` and across both warm-up</span>
-<span class="sd">            and main sampling stages otherwise. The key for each value is the</span>
-<span class="sd">            corresponding key in the dictionary returned by the trace function which</span>
-<span class="sd">            computed the traced value.</span>
+<span class="sd">            arrays of variables outputted by trace functions in :code:`trace_funcs` with</span>
+<span class="sd">            each array in the list corresponding to a single chain and the leading</span>
+<span class="sd">            dimension of each array corresponding to the iteration (draw) index, within</span>
+<span class="sd">            the main non-adaptive sampling stage if :code:`trace_warm_up=False` and</span>
+<span class="sd">            across both warm-up and main sampling stages otherwise. The key for each</span>
+<span class="sd">            value is the corresponding key in the dictionary returned by the trace</span>
+<span class="sd">            function which computed the traced value.</span>
 <span class="sd">        statistics: Dictionary of chain transition statistic dictionaries. Values in</span>
 <span class="sd">            outer dictionary are dictionaries of statistics for each chain transition,</span>
 <span class="sd">            keyed by the string key for the transition. The values in each inner</span>
 <span class="sd">            transition dictionary are lists of arrays of chain statistic values with</span>
 <span class="sd">            each array in the list corresponding to a single chain and the leading</span>
 <span class="sd">            dimension of each array corresponding to the iteration (draw) index, within</span>
-<span class="sd">            the main non-adaptive sampling stage if `trace_warm_up=False` and across</span>
-<span class="sd">            both warm-up and main sampling stages otherwise. The key for each value is a</span>
-<span class="sd">            string description of the corresponding transition statistic.</span>
+<span class="sd">            the main non-adaptive sampling stage if :code:`trace_warm_up=False` and</span>
+<span class="sd">            across both warm-up and main sampling stages otherwise. The key for each</span>
+<span class="sd">            value is a string description of the corresponding transition statistic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">final_states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]</span>
@@ -893,8 +893,8 @@
 <div class="viewcode-block" id="MarkovChainMonteCarloMethod"><a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod">[docs]</a><span class="k">class</span> <span class="nc">MarkovChainMonteCarloMethod</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic Markov chain Monte Carlo (MCMC) sampler.</span>
 
-<span class="sd">    Generates a Markov chain from some initial state by iteratively applying</span>
-<span class="sd">    a sequence of Markov transition operators.</span>
+<span class="sd">    Generates a Markov chain from some initial state by iteratively applying a sequence</span>
+<span class="sd">    of Markov transition operators.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]):</span>
@@ -958,83 +958,93 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending</span>
-<span class="sd">                on the `mici.stagers.Stager` instance specified by the `stager` argument</span>
-<span class="sd">                the warm up iterations may be split between one or more adaptive stages.</span>
-<span class="sd">                If zero, only a single non-adaptive stage is used.</span>
+<span class="sd">                on the :py:class:`mici.stagers.Stager` instance specified by the</span>
+<span class="sd">                :code:`stager` argument the warm up iterations may be split between one</span>
+<span class="sd">                or more adaptive stages. If zero, only a single non-adaptive stage is</span>
+<span class="sd">                used.</span>
 <span class="sd">            n_main_iter: Number of iterations (samples to draw) per chain during main</span>
 <span class="sd">                (non-adaptive) sampling stage.</span>
-<span class="sd">            init_states: Initial chain states. Each entry can be either a `ChainState`</span>
-<span class="sd">                object or a dictionary with entries specifying initial values for all</span>
-<span class="sd">                state variables used by chain transition `sample` methods.</span>
+<span class="sd">            init_states: Initial chain states. Each entry can be either a</span>
+<span class="sd">                :py:class:`ChainState` object or a dictionary with entries specifying</span>
+<span class="sd">                initial values for all state variables used by chain transition</span>
+<span class="sd">                :code:`sample` methods.</span>
 <span class="sd">            trace_funcs: Sequence of functions which compute the variables to be</span>
 <span class="sd">                recorded at each chain iteration (during only the main non-adaptive</span>
-<span class="sd">                sampling stage if `trace_warm_up` is False), with each trace function</span>
-<span class="sd">                passed the current state and returning a dictionary of scalar or array</span>
-<span class="sd">                values corresponding to the variable(s) to be stored. The keys in the</span>
-<span class="sd">                returned dictionaries are used to index the trace arrays in the returned</span>
-<span class="sd">                traces dictionary. If a key appears in multiple dictionaries only the</span>
-<span class="sd">                the value corresponding to the last trace function to return that key</span>
-<span class="sd">                will be stored. If `None` or an empty sequence no variables are traced.</span>
-<span class="sd">            adapters: dictionary of sequences of `mici.adapters.Adapter` instances keyed</span>
-<span class="sd">                by strings corresponding to the key of the transition in the</span>
-<span class="sd">                `transitions` dictionary to apply the adapters to, to use to</span>
-<span class="sd">                adaptatively set parameters of the transitions during the adaptive</span>
+<span class="sd">                sampling stage if :code:`trace_warm_up == False`), with each trace</span>
+<span class="sd">                function passed the current state and returning a dictionary of scalar</span>
+<span class="sd">                or array values corresponding to the variable(s) to be stored. The keys</span>
+<span class="sd">                in the returned dictionaries are used to index the trace arrays in the</span>
+<span class="sd">                returned traces dictionary. If a key appears in multiple dictionaries</span>
+<span class="sd">                only the the value corresponding to the last trace function to return</span>
+<span class="sd">                that key will be stored. If :code:`None` or an empty sequence no</span>
+<span class="sd">                variables are traced.</span>
+<span class="sd">            adapters: Dictionary of sequences of :py:class:`mici.adapters.Adapter`</span>
+<span class="sd">                instances keyed by strings corresponding to the key of the transition in</span>
+<span class="sd">                the :py:attr:`transitions` dictionary to apply the adapters to, to use</span>
+<span class="sd">                to adaptatively set parameters of the transitions during the adaptive</span>
 <span class="sd">                stages of the chains. Note that the adapter updates are applied in the</span>
-<span class="sd">                order the adapters appear in the sueqences and so if multiple adapters</span>
-<span class="sd">                change the same parameter(s) the order will matter. If `None` or an</span>
-<span class="sd">                empty sequence no adapters are used.</span>
+<span class="sd">                order the adapters appear in the sequence and so if multiple adapters</span>
+<span class="sd">                change the same parameter(s) the order will matter. If :code:`None` or</span>
+<span class="sd">                an empty sequence no adapters are used.</span>
 <span class="sd">            stager: Chain iteration stager object which controls the split of the chain</span>
 <span class="sd">                iterations into the adaptive warm up and non-adaptive main stages. If</span>
-<span class="sd">                set to `None` (the default) and all adapters specified by the `adapters`</span>
-<span class="sd">                argument are of the fast type (i.e. their `is_fast` attribute is `True`)</span>
-<span class="sd">                then a `mici.stagers.WarmUpStager` instance will be used corresponding</span>
-<span class="sd">                to using a single adaptive warm up stage will all adapters active. If</span>
-<span class="sd">                set to `None` and the adapters specified by the adapters argument are</span>
-<span class="sd">                not all of the fast type, then a `mici.stagers.WindowedWarmUpStager`</span>
-<span class="sd">                (with its default arguments) will be used, corresponding to using</span>
-<span class="sd">                multiple adaptive warm up stages with only the fast-type adapters active</span>
-<span class="sd">                in some - see docstring of `mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If `n_process=1`</span>
-<span class="sd">                then chains will be run sequentially otherwise a `multiprocessing.Pool`</span>
-<span class="sd">                object will be used to dynamically assign the chains across multiple</span>
-<span class="sd">                processes. If set to `None` then the number of processes will be set to</span>
-<span class="sd">                the output of `os.cpu_count()`. Default is `n_process=1`.</span>
+<span class="sd">                set to :code:`None` (the default) and all adapters specified by the</span>
+<span class="sd">                :code:`adapters` argument are of the fast type (i.e. their</span>
+<span class="sd">                :code:`is_fast` attribute is :code:`True`) then a</span>
+<span class="sd">                :py:class:`mici.stagers.WarmUpStager` instance will be used</span>
+<span class="sd">                corresponding to using a single adaptive warm up stage will all adapters</span>
+<span class="sd">                active. If set to :code:`None` and the adapters specified by the</span>
+<span class="sd">                adapters argument are not all of the fast type, then a</span>
+<span class="sd">                :py:class:`mici.stagers.WindowedWarmUpStager` (with its default</span>
+<span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
+<span class="sd">                up stages with only the fast-type adapters active in some - see</span>
+<span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
+<span class="sd">            n_process: Number of parallel processes to run chains over. If </span>
+<span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
+<span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
+<span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
+<span class="sd">                the number of processes will be set to the output of</span>
+<span class="sd">                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.</span>
 <span class="sd">            trace_warm_up: Whether to record chain traces and statistics during warm-up</span>
-<span class="sd">                stage iterations (True) or only record traces and statistics in the</span>
-<span class="sd">                iterations of the final non-adaptive stage (True, the default).</span>
-<span class="sd">            max_threads_per_process: If `threadpoolctl` is available this argument may</span>
-<span class="sd">                be used to limit the maximum number of threads that can be used in</span>
-<span class="sd">                thread pools used in libraries supported by `threadpoolctl`, which</span>
-<span class="sd">                include BLAS and OpenMP implementations. This argument will only have an</span>
-<span class="sd">                effect if `n_process &gt; 1` such that chains are being run on multiple</span>
-<span class="sd">                processes and only if `threadpoolctl` is installed in the current Python</span>
-<span class="sd">                environment. If set to `None` (the default) no limits are set.</span>
+<span class="sd">                stage iterations (:code:`True`) or only record traces and statistics in</span>
+<span class="sd">                the iterations of the final non-adaptive stage (:code:`False`, the</span>
+<span class="sd">                default).</span>
+<span class="sd">            max_threads_per_process: If :py:mod:`threadpoolctl` is available this</span>
+<span class="sd">                argument may be used to limit the maximum number of threads that can be</span>
+<span class="sd">                used in thread pools used in libraries supported by</span>
+<span class="sd">                :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.</span>
+<span class="sd">                This argument will only have an effect if :code:`n_process &gt; 1` such</span>
+<span class="sd">                that chains are being run on multiple processes and only if</span>
+<span class="sd">                :py:mod:`threadpoolctl` is installed in the current Python environment.</span>
+<span class="sd">                If set to :code:`None` (the default) no limits are set.</span>
 <span class="sd">            force_memmap: Whether to force arrays used to store chain data to be</span>
 <span class="sd">                memory-mapped to files on disk to avoid excessive system memory usage</span>
 <span class="sd">                for long chains and/or large chain states. The chain data is written to</span>
-<span class="sd">                `.npy` files in the directory specified by `memmap_path` (or a temporary</span>
-<span class="sd">                directory if `memmap_path` is `None`). Chain data is always memory</span>
-<span class="sd">                mapped when sampling chains in parallel on multiple processes.</span>
+<span class="sd">                `.npy` files in the directory specified by :code:`memmap_path` (or a</span>
+<span class="sd">                temporary directory if :code:`memmap_path` is `None`). Chain data is</span>
+<span class="sd">                always memory mapped when sampling chains in parallel on multiple</span>
+<span class="sd">                processes.</span>
 <span class="sd">            memmap_path: Path to directory to write memory-mapped chain data to. If</span>
-<span class="sd">                `None` (the default) and memory-mapping is enabled then a temporary</span>
-<span class="sd">                directory will be created and the chain data written to files there,</span>
-<span class="sd">                with the created files being deleted in this case once the last</span>
+<span class="sd">                :code:`None` (the default) and memory-mapping is enabled then a</span>
+<span class="sd">                temporary directory will be created and the chain data written to files</span>
+<span class="sd">                there, with the created files being deleted in this case once the last</span>
 <span class="sd">                reference to them is closed.</span>
 <span class="sd">            monitor_stats: String-keyed dictionary of lists of strings, with dictionary</span>
-<span class="sd">                key the key of a Markov transition in the `transitions` dict passed to</span>
-<span class="sd">                the the `__init__` method and the corresponding list, the keys of</span>
-<span class="sd">                statistics returned by the transition (as defined by the</span>
-<span class="sd">                `statistics_type` attribute of transition). The mean over samples</span>
-<span class="sd">                computed so far of the statistics associated with any valid key-pairs</span>
-<span class="sd">                will be monitored during sampling by printing as postfix to progress</span>
-<span class="sd">                bar. If `None` no statistics are monitored.</span>
+<span class="sd">                key the key of a Markov transition in the :code:`transitions` dict</span>
+<span class="sd">                passed to the the :py:meth:`__init__` method and the corresponding list,</span>
+<span class="sd">                the keys of statistics returned by the transition (as defined by the</span>
+<span class="sd">                :py:attr:`mici.transitions.Transition.statistics_type` attribute of</span>
+<span class="sd">                transition). The mean over samples computed so far of the statistics</span>
+<span class="sd">                associated with any valid key-pairs will be monitored during sampling by</span>
+<span class="sd">                printing as postfix to progress bar. If :code:`None` no statistics are</span>
+<span class="sd">                monitored.</span>
 <span class="sd">            display_progress: Whether to display a progress bar to track the completed</span>
-<span class="sd">                chain sampling iterations. Default value is `True`, i.e. to display</span>
-<span class="sd">                progress bar.</span>
+<span class="sd">                chain sampling iterations. Default value is :code:`True`, i.e. to</span>
+<span class="sd">                display progress bar.</span>
 <span class="sd">            progress_bar_class: Class or factory function for progress bar to use to</span>
-<span class="sd">                show chain progress if enabled (`display_progress=True`). Defaults to</span>
-<span class="sd">                `mici.progressbars.SequenceProgressBar` if `None` and</span>
-<span class="sd">                `display_progress=True`.</span>
+<span class="sd">                show chain progress if enabled (:code:`display_progress=True`). Defaults</span>
+<span class="sd">                to :py:class:`mici.progressbars.SequenceProgressBar` if :code:`None` and</span>
+<span class="sd">                :code:`display_progress=True`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Named tuple :code:`(final_states, traces, statistics)` corresponding to</span>
@@ -1162,27 +1172,27 @@
 
 
 <div class="viewcode-block" id="HMCSampleChainsOutputs"><a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.HMCSampleChainsOutputs">[docs]</a><span class="k">class</span> <span class="nc">HMCSampleChainsOutputs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outputs returned by :py:meth:`HamiltonianMCMC.sample_chains` call.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outputs returned by :py:meth:`HamiltonianMonteCarlo.sample_chains` call.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        final_states: States of chains after final iteration. May be used to resume</span>
-<span class="sd">            sampling a chain by passing as the initial states to a new `sample_chains`</span>
-<span class="sd">            call.</span>
+<span class="sd">            sampling a chain by passing as the initial states to a new</span>
+<span class="sd">            :py:meth:`HamiltonianMonteCarlo.sample_chains` call.</span>
 <span class="sd">        traces: Dictionary of chain trace arrays. Values in dictionary are list of</span>
-<span class="sd">            arrays of variables outputted by trace functions in `trace_funcs` with each</span>
-<span class="sd">            array in the list corresponding to a single chain and the leading dimension</span>
-<span class="sd">            of each array corresponding to the iteration (draw) index, within the main</span>
-<span class="sd">            non-adaptive sampling stage if `trace_warm_up=False` and across both warm-up</span>
-<span class="sd">            and main sampling stages otherwise. The key for each value is the</span>
-<span class="sd">            corresponding key in the dictionary returned by the trace function which</span>
-<span class="sd">            computed the traced value.</span>
+<span class="sd">            arrays of variables outputted by trace functions in :code:`trace_funcs` with</span>
+<span class="sd">            each array in the list corresponding to a single chain and the leading</span>
+<span class="sd">            dimension of each array corresponding to the iteration (draw) index, within</span>
+<span class="sd">            the main non-adaptive sampling stage if :code:`trace_warm_up=False` and</span>
+<span class="sd">            across both warm-up and main sampling stages otherwise. The key for each</span>
+<span class="sd">            value is the corresponding key in the dictionary returned by the trace</span>
+<span class="sd">            function which computed the traced value.</span>
 <span class="sd">        statistics: Dictionary of chain transition statistic dictionaries. Values in</span>
 <span class="sd">            dictionary are lists of arrays of chain statistic values with each array in</span>
 <span class="sd">            the list corresponding to a single chain and the leading dimension of each</span>
 <span class="sd">            array corresponding to the iteration (draw) index, within the main</span>
-<span class="sd">            non-adaptive sampling stage if `trace_warm_up=False` and across both warm-up</span>
-<span class="sd">            and main sampling stages otherwise. The key for each value is a string</span>
-<span class="sd">            description of the corresponding integration transition statistic.</span>
+<span class="sd">            non-adaptive sampling stage if :code:`trace_warm_up=False` and across both</span>
+<span class="sd">            warm-up and main sampling stages otherwise. The key for each value is a</span>
+<span class="sd">            string description of the corresponding integration transition statistic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">final_states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]</span>
@@ -1193,18 +1203,19 @@
 <div class="viewcode-block" id="HamiltonianMonteCarlo"><a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.HamiltonianMonteCarlo">[docs]</a><span class="k">class</span> <span class="nc">HamiltonianMonteCarlo</span><span class="p">(</span><span class="n">MarkovChainMonteCarloMethod</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class for Hamiltonian Monte Carlo (HMC) methods.</span>
 
-<span class="sd">    Here HMC is defined as a MCMC method which augments the original target variable</span>
-<span class="sd">    (henceforth position variable) with a momentum variable with a user specified</span>
-<span class="sd">    conditional distribution given the position variable. In each chain iteration two</span>
-<span class="sd">    Markov transitions leaving the resulting joint distribution on position and momentum</span>
-<span class="sd">    variables invariant are applied - the momentum variables are updated in a transition</span>
-<span class="sd">    which leaves their conditional distribution invariant (momentum transition) and then</span>
-<span class="sd">    a trajectory in the joint space is generated by numerically integrating a</span>
-<span class="sd">    Hamiltonian dynamic with an appropriate symplectic integrator which is exactly</span>
-<span class="sd">    reversible, volume preserving and approximately conserves the joint probability</span>
-<span class="sd">    density of the target-momentum state pair; one state from the resulting trajectory</span>
-<span class="sd">    is then selected as the next joint chain state using an appropriate sampling scheme</span>
-<span class="sd">    such that the joint distribution is left exactly invariant (integration transition).</span>
+<span class="sd">    Here HMC is defined as a Markov chain Monte Carlo method which augments the original</span>
+<span class="sd">    target variable (henceforth position variable) with a momentum variable with a user</span>
+<span class="sd">    specified conditional distribution given the position variable. In each chain</span>
+<span class="sd">    iteration two Markov transitions leaving the resulting joint distribution on</span>
+<span class="sd">    position and momentum variables invariant are applied - the momentum variables are</span>
+<span class="sd">    updated in a transition which leaves their conditional distribution invariant</span>
+<span class="sd">    (momentum transition) and then a trajectory in the joint space is generated by</span>
+<span class="sd">    numerically integrating a Hamiltonian dynamic with an appropriate symplectic</span>
+<span class="sd">    integrator which is exactly reversible, volume preserving and approximately</span>
+<span class="sd">    conserves the joint probability density of the target-momentum state pair; one state</span>
+<span class="sd">    from the resulting trajectory is then selected as the next joint chain state using</span>
+<span class="sd">    an appropriate sampling scheme such that the joint distribution is left exactly</span>
+<span class="sd">    invariant (integration transition).</span>
 
 <span class="sd">    There are various options available for both the momentum transition and integration</span>
 <span class="sd">    transition, with by default the momentum transition set to be independent resampling</span>
@@ -1226,7 +1237,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">            system Hamiltonian system to be simulated, corresponding to joint</span>
+<span class="sd">            system: Hamiltonian system to be simulated, corresponding to joint</span>
 <span class="sd">                distribution on augmented space.</span>
 <span class="sd">            rng: Numpy random number generator.</span>
 <span class="sd">            integration_transition: Markov transition kernel which leaves joint</span>
@@ -1296,9 +1307,10 @@
 <span class="sd">        integration transition such as the integrator step size are adaptively tuned</span>
 <span class="sd">        based on the chain state and/or transition statistics.</span>
 
-<span class="sd">        The default settings use a single (fast) `DualAveragingStepSizeAdapter` adapter</span>
-<span class="sd">        instance which adapts the integrator step-size using a dual-averaging algorithm</span>
-<span class="sd">        in a single adaptive stage.</span>
+<span class="sd">        The default settings use a single (fast)</span>
+<span class="sd">        :py:class:`DualAveragingStepSizeAdapter` adapter instance which adapts the</span>
+<span class="sd">        integrator step-size using a dual-averaging algorithm in a single adaptive</span>
+<span class="sd">        stage.</span>
 
 <span class="sd">        The chains (including both adaptive and non-adaptive stages) may be run in</span>
 <span class="sd">        parallel across multiple independent processes or sequentially. In all cases all</span>
@@ -1306,87 +1318,97 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending</span>
-<span class="sd">                on the `mici.stagers.Stager` instance specified by the `stager` argument</span>
-<span class="sd">                the warm up iterations may be split between one or more adaptive stages.</span>
-<span class="sd">                If zero, only a single non-adaptive stage is used.</span>
+<span class="sd">                on the :py:class:`mici.stagers.Stager` instance specified by the</span>
+<span class="sd">                :code:`stager` argument the warm up iterations may be split between one</span>
+<span class="sd">                or more adaptive stages. If zero, only a single non-adaptive stage is</span>
+<span class="sd">                used.</span>
 <span class="sd">            n_main_iter: Number of iterations (samples to draw) per chain during main</span>
 <span class="sd">                (non-adaptive) sampling stage.</span>
 <span class="sd">            init_states: Initial chain states. Each state can be either an array</span>
-<span class="sd">                specifying the state position component or a `mici.states.ChainState`</span>
-<span class="sd">                instance. If an array is passed or the `mom` attribute of the state is</span>
-<span class="sd">                not set, a momentum component will be independently sampled from its</span>
-<span class="sd">                conditional distribution. One chain will be run for each state in the</span>
-<span class="sd">                iterable.</span>
+<span class="sd">                specifying the state position component or a</span>
+<span class="sd">                :py:class:`mici.states.ChainState` instance. If an array is passed or</span>
+<span class="sd">                the :code:`mom` attribute of the state is not set, a momentum component</span>
+<span class="sd">                will be independently sampled from its conditional distribution. One</span>
+<span class="sd">                chain will be run for each state in the iterable.</span>
 
 <span class="sd">        Keyword Args:</span>
 <span class="sd">            trace_funcs: Sequence of functions which compute the variables to be</span>
 <span class="sd">                recorded at each chain iteration (during only the main non-adaptive</span>
-<span class="sd">                sampling stage if `trace_warm_up` is False), with each trace function</span>
-<span class="sd">                passed the current state and returning a dictionary of scalar or array</span>
-<span class="sd">                values corresponding to the variable(s) to be stored. The keys in the</span>
-<span class="sd">                returned dictionaries are used to index the trace arrays in the returned</span>
-<span class="sd">                traces dictionary. If a key appears in multiple dictionaries only the</span>
-<span class="sd">                the value corresponding to the last trace function to return that key</span>
-<span class="sd">                will be stored. Default is to use a single function which records the</span>
-<span class="sd">                position component of the state under the key `pos` and the Hamiltonian</span>
-<span class="sd">                at the state under the key `hamiltonian`.</span>
-<span class="sd">            adapters: Sequence of `mici.adapters.Adapter` instances to use to</span>
+<span class="sd">                sampling stage if :code:`trace_warm_up` is False), with each trace</span>
+<span class="sd">                function passed the current state and returning a dictionary of scalar</span>
+<span class="sd">                or array values corresponding to the variable(s) to be stored. The keys</span>
+<span class="sd">                in the returned dictionaries are used to index the trace arrays in the</span>
+<span class="sd">                returned traces dictionary. If a key appears in multiple dictionaries</span>
+<span class="sd">                only the the value corresponding to the last trace function to return</span>
+<span class="sd">                that key will be stored. Default is to use a single function which</span>
+<span class="sd">                records the position component of the state under the key :code:`&quot;pos&quot;`</span>
+<span class="sd">                and the Hamiltonian at the state under the key :code:`&quot;hamiltonian&quot;`.</span>
+<span class="sd">            adapters: Sequence of :py:class:`mici.adapters.Adapter` instances to use to</span>
 <span class="sd">                adaptatively set parameters of the integration transition such as the</span>
 <span class="sd">                step size during the adaptive stages of the chains. Note that the</span>
 <span class="sd">                adapter updates are applied in the order the adapters appear in the</span>
 <span class="sd">                sequence and so if multiple adapters change the same parameter(s) the</span>
-<span class="sd">                order will matter. If `None` or an empty sequence no adapters are used.</span>
-<span class="sd">                Default is to use a single instance of</span>
-<span class="sd">                `mici.adapters.DualAveragingStepSizeAdapter` with its default</span>
+<span class="sd">                order will matter. If :code:`None` or an empty sequence no adapters are</span>
+<span class="sd">                used. Default is to use a single instance of</span>
+<span class="sd">                :py:class:`mici.adapters.DualAveragingStepSizeAdapter` with its default</span>
 <span class="sd">                parameters.</span>
 <span class="sd">            stager: Chain iteration stager object which controls the split of the chain</span>
 <span class="sd">                iterations into the adaptive warm up and non-adaptive main stages. If</span>
-<span class="sd">                set to `None` (the default) and all adapters specified by the `adapters`</span>
-<span class="sd">                argument are of the fast type (i.e. their `is_fast` attribute is `True`)</span>
-<span class="sd">                then a `mici.stagers.WarmUpStager` instance will be used corresponding</span>
-<span class="sd">                to using a single adaptive warm up stage will all adapters active. If</span>
-<span class="sd">                set to `None` and the adapters specified by the adapters argument are</span>
-<span class="sd">                not all of the fast type, then a `mici.stagers.WindowedWarmUpStager`</span>
-<span class="sd">                (with its default arguments) will be used, corresponding to using</span>
-<span class="sd">                multiple adaptive warm up stages with only the fast-type adapters active</span>
-<span class="sd">                in some - see docstring of `mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If `n_process=1`</span>
-<span class="sd">                then chains will be run sequentially otherwise a `multiprocessing.Pool`</span>
-<span class="sd">                object will be used to dynamically assign the chains across multiple</span>
-<span class="sd">                processes. If set to `None` then the number of processes will be set to</span>
-<span class="sd">                the output of `os.cpu_count()`. Default is `n_process=1`.</span>
-<span class="sd">            max_threads_per_process: If `threadpoolctl` is available this argument may</span>
-<span class="sd">                be used to limit the maximum number of threads that can be used in</span>
-<span class="sd">                thread pools used in libraries supported by `threadpoolctl`, which</span>
-<span class="sd">                include BLAS and OpenMP implementations. This argument will only have an</span>
-<span class="sd">                effect if `n_process &gt; 1` such that chains are being run on multiple</span>
-<span class="sd">                processes and only if `threadpoolctl` is installed in the current Python</span>
-<span class="sd">                environment. If set to `None` (the default) no limits are set.</span>
+<span class="sd">                set to :code:`None` (the default) and all adapters specified by the</span>
+<span class="sd">                :code:`adapters` argument are of the fast type (i.e. their</span>
+<span class="sd">                :code:`is_fast` attribute is :code:`True`) then a</span>
+<span class="sd">                :py:class:`mici.stagers.WarmUpStager` instance will be used</span>
+<span class="sd">                corresponding to using a single adaptive warm up stage will all adapters</span>
+<span class="sd">                active. If set to :code:`None` and the adapters specified by the</span>
+<span class="sd">                adapters argument are not all of the fast type, then a</span>
+<span class="sd">                :py:class:`mici.stagers.WindowedWarmUpStager` (with its default</span>
+<span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
+<span class="sd">                up stages with only the fast-type adapters active in some - see</span>
+<span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
+<span class="sd">            n_process: Number of parallel processes to run chains over. If </span>
+<span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
+<span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
+<span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
+<span class="sd">                the number of processes will be set to the output of</span>
+<span class="sd">                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.</span>
+<span class="sd">            trace_warm_up: Whether to record chain traces and statistics during warm-up</span>
+<span class="sd">                stage iterations (:code:`True`) or only record traces and statistics in</span>
+<span class="sd">                the iterations of the final non-adaptive stage (:code:`False`, the</span>
+<span class="sd">                default).</span>
+<span class="sd">            max_threads_per_process: If :py:mod:`threadpoolctl` is available this</span>
+<span class="sd">                argument may be used to limit the maximum number of threads that can be</span>
+<span class="sd">                used in thread pools used in libraries supported by</span>
+<span class="sd">                :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.</span>
+<span class="sd">                This argument will only have an effect if :code:`n_process &gt; 1` such</span>
+<span class="sd">                that chains are being run on multiple processes and only if</span>
+<span class="sd">                :py:mod:`threadpoolctl` is installed in the current Python environment.</span>
+<span class="sd">                If set to :code:`None` (the default) no limits are set.</span>
 <span class="sd">            force_memmap: Whether to force arrays used to store chain data to be</span>
 <span class="sd">                memory-mapped to files on disk to avoid excessive system memory usage</span>
 <span class="sd">                for long chains and/or large chain states. The chain data is written to</span>
-<span class="sd">                `.npy` files in the directory specified by `memmap_path` (or a temporary</span>
-<span class="sd">                directory if `memmap_path` is `None`). Chain data is always memory</span>
-<span class="sd">                mapped when sampling chains in parallel on multiple processes.</span>
+<span class="sd">                `.npy` files in the directory specified by :code:`memmap_path` (or a</span>
+<span class="sd">                temporary directory if :code:`memmap_path` is :code:`None`). Chain data</span>
+<span class="sd">                is always memory mapped when sampling chains in parallel on multiple</span>
+<span class="sd">                processes.</span>
 <span class="sd">            memmap_path: Path to directory to write memory-mapped chain data to. If</span>
-<span class="sd">                `None` (the default) and memory-mapping is enabled then a temporary</span>
-<span class="sd">                directory will be created and the chain data written to files there,</span>
-<span class="sd">                with the created files being deleted in this case once the last</span>
+<span class="sd">                :code:`None` (the default) and memory-mapping is enabled then a</span>
+<span class="sd">                temporary directory will be created and the chain data written to files</span>
+<span class="sd">                there, with the created files being deleted in this case once the last</span>
 <span class="sd">                reference to them is closed.</span>
 <span class="sd">            monitor_stats: Sequence of string keys of (integration) transition</span>
 <span class="sd">                statistics to monitor mean of over samples computed so far during</span>
 <span class="sd">                sampling by printing as postfix to progress bar. Default is to print</span>
-<span class="sd">                only the mean `accept_stat` statistic.</span>
+<span class="sd">                only the mean `accept_stat` (acceptance statistic).</span>
 <span class="sd">            display_progress: Whether to display a progress bar to track the completed</span>
-<span class="sd">                chain sampling iterations. Default value is `True`, i.e. to display</span>
-<span class="sd">                progress bar.</span>
+<span class="sd">                chain sampling iterations. Default value is :code:`True`, i.e. to</span>
+<span class="sd">                display progress bar.</span>
 <span class="sd">            progress_bar_class: Class or factory function for progress bar to use to</span>
-<span class="sd">                show chain progress if enabled (`display_progress=True`). Defaults to</span>
-<span class="sd">                `mici.progressbars.SequenceProgressBar`.</span>
+<span class="sd">                show chain progress if enabled (:code:`display_progress=True`). Defaults</span>
+<span class="sd">                to :py:class:`mici.progressbars.SequenceProgressBar`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Named tuple :code:`(final_states, traces, statistics)` corresponding to</span>
-<span class="sd">            states of chains after final interatinos, dictionary of chain trace arrays</span>
+<span class="sd">            states of chains after final iteration, dictionary of chain trace arrays</span>
 <span class="sd">            and dictionary of chain statistics dictionaries.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">init_states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_init_state</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">init_states</span><span class="p">]</span>
@@ -1434,7 +1456,7 @@
 <span class="sd">    integration direction will be the negation of its initial value.</span>
 
 <span class="sd">    This is original proposed Hybrid Monte Carlo (often now instead termed Hamiltonian</span>
-<span class="sd">    Monte Carlo) algorithm [1, 2].</span>
+<span class="sd">    Monte Carlo) algorithm (Duane et al., 1987; Neal, 2011).</span>
 
 <span class="sd">    References:</span>
 <span class="sd">      1. Duane, S., Kennedy, A.D., Pendleton, B.J. and Roweth, D., 1987.</span>
@@ -1503,7 +1525,7 @@
 
 <span class="sd">    The randomisation of the number of integration steps avoids the potential of the</span>
 <span class="sd">    chain mixing poorly due to using an integration time close to the period of (near)</span>
-<span class="sd">    periodic systems [1, 2].</span>
+<span class="sd">    periodic systems (Neal, 2011; Mackenzie, 1989).</span>
 
 <span class="sd">    References:</span>
 <span class="sd">      1. Neal, R.M., 2011. MCMC using Hamiltonian dynamics.</span>
@@ -1534,9 +1556,10 @@
 <span class="sd">            momentum_transition: Markov transition kernel which leaves the conditional</span>
 <span class="sd">                distribution on the momentum under the canonical distribution invariant,</span>
 <span class="sd">                updating only the momentum component of the chain state. If set to</span>
-<span class="sd">                `None` the momentum transition operator</span>
-<span class="sd">                `mici.transitions.IndependentMomentumTransition` will be used, which</span>
-<span class="sd">                independently samples the momentum from its conditional distribution.</span>
+<span class="sd">                :code:`None` the momentum transition operator</span>
+<span class="sd">                :py:class:`mici.transitions.IndependentMomentumTransition` will be used,</span>
+<span class="sd">                which independently samples the momentum from its conditional</span>
+<span class="sd">                distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">MetropolisRandomIntegrationTransition</span><span class="p">(</span>
             <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
@@ -1564,16 +1587,17 @@
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
 <span class="sd">    randomly forward and backward in time by a number of steps equal to the previous</span>
-<span class="sd">    tree size [1, 2] until a termination criteria on the tree leaves is met. The next</span>
-<span class="sd">    chain state is chosen from the candidate states using a progressive multinomial</span>
-<span class="sd">    sampling scheme [2] based on the relative probability densities of the different</span>
-<span class="sd">    candidate states, with the resampling biased towards states further from the current</span>
-<span class="sd">    state.</span>
+<span class="sd">    tree size (Hoffman and Gelman, 2014; Betancourt, 2017) until a termination criteria</span>
+<span class="sd">    on the tree leaves is met. The next chain state is chosen from the candidate states</span>
+<span class="sd">    using a progressive multinomial sampling scheme (Betancourt, 2017) based on the</span>
+<span class="sd">    relative probability densities of the different candidate states, with the</span>
+<span class="sd">    resampling biased towards states further from the current state.</span>
 
-<span class="sd">    When used with the default settings of `riemannian_no_u_turn_criterion` termination</span>
-<span class="sd">    criterion and extra subtree checks enabled, this sampler is equivalent to the</span>
-<span class="sd">    default &#39;NUTS&#39; MCMC algorithm (minus adaptation) used in</span>
-<span class="sd">    [Stan](https://mc-stan.org/) as of version v2.23.</span>
+<span class="sd">    When used with the default settings of</span>
+<span class="sd">    :py:class:`mici.transitions.riemannian_no_u_turn_criterion` termination criterion</span>
+<span class="sd">    and extra subtree checks enabled (:code:`do_extra_subtree_checks == True`), this</span>
+<span class="sd">    sampler is equivalent to the default &#39;NUTS&#39; MCMC algorithm (minus adaptation) used</span>
+<span class="sd">    in `Stan &lt;https://mc-stan.org/&gt;`_ as of version v2.23.</span>
 
 <span class="sd">    References:</span>
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler: adaptively setting</span>
@@ -1603,7 +1627,7 @@
 <span class="sd">                transition.</span>
 <span class="sd">            max_tree_depth: Maximum depth to expand trajectory binary tree to in</span>
 <span class="sd">                integrator transition. The maximum number of integrator steps</span>
-<span class="sd">                corresponds to `2**max_tree_depth`.</span>
+<span class="sd">                corresponds to :code:`2**max_tree_depth`.</span>
 <span class="sd">            max_delta_h : Maximum change to tolerate in the Hamiltonian function over a</span>
 <span class="sd">                trajectory in integrator transition before signalling a divergence.</span>
 <span class="sd">            termination_criterion: Function computing criterion to use to determine when</span>
@@ -1612,7 +1636,7 @@
 <span class="sd">                to the two edge nodes in the trajectory (sub-)tree being checked and an</span>
 <span class="sd">                array containing the sum of the momentums over the trajectory</span>
 <span class="sd">                (sub)-tree. Defaults to</span>
-<span class="sd">                `mici.transitions.riemannian_no_u_turn_criterion`.</span>
+<span class="sd">                :py:class:`mici.transitions.riemannian_no_u_turn_criterion`.</span>
 <span class="sd">            do_extra_subtree_checks: Whether to perform additional termination criterion</span>
 <span class="sd">                checks on overlapping subtrees of the current tree to improve robustness</span>
 <span class="sd">                in systems with dynamics which are well approximated by independent</span>
@@ -1622,18 +1646,19 @@
 <span class="sd">                which the termination criterion fails to detect that the trajectory has</span>
 <span class="sd">                expanded past a half-period i.e. has &#39;U-turned&#39; resulting in</span>
 <span class="sd">                trajectories continuing to expand, potentially up until the</span>
-<span class="sd">                `max_tree_depth` limit is hit. For more details see [this Stan Discourse</span>
-<span class="sd">                discussion](kutt.it/yAkIES). If `do_extra_subtree_checks` is set to</span>
-<span class="sd">                `True` additional termination criterion checks are performed on</span>
+<span class="sd">                `max_tree_depth` limit is hit. For more details see `this Stan Discourse</span>
+<span class="sd">                discussion &lt;kutt.it/yAkIES&gt;`_. If :code:`do_extra_subtree_checks` is set</span>
+<span class="sd">                to :code:`True` additional termination criterion checks are performed on</span>
 <span class="sd">                overlapping subtrees which help to reduce this resonant behaviour at the</span>
 <span class="sd">                cost of more conservative trajectory termination in some correlated</span>
 <span class="sd">                models and some overhead from additional checks.</span>
 <span class="sd">            momentum_transition: Markov transition kernel which leaves the conditional</span>
 <span class="sd">                distribution on the momentum under the canonical distribution invariant,</span>
 <span class="sd">                updating only the momentum component of the chain state. If set to</span>
-<span class="sd">                `None` the momentum transition operator</span>
-<span class="sd">                `mici.transitions.IndependentMomentumTransition` will be used, which</span>
-<span class="sd">                independently samples the momentum from its conditional distribution.</span>
+<span class="sd">                :code:`None` the momentum transition operator</span>
+<span class="sd">                :py:class:`mici.transitions.IndependentMomentumTransition` will be used,</span>
+<span class="sd">                which independently samples the momentum from its conditional</span>
+<span class="sd">                distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">MultinomialDynamicIntegrationTransition</span><span class="p">(</span>
             <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
@@ -1672,15 +1697,16 @@
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
 <span class="sd">    randomly forward and backward in time by a number of steps equal to the previous</span>
-<span class="sd">    tree size [1] until a termination criteria on the tree leaves is met. The next chain</span>
-<span class="sd">    state is chosen from the candidate states using a progressive slice sampling scheme</span>
-<span class="sd">    [1] based on the relative probability densities of the different candidate states,</span>
-<span class="sd">    with the sampling biased towards states further from the current state.</span>
+<span class="sd">    tree size (Hoffman and Gelman, 2014) until a termination criteria on the tree leaves</span>
+<span class="sd">    is met. The next chain state is chosen from the candidate states using a progressive</span>
+<span class="sd">    slice sampling scheme (Hoffman and Gelman, 2014) based on the relative probability</span>
+<span class="sd">    densities of the different candidate states, with the sampling biased towards states</span>
+<span class="sd">    further from the current state.</span>
 
 <span class="sd">    When used with the default setting of `euclidean_no_u_turn_criterion` termination</span>
 <span class="sd">    criterion and extra subtree checks disabled, this sampler is equivalent to</span>
-<span class="sd">    &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in [1], i.e. the &#39;classic NUTS&#39;</span>
-<span class="sd">    algorithm.</span>
+<span class="sd">    &#39;Algorithm 3: Efficient No-U-Turn Sampler&#39; in Hoffman and Gelman (2014), i.e. the</span>
+<span class="sd">    &#39;classic NUTS&#39; algorithm.</span>
 
 <span class="sd">    References:</span>
 <span class="sd">      1. Hoffman, M.D. and Gelman, A., 2014. The No-U-turn sampler:</span>
@@ -1708,7 +1734,7 @@
 <span class="sd">                transition.</span>
 <span class="sd">            max_tree_depth: Maximum depth to expand trajectory binary tree to in</span>
 <span class="sd">                integrator transition. The maximum number of integrator steps</span>
-<span class="sd">                corresponds to `2**max_tree_depth`.</span>
+<span class="sd">                corresponds to :code:`2**max_tree_depth`.</span>
 <span class="sd">            max_delta_h: Maximum change to tolerate in the Hamiltonian function over a</span>
 <span class="sd">                trajectory in integrator transition before signalling a divergence.</span>
 <span class="sd">            termination_criterion: Function computing criterion to use to determine when</span>
@@ -1717,7 +1743,7 @@
 <span class="sd">                to the two edge nodes in the trajectory (sub-)tree being checked and an</span>
 <span class="sd">                array containing the sum of the momentums over the trajectory</span>
 <span class="sd">                (sub)-tree. Defaults to</span>
-<span class="sd">                `mici.transitions.euclidean_no_u_turn_criterion`.</span>
+<span class="sd">                :py:class:`mici.transitions.euclidean_no_u_turn_criterion`.</span>
 <span class="sd">            do_extra_subtree_checks: Whether to perform additional termination criterion</span>
 <span class="sd">                checks on overlapping subtrees of the current tree to improve robustness</span>
 <span class="sd">                in systems with dynamics which are well approximated by independent</span>
@@ -1727,18 +1753,19 @@
 <span class="sd">                which the termination criterion fails to detect that the trajectory has</span>
 <span class="sd">                expanded past a half-period i.e. has &#39;U-turned&#39; resulting in</span>
 <span class="sd">                trajectories continuing to expand, potentially up until the</span>
-<span class="sd">                `max_tree_depth` limit is hit. For more details see [this Stan Discourse</span>
-<span class="sd">                discussion](kutt.it/yAkIES). If `do_extra_subtree_checks` is set to</span>
-<span class="sd">                `True` additional termination criterion checks are performed on</span>
+<span class="sd">                `max_tree_depth` limit is hit. For more details see `this Stan Discourse</span>
+<span class="sd">                discussion &lt;kutt.it/yAkIES&gt;`_. If :code:`do_extra_subtree_checks` is set</span>
+<span class="sd">                to :code:`True` additional termination criterion checks are performed on</span>
 <span class="sd">                overlapping subtrees which help to reduce this resonant behaviour at the</span>
 <span class="sd">                cost of more conservative trajectory termination in some correlated</span>
 <span class="sd">                models and some overhead from additional checks.</span>
 <span class="sd">            momentum_transition: Markov transition kernel which leaves the conditional</span>
 <span class="sd">                distribution on the momentum under the canonical distribution invariant,</span>
 <span class="sd">                updating only the momentum component of the chain state. If set to</span>
-<span class="sd">                `None` the momentum transition operator</span>
-<span class="sd">                `mici.transitions.IndependentMomentumTransition` will be used, which</span>
-<span class="sd">                independently samples the momentum from its conditional distribution.</span>
+<span class="sd">                :code:`None` the momentum transition operator</span>
+<span class="sd">                :py:class:`mici.transitions.IndependentMomentumTransition` will be used,</span>
+<span class="sd">                which independently samples the momentum from its conditional</span>
+<span class="sd">                distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">integration_transition</span> <span class="o">=</span> <span class="n">SliceDynamicIntegrationTransition</span><span class="p">(</span>
             <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
