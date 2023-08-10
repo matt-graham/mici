@@ -1575,11 +1575,12 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
                 expanded past a half-period i.e. has 'U-turned' resulting in
                 trajectories continuing to expand, potentially up until the
                 `max_tree_depth` limit is hit. For more details see `this Stan Discourse
-                discussion <kutt.it/yAkIES>`_. If :code:`do_extra_subtree_checks` is set
-                to :code:`True` additional termination criterion checks are performed on
-                overlapping subtrees which help to reduce this resonant behaviour at the
-                cost of more conservative trajectory termination in some correlated
-                models and some overhead from additional checks.
+                discussion <https://kutt.it/yAkIES>`_. If
+                :code:`do_extra_subtree_checks` is set to :code:`True` additional
+                termination criterion checks are performed on overlapping subtrees which
+                help to reduce this resonant behaviour at the cost of more conservative
+                trajectory termination in some correlated models and some overhead from
+                additional checks.
             momentum_transition: Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution invariant,
                 updating only the momentum component of the chain state. If set to
@@ -1682,11 +1683,12 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
                 expanded past a half-period i.e. has 'U-turned' resulting in
                 trajectories continuing to expand, potentially up until the
                 `max_tree_depth` limit is hit. For more details see `this Stan Discourse
-                discussion <kutt.it/yAkIES>`_. If :code:`do_extra_subtree_checks` is set
-                to :code:`True` additional termination criterion checks are performed on
-                overlapping subtrees which help to reduce this resonant behaviour at the
-                cost of more conservative trajectory termination in some correlated
-                models and some overhead from additional checks.
+                discussion <https://kutt.it/yAkIES>`_. If
+                :code:`do_extra_subtree_checks` is set to :code:`True` additional
+                termination criterion checks are performed on overlapping subtrees which
+                help to reduce this resonant behaviour at the cost of more conservative
+                trajectory termination in some correlated models and some overhead from
+                additional checks.
             momentum_transition: Markov transition kernel which leaves the conditional
                 distribution on the momentum under the canonical distribution invariant,
                 updating only the momentum component of the chain state. If set to
