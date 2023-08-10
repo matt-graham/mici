@@ -460,7 +460,7 @@ class ConstrainedTractableFlowSystem(TractableFlowSystem):
 
     .. math::
 
-        \mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace`
+        \mathcal{M} = \lbrace q \in \mathbb{R}^Q : c(q) = 0 \rbrace
 
     with :math:`c: \mathbb{R}^Q \to \mathbb{R}^C` the differentiable and surjective
     vector-valued *constraint function*.
@@ -486,7 +486,7 @@ class ConstrainedTractableFlowSystem(TractableFlowSystem):
         \dot{p} = -\nabla_1 h(q, p) - \partial c(q)^T\lambda, \quad
         c(q) = 0.
 
-    where math:`\lambda` is a set of Lagrange multipliers of dimension equal to number
+    where :math:`\lambda` is a set of Lagrange multipliers of dimension equal to number
     of constraints, :math:`C`, and which are implicitly defined by the condition that
     the constraint equation :math:`c(q) = 0` applies at all times.
 
