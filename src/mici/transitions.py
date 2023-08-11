@@ -301,12 +301,13 @@ class MetropolisIntegrationTransition(IntegrationTransition):
             state_p.dir *= -1
         if state_p is not state:
             h_final = self.system.h(state_p)
-            accept_prob = np.exp(min(0, h_init - h_final))
-            accept_prob = 0 if np.isnan(accept_prob) else accept_prob
+            h_diff = h_init - h_final
+            # Explicitly check if h_diff is NaN as min(0, NaN) = 0
+            accept_prob = 0.0 if np.isnan(h_diff) else np.exp(min(0, h_diff))
         else:
-            accept_prob = 0
+            accept_prob = 0.0
         stats["metrop_accept_prob"] = accept_prob
-        stats["accept_stat"] = accept_prob if not integration_error else 0
+        stats["accept_stat"] = accept_prob if not integration_error else 0.0
         if not integration_error and rng.uniform() < accept_prob:
             state = state_p
         # Reverse integration direction of new state
@@ -658,13 +659,12 @@ class DynamicIntegrationTransition(IntegrationTransition):
                 state = self.integrator.step(state)
                 h = self.system.h(state)
                 h = np.inf if np.isnan(h) else h
-                # create new tree leave
                 tree = self._new_leave(state, h, aux_vars)
                 proposal = state
-                # accumulate stats
-                stats["sum_metrop_accept_prob"] += np.exp(
-                    min(0, aux_vars["h_init"] - h),
-                )
+                h_diff = aux_vars["h_init"] - h
+                # Explicitly check if h_diff is NaN as min(0, NaN) = 0
+                metrop_accept_prob = 0.0 if np.isnan(h_diff) else np.exp(min(0, h_diff))
+                stats["sum_metrop_accept_prob"] += metrop_accept_prob
                 stats["n_step"] += 1
                 # default to assuming valid and then check for divergence
                 terminate = False
