@@ -1053,8 +1053,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">display_progress</span><span class="p">:</span>
             <span class="n">progress_bar_class</span> <span class="o">=</span> <span class="n">DummyProgressBar</span>
+            <span class="n">sampling_stage_bar_class</span> <span class="o">=</span> <span class="n">DummyProgressBar</span>
         <span class="k">elif</span> <span class="n">progress_bar_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">progress_bar_class</span> <span class="o">=</span> <span class="n">SequenceProgressBar</span>
+            <span class="n">sampling_stage_bar_class</span> <span class="o">=</span> <span class="n">LabelledSequenceProgressBar</span>
         <span class="n">n_chain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_states</span><span class="p">)</span>
         <span class="n">n_trace_iter</span> <span class="o">=</span> <span class="n">n_warm_up_iter</span> <span class="o">+</span> <span class="n">n_main_iter</span> <span class="k">if</span> <span class="n">trace_warm_up</span> <span class="k">else</span> <span class="n">n_main_iter</span>
         <span class="n">init_states</span> <span class="o">=</span> <span class="p">[</span>
@@ -1125,8 +1127,11 @@
             <span class="p">)</span>
             <span class="n">chain_states</span> <span class="o">=</span> <span class="n">init_states</span>
             <span class="n">sampling_index_offset</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">with</span> <span class="n">LabelledSequenceProgressBar</span><span class="p">(</span>
-                <span class="n">sampling_stages</span><span class="p">,</span>
+            <span class="k">with</span> <span class="n">sampling_stage_bar_class</span><span class="p">(</span>
+                <span class="c1"># DummyProgressBar used when display_progress=False accepts sequence</span>
+                <span class="c1"># of values to iterate over while LabelledSequenceBar accepts dictionary</span>
+                <span class="c1"># mapping from labels to values to iterate over</span>
+                <span class="n">sampling_stages</span> <span class="k">if</span> <span class="n">display_progress</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">sampling_stages</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
                 <span class="s2">&quot;Sampling stage&quot;</span><span class="p">,</span>
                 <span class="n">position</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_chain</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
             <span class="p">)</span> <span class="k">as</span> <span class="n">sampling_stages_pb</span><span class="p">:</span>
