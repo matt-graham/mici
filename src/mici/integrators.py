@@ -55,7 +55,7 @@ class Integrator(ABC):
             system: Hamiltonian system to integrate the dynamics of.
             step_size: Integrator time step. If set to :code:`None` it is assumed that a
                 step size adapter will be used to set the step size before calling the
-                `step` method.
+                :py:meth:`step` method.
         """
         self.system = system
         self.step_size = step_size
@@ -342,7 +342,7 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
 
     Corresponds to specific instance of :py:class:`SymmetricCompositionIntegrator` with
     :math:`S = 4` and free coefficients :math:`a_0 = 0.071353913450279725904`,
-    :math:`b_1 = 0.191667800000000000000` and :math:`a_1 = 268548791161230105820`.
+    :math:`b_1 = 0.191667800000000000000` and :math:`a_1 = 0.268548791161230105820`.
 
     References:
       1. Blanes, S., Casas, F., & Sanz-Serna, J. M. (2014).
