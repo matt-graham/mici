@@ -196,15 +196,15 @@ The manifold MCMC methods implemented in Mici have been used in several research
   <tr>
     <td>Open non-interactive version with nbviewer</td>
     <td>
-      <a href="https://nbviewer.jupyter.org/github/thiery-lab/manifold_lifting/blob/master/notebooks/Two-dimensional_example.ipynb">
-        <img src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg?sanitize=true" width="109" alt="Render with nbviewer"  style="vertical-align:text-bottom" />
+      <a href="https://nbviewer.jupyter.org/github/thiery-lab/manifold_lifting/blob/main/notebooks/Two-dimensional_example.ipynb">
+        <img src="https://raw.githubusercontent.com/jupyter/design/main/logos/Badges/nbviewer_badge.svg?sanitize=true" width="109" alt="Render with nbviewer"  style="vertical-align:text-bottom" />
       </a>
     </td>
   </tr>
   <tr>
     <td>Open interactive version with Binder</td>
     <td>
-      <a href="https://mybinder.org/v2/gh/thiery-lab/manifold_lifting/master?filepath=notebooks%2FTwo-dimensional_example.ipynb">
+      <a href="https://mybinder.org/v2/gh/thiery-lab/manifold_lifting/main?filepath=notebooks%2FTwo-dimensional_example.ipynb">
         <img src="https://mybinder.org/badge_logo.svg" alt="Launch with Binder"  style="vertical-align:text-bottom"/>
       </a>
     </td>
@@ -212,7 +212,7 @@ The manifold MCMC methods implemented in Mici have been used in several research
   <tr>
     <td>Open interactive version with Google Colab</td>
     <td>
-      <a href="https://colab.research.google.com/github/thiery-lab/manifold_lifting/blob/master/notebooks/Two-dimensional_example.ipynb">
+      <a href="https://colab.research.google.com/github/thiery-lab/manifold_lifting/blob/main/notebooks/Two-dimensional_example.ipynb">
         <img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" style="vertical-align:text-bottom">
        </a>
     </td>
@@ -226,15 +226,15 @@ The manifold MCMC methods implemented in Mici have been used in several research
   <tr>
     <td>Open non-interactive version with nbviewer</td>
     <td>
-      <a href="https://nbviewer.jupyter.org/github/thiery-lab/manifold-mcmc-for-diffusions/blob/master/FitzHugh-Nagumo_example.ipynb">
-        <img src="https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg?sanitize=true" width="109" alt="Render with nbviewer"  style="vertical-align:text-bottom" />
+      <a href="https://nbviewer.jupyter.org/github/thiery-lab/manifold-mcmc-for-diffusions/blob/main/FitzHugh-Nagumo_example.ipynb">
+        <img src="https://raw.githubusercontent.com/jupyter/design/main/logos/Badges/nbviewer_badge.svg?sanitize=true" width="109" alt="Render with nbviewer"  style="vertical-align:text-bottom" />
       </a>
     </td>
   </tr>
   <tr>
     <td>Open interactive version with Binder</td>
     <td>
-      <a href="https://mybinder.org/v2/gh/thiery-lab/manifold-mcmc-for-diffusions/master?filepath=FitzHugh-Nagumo_example.ipynb">
+      <a href="https://mybinder.org/v2/gh/thiery-lab/manifold-mcmc-for-diffusions/main?filepath=FitzHugh-Nagumo_example.ipynb">
         <img src="https://mybinder.org/badge_logo.svg" alt="Launch with Binder"  style="vertical-align:text-bottom"/>
       </a>
     </td>
@@ -242,7 +242,7 @@ The manifold MCMC methods implemented in Mici have been used in several research
   <tr>
     <td>Open interactive version with Google Colab</td>
     <td>
-      <a href="https://colab.research.google.com/github/thiery-lab/manifold-mcmc-for-diffusions/blob/master/FitzHugh-Nagumo_example.ipynb">
+      <a href="https://colab.research.google.com/github/thiery-lab/manifold-mcmc-for-diffusions/blob/main/FitzHugh-Nagumo_example.ipynb">
         <img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg" style="vertical-align:text-bottom">
        </a>
     </td>
