@@ -981,8 +981,10 @@ class MarkovChainMonteCarloMethod:
         """
         if not display_progress:
             progress_bar_class = DummyProgressBar
+            sampling_stage_bar_class = DummyProgressBar
         elif progress_bar_class is None:
             progress_bar_class = SequenceProgressBar
+            sampling_stage_bar_class = LabelledSequenceProgressBar
         n_chain = len(init_states)
         n_trace_iter = n_warm_up_iter + n_main_iter if trace_warm_up else n_main_iter
         init_states = [
@@ -1053,8 +1055,11 @@ class MarkovChainMonteCarloMethod:
             )
             chain_states = init_states
             sampling_index_offset = 0
-            with LabelledSequenceProgressBar(
-                sampling_stages,
+            with sampling_stage_bar_class(
+                # DummyProgressBar used when display_progress=False accepts sequence
+                # of values to iterate over while LabelledSequenceBar accepts dictionary
+                # mapping from labels to values to iterate over
+                sampling_stages if display_progress else list(sampling_stages.values()),
                 "Sampling stage",
                 position=(0, n_chain + 1),
             ) as sampling_stages_pb:
