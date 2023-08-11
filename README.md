@@ -1,4 +1,4 @@
-<img src='images/mici-logo-rectangular.svg' width='400px'/>
+<img src='https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg' width='400px'/>
 
 <p class='badges'>
   <a href="https://badge.fury.io/py/mici">
@@ -251,7 +251,7 @@ The manifold MCMC methods implemented in Mici have been used in several research
 
 ## Example: sampling on a torus
 
-<img src='images/torus-samples.gif' width='360px'/>
+<img src='https://raw.githubusercontent.com/matt-graham/mici/main/images/torus-samples.gif' width='360px'/>
 
 A simple complete example of using the package to compute approximate samples
 from a distribution on a two-dimensional torus embedded in a three-dimensional
