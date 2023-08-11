@@ -262,6 +262,8 @@ distribution and Jacobian of constraint function), sample four chains in
 parallel using `multiprocess`, use `arviz` to calculate diagnostics and use
 `matplotlib` to plot the samples.
 
+> ⚠️ **If you do not have [`multiprocess`](https://github.com/uqfoundation/multiprocess) installed the example code below will hang or raise an error when sampling the chains as the inbuilt `multiprocessing` module does not support pickling Autograd functions.**
+
 ```Python
 from mici import systems, integrators, samplers
 import autograd.numpy as np
@@ -317,8 +319,12 @@ def trace_func(state):
 # Sample 4 chains in parallel with 500 adaptive warm up iterations in which the
 # integrator step size is tuned, followed by 2000 non-adaptive iterations
 final_states, traces, stats = sampler.sample_chains(
-    n_warm_up_iter=500, n_main_iter=2000, init_states=q_init, n_process=4,
-    trace_funcs=[trace_func])
+    n_warm_up_iter=500,
+    n_main_iter=2000,
+    init_states=q_init,
+    n_process=4,
+    trace_funcs=[trace_func]
+)
 
 # Print average accept probability and number of integrator steps per chain
 for c in range(n_chain):
