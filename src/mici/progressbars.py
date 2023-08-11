@@ -404,7 +404,7 @@ class SequenceProgressBar(ProgressBar):
         return f"""
         <div style="line-height: 28px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
-                    position: relative; margin: 2px;">
+                    position: relative; margin: 0px;">
           <label style="margin-right: 8px; flex-shrink: 0;
                         font-size: var(--jp-code-font-size, 13px);
                         font-family: var(--jp-code-font-family, monospace);">
@@ -581,7 +581,7 @@ class LabelledSequenceProgressBar(ProgressBar):
         html_string = f"""
         <div style="line-height: 24px; width: 100%; display: flex;
                     flex-flow: row wrap; align-items: center;
-                    position: relative; margin: 2px;">
+                    position: relative; margin: 0px;">
           <label style="flex-shrink: 0;
                         font-size: var(--jp-code-font-size, 13px);
                         font-family: var(--jp-code-font-family, monospace);">
