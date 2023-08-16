@@ -1,115 +1,363 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>mici.samplers module &mdash; Mici 0.2.0 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>mici.samplers module &#8212; Mici 0.2.0 documentation</title>
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/js/theme.js"></script>
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ed26ec02"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'mici.samplers';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="mici.solvers module" href="mici.solvers.html" />
-    <link rel="prev" title="mici.progressbars module" href="mici.progressbars.html" /> 
-</head>
+    <link rel="prev" title="mici.progressbars module" href="mici.progressbars.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
 
-          
-          
-          <a href="index.html">
-            
-              <img src="_static/mici-logo-rectangular.svg" class="logo" alt="Logo"/>
-          </a>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="mici.html">mici package</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="mici.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">mici.samplers module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.DynamicMultinomialHMC"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.DynamicSliceHMC"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.HMCSampleChainsOutputs"><code class="docutils literal notranslate"><span class="pre">HMCSampleChainsOutputs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.MCMCSampleChainsOutputs"><code class="docutils literal notranslate"><span class="pre">MCMCSampleChainsOutputs</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.RandomMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mici.samplers.StaticMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">Mici</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="mici.html">mici package</a></li>
-      <li class="breadcrumb-item active">mici.samplers module</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="_sources/mici.samplers.rst.txt" rel="nofollow"> View page source</a>
-      </li>
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="mici.html">
+                        mici package
+                      </a>
+                    </li>
+                
   </ul>
-  <hr/>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="mici.html">
+                        mici package
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.matrices.html">mici.matrices module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.progressbars.html">mici.progressbars module</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">mici.samplers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.solvers.html">mici.solvers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.stagers.html">mici.stagers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.states.html">mici.states module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.systems.html">mici.systems module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.transitions.html">mici.transitions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.types.html">mici.types module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mici.utils.html">mici.utils module</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="mici.html" class="nav-link">mici package</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">mici.samplers module</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <section id="module-mici.samplers">
-<span id="mici-samplers-module"></span><h1>mici.samplers module<a class="headerlink" href="#module-mici.samplers" title="Permalink to this heading"></a></h1>
+<span id="mici-samplers-module"></span><h1>mici.samplers module<a class="headerlink" href="#module-mici.samplers" title="Permalink to this heading">#</a></h1>
 <p>Monte Carlo sampler classes for peforming inference.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicMultinomialHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicMultinomialHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicMultinomialHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">riemannian_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicMultinomialHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo" title="mici.samplers.HamiltonianMonteCarlo"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a></p>
 <p>Dynamic integration time HMC method with multinomial sampling from trajectory.</p>
 <p>In each transition a binary tree of states is recursively computed by integrating
@@ -179,25 +427,25 @@ distribution.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.max_delta_h">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_delta_h" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_delta_h" title="Permalink to this definition">#</a></dt>
 <dd><p>Change in Hamiltonian over trajectory to trigger divergence.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.max_tree_depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_tree_depth" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.max_tree_depth" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum depth to expand trajectory binary tree to.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of a
 momentum transition followed by an integration transition. The chains are split
@@ -320,13 +568,13 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.system" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.system" title="Permalink to this definition">#</a></dt>
 <dd><p>Hamiltonian system corresponding to joint distribution on augmented space.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicMultinomialHMC.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.DynamicMultinomialHMC.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -334,7 +582,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicSliceHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">euclidean_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicSliceHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicSliceHMC" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">DynamicSliceHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tree_depth=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta_h=1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_criterion=&lt;function</span> <span class="pre">euclidean_no_u_turn_criterion&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_extra_subtree_checks=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#DynamicSliceHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.DynamicSliceHMC" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo" title="mici.samplers.HamiltonianMonteCarlo"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a></p>
 <p>Dynamic integration time HMC method with slice sampling from trajectory.</p>
 <p>In each transition a binary tree of states is recursively computed by integrating
@@ -402,25 +650,25 @@ distribution.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.max_delta_h">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_delta_h" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_delta_h</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_delta_h" title="Permalink to this definition">#</a></dt>
 <dd><p>Change in Hamiltonian over trajectory to trigger divergence.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.max_tree_depth">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_tree_depth" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_tree_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.max_tree_depth" title="Permalink to this definition">#</a></dt>
 <dd><p>Maximum depth to expand trajectory binary tree to.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of a
 momentum transition followed by an integration transition. The chains are split
@@ -543,13 +791,13 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.system" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.system" title="Permalink to this definition">#</a></dt>
 <dd><p>Hamiltonian system corresponding to joint distribution on augmented space.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.DynamicSliceHMC.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.DynamicSliceHMC.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -557,7 +805,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.HMCSampleChainsOutputs">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">HMCSampleChainsOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HMCSampleChainsOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HMCSampleChainsOutputs" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">HMCSampleChainsOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HMCSampleChainsOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HMCSampleChainsOutputs" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
 <p>Outputs returned by <a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo.sample_chains" title="mici.samplers.HamiltonianMonteCarlo.sample_chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo.sample_chains()</span></code></a> call.</p>
 <dl class="field-list simple">
@@ -588,7 +836,7 @@ string description of the corresponding integration transition statistic.</p></l
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.HamiltonianMonteCarlo">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">HamiltonianMonteCarlo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMonteCarlo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">HamiltonianMonteCarlo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integration_transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMonteCarlo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod" title="mici.samplers.MarkovChainMonteCarloMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod</span></code></a></p>
 <p>Wrapper class for Hamiltonian Monte Carlo (HMC) methods.</p>
 <p>Here HMC is defined as a Markov chain Monte Carlo method which augments the original
@@ -636,13 +884,13 @@ distribution.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.HamiltonianMonteCarlo.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.HamiltonianMonteCarlo.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMonteCarlo.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#HamiltonianMonteCarlo.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of a
 momentum transition followed by an integration transition. The chains are split
@@ -765,13 +1013,13 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.HamiltonianMonteCarlo.system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.system" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.system" title="Permalink to this definition">#</a></dt>
 <dd><p>Hamiltonian system corresponding to joint distribution on augmented space.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.HamiltonianMonteCarlo.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.HamiltonianMonteCarlo.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -779,7 +1027,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.MCMCSampleChainsOutputs">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">MCMCSampleChainsOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MCMCSampleChainsOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MCMCSampleChainsOutputs" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">MCMCSampleChainsOutputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">final_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MCMCSampleChainsOutputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MCMCSampleChainsOutputs" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
 <p>Outputs returned by <a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="mici.samplers.MarkovChainMonteCarloMethod.sample_chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod.sample_chains()</span></code></a> call.</p>
 <dl class="field-list simple">
@@ -812,7 +1060,7 @@ value is a string description of the corresponding transition statistic.</p></li
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">MarkovChainMonteCarloMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">MarkovChainMonteCarloMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transitions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Generic Markov chain Monte Carlo (MCMC) sampler.</p>
 <p>Generates a Markov chain from some initial state by iteratively applying a sequence
@@ -828,13 +1076,13 @@ sequentially sample from on each chain iteration.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads_per_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_memmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memmap_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads_per_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_memmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memmap_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from initial states with optional adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of
 one or more Markov transitions. The chains are split into multiple <em>stages</em> with
@@ -950,7 +1198,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -958,7 +1206,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">RandomMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#RandomMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">RandomMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step_range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#RandomMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo" title="mici.samplers.HamiltonianMonteCarlo"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a></p>
 <p>Random integration time HMC method with Metropolis sampling of new state.</p>
 <p>In each transition a trajectory is generated by integrating the Hamiltonian dynamics
@@ -1005,19 +1253,19 @@ distribution.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.n_step_range">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.n_step_range" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step_range</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.n_step_range" title="Permalink to this definition">#</a></dt>
 <dd><p>Interval to uniformly draw number of integrator steps from.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of a
 momentum transition followed by an integration transition. The chains are split
@@ -1140,13 +1388,13 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.system" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.system" title="Permalink to this definition">#</a></dt>
 <dd><p>Hamiltonian system corresponding to joint distribution on augmented space.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.RandomMetropolisHMC.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.RandomMetropolisHMC.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -1154,7 +1402,7 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">StaticMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#StaticMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.samplers.</span></span><span class="sig-name descname"><span class="pre">StaticMetropolisHMC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integrator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum_transition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#StaticMetropolisHMC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.samplers.HamiltonianMonteCarlo" title="mici.samplers.HamiltonianMonteCarlo"><code class="xref py py-class docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a></p>
 <p>Static integration time HMC method with Metropolis sampling.</p>
 <p>In each transition a trajectory is generated by integrating the Hamiltonian dynamics
@@ -1195,19 +1443,19 @@ independently samples the momentum from its conditional distribution.</p></li>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.n_step">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.n_step" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">n_step</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.n_step" title="Permalink to this definition">#</a></dt>
 <dd><p>Number of integrator steps per integrator transition.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.rng">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.rng" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Generator</span></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.rng" title="Permalink to this definition">#</a></dt>
 <dd><p>NumPy random number generator object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.sample_chains" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.sample_chains" title="Permalink to this definition">#</a></dt>
 <dd><p>Sample Markov chains from given initial states with adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of a
 momentum transition followed by an integration transition. The chains are split
@@ -1330,13 +1578,13 @@ and dictionary of chain statistics dictionaries.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.system">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.system" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><span class="pre">System</span></a></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.system" title="Permalink to this definition">#</a></dt>
 <dd><p>Hamiltonian system corresponding to joint distribution on augmented space.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.samplers.StaticMetropolisHMC.transitions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.transitions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transitions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.11)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><span class="pre">Transition</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#mici.samplers.StaticMetropolisHMC.transitions" title="Permalink to this definition">#</a></dt>
 <dd><p>Dictionary of transition kernels sampled from in each chain iteration.</p>
 </dd></dl>
 
@@ -1345,34 +1593,162 @@ and dictionary of chain statistics dictionaries.</p>
 </section>
 
 
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="mici.progressbars.html" class="btn btn-neutral float-left" title="mici.progressbars module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="mici.solvers.html" class="btn btn-neutral float-right" title="mici.solvers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-    <p>&#169; Copyright 2023, Matt Graham.</p>
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="mici.progressbars.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">mici.progressbars module</p>
       </div>
-    </section>
-  </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
+    </a>
+    <a class="right-next"
+       href="mici.solvers.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">mici.solvers module</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
 
-</body>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.max_delta_h"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.max_delta_h</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.max_tree_depth"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.max_tree_depth</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.rng"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.sample_chains"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.system"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.system</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicMultinomialHMC.transitions"><code class="docutils literal notranslate"><span class="pre">DynamicMultinomialHMC.transitions</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.max_delta_h"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.max_delta_h</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.max_tree_depth"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.max_tree_depth</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.rng"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.sample_chains"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.system"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.system</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.DynamicSliceHMC.transitions"><code class="docutils literal notranslate"><span class="pre">DynamicSliceHMC.transitions</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HMCSampleChainsOutputs"><code class="docutils literal notranslate"><span class="pre">HMCSampleChainsOutputs</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HamiltonianMonteCarlo"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HamiltonianMonteCarlo.rng"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HamiltonianMonteCarlo.sample_chains"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HamiltonianMonteCarlo.system"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo.system</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.HamiltonianMonteCarlo.transitions"><code class="docutils literal notranslate"><span class="pre">HamiltonianMonteCarlo.transitions</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.MCMCSampleChainsOutputs"><code class="docutils literal notranslate"><span class="pre">MCMCSampleChainsOutputs</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.MarkovChainMonteCarloMethod"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.MarkovChainMonteCarloMethod.rng"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.MarkovChainMonteCarloMethod.transitions"><code class="docutils literal notranslate"><span class="pre">MarkovChainMonteCarloMethod.transitions</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC.n_step_range"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC.n_step_range</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC.rng"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC.sample_chains"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC.system"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC.system</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.RandomMetropolisHMC.transitions"><code class="docutils literal notranslate"><span class="pre">RandomMetropolisHMC.transitions</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC.n_step"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC.n_step</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC.rng"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC.rng</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC.sample_chains"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC.sample_chains()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC.system"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC.system</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.samplers.StaticMetropolisHMC.transitions"><code class="docutils literal notranslate"><span class="pre">StaticMetropolisHMC.transitions</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/mici.samplers.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023, Matt Graham.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
 </html>
