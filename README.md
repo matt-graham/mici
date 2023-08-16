@@ -1,20 +1,24 @@
-<img src='https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg' width='400px'/>
-
-<p class='badges'>
-  <a href="https://badge.fury.io/py/mici">
-    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
-  </a>
-  <a href="https://matt-graham.github.io/mici">
-    <img src="https://img.shields.io/badge/API_docs-grey.svg"
-         alt="API documentation"/>
-  </a>
-  <a href="https://zenodo.org/badge/latestdoi/52494384">
-    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
-  </a>
-  <a href="https://github.com/matt-graham/mici/actions/workflows/tests.yml">
-    <img src="https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg" alt="Test status" />
-  </a>
-</p>
+<div style="text-align: center;" align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular-light-text.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg">
+    <img alt="Mici logo" src="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg" width="400px">
+  </picture>
+  <p>
+    <a href="https://badge.fury.io/py/mici">
+      <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
+    </a>
+    <a href="https://zenodo.org/badge/latestdoi/52494384">
+      <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
+    </a>
+    <a href="https://github.com/matt-graham/mici/actions/workflows/tests.yml">
+      <img src="https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg" alt="Test status" />
+    </a>
+    <a href="https://matt-graham.github.io/mici">
+      <img src="https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg" alt="Documentation status" />
+    </a>
+  </p>
+</div>
 
 **Mici** is a Python package providing implementations of *Markov chain Monte
 Carlo* (MCMC) methods for approximate inference in probabilistic models, with a
@@ -103,9 +107,9 @@ Probability](https://github.com/tensorflow/probability),
 [BlackJAX](https://github.com/blackjax-devs/blackjax).
 
 Unlike PyMC, PyStan, (Num)Pyro and TensorFlow Probability which are complete
-probabilistic programming frameworks including functionality for definining a
+probabilistic programming frameworks including functionality for defining a
 probabilistic model / program, but like emcee, Sampyl and BlackJAX, Mici is solely
-focussed on providing implementations of inference algorithms, with the user
+focused on providing implementations of inference algorithms, with the user
 expected to be able to define at a minimum a function specifying the negative
 log (unnormalized) density of the distribution of interest.
 
@@ -191,7 +195,7 @@ The manifold MCMC methods implemented in Mici have been used in several research
 
 <table>
   <tr>
-    <th colspan="2"><a href="https://github.com/thiery-lab/manifold_lifting">Manifold lifting: MCMC in the vanishing noise regime</a></th>
+    <th colspan="2"><a href="https://github.com/thiery-lab/manifold_lifting">Manifold lifting: scaling MCMC to the vanishing noise regime</a></th>
   </tr>
   <tr>
     <td>Open non-interactive version with nbviewer</td>
