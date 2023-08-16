@@ -34,7 +34,7 @@ autodoc_default_options = {"inherited-members": True, "special-members": "__call
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "pymc3": ("https://www.pymc.io/projects/docs/en/v3/", None),
+    "pymc": ("https://www.pymc.io/projects/docs/en/latest/", None),
     "arviz": ("https://python.arviz.org/en/stable/", None),
     "pystan": ("https://pystan.readthedocs.io/en/latest/", None)
 }
@@ -46,10 +46,23 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
-html_logo = "_static/mici-logo-rectangular.svg"
-html_theme_options = {"logo_only": True}
+html_theme = "pydata_sphinx_theme"
+html_static_path = ["_static", "../images"]
+
+html_theme_options = {
+    "logo": {
+        "image_light": "../images/mici-logo-rectangular.svg",
+        "image_dark": "../images/mici-logo-rectangular-light-text.svg",
+    },
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/matt-graham/mici",
+            "icon": "fa-brands fa-square-github",
+            "type": "fontawesome",
+        },
+    ],
+}
 
 
 # -- Post process ------------------------------------------------------------
