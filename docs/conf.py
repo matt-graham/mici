@@ -34,7 +34,7 @@ autodoc_default_options = {"inherited-members": True, "special-members": "__call
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "pymc3": ("https://www.pymc.io/projects/docs/en/v3/", None),
+    "pymc": ("https://www.pymc.io/projects/docs/en/latest/", None),
     "arviz": ("https://python.arviz.org/en/stable/", None),
     "pystan": ("https://pystan.readthedocs.io/en/latest/", None)
 }
