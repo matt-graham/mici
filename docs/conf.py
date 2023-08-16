@@ -46,10 +46,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
-html_logo = "_static/mici-logo-rectangular.svg"
-html_theme_options = {"logo_only": True}
+html_static_path = ["_static", "../images"]
 
 
 # -- Post process ------------------------------------------------------------
