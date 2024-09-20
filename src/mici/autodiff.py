@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
-from mici import autograd_wrapper
+from mici import autograd_wrapper, jax_wrapper
 
 if TYPE_CHECKING:
+    from types import ModuleType
     from typing import Callable, Optional
 
 
-"""List of names of valid differential operators.
+"""Names of valid differential operators.
 
 Any automatic differentiation framework wrapper module will need to provide all of these
 operators as callables (with a single function as argument) to fully support all of the
 required derivative functions.
 """
-DIFF_OPS = [
+DIFF_OPS = (
     # vector Jacobian product and value
     "vjp_and_value",
     # gradient and value for scalar valued functions
@@ -29,7 +30,20 @@ DIFF_OPS = [
     "jacobian_and_value",
     # matrix Hessian product, Jacobian matrix and value for vector valued functions
     "mhp_jacobian_and_value",
-]
+)
+
+
+class _AutodiffBackend(NamedTuple):
+
+    wrapper_module: ModuleType
+    postprocess_diff_function: Optional[Callable] = None
+
+
+"""Available autodifferentiation framework backends."""
+AVAILABLE_BACKENDS = {
+    "autograd": _AutodiffBackend(autograd_wrapper),
+    "jax": _AutodiffBackend(jax_wrapper, jax_wrapper.jit_and_return_numpy_arrays),
+}
 
 
 def autodiff_fallback(
@@ -37,6 +51,7 @@ def autodiff_fallback(
     func: Callable,
     diff_op_name: str,
     name: str,
+    backend: str = "jax",
 ) -> Callable:
     """Generate derivative function automatically if not provided.
 
@@ -52,19 +67,35 @@ def autodiff_fallback(
             differentiation framework wrapper to use to generate required derivative
             function.
         name: Name of derivative function to use in error message.
+        backend: Name of automatic differentiation framework backend to use.
 
     Returns:
         `diff_func` value if not `None` otherwise generated derivative of `func` by
         applying named differential operator.
     """
+    # Normalize backend string to all lowercase to make invariant to capitalization
+    backend = backend.lower()
     if diff_func is not None:
         return diff_func
     elif diff_op_name not in DIFF_OPS:
         msg = f"Differential operator {diff_op_name} is not defined."
         raise ValueError(msg)
-    elif autograd_wrapper.AUTOGRAD_AVAILABLE:
-        return getattr(autograd_wrapper, diff_op_name)(func)
-    elif not autograd_wrapper.AUTOGRAD_AVAILABLE:
-        msg = f"Autograd not available therefore {name} must be provided."
+    elif backend not in AVAILABLE_BACKENDS:
+        msg = (
+            f"Selected autodiff backend {backend} not recognised: "
+            f"available options are {AVAILABLE_BACKENDS}."
+        )
         raise ValueError(msg)
-    return None
+    else:
+        autodiff_backend = AVAILABLE_BACKENDS[backend]
+        if getattr(autodiff_backend.wrapper_module, f"{backend.upper()}_AVAILABLE"):
+            diff_func = getattr(autograd_wrapper, diff_op_name)(func)
+            if autodiff_backend.postprocess_diff_function is not None:
+                diff_func = autodiff_backend.postprocess_diff_function(diff_func)
+            return diff_func
+        else:
+            msg = (
+                f"{backend} selected as autodiff backend but is not available in "
+                f"current environment therefore {name} must be provided directly."
+            )
+            raise ValueError(msg)
