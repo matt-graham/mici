@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NamedTuple
 
-from mici import autograd_wrapper, jax_wrapper
+from mici import autograd_wrapper, jax_wrapper, symnum_wrapper
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -55,6 +55,7 @@ _REGISTERED_BACKENDS = {
     "jax_nojit": AutodiffBackend(
         jax_wrapper, jax_wrapper.JAX_AVAILABLE, jax_wrapper.return_numpy_arrays,
     ),
+    "symnum": AutodiffBackend(symnum_wrapper, symnum_wrapper.SYMNUM_AVAILABLE),
 }
 
 """Name of default automatic differentiation backend to use."""

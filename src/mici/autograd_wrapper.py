@@ -51,8 +51,7 @@ def grad_and_value(fun: ScalarFunction, x: ArrayLike) -> tuple[ArrayLike, Scalar
 def vjp_and_value(
     fun: ScalarFunction, x: ArrayLike,
 ) -> tuple[VectorJacobianProduct, ArrayLike]:
-    """
-    Makes a function that returns vector-Jacobian-product and value of a function.
+    """Makes a function that returns vector-Jacobian-product and value of a function.
 
     For a vector-valued function `fun` the vector-Jacobian-product (VJP) is here
     defined as a function of a vector `v` corresponding to
