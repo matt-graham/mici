@@ -33,17 +33,68 @@ DIFF_OPS = (
 )
 
 
-class _AutodiffBackend(NamedTuple):
+class AutodiffBackend(NamedTuple):
+    """Automatic differentiation backend framework.
 
-    wrapper_module: ModuleType
-    postprocess_diff_function: Optional[Callable] = None
+    Consists of a module defining differential operators, a boolean flag indicating if
+    backend is available in current environment and optionally a function wrapper which
+    applies any post processing required to functions.
+    """
+
+    module: ModuleType
+    available: bool
+    function_wrapper: Optional[Callable] = None
 
 
 """Available autodifferentiation framework backends."""
-AVAILABLE_BACKENDS = {
-    "autograd": _AutodiffBackend(autograd_wrapper),
-    "jax": _AutodiffBackend(jax_wrapper, jax_wrapper.jit_and_return_numpy_arrays),
+_REGISTERED_BACKENDS = {
+    "autograd": AutodiffBackend(autograd_wrapper, autograd_wrapper.AUTOGRAD_AVAILABLE),
+    "jax": AutodiffBackend(
+        jax_wrapper, jax_wrapper.JAX_AVAILABLE, jax_wrapper.jit_and_return_numpy_arrays,
+    ),
+    "jax_nojit": AutodiffBackend(
+        jax_wrapper, jax_wrapper.JAX_AVAILABLE, jax_wrapper.return_numpy_arrays,
+    ),
 }
+
+"""Name of default automatic differentiation backend to use."""
+DEFAULT_BACKEND = "jax"
+
+
+def _get_backend(name: str):
+    # Normalize name string to all lowercase to make invariant to capitalization
+    name = name.lower()
+    if name not in _REGISTERED_BACKENDS:
+        msg = (
+            f"Selected autodiff backend {name} not recognised: "
+            f"available options are {tuple(_REGISTERED_BACKENDS)}."
+        )
+        raise ValueError(msg)
+    return _REGISTERED_BACKENDS[name]
+
+
+def wrap_function(function: Callable, backend: Optional[str]):
+    """Apply function wrapper for automatic differentiation backend to a function.
+
+    Backends may define a function wrapper which applies any post processing required to
+    functions using framework - for example ensuring the function returns NumPy arrays
+    or just-in-time compiling the function.
+
+    Args:
+        function: Function to wrap.
+        backend: Name of automatic differentiation framework backend to use. If `None`
+            function is returned unchanged.
+
+    Returns:
+        Wrapped function.
+    """
+    if backend is None:
+        return function
+    backend = _get_backend(backend)
+    if backend.function_wrapper is not None:
+        return backend.function_wrapper(function)
+    else:
+        return function
 
 
 def autodiff_fallback(
@@ -51,7 +102,7 @@ def autodiff_fallback(
     func: Callable,
     diff_op_name: str,
     name: str,
-    backend: str = "jax",
+    backend: Optional[str],
 ) -> Callable:
     """Generate derivative function automatically if not provided.
 
@@ -67,32 +118,29 @@ def autodiff_fallback(
             differentiation framework wrapper to use to generate required derivative
             function.
         name: Name of derivative function to use in error message.
-        backend: Name of automatic differentiation framework backend to use.
+        backend: Name of automatic differentiation framework backend to use. If `None`
+            `diff_func` must be provided.
 
     Returns:
         `diff_func` value if not `None` otherwise generated derivative of `func` by
-        applying named differential operator.
+        applying named differential operator from automatic differentiation backend.
     """
-    # Normalize backend string to all lowercase to make invariant to capitalization
-    backend = backend.lower()
     if diff_func is not None:
         return diff_func
+    elif diff_func is None and backend is None:
+        msg = (
+            f"Automatic differentiation backend specified as `None` so {name} must"
+            "be provided directly."
+        )
+        raise ValueError(msg)
     elif diff_op_name not in DIFF_OPS:
         msg = f"Differential operator {diff_op_name} is not defined."
         raise ValueError(msg)
-    elif backend not in AVAILABLE_BACKENDS:
-        msg = (
-            f"Selected autodiff backend {backend} not recognised: "
-            f"available options are {AVAILABLE_BACKENDS}."
-        )
-        raise ValueError(msg)
     else:
-        autodiff_backend = AVAILABLE_BACKENDS[backend]
-        if getattr(autodiff_backend.wrapper_module, f"{backend.upper()}_AVAILABLE"):
-            diff_func = getattr(autograd_wrapper, diff_op_name)(func)
-            if autodiff_backend.postprocess_diff_function is not None:
-                diff_func = autodiff_backend.postprocess_diff_function(diff_func)
-            return diff_func
+        autodiff_backend = _get_backend(backend)
+        if autodiff_backend.available:
+            diff_func = getattr(autodiff_backend.module, diff_op_name)(func)
+            return wrap_function(diff_func, backend)
         else:
             msg = (
                 f"{backend} selected as autodiff backend but is not available in "

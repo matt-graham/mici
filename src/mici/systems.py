@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from mici import matrices
-from mici.autodiff import autodiff_fallback
+from mici.autodiff import DEFAULT_BACKEND, autodiff_fallback, wrap_function
 from mici.states import cache_in_state, cache_in_state_with_aux
 
 if TYPE_CHECKING:
@@ -62,6 +62,7 @@ class System(ABC):
         neg_log_dens: ScalarFunction,
         *,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -78,13 +79,17 @@ class System(ABC):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
-        self._neg_log_dens = neg_log_dens
+        self._neg_log_dens = wrap_function(neg_log_dens, backend)
         self._grad_neg_log_dens = autodiff_fallback(
             grad_neg_log_dens,
             neg_log_dens,
             "grad_and_value",
             "grad_neg_log_dens",
+            backend,
         )
 
     @cache_in_state("pos")
@@ -285,6 +290,7 @@ class EuclideanMetricSystem(TractableFlowSystem):
         *,
         metric: Optional[MetricLike] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -311,8 +317,15 @@ class EuclideanMetricSystem(TractableFlowSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
-        super().__init__(neg_log_dens=neg_log_dens, grad_neg_log_dens=grad_neg_log_dens)
+        super().__init__(
+            neg_log_dens=neg_log_dens,
+            grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
+        )
         if metric is None:
             self.metric = matrices.IdentityMatrix()
         elif isinstance(metric, np.ndarray):
@@ -392,6 +405,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
         *,
         metric: Optional[MetricLike] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -418,11 +432,15 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
             metric=metric,
             grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
         )
 
     def h2(self, state: ChainState) -> ScalarLike:
@@ -667,6 +685,7 @@ class ConstrainedEuclideanMetricSystem(
         dens_wrt_hausdorff: bool = True,
         grad_neg_log_dens: Optional[GradientFunction] = None,
         jacob_constr: Optional[JacobianFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         r"""
         Args:
@@ -692,7 +711,7 @@ class ConstrainedEuclideanMetricSystem(
                 where :code:`jacob_constr` is the Jacobian of the constraint function
                 :code:`constr` and :code:`metric` is the matrix representation of the
                 metric on the ambient space.
-            constr: Function which given a position rray return as a 1D array the value
+            constr: Function which given a position array return as a 1D array the value
                 of the (vector-valued) constraint function, the zero level-set of which
                 implicitly defines the manifold the dynamic is simulated on.
             metric: Matrix object corresponding to matrix representation of metric on
@@ -737,19 +756,24 @@ class ConstrainedEuclideanMetricSystem(
                 used to attempt to construct a function to compute the Jacobian (and
                 value) of :code:`constr`
                 automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
             metric=metric,
             grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
         )
-        self._constr = constr
+        self._constr = wrap_function(constr, backend)
         self.dens_wrt_hausdorff = dens_wrt_hausdorff
         self._jacob_constr = autodiff_fallback(
             jacob_constr,
             constr,
             "jacobian_and_value",
             "jacob_constr",
+            backend,
         )
 
     @cache_in_state("pos")
@@ -861,6 +885,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         grad_neg_log_dens: Optional[GradientFunction] = None,
         jacob_constr: Optional[JacobianFunction] = None,
         mhp_constr: Optional[MatrixHessianProductFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -886,7 +911,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 where :code:`jacob_constr` is the Jacobian of the constraint function
                 :code:`constr` and :code:`metric` is the matrix representation of the
                 metric on the ambient space.
-            constr: Function which given a position rray return as a 1D array the value
+            constr: Function which given a position array return as a 1D array the value
                 of the (vector-valued) constraint function, the zero level-set of which
                 implicitly defines the manifold the dynamic is simulated on.
             metric: Matrix object corresponding to matrix representation of metric on
@@ -949,6 +974,9 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 fallback will be used to attempt to construct a function which
                 calculates the MHP (and Jacobian and value) of :code:`constr`
                 automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -957,6 +985,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
             dens_wrt_hausdorff=dens_wrt_hausdorff,
             grad_neg_log_dens=grad_neg_log_dens,
             jacob_constr=jacob_constr,
+            backend=backend,
         )
         if not dens_wrt_hausdorff:
             self._mhp_constr = autodiff_fallback(
@@ -964,6 +993,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
                 constr,
                 "mhp_jacobian_and_value",
                 "mhp_constr",
+                backend,
             )
 
     @cache_in_state_with_aux("pos", ("jacob_constr", "constr"))
@@ -1015,6 +1045,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
         grad_neg_log_dens: Optional[GradientFunction] = None,
         jacob_constr: Optional[JacobianFunction] = None,
         mhp_constr: Optional[MatrixHessianProductFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1099,6 +1130,9 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
                 passed (the default) an automatic differentiation fallback will be used
                 to attempt to construct a function which calculates the MHP (and
                 Jacobian and value) of `constr` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         DenseConstrainedEuclideanMetricSystem.__init__(
             self,
@@ -1109,6 +1143,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
             grad_neg_log_dens=grad_neg_log_dens,
             jacob_constr=jacob_constr,
             mhp_constr=mhp_constr,
+            backend=backend,
         )
 
     def jacob_constr_inner_product(
@@ -1192,6 +1227,7 @@ class RiemannianMetricSystem(System):
         vjp_metric_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
         metric_kwargs: Optional[dict[str, Any]] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1258,14 +1294,18 @@ class RiemannianMetricSystem(System):
                 derivative of `neg_log_dens` automatically.
             metric_kwargs: An optional dictionary of any additional keyword arguments to
                 the initializer of `metric_matrix_class`.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         self._metric_matrix_class = metric_matrix_class
-        self._metric_func = metric_func
+        self._metric_func = wrap_function(metric_func, backend)
         self._vjp_metric_func = autodiff_fallback(
             vjp_metric_func,
             metric_func,
             "vjp_and_value",
             "vjp_metric_func",
+            backend,
         )
         self._metric_kwargs = {} if metric_kwargs is None else metric_kwargs
         super().__init__(neg_log_dens, grad_neg_log_dens=grad_neg_log_dens)
@@ -1376,6 +1416,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         *,
         vjp_metric_scalar_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1420,6 +1461,9 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -1427,6 +1471,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
             metric_func=metric_scalar_func,
             vjp_metric_func=vjp_metric_scalar_func,
             grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
         )
 
     @cache_in_state("pos")
@@ -1457,6 +1502,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
         *,
         vjp_metric_diagonal_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1501,6 +1547,9 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -1508,6 +1557,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
             metric_func=metric_diagonal_func,
             vjp_metric_func=vjp_metric_diagonal_func,
             grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
         )
 
 
@@ -1530,6 +1580,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
         *,
         vjp_metric_chol_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1575,6 +1626,9 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -1583,6 +1637,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
             vjp_metric_func=vjp_metric_chol_func,
             grad_neg_log_dens=grad_neg_log_dens,
             metric_kwargs={"factor_is_lower": True},
+            backend=backend,
         )
 
 
@@ -1605,6 +1660,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
         *,
         vjp_metric_func: Optional[VectorJacobianProductFunction] = None,
         grad_neg_log_dens: Optional[GradientFunction] = None,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1650,6 +1706,9 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
                 position array. If `None` is passed (the default) an automatic
                 differentiation fallback will be used to attempt to construct the
                 derivative of `neg_log_dens` automatically.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -1657,6 +1716,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
             metric_func=metric_func,
             vjp_metric_func=vjp_metric_func,
             grad_neg_log_dens=grad_neg_log_dens,
+            backend=backend,
         )
 
 
@@ -1706,6 +1766,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         hess_neg_log_dens: Optional[HessianFunction] = None,
         mtp_neg_log_dens: Optional[MatrixTressianProductFunction] = None,
         softabs_coeff: ScalarLike = 1.0,
+        backend: Optional[str] = DEFAULT_BACKEND,
     ):
         """
         Args:
@@ -1762,18 +1823,23 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
                 to absolute value used to regularize Hessian eigenvalues in metric
                 matrix representation. As the value tends to infinity the approximation
                 becomes increasingly close to the absolute function.
+            backend: Name of automatic differentiation backend to use. If `None` no
+                automatic differentiation fallback will be used and so all derivative
+                functions must be specified explicitly.
         """
         self._hess_neg_log_dens = autodiff_fallback(
             hess_neg_log_dens,
             neg_log_dens,
             "hessian_grad_and_value",
             "neg_log_dens",
+            backend,
         )
         self._mtp_neg_log_dens = autodiff_fallback(
             mtp_neg_log_dens,
             neg_log_dens,
             "mtp_hessian_grad_and_value",
             "mtp_neg_log_dens",
+            backend,
         )
         super().__init__(
             neg_log_dens=neg_log_dens,
@@ -1782,6 +1848,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
             vjp_metric_func=self._mtp_neg_log_dens,
             grad_neg_log_dens=grad_neg_log_dens,
             metric_kwargs={"softabs_coeff": softabs_coeff},
+            backend=backend,
         )
 
     def metric_func(self, state: ChainState) -> ArrayLike:
