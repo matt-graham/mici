@@ -1,4 +1,4 @@
-"""Additional autograd differential operators."""
+"""Autograd differential operators."""
 
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         MatrixTressianProduct,
         ScalarFunction,
         ScalarLike,
+        VectorJacobianProduct,
     )
 
 
@@ -44,6 +45,27 @@ def grad_and_value(fun: ScalarFunction, x: ArrayLike) -> tuple[ArrayLike, Scalar
         msg = "grad_and_value only applies to real scalar-output functions."
         raise TypeError(msg)
     return vjp(vspace(val).ones()), val
+
+
+@_wrapped_unary_to_nary
+def vjp_and_value(
+    fun: ScalarFunction, x: ArrayLike,
+) -> tuple[VectorJacobianProduct, ArrayLike]:
+    """
+    Makes a function that returns vector-Jacobian-product and value of a function.
+
+    For a vector-valued function `fun` the vector-Jacobian-product (VJP) is here
+    defined as a function of a vector `v` corresponding to
+
+        vjp(v) = v @ j
+
+    where `j` is the Jacobian of `f = fun(x)` wrt `x` i.e. the rank-2
+    tensor of first-order partial derivatives of the vector-valued function,
+    such that
+
+        j[i, k] = ∂f[i] / ∂x[k]
+    """
+    return make_vjp(fun, x)
 
 
 @_wrapped_unary_to_nary
