@@ -1,23 +1,15 @@
-<h1 style="text-align: center;" align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular-light-text.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg">
-    <img alt="Mici logo" src="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg" width="400px">
-  </picture>
-</h1>
 <div style="text-align: center;" align="center">
-  <a href="https://badge.fury.io/py/mici">
-    <img src="https://badge.fury.io/py/mici.svg" alt="PyPI version"/>
-  </a>
-  <a href="https://zenodo.org/badge/latestdoi/52494384">
-    <img src="https://zenodo.org/badge/52494384.svg" alt="DOI"/>
-  </a>
-  <a href="https://github.com/matt-graham/mici/actions/workflows/tests.yml">
-    <img src="https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg" alt="Test status" />
-  </a>
-  <a href="https://matt-graham.github.io/mici">
-    <img src="https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg" alt="Documentation status" />
-  </a>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular-light-text.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg">
+  <img alt="Mici logo" src="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg" width="400px">
+</picture>
+<div style="text-align: center;" align="center">
+[![PyPI version](https://badge.fury.io/py/mici.svg)](https://pypi.org/project/mici)
+[![Zenodo DOI](https://zenodo.org/badge/52494384.svg)](https://zenodo.org/badge/latestdoi/52494384)
+[![Test status](https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/tests.yml)
+[![Docs status](https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg)](https://matt-graham.github.io/mici)
+</div>
 </div>
 
 **Mici** is a Python package providing implementations of *Markov chain Monte
