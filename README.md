@@ -5,10 +5,12 @@
   <img alt="Mici logo" src="https://raw.githubusercontent.com/matt-graham/mici/main/images/mici-logo-rectangular.svg" width="400px">
 </picture>
 <div style="text-align: center;" align="center">
+
 [![PyPI version](https://badge.fury.io/py/mici.svg)](https://pypi.org/project/mici)
 [![Zenodo DOI](https://zenodo.org/badge/52494384.svg)](https://zenodo.org/badge/latestdoi/52494384)
 [![Test status](https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/tests.yml)
 [![Docs status](https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg)](https://matt-graham.github.io/mici)
+
 </div>
 </div>
 
