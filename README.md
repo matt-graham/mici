@@ -43,7 +43,7 @@ Key features include
 
 ## Installation
 
-To install and use Mici the minimal requirements are a Python 3.9+ environment
+To install and use Mici the minimal requirements are a Python 3.10+ environment
 with [NumPy](http://www.numpy.org/) and [SciPy](https://www.scipy.org)
 installed. The latest Mici release on PyPI (and its dependencies) can be
 installed in the current Python environment by running
