@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import wraps
 from typing import TYPE_CHECKING
 
 AUTOGRAD_AVAILABLE = True
@@ -11,47 +10,37 @@ try:
     from autograd.builtins import tuple as atuple
     from autograd.core import make_vjp
     from autograd.extend import vspace
-    from autograd.wrap_util import unary_to_nary
 except ImportError:
     AUTOGRAD_AVAILABLE = False
 
 if TYPE_CHECKING:
-    from typing import Callable
 
     from mici.types import (
         ArrayFunction,
-        ArrayLike,
-        MatrixHessianProduct,
-        MatrixTressianProduct,
+        GradientFunction,
+        HessianFunction,
+        JacobianFunction,
+        MatrixHessianProductFunction,
+        MatrixTressianProductFunction,
         ScalarFunction,
-        ScalarLike,
-        VectorJacobianProduct,
+        VectorJacobianProductFunction,
     )
 
 
-def _wrapped_unary_to_nary(func: Callable) -> Callable:
-    """Use functools.wraps with unary_to_nary decorator."""
-    if AUTOGRAD_AVAILABLE:
-        return wraps(func)(unary_to_nary(func))
-    else:
-        return func
-
-
-@_wrapped_unary_to_nary
-def grad_and_value(fun: ScalarFunction, x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
+def grad_and_value(func: ScalarFunction) -> GradientFunction:
     """Makes a function that returns both gradient and value of a function."""
-    vjp, val = make_vjp(fun, x)
-    if vspace(val).size != 1:
-        msg = "grad_and_value only applies to real scalar-output functions."
-        raise TypeError(msg)
-    return vjp(vspace(val).ones()), val
+
+    def grad_and_value_func(x):
+        vjp, val = make_vjp(func, x)
+        if vspace(val).size != 1:
+            msg = "grad_and_value only applies to real scalar-output functions."
+            raise TypeError(msg)
+        return vjp(vspace(val).ones()), val
+
+    return grad_and_value_func
 
 
-@_wrapped_unary_to_nary
-def vjp_and_value(
-    fun: ScalarFunction,
-    x: ArrayLike,
-) -> tuple[VectorJacobianProduct, ArrayLike]:
+def vjp_and_value(func: ScalarFunction) -> VectorJacobianProductFunction:
     """
     Makes a function that returns vector-Jacobian-product and value of a function.
 
@@ -66,24 +55,27 @@ def vjp_and_value(
 
         j[i, k] = ∂f[i] / ∂x[k]
     """
-    return make_vjp(fun, x)
+
+    def vjp_and_value_func(x):
+        return make_vjp(func, x)
+
+    return vjp_and_value_func
 
 
-@_wrapped_unary_to_nary
-def jacobian_and_value(fun: ArrayFunction, x: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
+def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
     """Makes a function that returns both the Jacobian and value of a function."""
-    vjp, val = make_vjp(fun, x)
-    val_vspace = vspace(val)
-    jacobian_shape = val_vspace.shape + vspace(x).shape
-    jacobian_rows = map(vjp, val_vspace.standard_basis())
-    return np.reshape(np.stack(jacobian_rows), jacobian_shape), val
+
+    def jacobian_and_value_func(x):
+        vjp, val = make_vjp(func, x)
+        val_vspace = vspace(val)
+        jacobian_shape = val_vspace.shape + vspace(x).shape
+        jacobian_rows = map(vjp, val_vspace.standard_basis())
+        return np.reshape(np.stack(jacobian_rows), jacobian_shape), val
+
+    return jacobian_and_value_func
 
 
-@_wrapped_unary_to_nary
-def mhp_jacobian_and_value(
-    fun: ArrayFunction,
-    x: ArrayLike,
-) -> tuple[MatrixHessianProduct, ArrayLike, ArrayLike]:
+def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
     """
     Makes a function that returns MHP, Jacobian and value of a function.
 
@@ -98,34 +90,33 @@ def mhp_jacobian_and_value(
 
         h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
     """
-    mhp, (jacob, val) = make_vjp(lambda x: atuple(jacobian_and_value(fun)(x)), x)
-    return lambda m: mhp((m, vspace(val).zeros())), jacob, val
+
+    def mhp_jacobian_and_value_func(x):
+        mhp, (jacob, val) = make_vjp(lambda x: atuple(jacobian_and_value(func)(x)), x)
+        return lambda m: mhp((m, vspace(val).zeros())), jacob, val
+
+    return mhp_jacobian_and_value_func
 
 
-@_wrapped_unary_to_nary
-def hessian_grad_and_value(
-    fun: ArrayFunction,
-    x: ArrayLike,
-) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
+def hessian_grad_and_value(func: ArrayFunction) -> HessianFunction:
     """Makes a function that returns the Hessian, gradient & value of a function."""
 
-    def grad_fun(x):
-        vjp, val = make_vjp(fun, x)
+    def grad_func(x):
+        vjp, val = make_vjp(func, x)
         return vjp(vspace(val).ones()), val
 
-    x_vspace = vspace(x)
-    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x)
-    hessian_shape = x_vspace.shape + x_vspace.shape
-    zeros = vspace(val).zeros()
-    hessian_rows = (vjp_grad((v, zeros)) for v in x_vspace.standard_basis())
-    return np.reshape(np.stack(hessian_rows), hessian_shape), grad, val
+    def hessian_grad_and_value_func(x):
+        x_vspace = vspace(x)
+        vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_func(x)), x)
+        hessian_shape = x_vspace.shape + x_vspace.shape
+        zeros = vspace(val).zeros()
+        hessian_rows = (vjp_grad((v, zeros)) for v in x_vspace.standard_basis())
+        return np.reshape(np.stack(hessian_rows), hessian_shape), grad, val
+
+    return hessian_grad_and_value_func
 
 
-@_wrapped_unary_to_nary
-def mtp_hessian_grad_and_value(
-    fun: ArrayFunction,
-    x: ArrayLike,
-) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
+def mtp_hessian_grad_and_value(func: ArrayFunction) -> MatrixTressianProductFunction:
     """
     Makes a function that returns MTP, Jacobian and value of a function.
 
@@ -139,13 +130,17 @@ def mtp_hessian_grad_and_value(
 
         t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
     """
-    mtp, (hessian, grad, val) = make_vjp(
-        lambda x: atuple(hessian_grad_and_value(fun)(x)),
-        x,
-    )
-    return (
-        lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
-        hessian,
-        grad,
-        val,
-    )
+
+    def mtp_hessian_grad_and_value_func(x):
+        mtp, (hessian, grad, val) = make_vjp(
+            lambda x: atuple(hessian_grad_and_value(func)(x)),
+            x,
+        )
+        return (
+            lambda m: mtp((m, vspace(grad).zeros(), vspace(val).zeros())),
+            hessian,
+            grad,
+            val,
+        )
+
+    return mtp_hessian_grad_and_value_func
