@@ -49,9 +49,11 @@ def grad_and_value(fun: ScalarFunction, x: ArrayLike) -> tuple[ArrayLike, Scalar
 
 @_wrapped_unary_to_nary
 def vjp_and_value(
-    fun: ScalarFunction, x: ArrayLike,
+    fun: ScalarFunction,
+    x: ArrayLike,
 ) -> tuple[VectorJacobianProduct, ArrayLike]:
-    """Makes a function that returns vector-Jacobian-product and value of a function.
+    """
+    Makes a function that returns vector-Jacobian-product and value of a function.
 
     For a vector-valued function `fun` the vector-Jacobian-product (VJP) is here
     defined as a function of a vector `v` corresponding to
@@ -69,22 +71,12 @@ def vjp_and_value(
 
 @_wrapped_unary_to_nary
 def jacobian_and_value(fun: ArrayFunction, x: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
-    """
-    Makes a function that returns both the Jacobian and value of a function.
-
-    Assumes that the function `fun` broadcasts along the first dimension of the
-    input being differentiated with respect to such that a batch of outputs can
-    be computed concurrently for a batch of inputs.
-    """
-    val = fun(x)
-    v_vspace = vspace(val)
-    x_vspace = vspace(x)
-    x_rep = np.tile(x, (v_vspace.size,) + (1,) * x_vspace.ndim)
-    vjp_rep, _ = make_vjp(fun, x_rep)
-    jacobian_shape = v_vspace.shape + x_vspace.shape
-    basis_vectors = np.array(list(v_vspace.standard_basis()))
-    jacobian = vjp_rep(basis_vectors)
-    return np.reshape(jacobian, jacobian_shape), val
+    """Makes a function that returns both the Jacobian and value of a function."""
+    vjp, val = make_vjp(fun, x)
+    val_vspace = vspace(val)
+    jacobian_shape = val_vspace.shape + vspace(x).shape
+    jacobian_rows = map(vjp, val_vspace.standard_basis())
+    return np.reshape(np.stack(jacobian_rows), jacobian_shape), val
 
 
 @_wrapped_unary_to_nary
@@ -105,10 +97,6 @@ def mhp_jacobian_and_value(
     such that
 
         h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
-
-    Assumes that the function `fun` broadcasts along the first dimension of the
-    input being differentiated with respect to such that a batch of outputs can
-    be computed concurrently for a batch of inputs.
     """
     mhp, (jacob, val) = make_vjp(lambda x: atuple(jacobian_and_value(fun)(x)), x)
     return lambda m: mhp((m, vspace(val).zeros())), jacob, val
@@ -119,25 +107,18 @@ def hessian_grad_and_value(
     fun: ArrayFunction,
     x: ArrayLike,
 ) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
-    """
-    Makes a function that returns the Hessian, gradient & value of a function.
-
-    Assumes that the function `fun` broadcasts along the first dimension of the
-    input being differentiated with respect to such that a batch of outputs can
-    be computed concurrently for a batch of inputs.
-    """
+    """Makes a function that returns the Hessian, gradient & value of a function."""
 
     def grad_fun(x):
         vjp, val = make_vjp(fun, x)
         return vjp(vspace(val).ones()), val
 
     x_vspace = vspace(x)
-    x_rep = np.tile(x, (x_vspace.size,) + (1,) * x_vspace.ndim)
-    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x_rep)
+    vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_fun(x)), x)
     hessian_shape = x_vspace.shape + x_vspace.shape
-    basis_vectors = np.array(list(x_vspace.standard_basis()))
-    hessian = vjp_grad((basis_vectors, vspace(val).zeros()))
-    return np.reshape(hessian, hessian_shape), grad[0], val[0]
+    zeros = vspace(val).zeros()
+    hessian_rows = (vjp_grad((v, zeros)) for v in x_vspace.standard_basis())
+    return np.reshape(np.stack(hessian_rows), hessian_shape), grad, val
 
 
 @_wrapped_unary_to_nary
@@ -157,10 +138,6 @@ def mtp_hessian_grad_and_value(
     third-order partial derivatives of the scalar-valued function such that
 
         t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
-
-    Assumes that the function `fun` broadcasts along the first dimension of the
-    input being differentiated with respect to such that a batch of outputs can
-    be computed concurrently for a batch of inputs.
     """
     mtp, (hessian, grad, val) = make_vjp(
         lambda x: atuple(hessian_grad_and_value(fun)(x)),
