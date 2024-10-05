@@ -226,6 +226,7 @@ def sample_pymc_model(
     system = mici.systems.EuclideanMetricSystem(
         neg_log_dens=neg_log_dens,
         grad_neg_log_dens=grad_neg_log_dens,
+        backend=None,
     )
 
     integrator = mici.integrators.LeapfrogIntegrator(system)
@@ -423,6 +424,7 @@ def sample_stan_model(
     system = mici.systems.EuclideanMetricSystem(
         neg_log_dens=neg_log_dens,
         grad_neg_log_dens=grad_neg_log_dens,
+        backend=None,
     )
 
     integrator = mici.integrators.LeapfrogIntegrator(system, step_size=stepsize)
