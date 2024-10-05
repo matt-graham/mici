@@ -248,7 +248,6 @@ def test_vector_function_diff_ops(
         for (function_name, expected_value_function), test_value in zip(
             function_and_derivatives.items(),
             reversed(derivatives_and_values),
-            False,
         ):
             if function_name.startswith("mhp"):
                 m = rng.standard_normal((dim_c, dim_q))
@@ -292,7 +291,6 @@ def test_scalar_function_diff_ops(
         for (function_name, expected_value_function), test_value in zip(
             function_and_derivatives.items(),
             reversed(derivatives_and_values),
-            False,
         ):
             if function_name.startswith("mtp"):
                 m = rng.standard_normal((dim_q, dim_q))
