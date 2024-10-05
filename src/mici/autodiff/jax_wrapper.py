@@ -122,13 +122,13 @@ def vjp_and_value(func: ArrayFunction) -> VectorJacobianProductFunction:
 def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
     """Makes a function that returns both the Jacobian and value of a function."""
 
-    def value_and_jacobian_func(x):
+    def jacobian_and_value_func(x):
         value, pullback = jax.vjp(func, x)
         basis = jnp.eye(value.size, dtype=value.dtype)
         (jac,) = jax.vmap(pullback)(basis)
         return jac, value
 
-    return value_and_jacobian_func
+    return jacobian_and_value_func
 
 
 def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
