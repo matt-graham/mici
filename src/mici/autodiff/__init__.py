@@ -91,16 +91,6 @@ _REGISTERED_BACKENDS = {
     "symnum": AutodiffBackend(symnum_wrapper, symnum_wrapper.SYMNUM_AVAILABLE),
 }
 
-"""Name of default automatic differentiation backend to use.
-
-Defaults to first available backend from `jax`, `autograd` and `symnum` (in that order)
-or to `None` if none are available.
-"""
-DEFAULT_BACKEND = next(
-    (name for name, backend in _REGISTERED_BACKENDS.items() if backend.available),
-    None,
-)
-
 
 def _get_backend(name: str):
     # Normalize name string to all lowercase to make invariant to capitalization
