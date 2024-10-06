@@ -2,46 +2,47 @@
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mici.autodiff module &#8212; Mici 0.2.0 documentation</title>
+    <title>mici.autodiff package &#8212; Mici 0.2.0 documentation</title>
   
   
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ed26ec02"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'mici.autodiff';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mici.autograd_wrapper module" href="mici.autograd_wrapper.html" />
-    <link rel="prev" title="mici.adapters module" href="mici.adapters.html" />
+    <link rel="next" title="mici.autodiff.autograd_wrapper module" href="mici.autodiff.autograd_wrapper.html" />
+    <link rel="prev" title="mici package" href="mici.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -51,19 +52,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -85,16 +90,25 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="index.html">
@@ -102,39 +116,34 @@
   
   
   
+  
     
     
       
     
     
-    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Logo image"/>
-    <script>document.write(`<img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
+    <script>document.write(`<img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
   
   
 </a></div>
     
   </div>
   
-  
   <div class="col-lg-9 navbar-header-items">
     
     <div class="me-auto navbar-header-items__center">
       
-        <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+        <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="mici.html">
-                        mici package
-                      </a>
-                    </li>
-                
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="mici.html">
+    mici package
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -145,28 +154,32 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
+
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script></div>
       
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+        <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
         <li class="nav-item">
           
@@ -177,8 +190,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
         </li>
 </ul></div>
       
@@ -188,27 +201,33 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
-    </nav>
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -219,23 +238,21 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+          
+          
+            <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="mici.html">
-                        mici package
-                      </a>
-                    </li>
-                
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="mici.html">
+    mici package
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -244,17 +261,18 @@ document.write(`
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
+
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script></div>
         
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+          <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
         <li class="nav-item">
           
@@ -265,8 +283,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
         </li>
 </ul></div>
         
@@ -275,13 +293,20 @@ document.write(`
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">mici.autodiff package</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html">mici.autodiff.autograd_wrapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html">mici.autodiff.jax_wrapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html">mici.autodiff.symnum_wrapper module</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="mici.adapters.html">mici.adapters module</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">mici.autodiff module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
@@ -309,13 +334,13 @@ document.write(`
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
@@ -324,8 +349,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
@@ -335,7 +360,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="mici.html" class="nav-link">mici package</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mici.autodiff module</li>
+    <li class="breadcrumb-item active" aria-current="page">mici.autodif...</li>
   </ul>
 </nav>
 </div>
@@ -350,14 +375,61 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="module-mici.autodiff">
-<span id="mici-autodiff-module"></span><h1>mici.autodiff module<a class="headerlink" href="#module-mici.autodiff" title="Permalink to this heading">#</a></h1>
-<p>Automatic differentation fallback for constructing derivative functions.</p>
+<span id="mici-autodiff-package"></span><h1>mici.autodiff package<a class="headerlink" href="#module-mici.autodiff" title="Link to this heading">#</a></h1>
+<p>Automatic differentation support for constructing derivative functions.</p>
+<p>Multiple automatic differentiation backends are supported:</p>
+<ul class="simple">
+<li><p><cite>jax</cite>: High performance array computing framework, with support for running
+computations on accelerator devices and just-in-time (JIT) compilation. To
+differentiate a function using the <cite>jax</cite> backend, the function must be defined in
+terms of JAX primitives, for example using the functions in the <cite>jax.numpy</cite> API. By
+default the derivative functions produced will be JIT compiled; a <cite>jax_nojit</cite> variant
+is available if the function (or its derivative) is not compatible with JIT
+compilation.</p></li>
+<li><p><cite>autograd</cite>: Autograd can automatically differentiate native Python and NumPy code. To
+differentiate a function using the <cite>autograd</cite> backend it should be defined in terms
+of functions from the <cite>autograd.numpy</cite> and <cite>autograd.scipy</cite> APIs. Compared to JAX,
+the lack of JIT compilation in Autograd and features such as automatic vectorisation
+make Autograd slower, and so JAX will generally be a better choice.</p></li>
+<li><p><cite>symnum</cite>: SymNum is a Python package that acts a bridge between NumPy and SymPy,
+providing a NumPy-like interface that can be used to symbolically define functions
+which take arrays as arguments and return arrays or scalars as values. To
+differentiate a function using the <cite>symnum</cite> backend it should be defined in terms of
+functions from the <cite>symnum.numpy</cite> API, and should have been decorated with
+<code class="docutils literal notranslate"><span class="pre">symnum.numpify</span></code> with specified argument shapes. SymNum is intended for use in
+generating the derivatives of ‘simple’ functions which compose a relatively small
+number of operations and act on small array inputs. By reducing interpreter overheads
+it can produce code which is cheaper to evaluate than corresponding Autograd or JAX
+functions (including those using JIT compilation) in such cases, and which can be
+serialised with the inbuilt Python pickle library allowing use for example in
+libraries which use multiprocessing to implement parallelisation across multiple
+processes.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.autodiff.AutodiffBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.autodiff.</span></span><span class="sig-name descname"><span class="pre">AutodiffBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">available</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_wrapper</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff.html#AutodiffBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.AutodiffBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.NamedTuple" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></a></p>
+<p>Automatic differentiation backend framework.</p>
+<p>Consists of a module defining differential operators, a boolean flag indicating if
+backend is available in current environment and optionally a function wrapper which
+applies any post processing required to functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>ModuleType</em>)</p></li>
+<li><p><strong>available</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>)</p></li>
+<li><p><strong>function_wrapper</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.autodiff.autodiff_fallback">
-<span class="sig-prename descclassname"><span class="pre">mici.autodiff.</span></span><span class="sig-name descname"><span class="pre">autodiff_fallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diff_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diff_op_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff.html#autodiff_fallback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.autodiff_fallback" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.autodiff.</span></span><span class="sig-name descname"><span class="pre">autodiff_fallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diff_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diff_op_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff.html#autodiff_fallback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.autodiff_fallback" title="Link to this definition">#</a></dt>
 <dd><p>Generate derivative function automatically if not provided.</p>
 <p>Uses automatic differentiation to generate a function corresponding to a
 differential operator applied to a function if an alternative implementation of the
@@ -368,15 +440,17 @@ derivative function has not been provided.</p>
 <li><p><strong>diff_func</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – Either a callable implementing the required derivative function or
 <cite>None</cite> if none was provided.</p></li>
 <li><p><strong>func</strong> (<em>Callable</em>) – Function to differentiate.</p></li>
-<li><p><strong>diff_op_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – String specifying name of differential operator from automatic
+<li><p><strong>diff_op_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – String specifying name of differential operator from automatic
 differentiation framework wrapper to use to generate required derivative
 function.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – Name of derivative function to use in error message.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>) – Name of derivative function to use in error message.</p></li>
+<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation framework backend to use. If <cite>None</cite>
+<cite>diff_func</cite> must be provided.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><cite>diff_func</cite> value if not <cite>None</cite> otherwise generated derivative of <cite>func</cite> by
-applying named differential operator.</p>
+applying named differential operator from automatic differentiation backend.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Callable</em></p>
@@ -384,6 +458,63 @@ applying named differential operator.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="mici.autodiff.wrap_function">
+<span class="sig-prename descclassname"><span class="pre">mici.autodiff.</span></span><span class="sig-name descname"><span class="pre">wrap_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff.html#wrap_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.wrap_function" title="Link to this definition">#</a></dt>
+<dd><p>Apply function wrapper for automatic differentiation backend to a function.</p>
+<p>Backends may define a function wrapper which applies any post processing required to
+functions using framework - for example ensuring the function returns NumPy arrays
+or just-in-time compiling the function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>function</strong> (<em>Callable</em>) – Function to wrap.</p></li>
+<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation framework backend to use. If <cite>None</cite>
+function is returned unchanged.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wrapped function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html">mici.autodiff.autograd_wrapper module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.grad_and_value"><code class="docutils literal notranslate"><span class="pre">grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.mhp_jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">mhp_jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.mtp_hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">mtp_hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.vjp_and_value"><code class="docutils literal notranslate"><span class="pre">vjp_and_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mici.autodiff.jax_wrapper.html">mici.autodiff.jax_wrapper module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.grad_and_value"><code class="docutils literal notranslate"><span class="pre">grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.jit_and_return_numpy_arrays"><code class="docutils literal notranslate"><span class="pre">jit_and_return_numpy_arrays()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.mhp_jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">mhp_jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.mtp_hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">mtp_hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.return_numpy_arrays"><code class="docutils literal notranslate"><span class="pre">return_numpy_arrays()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.vjp_and_value"><code class="docutils literal notranslate"><span class="pre">vjp_and_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html">mici.autodiff.symnum_wrapper module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.grad_and_value"><code class="docutils literal notranslate"><span class="pre">grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.mhp_jacobian_and_value"><code class="docutils literal notranslate"><span class="pre">mhp_jacobian_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.mtp_hessian_grad_and_value"><code class="docutils literal notranslate"><span class="pre">mtp_hessian_grad_and_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html#mici.autodiff.symnum_wrapper.vjp_and_value"><code class="docutils literal notranslate"><span class="pre">vjp_and_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
 </section>
 
 
@@ -391,34 +522,30 @@ applying named differential operator.</p>
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer d-print-none">
                   
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mici.adapters.html"
+       href="mici.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mici.adapters module</p>
+        <p class="prev-next-title">mici package</p>
       </div>
     </a>
     <a class="right-next"
-       href="mici.autograd_wrapper.html"
+       href="mici.autodiff.autograd_wrapper.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mici.autograd_wrapper module</p>
+        <p class="prev-next-title">mici.autodiff.autograd_wrapper module</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -427,17 +554,24 @@ applying named differential operator.</p>
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> On this page
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.autodiff.AutodiffBackend"><code class="docutils literal notranslate"><span class="pre">AutodiffBackend</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.autodiff.autodiff_fallback"><code class="docutils literal notranslate"><span class="pre">autodiff_fallback()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.autodiff.wrap_function"><code class="docutils literal notranslate"><span class="pre">wrap_function()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
+
   <div class="tocsection sourcelink">
     <a href="_sources/mici.autodiff.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
@@ -458,8 +592,8 @@ applying named differential operator.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -467,6 +601,7 @@ applying named differential operator.</p>
     <div class="footer-items__start">
       
         <div class="footer-item">
+
   <p class="copyright">
     
       © Copyright 2023, Matt Graham.
@@ -476,8 +611,9 @@ applying named differential operator.</p>
 </div>
       
         <div class="footer-item">
+
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>
@@ -485,10 +621,12 @@ applying named differential operator.</p>
     </div>
   
   
+  
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
 </p></div>
       
     </div>

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="./" >
 
   <head>
     <meta charset="utf-8" />
@@ -14,34 +14,35 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ed26ec02"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'mici.adapters';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="mici.autodiff module" href="mici.autodiff.html" />
-    <link rel="prev" title="mici package" href="mici.html" />
+    <link rel="next" title="mici.errors module" href="mici.errors.html" />
+    <link rel="prev" title="mici.autodiff.symnum_wrapper module" href="mici.autodiff.symnum_wrapper.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -51,19 +52,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -85,16 +90,25 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="index.html">
@@ -102,39 +116,34 @@
   
   
   
+  
     
     
       
     
     
-    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Logo image"/>
-    <script>document.write(`<img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
+    <script>document.write(`<img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
   
   
 </a></div>
     
   </div>
   
-  
   <div class="col-lg-9 navbar-header-items">
     
     <div class="me-auto navbar-header-items__center">
       
-        <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+        <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="mici.html">
-                        mici package
-                      </a>
-                    </li>
-                
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="mici.html">
+    mici package
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -145,28 +154,32 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
+
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script></div>
       
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+        <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
         <li class="nav-item">
           
@@ -177,8 +190,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
         </li>
 </ul></div>
       
@@ -188,27 +201,33 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
-    </nav>
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -219,23 +238,21 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item"><nav class="navbar-nav">
-  <p class="sidebar-header-items__title"
-     role="heading"
-     aria-level="1"
-     aria-label="Site Navigation">
-    Site Navigation
-  </p>
+          
+          
+            <div class="navbar-item">
+<nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="mici.html">
-                        mici package
-                      </a>
-                    </li>
-                
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="mici.html">
+    mici package
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -244,17 +261,18 @@ document.write(`
       <div class="sidebar-header-items__end">
         
           <div class="navbar-item">
+
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script></div>
         
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+          <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
         <li class="nav-item">
           
@@ -265,8 +283,8 @@ document.write(`
           
           
           
-          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
         </li>
 </ul></div>
         
@@ -275,13 +293,20 @@ document.write(`
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item"><nav class="bd-docs-nav bd-links"
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="mici.autodiff.html">mici.autodiff package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.autograd_wrapper.html">mici.autodiff.autograd_wrapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.jax_wrapper.html">mici.autodiff.jax_wrapper module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mici.autodiff.symnum_wrapper.html">mici.autodiff.symnum_wrapper module</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">mici.adapters module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mici.autodiff.html">mici.autodiff module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="mici.autograd_wrapper.html">mici.autograd_wrapper module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.errors.html">mici.errors module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.integrators.html">mici.integrators module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mici.interop.html">mici.interop module</a></li>
@@ -309,13 +334,13 @@ document.write(`
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
@@ -324,8 +349,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
@@ -350,15 +375,15 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="module-mici.adapters">
-<span id="mici-adapters-module"></span><h1>mici.adapters module<a class="headerlink" href="#module-mici.adapters" title="Permalink to this heading">#</a></h1>
+<span id="mici-adapters-module"></span><h1>mici.adapters module<a class="headerlink" href="#module-mici.adapters" title="Link to this heading">#</a></h1>
 <p>Methods for adaptively setting algorithmic parameters of transitions.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.Adapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">Adapter</span></span><a class="reference internal" href="_modules/mici/adapters.html#Adapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">Adapter</span></span><a class="reference internal" href="_modules/mici/adapters.html#Adapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Abstract adapter for implementing schemes to adapt transition parameters.</p>
 <p>Adaptation schemes are assumed to be based on updating a collection of adaptation
 variables (collectively termed the adapter state here) after each chain transition
@@ -368,7 +393,7 @@ transitions, the final adapter state may be used to perform a final update to th
 transition parameters.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.finalize">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.finalize" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.finalize" title="Link to this definition">#</a></dt>
 <dd><p>Update transition parameters based on final adapter state or states.</p>
 <p>Optionally, if multiple adapter states are available, e.g. from a set of
 independent adaptive chains, then these adaptation information from all the
@@ -395,7 +420,7 @@ be updated due to adaptation if required.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.initialize">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.initialize" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize adapter state prior to starting adaptive transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -418,7 +443,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.is_fast">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#mici.adapters.Adapter.is_fast" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#mici.adapters.Adapter.is_fast" title="Link to this definition">#</a></dt>
 <dd><p>Whether the adapter is ‘fast’ or ‘slow’.</p>
 <p>An adapter which requires only local information to adapt the transition
 parameters should be classified as fast while one which requires more global
@@ -428,7 +453,7 @@ information and so more chain iterations should be classified as slow i.e.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.update">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.update" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.update" title="Link to this definition">#</a></dt>
 <dd><p>Update adapter state after sampling from transition being adapted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -452,7 +477,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">DualAveragingStepSizeAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_stat_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_stat_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_decay_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_init_step_size_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reducer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">DualAveragingStepSizeAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_stat_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_stat_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_decay_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_init_step_size_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reducer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dual averaging integrator step size adapter.</p>
 <p>Implementation of the dual algorithm step size adaptation algorithm described in
@@ -472,13 +497,13 @@ Mathematical programming 120(1), pp.221-259.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Target value for the transition statistic
+<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Target value for the transition statistic
 being controlled during adaptation.</p></li>
 <li><p><strong>adapt_stat_func</strong> (<em>Optional</em><em>[</em><em>AdaptationStatisticFunction</em><em>]</em>) – Function which given a dictionary of transition statistics
 outputs the value of the statistic to control during adaptation. By
 default this is set to a function which simply selects the
 :code:’accept_stat’ value in the statistics dictionary.</p></li>
-<li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Value to regularize the controlled output
+<li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Value to regularize the controlled output
 (logarithm of the integrator step size) towards. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> set to
 <code class="code docutils literal notranslate"><span class="pre">log(10</span> <span class="pre">*</span> <span class="pre">init_step_size)</span></code> where <code class="code docutils literal notranslate"><span class="pre">init_step_size</span></code> is the
 initial ‘reasonable’ step size found by a coarse search as recommended
@@ -486,22 +511,22 @@ in Hoffman and Gelman (2014). This has the effect of giving the dual
 averaging algorithm a tendency towards testing step sizes larger than
 the initial value, with typically integrating with a larger step size
 having a lower computational cost.</p></li>
-<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling amount of
+<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Coefficient controlling amount of
 regularisation of controlled output (logarithm of the integrator step
 size) towards <code class="code docutils literal notranslate"><span class="pre">log_step_size_reg_target</span></code>. Defaults to 0.05 as
 recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
+<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
 weighting stochastic updates to smoothed log step size estimate. Should
 be in the interval (0.5, 1] to ensure asymptotic convergence of
 adaptation. A value of 1 gives equal weight to the whole history of
 updates while setting to a smaller value increasingly highly weights
 recent updates, giving a tendency to ‘forget’ early updates.
 Defaults to 0.75 as recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Offset used for the iteration based weighting of the adaptation
+<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Offset used for the iteration based weighting of the adaptation
 statistic error estimate. Should be set to a non-negative value. A value
 &gt; 0 has the effect of stabilising early iterations. Defaults to the
 value of 10 as recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Maximum number of iterations to use in initial
+<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Maximum number of iterations to use in initial
 search for a reasonable step size with an
 <a class="reference internal" href="mici.errors.html#mici.errors.AdaptationError" title="mici.errors.AdaptationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.AdaptationError</span></code></a> exception raised if a suitable
 step size is not found within this many iterations.</p></li>
@@ -516,7 +541,7 @@ of the per-chain step sizes is used.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter.finalize">
-<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.finalize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.finalize" title="Link to this definition">#</a></dt>
 <dd><p>Update transition parameters based on final adapter state or states.</p>
 <p>Optionally, if multiple adapter states are available, e.g. from a set of
 independent adaptive chains, then these adaptation information from all the
@@ -543,7 +568,7 @@ be updated due to adaptation if required.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.initialize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize adapter state prior to starting adaptive transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -566,12 +591,12 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.is_fast" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.update" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.update" title="Link to this definition">#</a></dt>
 <dd><p>Update adapter state after sampling from transition being adapted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -595,7 +620,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineCovarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineCovarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dense metric adapter using online covariance estimates.</p>
 <p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
@@ -625,18 +650,18 @@ probabilistic programming language. Journal of Statistical Software, 76(1).</p><
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Iteration offset used for calculating iteration
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Iteration offset used for calculating iteration
 dependent weighting between regularisation target and current covariance
 estimate. Higher values cause stronger regularisation during initial
 iterations.</p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Positive scalar defining value variance estimates are
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Positive scalar defining value variance estimates are
 regularized towards.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter.finalize">
-<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.finalize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.finalize" title="Link to this definition">#</a></dt>
 <dd><p>Update transition parameters based on final adapter state or states.</p>
 <p>Optionally, if multiple adapter states are available, e.g. from a set of
 independent adaptive chains, then these adaptation information from all the
@@ -663,7 +688,7 @@ be updated due to adaptation if required.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.initialize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize adapter state prior to starting adaptive transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -686,12 +711,12 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.is_fast" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.update" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.update" title="Link to this definition">#</a></dt>
 <dd><p>Update adapter state after sampling from transition being adapted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -715,7 +740,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineVarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineVarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Diagonal metric adapter using online variance estimates.</p>
 <p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
@@ -742,19 +767,19 @@ probabilistic programming language. Journal of Statistical Software, 76(1).</p><
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – Iteration offset used for calculating iteration dependent
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Iteration offset used for calculating iteration dependent
 weighting between regularisation target and current covariance estimate.
 Higher values cause stronger regularisation during initial iterations. A
 value of zero corresponds to no regularisation; this should only be used
 if the sample covariance is guaranteed to be positive definite.</p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – Positive scalar defining value variance estimates are regularized
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Positive scalar defining value variance estimates are regularized
 towards.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter.finalize">
-<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.finalize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.finalize" title="Link to this definition">#</a></dt>
 <dd><p>Update transition parameters based on final adapter state or states.</p>
 <p>Optionally, if multiple adapter states are available, e.g. from a set of
 independent adaptive chains, then these adaptation information from all the
@@ -781,7 +806,7 @@ be updated due to adaptation if required.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter.initialize">
-<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.initialize" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize adapter state prior to starting adaptive transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -804,12 +829,12 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.is_fast" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.update" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.update" title="Link to this definition">#</a></dt>
 <dd><p>Update adapter state after sampling from transition being adapted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -833,24 +858,24 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.adapters.arithmetic_mean_log_step_size_reducer">
-<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">arithmetic_mean_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#arithmetic_mean_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.arithmetic_mean_log_step_size_reducer" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">arithmetic_mean_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#arithmetic_mean_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.arithmetic_mean_log_step_size_reducer" title="Link to this definition">#</a></dt>
 <dd><p>Compute arithmetic mean of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Arithmetic mean of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.adapters.default_adapt_stat_func">
-<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">default_adapt_stat_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#default_adapt_stat_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.default_adapt_stat_func" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">default_adapt_stat_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stats</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#default_adapt_stat_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.default_adapt_stat_func" title="Link to this definition">#</a></dt>
 <dd><p>Function to extract default statistic used for step-size adaptation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -860,41 +885,41 @@ child objects may be updated in-place by the method.</p></li>
 <dd class="field-even"><p>Acceptance statistic.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.adapters.geometric_mean_log_step_size_reducer">
-<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">geometric_mean_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#geometric_mean_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.geometric_mean_log_step_size_reducer" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">geometric_mean_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#geometric_mean_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.geometric_mean_log_step_size_reducer" title="Link to this definition">#</a></dt>
 <dd><p>Compute geometric mean of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Geometric mean of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.adapters.min_log_step_size_reducer">
-<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">min_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#min_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.min_log_step_size_reducer" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">min_log_step_size_reducer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_step_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#min_log_step_size_reducer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.min_log_step_size_reducer" title="Link to this definition">#</a></dt>
 <dd><p>Compute minimum of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Minimum of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -906,34 +931,30 @@ child objects may be updated in-place by the method.</p></li>
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer d-print-none">
                   
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mici.html"
+       href="mici.autodiff.symnum_wrapper.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">mici package</p>
+        <p class="prev-next-title">mici.autodiff.symnum_wrapper module</p>
       </div>
     </a>
     <a class="right-next"
-       href="mici.autodiff.html"
+       href="mici.errors.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">mici.autodiff module</p>
+        <p class="prev-next-title">mici.errors module</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -942,11 +963,14 @@ child objects may be updated in-place by the method.</p></li>
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> On this page
   </div>
-  <nav class="bd-toc-nav page-toc">
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.adapters.Adapter"><code class="docutils literal notranslate"><span class="pre">Adapter</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.adapters.Adapter.finalize"><code class="docutils literal notranslate"><span class="pre">Adapter.finalize()</span></code></a></li>
@@ -984,6 +1008,7 @@ child objects may be updated in-place by the method.</p></li>
   </nav></div>
 
   <div class="sidebar-secondary-item">
+
   <div class="tocsection sourcelink">
     <a href="_sources/mici.adapters.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
@@ -1004,8 +1029,8 @@ child objects may be updated in-place by the method.</p></li>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1013,6 +1038,7 @@ child objects may be updated in-place by the method.</p></li>
     <div class="footer-items__start">
       
         <div class="footer-item">
+
   <p class="copyright">
     
       © Copyright 2023, Matt Graham.
@@ -1022,8 +1048,9 @@ child objects may be updated in-place by the method.</p></li>
 </div>
       
         <div class="footer-item">
+
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>
@@ -1031,10 +1058,12 @@ child objects may be updated in-place by the method.</p></li>
     </div>
   
   
+  
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
 </p></div>
       
     </div>
