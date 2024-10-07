@@ -494,9 +494,9 @@ def _sample_chain(  # noqa: PLR0912
                         adapter.initialize(state, transitions[trans_key]),
                     )
     except AdaptationError as exception:
-        logger.error(
+        logger.exception(
             f"Initialisation of {type(adapter).__name__} for chain "
-            f"{chain_index + 1} failed: {exception}",
+            f"{chain_index + 1} failed.",
         )
         return state, adapter_states, exception
     try:
@@ -539,7 +539,7 @@ def _sample_chain(  # noqa: PLR0912
                             )
     except KeyboardInterrupt as e:
         exception = e
-        logger.error(
+        logger.exception(
             f"Sampling manually interrupted for chain {chain_index + 1} at"
             f" iteration {sample_index}. Arrays containing chain traces and"
             f" statistics computed before interruption will be returned.",
@@ -666,12 +666,9 @@ def _sample_chains_worker(
                 break
         except queue.Empty:
             pass
-        except Exception as exception:  # noqa: BLE001
+        except Exception as exception:
             # Log exception here so that correct traceback is logged
-            logger.error(
-                "Exception encountered in chain worker process:",
-                exc_info=exception,
-            )
+            logger.exception("Exception encountered in chain worker process")
             # Put exception on iteration queue to be reraised in parent process
             iter_queue.put(exception)
     return chain_outputs
@@ -778,7 +775,7 @@ def _sample_chains_parallel(
                     "this package when available, may resolve this error."
                 )
                 raise RuntimeError(msg) from e
-            raise e
+            raise
         except KeyboardInterrupt as e:
             # Interrupts handled in child processes therefore ignore here
             exception = e

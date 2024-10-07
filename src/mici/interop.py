@@ -290,10 +290,11 @@ def get_stan_model_unconstrained_param_dim(model: stan.Model) -> int:
     while True:
         try:
             model.log_prob([0] * n_dim)
-            return n_dim
         except RuntimeError:  # noqa: PERF203
             param_size_list.pop()
             n_dim = sum(param_size_list)
+        else:
+            return n_dim
 
 
 def construct_stan_model_functions(

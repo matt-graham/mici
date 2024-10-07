@@ -37,13 +37,9 @@ def _in_zmq_interactive_shell() -> bool:
         return True
     try:
         shell = get_ipython().__class__.__name__
-        if shell == "ZMQInteractiveShell":
-            return True
-        if shell == "TerminalInteractiveShell":
-            return False
-        return False
     except NameError:
         return False
+    return shell == "ZMQInteractiveShell"
 
 
 def _create_display(obj, position: tuple[int, int]):
