@@ -11,7 +11,7 @@ import numpy as np
 import mici
 
 if TYPE_CHECKING:
-    from typing import Literal, Optional, Union
+    from typing import Literal
 
     import arviz
     import pymc
@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 def convert_to_inference_data(
     traces: dict[str, list[ArrayLike]],
     stats: dict[str, list[ArrayLike]],
-    energy_key: Optional[str] = "energy",
-    lp_key: Optional[str] = "lp",
+    energy_key: str | None = "energy",
+    lp_key: str | None = "lp",
 ) -> arviz.InferenceData:
     """Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData`.
 
@@ -126,17 +126,17 @@ def sample_pymc_model(
     draws: int = 1000,
     *,
     tune: int = 1000,
-    chains: Optional[int] = None,
-    cores: Optional[int] = None,
-    random_seed: Optional[int] = None,
+    chains: int | None = None,
+    cores: int | None = None,
+    random_seed: int | None = None,
     progressbar: bool = True,
     init: Literal["auto", "adapt_diag", "jitter+adapt_diag", "adapt_full"] = "auto",
     jitter_max_retries: int = 10,
     return_inferencedata: bool = False,
-    model: Optional[pymc.Model] = None,
+    model: pymc.Model | None = None,
     target_accept: float = 0.8,
     max_treedepth: int = 10,
-) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
+) -> arviz.InferenceData | dict[str, ArrayLike]:
     """Generate approximate samples from posterior defined by a PyMC model.
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
@@ -273,8 +273,7 @@ def sample_pymc_model(
 
     if return_inferencedata:
         return convert_to_inference_data(traces, stats)
-    else:
-        return {k: np.stack(v) for k, v in traces.items()}
+    return {k: np.stack(v) for k, v in traces.items()}
 
 
 def get_stan_model_unconstrained_param_dim(model: stan.Model) -> int:
@@ -330,6 +329,7 @@ def construct_stan_model_functions(
                 model.param_names,
                 np.split(param_array, np.cumsum(param_size_list)[:-1]),
                 model.dims,
+                strict=True,
             )
         }
         trace_dict["lp"] = -neg_log_dens(state.pos)
@@ -357,9 +357,9 @@ def sample_stan_model(
     term_buffer: int = 50,
     window: int = 25,
     max_depth: int = 10,
-    seed: Optional[int] = None,
+    seed: int | None = None,
     return_inferencedata: bool = False,
-) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
+) -> arviz.InferenceData | dict[str, ArrayLike]:
     """Generate approximate samples from posterior defined by a Stan model.
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
@@ -478,5 +478,4 @@ def sample_stan_model(
 
     if return_inferencedata:
         return convert_to_inference_data(traces, stats)
-    else:
-        return {k: np.concatenate(v).swapaxes(0, -1) for k, v in traces.items()}
+    return {k: np.concatenate(v).swapaxes(0, -1) for k, v in traces.items()}

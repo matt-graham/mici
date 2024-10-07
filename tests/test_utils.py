@@ -6,7 +6,7 @@ import mici
 SEED = 3046987125
 
 
-@pytest.fixture()
+@pytest.fixture
 def rng():
     return np.random.default_rng(SEED)
 
@@ -36,8 +36,7 @@ def test_hash_array_not_equal(array_not_equal_pair):
 def get_val(obj):
     if isinstance(obj, mici.utils.LogRepFloat):
         return obj.val
-    else:
-        return obj
+    return obj
 
 
 class TestLogRepFloat:

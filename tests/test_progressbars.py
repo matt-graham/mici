@@ -38,18 +38,17 @@ def progress_bar_and_sequence(request):
             mici.progressbars.LabelledSequenceProgressBar(sequence),
             sequence.values(),
         )
-    else:
-        sequence = range(100)
-        if request.param == "DummyProgressBar":
-            return mici.progressbars.DummyProgressBar(sequence, None), sequence
-        elif request.param == "SequenceProgressBar":
-            return mici.progressbars.SequenceProgressBar(sequence, None), sequence
-        elif request.param == "_ProxySequenceProgressBar":
-            return (
-                mici.progressbars._ProxySequenceProgressBar(sequence, 0, SimpleQueue()),
-                sequence,
-            )
-        return None
+    sequence = range(100)
+    if request.param == "DummyProgressBar":
+        return mici.progressbars.DummyProgressBar(sequence, None), sequence
+    if request.param == "SequenceProgressBar":
+        return mici.progressbars.SequenceProgressBar(sequence, None), sequence
+    if request.param == "_ProxySequenceProgressBar":
+        return (
+            mici.progressbars._ProxySequenceProgressBar(sequence, 0, SimpleQueue()),
+            sequence,
+        )
+    return None
 
 
 def test_progress_bar_len(progress_bar_and_sequence):
@@ -60,6 +59,6 @@ def test_progress_bar_len(progress_bar_and_sequence):
 def test_progress_bar_iter(progress_bar_and_sequence):
     progress_bar, sequence = progress_bar_and_sequence
     with progress_bar:
-        for (val, iter_dict), val_orig in zip(progress_bar, sequence):
+        for (val, iter_dict), val_orig in zip(progress_bar, sequence, strict=True):
             assert val == val_orig
             assert isinstance(iter_dict, dict)

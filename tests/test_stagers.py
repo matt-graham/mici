@@ -26,23 +26,23 @@ class StagerTests:
 
 
 class TestWarmUpStager(StagerTests):
-    @pytest.fixture()
+    @pytest.fixture
     def adapters(self):
         return {
             "integration_transition": [mici.adapters.DualAveragingStepSizeAdapter()],
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def stager(self):
         return mici.stagers.WarmUpStager()
 
-    @pytest.fixture()
+    @pytest.fixture
     def n_warm_up_iter(self):
         return 1
 
 
 class TestWindowedWarmUpStager(StagerTests):
-    @pytest.fixture()
+    @pytest.fixture
     def adapters(self):
         return {
             "integration_transition": [

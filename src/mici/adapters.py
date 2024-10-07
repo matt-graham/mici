@@ -13,7 +13,6 @@ from mici.matrices import DensePositiveDefiniteMatrix, PositiveDiagonalMatrix
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
-    from typing import Optional, Union
 
     from numpy.random import Generator
     from numpy.typing import ArrayLike
@@ -86,10 +85,10 @@ class Adapter(ABC):
     @abstractmethod
     def finalize(
         self,
-        adapt_states: Union[AdapterState, Iterable[AdapterState]],
-        chain_states: Union[ChainState, Iterable[ChainState]],
+        adapt_states: AdapterState | Iterable[AdapterState],
+        chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
-        rngs: Union[Generator, Iterable[Generator]],
+        rngs: Generator | Iterable[Generator],
     ):
         """Update transition parameters based on final adapter state or states.
 
@@ -195,13 +194,13 @@ class DualAveragingStepSizeAdapter(Adapter):
     def __init__(
         self,
         adapt_stat_target: float = 0.8,
-        adapt_stat_func: Optional[AdaptationStatisticFunction] = None,
-        log_step_size_reg_target: Optional[float] = None,
+        adapt_stat_func: AdaptationStatisticFunction | None = None,
+        log_step_size_reg_target: float | None = None,
         log_step_size_reg_coefficient: float = 0.05,
         iter_decay_coeff: float = 0.75,
         iter_offset: int = 10,
         max_init_step_size_iters: int = 100,
-        log_step_size_reducer: Optional[ReducerFunction] = None,
+        log_step_size_reducer: ReducerFunction | None = None,
     ):
         """
         Args:
@@ -332,7 +331,7 @@ class DualAveragingStepSizeAdapter(Adapter):
                     not step_size_too_big and delta_h > delta_h_threshold
                 ):
                     return integrator.step_size
-                elif step_size_too_big:
+                if step_size_too_big:
                     integrator.step_size /= 2
                 else:
                     integrator.step_size *= 2
@@ -353,7 +352,7 @@ class DualAveragingStepSizeAdapter(Adapter):
     def update(
         self,
         adapt_state: AdapterState,
-        chain_state: ChainState,
+        chain_state: ChainState,  # noqa: ARG002
         trans_stats: TransitionStatistics,
         transition: Transition,
     ):
@@ -375,10 +374,10 @@ class DualAveragingStepSizeAdapter(Adapter):
 
     def finalize(
         self,
-        adapt_states: Union[AdapterState, Iterable[AdapterState]],
-        chain_states: Union[ChainState, Iterable[ChainState]],
+        adapt_states: AdapterState | Iterable[AdapterState],
+        chain_states: ChainState | Iterable[ChainState],  # noqa: ARG002
         transition: Transition,
-        rngs: Union[Generator, Iterable[Generator]],
+        rngs: Generator | Iterable[Generator],  # noqa: ARG002
     ):
         if isinstance(adapt_states, dict):
             transition.integrator.step_size = exp(
@@ -434,7 +433,7 @@ class OnlineVarianceMetricAdapter(Adapter):
     def initialize(
         self,
         chain_state: ChainState,
-        transition: Transition,
+        transition: Transition,  # noqa: ARG002
     ) -> AdapterState:
         return {
             "iter": 0,
@@ -446,8 +445,8 @@ class OnlineVarianceMetricAdapter(Adapter):
         self,
         adapt_state: AdapterState,
         chain_state: ChainState,
-        trans_stats: TransitionStatistics,
-        transition: Transition,
+        trans_stats: TransitionStatistics,  # noqa: ARG002
+        transition: Transition,  # noqa: ARG002
     ):
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online variance estimate
@@ -473,10 +472,10 @@ class OnlineVarianceMetricAdapter(Adapter):
 
     def finalize(
         self,
-        adapt_states: Union[AdapterState, Iterable[AdapterState]],
-        chain_states: Union[ChainState, Iterable[ChainState]],
+        adapt_states: AdapterState | Iterable[AdapterState],
+        chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
-        rngs: Union[Generator, Iterable[Generator]],
+        rngs: Generator | Iterable[Generator],
     ):
         if isinstance(adapt_states, dict):
             n_iter = adapt_states["iter"]
@@ -504,14 +503,14 @@ class OnlineVarianceMetricAdapter(Adapter):
                     var_est += (
                         mean_diff**2 * (adapt_state["iter"] * n_iter_prev) / n_iter
                     )
-        if n_iter < 2:
+        if n_iter < 2:  # noqa: PLR2004
             msg = "At least two chain samples required to compute a variance estimates."
             raise AdaptationError(msg)
         var_est /= n_iter - 1
         self._regularize_var_est(var_est, n_iter)
         transition.system.metric = PositiveDiagonalMatrix(var_est).inv
         # Resample momentum to account for altered distribution due to new metric
-        for chain_state, rng in zip(chain_states, rngs):
+        for chain_state, rng in zip(chain_states, rngs, strict=True):
             chain_state.mom = transition.system.sample_momentum(chain_state, rng)
 
 
@@ -562,7 +561,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
     def initialize(
         self,
         chain_state: ChainState,
-        transition: Transition,
+        transition: Transition,  # noqa: ARG002
     ) -> AdapterState:
         dim_pos = chain_state.pos.shape[0]
         dtype = chain_state.pos.dtype
@@ -576,8 +575,8 @@ class OnlineCovarianceMetricAdapter(Adapter):
         self,
         adapt_state: AdapterState,
         chain_state: ChainState,
-        trans_stats: TransitionStatistics,
-        transition: Transition,
+        trans_stats: TransitionStatistics,  # noqa: ARG002
+        transition: Transition,  # noqa: ARG002
     ):
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online covariance estimate
@@ -603,10 +602,10 @@ class OnlineCovarianceMetricAdapter(Adapter):
 
     def finalize(
         self,
-        adapt_states: Union[AdapterState, Iterable[AdapterState]],
-        chain_states: Union[ChainState, Iterable[ChainState]],
+        adapt_states: AdapterState | Iterable[AdapterState],
+        chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
-        rngs: Union[Generator, Iterable[Generator]],
+        rngs: Generator | Iterable[Generator],
     ):
         if isinstance(adapt_states, dict):
             n_iter = adapt_states["iter"]
@@ -634,12 +633,12 @@ class OnlineCovarianceMetricAdapter(Adapter):
                         * (adapt_state["iter"] * n_iter_prev)
                         / n_iter
                     )
-        if n_iter < 2:
+        if n_iter < 2:  # noqa: PLR2004
             msg = "At least two chain samples required to compute a variance estimates."
             raise AdaptationError(msg)
         covar_est /= n_iter - 1
         self._regularize_covar_est(covar_est, n_iter)
         transition.system.metric = DensePositiveDefiniteMatrix(covar_est).inv
         # Resample momentum to account for altered distribution due to new metric
-        for chain_state, rng in zip(chain_states, rngs):
+        for chain_state, rng in zip(chain_states, rngs, strict=True):
             chain_state.mom = transition.system.sample_momentum(chain_state, rng)

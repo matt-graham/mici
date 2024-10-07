@@ -17,8 +17,8 @@ from mici.solvers import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Any, Callable, Optional
+    from collections.abc import Callable, Sequence
+    from typing import Any
 
     from numpy.typing import ArrayLike
 
@@ -49,7 +49,7 @@ class Integrator(ABC):
     of the Hamiltonian dynamics.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: System, step_size: float | None = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
@@ -107,7 +107,7 @@ class TractableFlowIntegrator(Integrator):
     exactly.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: float | None = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -234,7 +234,7 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         system: TractableFlowSystem,
         free_coefficients: Sequence[float],
         *,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         initial_h1_flow_step: bool = True,
     ):
         r"""
@@ -270,7 +270,7 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         self.flows = [flow_a, flow_b] * (n_free_coefficients + 1) + [flow_a]
 
     def _step(self, state, time_step):
-        for coefficient, flow in zip(self.coefficients, self.flows):
+        for coefficient, flow in zip(self.coefficients, self.flows, strict=True):
             flow(state, coefficient * time_step)
 
 
@@ -288,7 +288,7 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: float | None = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -316,7 +316,7 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: float | None = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -350,7 +350,7 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(self, system: TractableFlowSystem, step_size: float | None = None):
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -430,11 +430,11 @@ class ImplicitLeapfrogIntegrator(Integrator):
     def __init__(
         self,
         system: System,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
+        fixed_point_solver_kwargs: dict[str, Any] | None = None,
     ):
         """
         Args:
@@ -581,11 +581,11 @@ class ImplicitMidpointIntegrator(Integrator):
     def __init__(
         self,
         system: System,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
+        fixed_point_solver_kwargs: dict[str, Any] | None = None,
     ):
         """
         Args:
@@ -847,12 +847,12 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     def __init__(
         self,
         system: ConstrainedTractableFlowSystem,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         n_inner_step: int = 1,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         projection_solver: ProjectionSolver = solve_projection_onto_manifold_newton,
-        projection_solver_kwargs: Optional[dict[str, Any]] = None,
+        projection_solver_kwargs: dict[str, Any] | None = None,
     ):
         """
         Args:

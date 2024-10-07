@@ -18,8 +18,6 @@ from mici.errors import (
 from mici.utils import LogRepFloat
 
 if TYPE_CHECKING:
-    from typing import Optional
-
     from numpy.random import Generator
     from numpy.typing import ArrayLike, DTypeLike
 
@@ -56,7 +54,7 @@ class Transition(ABC):
         """A set of names of state variables accessed by this transition."""
 
     @property
-    def statistic_types(self) -> Optional[dict[str, tuple[DTypeLike, ScalarLike]]]:
+    def statistic_types(self) -> dict[str, tuple[DTypeLike, ScalarLike]] | None:
         """A dictionary describing the statistics computed during transition.
 
         Either :code:`None` if no statistics are returned by :py:meth:`sample` method or
@@ -73,7 +71,7 @@ class Transition(ABC):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         """Sample a new chain state from the Markov transition kernel.
 
         Args:
@@ -111,7 +109,7 @@ class MomentumTransition(Transition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         """Sample a new momentum component to state.
 
         Assigns a new momentum component to state by sampling from a Markov transition
@@ -139,7 +137,7 @@ class IndependentMomentumTransition(MomentumTransition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         state.mom = self.system.sample_momentum(state, rng)
         return state, None
 
@@ -190,7 +188,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         if state.mom is None or self.mom_resample_coeff == 1:
             state.mom = self.system.sample_momentum(state, rng)
         elif self.mom_resample_coeff != 0:
@@ -238,7 +236,7 @@ class IntegrationTransition(Transition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         """Sample a position-momentum pair using integration based proposal(s).
 
         Samples new position and momentum values from a Markov transition kernel which
@@ -350,7 +348,7 @@ class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         return self._sample_n_step(state, self.n_step, rng)
 
 
@@ -399,7 +397,7 @@ class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
         self,
         state: ChainState,
         rng: Generator,
-    ) -> tuple[ChainState, Optional[dict[str, ScalarLike]]]:
+    ) -> tuple[ChainState, dict[str, ScalarLike] | None]:
         n_step = rng.integers(*self.n_step_range)
         return self._sample_n_step(state, n_step, rng)
 
@@ -577,7 +575,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
             tree.sum_mom,
         ):
             return True
-        elif tree.depth > 1 and self.do_extra_subtree_checks:
+        if tree.depth > 1 and self.do_extra_subtree_checks:
             return self.termination_criterion(
                 self.system,
                 neg_subtree.negative,
@@ -620,7 +618,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
     def _init_aux_vars(
         self,
         state: ChainState,
-        rng: Generator,
+        rng: Generator,  # noqa: ARG002
     ) -> dict[str, ScalarLike]:
         return {"h_init": self.system.h(state)}
 
@@ -651,7 +649,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         stats: dict[str, ScalarLike],
         rng: Generator,
         aux_vars: dict[str, ScalarLike],
-    ) -> tuple[bool, Optional[_SubTree], Optional[ChainState]]:
+    ) -> tuple[bool, _SubTree | None, ChainState | None]:
         if depth == 0:
             # recursion base case
             try:
@@ -726,7 +724,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         next_state = state
         for depth in range(self.max_tree_depth):
             # uniformly sample direction to expand tree in
-            direction = 2 * (rng.uniform() < 0.5) - 1
+            direction = 2 * (rng.uniform() < 0.5) - 1  # noqa: PLR2004
             state = tree.positive if direction == 1 else tree.negative
             state.dir = direction
             # expand tree by building new subtree of current depth
@@ -794,7 +792,7 @@ class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
     def _weight_function(
         self,
         h: ScalarLike,
-        aux_vars: dict[str, ScalarLike],
+        aux_vars: dict[str, ScalarLike],  # noqa: ARG002
     ) -> ScalarLike:
         return LogRepFloat(log_val=-h)
 

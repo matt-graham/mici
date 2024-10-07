@@ -62,7 +62,6 @@ def torus_function_and_derivatives(numpy_module):
 
 
 def linear_function_and_derivatives(_):
-
     constr_matrix = np.array([[1.0, -1.0, 2.0, 3.0], [-3.0, 2.0, 0.0, 5.0]])
 
     def constr(q):
@@ -82,7 +81,6 @@ def linear_function_and_derivatives(_):
 
 
 def quadratic_form_function_and_derivatives(_):
-
     matrix = np.array([[1.3, -0.2], [-0.2, 2.5]])
 
     def quadratic_form(q):
@@ -106,7 +104,6 @@ def quadratic_form_function_and_derivatives(_):
 
 
 def cubic_function_and_derivatives(_):
-
     def cubic(q):
         return (q**3).sum() / 6
 
@@ -128,7 +125,6 @@ def cubic_function_and_derivatives(_):
 
 
 def quartic_function_and_derivatives(_):
-
     def quartic(q):
         return (q**4).sum() / 24
 
@@ -171,17 +167,16 @@ def get_numpy_module(backend):
         import jax.numpy
 
         return jax.numpy
-    elif backend == "autograd":
+    if backend == "autograd":
         import autograd.numpy
 
         return autograd.numpy
-    elif backend == "symnum":
+    if backend == "symnum":
         import symnum.numpy
 
         return symnum.numpy
-    else:
-        msg = f"Unrecognised backend {backend}"
-        raise ValueError(msg)
+    msg = f"Unrecognised backend {backend}"
+    raise ValueError(msg)
 
 
 @pytest.fixture
@@ -193,7 +188,11 @@ def rng():
 def test_autodiff_fallback_with_no_backend_raises(diff_op_name):
     with pytest.raises(ValueError, match="None"):
         autodiff_fallback(
-            None, lambda q: q, diff_op_name, diff_op_name + "_function", None,
+            None,
+            lambda q: q,
+            diff_op_name,
+            diff_op_name + "_function",
+            None,
         )
 
 
@@ -205,7 +204,6 @@ def test_autodiff_fallback_with_invalid_diff_op_raises(backend_name):
 
 @pytest.mark.parametrize("backend_name", BACKENDS_AVAIALBLE)
 def test_wrap_function(backend_name):
-
     def function(q):
         return q**2
 
@@ -226,7 +224,10 @@ def test_wrap_function(backend_name):
     ids=lambda p: p[0].__name__,
 )
 def test_vector_function_diff_ops(
-    diff_op_name, backend_name, function_and_derivatives_and_dim, rng,
+    diff_op_name,
+    backend_name,
+    function_and_derivatives_and_dim,
+    rng,
 ):
     construct_function_and_derivatives, dim_c, dim_q = function_and_derivatives_and_dim
     numpy_module = get_numpy_module(backend_name)
@@ -248,6 +249,7 @@ def test_vector_function_diff_ops(
         for (function_name, expected_value_function), test_value in zip(
             function_and_derivatives.items(),
             reversed(derivatives_and_values),
+            strict=False,
         ):
             if function_name.startswith("mhp"):
                 m = rng.standard_normal((dim_c, dim_q))
@@ -269,7 +271,10 @@ def test_vector_function_diff_ops(
     ids=lambda p: p[0].__name__,
 )
 def test_scalar_function_diff_ops(
-    diff_op_name, backend_name, function_and_derivatives_and_dim_q, rng,
+    diff_op_name,
+    backend_name,
+    function_and_derivatives_and_dim_q,
+    rng,
 ):
     construct_function_and_derivatives, dim_q = function_and_derivatives_and_dim_q
     numpy_module = get_numpy_module(backend_name)
@@ -291,6 +296,7 @@ def test_scalar_function_diff_ops(
         for (function_name, expected_value_function), test_value in zip(
             function_and_derivatives.items(),
             reversed(derivatives_and_values),
+            strict=False,
         ):
             if function_name.startswith("mtp"):
                 m = rng.standard_normal((dim_q, dim_q))

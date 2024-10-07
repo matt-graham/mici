@@ -63,17 +63,15 @@ def return_numpy_arrays(function: callable) -> callable:
     def as_numpy_array(value):
         if callable(value):
             return return_numpy_arrays(value)
-        elif isinstance(value, jax.Array):
+        if isinstance(value, jax.Array):
             return np.asarray(value)
-        else:
-            return value
+        return value
 
     def function_returning_numpy_arrays(*args, **kwargs):
         return_value = function(*args, **kwargs)
         if isinstance(return_value, tuple):
             return tuple(as_numpy_array(value) for value in return_value)
-        else:
-            return as_numpy_array(return_value)
+        return as_numpy_array(return_value)
 
     return function_returning_numpy_arrays
 
@@ -132,8 +130,7 @@ def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
 
 
 def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
-    """
-    Makes a function that returns MHP, Jacobian and value of a function.
+    """Makes a function that returns MHP, Jacobian and value of a function.
 
     For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here
     defined as a function of a matrix `m` corresponding to
@@ -174,8 +171,7 @@ def hessian_grad_and_value(
 def mtp_hessian_grad_and_value(
     func: ScalarFunction,
 ) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
-    """
-    Makes a function that returns MTP, Jacobian and value of a function.
+    """Makes a function that returns MTP, Jacobian and value of a function.
 
     For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
     here defined as a function of a matrix `m` corresponding to

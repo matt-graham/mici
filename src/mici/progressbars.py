@@ -20,7 +20,7 @@ except ImportError:
 if TYPE_CHECKING:
     from collections.abc import Collection, Generator
     from queue import Queue
-    from typing import Any, Optional, TextIO
+    from typing import Any, TextIO
 
 
 ON_COLAB = (
@@ -33,19 +33,17 @@ def _in_zmq_interactive_shell() -> bool:
     """Check if in interactive ZMQ shell which supports updateable displays."""
     if not IPYTHON_AVAILABLE:
         return False
-    elif ON_COLAB:
+    if ON_COLAB:
         return True
-    else:
-        try:
-            shell = get_ipython().__class__.__name__
-            if shell == "ZMQInteractiveShell":
-                return True
-            elif shell == "TerminalInteractiveShell":
-                return False
-            else:
-                return False
-        except NameError:
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == "ZMQInteractiveShell":
+            return True
+        if shell == "TerminalInteractiveShell":
             return False
+        return False
+    except NameError:
+        return False
 
 
 def _create_display(obj, position: tuple[int, int]):
@@ -62,8 +60,7 @@ def _create_display(obj, position: tuple[int, int]):
     """
     if _in_zmq_interactive_shell():
         return ipython_display(obj, display_id=True)
-    else:
-        return FileDisplay(position)
+    return FileDisplay(position)
 
 
 def _format_time(total_seconds: float) -> str:
@@ -72,8 +69,7 @@ def _format_time(total_seconds: float) -> str:
     hours, mins = divmod(total_mins, 60)
     if hours != 0:
         return f"{hours:d}:{mins:02d}:{seconds:02d}"
-    else:
-        return f"{mins:02d}:{seconds:02d}"
+    return f"{mins:02d}:{seconds:02d}"
 
 
 def _update_stats_running_means(
@@ -95,7 +91,7 @@ class ProgressBar(abc.ABC):
     def __init__(
         self,
         sequence: Collection,
-        description: Optional[str],
+        description: str | None,
         position: tuple[int, int] = (0, 1),
     ):
         """
@@ -143,7 +139,7 @@ class ProgressBar(abc.ABC):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]],
+        iter_dict: dict[str, float] | None,
         *,
         refresh: bool = True,
     ):
@@ -173,7 +169,7 @@ class DummyProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]],
+        iter_dict: dict[str, float] | None,
         *,
         refresh: bool = True,
     ):
@@ -194,9 +190,9 @@ class SequenceProgressBar(ProgressBar):
     def __init__(
         self,
         sequence: Collection,
-        description: Optional[str] = None,
+        description: str | None = None,
         position: tuple[int, int] = (0, 1),
-        displays: Optional[Collection] = None,
+        displays: Collection | None = None,
         n_col: int = 10,
         unit: str = "it",
         min_refresh_time: float = 0.25,
@@ -262,21 +258,19 @@ class SequenceProgressBar(ProgressBar):
         """Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string."""
         if self.prop_complete == 0:
             return "?"
-        else:
-            mean_time = self._elapsed_time / self.counter
-            return (
-                f"{mean_time:.2f}s/{self._unit}"
-                if mean_time > 1
-                else f"{1/mean_time:.2f}{self._unit}/s"
-            )
+        mean_time = self._elapsed_time / self.counter
+        return (
+            f"{mean_time:.2f}s/{self._unit}"
+            if mean_time > 1
+            else f"{1/mean_time:.2f}{self._unit}/s"
+        )
 
     @property
     def est_remaining_time(self) -> str:
         """Estimated remaining time to completion formatted as string."""
         if self.prop_complete == 0:
             return "?"
-        else:
-            return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
+        return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
 
     @property
     def n_block_filled(self) -> int:
@@ -303,16 +297,14 @@ class SequenceProgressBar(ProgressBar):
         """Empty blocks string."""
         if self.prop_partial_block == 0:
             return self.GLYPHS[0] * self.n_block_empty
-        else:
-            return self.GLYPHS[0] * (self.n_block_empty - 1)
+        return self.GLYPHS[0] * (self.n_block_empty - 1)
 
     @property
     def partial_block(self) -> str:
         """Partial block character."""
         if self.prop_partial_block == 0:
             return ""
-        else:
-            return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
+        return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
 
     @property
     def progress_bar(self) -> str:
@@ -324,10 +316,9 @@ class SequenceProgressBar(ProgressBar):
         """CSS color property for HTML progress bar."""
         if self.counter == self.n_iter:
             return "var(--jp-success-color1, #4caf50)"
-        elif self._active:
+        if self._active:
             return "var(--jp-brand-color1, #2196f3)"
-        else:
-            return "var(--jp-error-color1, #f44336)"
+        return "var(--jp-error-color1, #f44336)"
 
     @property
     def stats(self) -> str:
@@ -362,7 +353,7 @@ class SequenceProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]] = None,
+        iter_dict: dict[str, float] | None = None,
         *,
         refresh: bool = True,
     ):
@@ -447,9 +438,9 @@ class LabelledSequenceProgressBar(ProgressBar):
     def __init__(
         self,
         labelled_sequence: dict[str, Any],
-        description: Optional[str] = None,
+        description: str | None = None,
         position: tuple[int, int] = (0, 1),
-        displays: Optional[Collection] = None,
+        displays: Collection | None = None,
     ):
         """
         Args:
@@ -511,6 +502,7 @@ class LabelledSequenceProgressBar(ProgressBar):
             for label, time in zip(
                 self._labels[: self._counter],
                 self._iter_times[: self._counter],
+                strict=True,
             )
         ]
 
@@ -542,7 +534,7 @@ class LabelledSequenceProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]] = None,
+        iter_dict: dict[str, float] | None = None,
         *,
         refresh: bool = True,
     ):
@@ -653,7 +645,7 @@ class FileDisplay:
     def __init__(
         self,
         position: tuple[int, int] = (0, 1),
-        file: Optional[TextIO] = None,
+        file: TextIO | None = None,
     ):
         r"""
         Args:

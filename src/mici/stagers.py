@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, NamedTuple
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Optional
 
     from mici.adapters import Adapter
     from mici.types import TraceFunction
@@ -25,7 +24,7 @@ class ChainStage(NamedTuple):
 
     n_iter: int
     adapters: dict[str, Iterable[Adapter]]
-    trace_funcs: Optional[tuple[TraceFunction]]
+    trace_funcs: tuple[TraceFunction] | None
     record_stats: bool
 
 
@@ -255,13 +254,13 @@ class WindowedWarmUpStager(Stager):
                 counter += n_window_iter
                 n_window_iter = int(self.slow_window_multiplier * n_window_iter)
             for i, n_iter in enumerate(slow_windows):
-                sampling_stages[
-                    f"Slow adaptive ({i + 1}/{len(slow_windows)})"
-                ] = ChainStage(
-                    n_iter=n_iter,
-                    adapters=adapters,
-                    trace_funcs=warm_up_trace_funcs,
-                    record_stats=record_stats,
+                sampling_stages[f"Slow adaptive ({i + 1}/{len(slow_windows)})"] = (
+                    ChainStage(
+                        n_iter=n_iter,
+                        adapters=adapters,
+                        trace_funcs=warm_up_trace_funcs,
+                        record_stats=record_stats,
+                    )
                 )
             # final fast adaptation stage
             sampling_stages["Final fast adaptive"] = ChainStage(

@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from mici.errors import ReadOnlyStateError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-    from typing import Any, Callable, Optional
+    from collections.abc import Callable, Iterable
+    from typing import Any
 
     from numpy.typing import ArrayLike
 
@@ -139,7 +139,7 @@ def cache_in_state_with_aux(
             if prim_key not in state._cache or state._cache[prim_key] is None:
                 vals = method(self, state)
                 if isinstance(vals, tuple):
-                    for k, v in zip(keys, vals):
+                    for k, v in zip(keys, vals, strict=False):
                         state._cache[k] = v
                 else:
                     state._cache[prim_key] = vals
@@ -169,10 +169,10 @@ class ChainState:
     def __init__(
         self,
         *,
-        _call_counts: Optional[dict[str, int]] = None,
+        _call_counts: dict[str, int] | None = None,
         _read_only: bool = False,
-        _dependencies: Optional[dict[str, set[str]]] = None,
-        _cache: Optional[dict[str, Any]] = None,
+        _dependencies: dict[str, set[str]] | None = None,
+        _cache: dict[str, Any] | None = None,
         **variables: ArrayLike,
     ):
         """Create a new `ChainState` instance.
@@ -237,9 +237,8 @@ class ChainState:
     def __getattr__(self, name: str) -> ArrayLike:
         if name in self._variables:
             return self._variables[name]
-        else:
-            msg = f"'{type(self).__name__}' object has no attribute '{name}'"
-            raise AttributeError(msg)
+        msg = f"'{type(self).__name__}' object has no attribute '{name}'"
+        raise AttributeError(msg)
 
     def __setattr__(self, name: str, value: ArrayLike):
         if self._read_only:
@@ -251,8 +250,7 @@ class ChainState:
             for dep in self._dependencies[name]:
                 self._cache[dep] = None
             return None
-        else:
-            return super().__setattr__(name, value)
+        return super().__setattr__(name, value)
 
     def __contains__(self, name: str) -> bool:
         return name in self._variables

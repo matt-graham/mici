@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable
-from typing import Any, Callable, TypeVar, Union
+from collections.abc import Callable, Collection, Iterable
+from typing import Any, TypeVar
 
 from numpy import number
 from numpy.typing import ArrayLike
@@ -13,13 +13,13 @@ from mici.states import ChainState
 from mici.systems import System
 from mici.utils import LogRepFloat
 
-ScalarLike = Union[bool, int, float, LogRepFloat, number]
+ScalarLike = bool | int | float | LogRepFloat | number
 """Scalar like objects."""
 
-MatrixLike = Union[ArrayLike, Matrix]
+MatrixLike = ArrayLike | Matrix
 """Matrix like objects."""
 
-MetricLike = Union[ArrayLike, PositiveDefiniteMatrix]
+MetricLike = ArrayLike | PositiveDefiniteMatrix
 """Metric (positive definite matrix) like objects."""
 
 TransitionStatistics = dict[str, ScalarLike]
@@ -40,7 +40,7 @@ ScalarFunction = Callable[[ArrayLike], ScalarLike]
 ArrayFunction = Callable[[ArrayLike], ArrayLike]
 """Function taking an array-like input and returning a array-like output."""
 
-GradientFunction = Callable[[ArrayLike], Union[ArrayLike, tuple[ArrayLike, ScalarLike]]]
+GradientFunction = Callable[[ArrayLike], ArrayLike | tuple[ArrayLike, ScalarLike]]
 """Function returning the gradient of a scalar-valued function.
 
 May optionally also return scalar-like value of  function.
@@ -48,7 +48,7 @@ May optionally also return scalar-like value of  function.
 
 HessianFunction = Callable[
     [ArrayLike],
-    Union[ArrayLike, tuple[ArrayLike, ArrayLike, ScalarLike]],
+    ArrayLike | tuple[ArrayLike, ArrayLike, ScalarLike],
 ]
 """Function returning the Hessian matrix of a scalar-valued function.
 
@@ -64,10 +64,8 @@ function.
 
 MatrixTressianProductFunction = Callable[
     [ArrayLike],
-    Union[
-        MatrixTressianProduct,
-        tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike],
-    ],
+    MatrixTressianProduct
+    | tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike],
 ]
 """Function returning a matrix-Tressian product function for a scalar function.
 
@@ -77,7 +75,7 @@ function.
 May optionally also return the Hessian matrix, gradient and value of function.
 """
 
-JacobianFunction = Callable[[ArrayLike], Union[ArrayLike, tuple[ArrayLike, ArrayLike]]]
+JacobianFunction = Callable[[ArrayLike], ArrayLike | tuple[ArrayLike, ArrayLike]]
 """Function returning the Jacobian of a array (vector) valued function.
 
 May optionally aslo return the array value of the function.
@@ -92,10 +90,7 @@ function.
 
 MatrixHessianProductFunction = Callable[
     [ArrayLike],
-    Union[
-        MatrixHessianProduct,
-        tuple[MatrixHessianProduct, ArrayLike, ArrayLike],
-    ],
+    MatrixHessianProduct | tuple[MatrixHessianProduct, ArrayLike, ArrayLike],
 ]
 """Function returning a matrix-Hessian product function for an array function.
 
@@ -114,7 +109,7 @@ d-dimensional array-valued function taking a 1-dimensional array as input.
 
 VectorJacobianProductFunction = Callable[
     [ArrayLike],
-    Union[VectorJacobianProduct, tuple[VectorJacobianProduct, ArrayLike]],
+    VectorJacobianProduct | tuple[VectorJacobianProduct, ArrayLike],
 ]
 """Function returning a vector-Jaccobian product function for an array function.
 
@@ -125,7 +120,7 @@ May optionally also return the array value of function.
 """
 
 T = TypeVar("T")
-PyTree = Union[dict[Any, "PyTree"], list["PyTree"], tuple["PyTree"], T]
+PyTree = dict[Any, "PyTree"] | list["PyTree"] | tuple["PyTree"] | T
 """Arbitrarily nested structure of Python dict, list and tuple types."""
 
 TraceFunction = Callable[[ChainState], dict[str, ArrayLike]]

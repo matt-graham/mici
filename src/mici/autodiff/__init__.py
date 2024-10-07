@@ -36,8 +36,9 @@ from typing import TYPE_CHECKING, NamedTuple
 from mici.autodiff import autograd_wrapper, jax_wrapper, symnum_wrapper
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from types import ModuleType
-    from typing import Callable, Optional
+    from typing import Optional
 
 
 """Names of valid differential operators.
@@ -72,7 +73,7 @@ class AutodiffBackend(NamedTuple):
 
     module: ModuleType
     available: bool
-    function_wrapper: Optional[Callable] = None
+    function_wrapper: Callable | None = None
 
 
 """Available autodifferentiation framework backends."""
@@ -104,7 +105,7 @@ def _get_backend(name: str):
     return _REGISTERED_BACKENDS[name]
 
 
-def wrap_function(function: Callable, backend: Optional[str]):
+def wrap_function(function: Callable, backend: str | None):
     """Apply function wrapper for automatic differentiation backend to a function.
 
     Backends may define a function wrapper which applies any post processing required to
@@ -124,16 +125,15 @@ def wrap_function(function: Callable, backend: Optional[str]):
     backend = _get_backend(backend)
     if backend.function_wrapper is not None:
         return backend.function_wrapper(function)
-    else:
-        return function
+    return function
 
 
 def autodiff_fallback(
-    diff_func: Optional[Callable],
+    diff_func: Callable | None,
     func: Callable,
     diff_op_name: str,
     name: str,
-    backend: Optional[str],
+    backend: str | None,
 ) -> Callable:
     """Generate derivative function automatically if not provided.
 
@@ -158,23 +158,21 @@ def autodiff_fallback(
     """
     if diff_func is not None:
         return diff_func
-    elif diff_func is None and backend is None:
+    if diff_func is None and backend is None:
         msg = (
             f"Automatic differentiation backend specified as `None` so {name} must"
             "be provided directly."
         )
         raise ValueError(msg)
-    elif diff_op_name not in DIFF_OPS:
+    if diff_op_name not in DIFF_OPS:
         msg = f"Differential operator {diff_op_name} is not defined."
         raise ValueError(msg)
-    else:
-        autodiff_backend = _get_backend(backend)
-        if autodiff_backend.available:
-            diff_func = getattr(autodiff_backend.module, diff_op_name)(func)
-            return wrap_function(diff_func, backend)
-        else:
-            msg = (
-                f"{backend} selected as autodiff backend but is not available in "
-                f"current environment therefore {name} must be provided directly."
-            )
-            raise ValueError(msg)
+    autodiff_backend = _get_backend(backend)
+    if autodiff_backend.available:
+        diff_func = getattr(autodiff_backend.module, diff_op_name)(func)
+        return wrap_function(diff_func, backend)
+    msg = (
+        f"{backend} selected as autodiff backend but is not available in "
+        f"current environment therefore {name} must be provided directly."
+    )
+    raise ValueError(msg)

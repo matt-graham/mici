@@ -14,7 +14,6 @@ except ImportError:
     AUTOGRAD_AVAILABLE = False
 
 if TYPE_CHECKING:
-
     from mici.types import (
         ArrayFunction,
         GradientFunction,
@@ -41,8 +40,7 @@ def grad_and_value(func: ScalarFunction) -> GradientFunction:
 
 
 def vjp_and_value(func: ScalarFunction) -> VectorJacobianProductFunction:
-    """
-    Makes a function that returns vector-Jacobian-product and value of a function.
+    """Makes a function that returns vector-Jacobian-product and value of a function.
 
     For a vector-valued function `fun` the vector-Jacobian-product (VJP) is here
     defined as a function of a vector `v` corresponding to
@@ -76,8 +74,7 @@ def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
 
 
 def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
-    """
-    Makes a function that returns MHP, Jacobian and value of a function.
+    """Makes a function that returns MHP, Jacobian and value of a function.
 
     For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here
     defined as a function of a matrix `m` corresponding to
@@ -117,8 +114,7 @@ def hessian_grad_and_value(func: ArrayFunction) -> HessianFunction:
 
 
 def mtp_hessian_grad_and_value(func: ArrayFunction) -> MatrixTressianProductFunction:
-    """
-    Makes a function that returns MTP, Jacobian and value of a function.
+    """Makes a function that returns MTP, Jacobian and value of a function.
 
     For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
     here defined as a function of a matrix `m` corresponding to
