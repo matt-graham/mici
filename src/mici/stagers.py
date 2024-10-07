@@ -164,7 +164,7 @@ class WindowedWarmUpStager(Stager):
         n_init_fast_stage_iter: int = 75,
         n_final_fast_stage_iter: int = 50,
         slow_window_multiplier: float = 2.0,
-    ):
+    ) -> None:
         """
         Args:
             n_init_slow_window_iter: Number of iterations in the initial (smallest)

@@ -16,12 +16,17 @@ except ImportError:
 if TYPE_CHECKING:
     from mici.types import (
         ArrayFunction,
+        ArrayLike,
         GradientFunction,
         HessianFunction,
         JacobianFunction,
+        MatrixHessianProduct,
         MatrixHessianProductFunction,
+        MatrixTressianProduct,
         MatrixTressianProductFunction,
         ScalarFunction,
+        ScalarLike,
+        VectorJacobianProduct,
         VectorJacobianProductFunction,
     )
 
@@ -29,7 +34,7 @@ if TYPE_CHECKING:
 def grad_and_value(func: ScalarFunction) -> GradientFunction:
     """Makes a function that returns both gradient and value of a function."""
 
-    def grad_and_value_func(x):
+    def grad_and_value_func(x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         vjp, val = make_vjp(func, x)
         if vspace(val).size != 1:
             msg = "grad_and_value only applies to real scalar-output functions."
@@ -54,7 +59,7 @@ def vjp_and_value(func: ScalarFunction) -> VectorJacobianProductFunction:
         j[i, k] = ∂f[i] / ∂x[k]
     """
 
-    def vjp_and_value_func(x):
+    def vjp_and_value_func(x: ArrayLike) -> VectorJacobianProduct:
         return make_vjp(func, x)
 
     return vjp_and_value_func
@@ -63,7 +68,7 @@ def vjp_and_value(func: ScalarFunction) -> VectorJacobianProductFunction:
 def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
     """Makes a function that returns both the Jacobian and value of a function."""
 
-    def jacobian_and_value_func(x):
+    def jacobian_and_value_func(x: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
         vjp, val = make_vjp(func, x)
         val_vspace = vspace(val)
         jacobian_shape = val_vspace.shape + vspace(x).shape
@@ -88,7 +93,9 @@ def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
         h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
     """
 
-    def mhp_jacobian_and_value_func(x):
+    def mhp_jacobian_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[MatrixHessianProduct, ArrayLike, ArrayLike]:
         mhp, (jacob, val) = make_vjp(lambda x: atuple(jacobian_and_value(func)(x)), x)
         return lambda m: mhp((m, vspace(val).zeros())), jacob, val
 
@@ -98,11 +105,13 @@ def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
 def hessian_grad_and_value(func: ArrayFunction) -> HessianFunction:
     """Makes a function that returns the Hessian, gradient & value of a function."""
 
-    def grad_func(x):
+    def grad_func(x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         vjp, val = make_vjp(func, x)
         return vjp(vspace(val).ones()), val
 
-    def hessian_grad_and_value_func(x):
+    def hessian_grad_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
         x_vspace = vspace(x)
         vjp_grad, (grad, val) = make_vjp(lambda x: atuple(grad_func(x)), x)
         hessian_shape = x_vspace.shape + x_vspace.shape
@@ -127,7 +136,9 @@ def mtp_hessian_grad_and_value(func: ArrayFunction) -> MatrixTressianProductFunc
         t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
     """
 
-    def mtp_hessian_grad_and_value_func(x):
+    def mtp_hessian_grad_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
         mtp, (hessian, grad, val) = make_vjp(
             lambda x: atuple(hessian_grad_and_value(func)(x)),
             x,

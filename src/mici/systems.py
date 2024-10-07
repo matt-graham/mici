@@ -63,7 +63,7 @@ class System(ABC):
         *,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -140,7 +140,7 @@ class System(ABC):
         """
         return self.grad_neg_log_dens(state)
 
-    def h1_flow(self, state: ChainState, dt: ScalarLike):
+    def h1_flow(self, state: ChainState, dt: ScalarLike) -> None:
         """Apply exact flow map corresponding to `h1` Hamiltonian component.
 
         `state` argument is modified in place.
@@ -250,7 +250,7 @@ class TractableFlowSystem(System):
     """
 
     @abstractmethod
-    def h2_flow(self, state: ChainState, dt: ScalarLike):
+    def h2_flow(self, state: ChainState, dt: ScalarLike) -> None:
         """Apply exact flow map corresponding to `h2` Hamiltonian component.
 
         `state` argument is modified in place.
@@ -292,7 +292,7 @@ class EuclideanMetricSystem(TractableFlowSystem):
         metric: MetricLike | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -359,7 +359,7 @@ class EuclideanMetricSystem(TractableFlowSystem):
     def dh_dpos(self, state: ChainState) -> ArrayLike:
         return self.dh1_dpos(state)
 
-    def h2_flow(self, state: ChainState, dt: ScalarLike):
+    def h2_flow(self, state: ChainState, dt: ScalarLike) -> None:
         state.pos += dt * self.dh2_dmom(state)
 
     def sample_momentum(self, state: ChainState, rng: Generator) -> ArrayLike:
@@ -409,7 +409,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
         metric: MetricLike | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -461,7 +461,7 @@ class GaussianEuclideanMetricSystem(EuclideanMetricSystem):
     def dh2_dpos(self, state: ChainState) -> ArrayLike:
         return state.pos
 
-    def h2_flow(self, state: ChainState, dt: ScalarLike):
+    def h2_flow(self, state: ChainState, dt: ScalarLike) -> None:
         omega = 1.0 / self.metric.eigval**0.5
         sin_omega_dt, cos_omega_dt = np.sin(omega * dt), np.cos(omega * dt)
         eigvec_trans_pos = self.metric.eigvec.T @ state.pos
@@ -691,7 +691,7 @@ class ConstrainedEuclideanMetricSystem(
         grad_neg_log_dens: GradientFunction | None = None,
         jacob_constr: JacobianFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         r"""
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -891,7 +891,7 @@ class DenseConstrainedEuclideanMetricSystem(ConstrainedEuclideanMetricSystem):
         jacob_constr: JacobianFunction | None = None,
         mhp_constr: MatrixHessianProductFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1052,7 +1052,7 @@ class GaussianDenseConstrainedEuclideanMetricSystem(
         jacob_constr: JacobianFunction | None = None,
         mhp_constr: MatrixHessianProductFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1235,7 +1235,7 @@ class RiemannianMetricSystem(System):
         grad_neg_log_dens: GradientFunction | None = None,
         metric_kwargs: dict[str, Any] | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1423,7 +1423,7 @@ class ScalarRiemannianMetricSystem(RiemannianMetricSystem):
         vjp_metric_scalar_func: VectorJacobianProductFunction | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1511,7 +1511,7 @@ class DiagonalRiemannianMetricSystem(RiemannianMetricSystem):
         vjp_metric_diagonal_func: VectorJacobianProductFunction | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1591,7 +1591,7 @@ class CholeskyFactoredRiemannianMetricSystem(RiemannianMetricSystem):
         vjp_metric_chol_func: VectorJacobianProductFunction | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1673,7 +1673,7 @@ class DenseRiemannianMetricSystem(RiemannianMetricSystem):
         vjp_metric_func: VectorJacobianProductFunction | None = None,
         grad_neg_log_dens: GradientFunction | None = None,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative
@@ -1781,7 +1781,7 @@ class SoftAbsRiemannianMetricSystem(RiemannianMetricSystem):
         mtp_neg_log_dens: MatrixTressianProductFunction | None = None,
         softabs_coeff: ScalarLike = 1.0,
         backend: str | None = None,
-    ):
+    ) -> None:
         """
         Args:
             neg_log_dens: Function which given a position array returns the negative

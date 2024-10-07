@@ -93,7 +93,7 @@ _REGISTERED_BACKENDS = {
 }
 
 
-def _get_backend(name: str):
+def _get_backend(name: str) -> AutodiffBackend:
     # Normalize name string to all lowercase to make invariant to capitalization
     name = name.lower()
     if name not in _REGISTERED_BACKENDS:
@@ -105,7 +105,7 @@ def _get_backend(name: str):
     return _REGISTERED_BACKENDS[name]
 
 
-def wrap_function(function: Callable, backend: str | None):
+def wrap_function(function: Callable, backend: str | None) -> Callable:
     """Apply function wrapper for automatic differentiation backend to a function.
 
     Backends may define a function wrapper which applies any post processing required to

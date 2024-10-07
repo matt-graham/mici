@@ -16,9 +16,15 @@ if TYPE_CHECKING:
     import arviz
     import pymc
     import stan
-    from numpy.typing import ArrayLike
 
-    from mici.types import GradientFunction, ScalarFunction, TraceFunction
+    from mici.states import ChainState
+    from mici.types import (
+        ArrayLike,
+        GradientFunction,
+        ScalarFunction,
+        ScalarLike,
+        TraceFunction,
+    )
 
 
 def convert_to_inference_data(
@@ -92,15 +98,15 @@ def construct_pymc_model_functions(
     val_and_grad_log_dens = model.logp_dlogp_function()
     val_and_grad_log_dens.set_extra_values({})
 
-    def grad_neg_log_dens(pos):
+    def grad_neg_log_dens(pos: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         val, grad = val_and_grad_log_dens(pos)
         return -grad, -val
 
-    def neg_log_dens(pos):
+    def neg_log_dens(pos: ArrayLike) -> ScalarLike:
         val, _ = val_and_grad_log_dens(pos)
         return -val
 
-    def trace_func(state):
+    def trace_func(state: ChainState) -> dict[str, ScalarLike]:
         raveled_vars = pymc.blocking.RaveledVars(
             state.pos,
             raveled_initial_point.point_map_info,
@@ -314,15 +320,15 @@ def construct_stan_model_functions(
         parameter values from chain state for tracing during sampling.
     """
 
-    def neg_log_dens(u):
+    def neg_log_dens(u: ArrayLike) -> ScalarLike:
         return -model.log_prob(list(u))
 
-    def grad_neg_log_dens(u):
+    def grad_neg_log_dens(u: ArrayLike) -> ArrayLike:
         return -np.array(model.grad_log_prob(list(u)))
 
     param_size_list = [np.prod(dim, dtype=np.int64) for dim in model.dims]
 
-    def trace_func(state):
+    def trace_func(state: ChainState) -> dict[str, ScalarLike]:
         param_array = np.array(model.constrain_pars(list(state.pos)))
         trace_dict = {
             name: val.reshape(shape)

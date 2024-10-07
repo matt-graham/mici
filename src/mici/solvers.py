@@ -14,15 +14,15 @@ if TYPE_CHECKING:
         ConstrainedEuclideanMetricSystem,
         ConstrainedTractableFlowSystem,
     )
-    from mici.types import ArrayFunction, ArrayLike, ScalarFunction
+    from mici.types import ArrayFunction, ArrayLike, ScalarFunction, ScalarLike
 
 
-def euclidean_norm(vct):
+def euclidean_norm(vct: ArrayLike) -> ScalarLike:
     """Calculate the Euclidean (L-2) norm of a vector."""
     return (vct**2).sum() ** 0.5
 
 
-def maximum_norm(vct):
+def maximum_norm(vct: ArrayLike) -> ScalarLike:
     """Calculate the maximum (L-infinity) norm of a vector."""
     return (abs(vct)).max()
 
@@ -30,7 +30,9 @@ def maximum_norm(vct):
 class FixedPointSolver(Protocol):
     """Solver for fixed point equation :code:`func(x) = x`."""
 
-    def __call__(self, func: ArrayFunction, x0: ArrayLike, **kwargs) -> ArrayLike:
+    def __call__(
+        self, func: ArrayFunction, x0: ArrayLike, **kwargs: float | ScalarFunction
+    ) -> ArrayLike:
         """Solve fixed point equation.
 
         Args:
@@ -174,7 +176,7 @@ class ProjectionSolver(Protocol):
         state_prev: ChainState,
         time_step: float,
         system: ConstrainedTractableFlowSystem,
-        **kwargs,
+        **kwargs: float | ScalarFunction,
     ) -> ChainState:
         """Solve for projection on to manifold step.
 

@@ -88,6 +88,9 @@ target-version = "py310"
 
 [tool.ruff.lint]
 ignore = [
+    "ANN003",  # missing-type-kwargs
+    "ANN101",  # missing-type-self
+    "ANN102",  # missing-type-cls
     "D102",  # missing docstrings on public methods
     "D105",  # missing docstrings on magic methods
     "D107",  # missing docstring on __init__ method
@@ -97,9 +100,10 @@ ignore = [
     "COM812",  # missing-trailing-comma (conflicts with ruff format)
     "ISC001",  # single-line-implicit-string-concatenation (conflifts with ruff format)
 ]
-per-file-ignores = { "test_*" = ["ARG002", "D100", "D101", "D102", "D103", "INP001", "S101", "SLF"], "__init__.py" = ["F401"] }
+per-file-ignores = { "test_*" = ["ANN", "ARG002", "D100", "D101", "D102", "D103", "INP001", "S101", "SLF"], "__init__.py" = ["F401"] }
 select = [
     "A",
+    "ANN",
     "ARG",
     "ASYNC",
     "B",

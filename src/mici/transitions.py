@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _process_integrator_error(exception: Error, stats: dict[str, ScalarLike]):
+def _process_integrator_error(exception: Error, stats: dict[str, ScalarLike]) -> None:
     logger.info(f"Terminating trajectory due to error:\n{exception!s}")
     # Only set stats fields to True if exception is of matching type.
     # Corresponding fields should be set to False by default for transitions
@@ -96,7 +96,7 @@ class MomentumTransition(Transition):
     def state_variables(self) -> set[str]:
         return {"mom"}
 
-    def __init__(self, system: System):
+    def __init__(self, system: System) -> None:
         """
         Args:
             system: Hamiltonian system defining conditional distribution on momentum to
@@ -170,7 +170,7 @@ class CorrelatedMomentumTransition(MomentumTransition):
          B, 268(CERN-TH-6172-91), pp.247-252.
     """
 
-    def __init__(self, system: System, mom_resample_coeff: float = 1.0):
+    def __init__(self, system: System, mom_resample_coeff: float = 1.0) -> None:
         """
         Args:
             system: Hamiltonian system defining conditional distribution on momentum to
@@ -214,7 +214,7 @@ class IntegrationTransition(Transition):
     def statistic_types(self) -> dict[str, tuple[DTypeLike, ScalarLike]]:
         return self._statistic_types
 
-    def __init__(self, system: System, integrator: Integrator):
+    def __init__(self, system: System, integrator: Integrator) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -268,7 +268,7 @@ class MetropolisIntegrationTransition(IntegrationTransition):
     integration direction will be the negation of its initial value.
     """
 
-    def __init__(self, system: System, integrator: Integrator):
+    def __init__(self, system: System, integrator: Integrator) -> None:
         super().__init__(system, integrator)
         self._statistic_types["metrop_accept_prob"] = (np.float64, np.nan)
 
@@ -330,7 +330,7 @@ class MetropolisStaticIntegrationTransition(MetropolisIntegrationTransition):
          Monte Carlo, 2(11), p.2.
     """
 
-    def __init__(self, system: System, integrator: Integrator, n_step: int):
+    def __init__(self, system: System, integrator: Integrator, n_step: int) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -374,7 +374,7 @@ class MetropolisRandomIntegrationTransition(MetropolisIntegrationTransition):
         system: System,
         integrator: Integrator,
         n_step_range: tuple[int, int],
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -511,7 +511,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         max_delta_h: float = 1000.0,
         termination_criterion: TerminationCriterion = riemannian_no_u_turn_criterion,
         do_extra_subtree_checks: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -639,7 +639,7 @@ class DynamicIntegrationTransition(IntegrationTransition):
         pass
 
     @abstractmethod
-    def _check_divergence(self, h: float, aux_vars: dict[str, ScalarLike]):
+    def _check_divergence(self, h: float, aux_vars: dict[str, ScalarLike]) -> None:
         pass
 
     def _build_tree(
@@ -803,7 +803,7 @@ class MultinomialDynamicIntegrationTransition(DynamicIntegrationTransition):
     ) -> ScalarLike:
         return min(numerator / denominator, 1)
 
-    def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]):
+    def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]) -> None:
         if h - aux_vars["h_init"] > self.max_delta_h:
             msg = f"delta_h = {h - aux_vars['h_init']}"
             raise HamiltonianDivergenceError(msg)
@@ -852,7 +852,7 @@ class SliceDynamicIntegrationTransition(DynamicIntegrationTransition):
     ) -> ScalarLike:
         return min(numerator / denominator, 1) if denominator > 0 else min(numerator, 1)
 
-    def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]):
+    def _check_divergence(self, h: ScalarLike, aux_vars: dict[str, ScalarLike]) -> None:
         if h + aux_vars["log_u"] > self.max_delta_h:
             msg = f"delta_h = {h + aux_vars['log_u']}"
             raise HamiltonianDivergenceError(msg)

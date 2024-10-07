@@ -66,7 +66,7 @@ class Adapter(ABC):
         chain_state: ChainState,
         trans_stats: TransitionStatistics,
         transition: Transition,
-    ):
+    ) -> None:
         """Update adapter state after sampling from transition being adapted.
 
         Args:
@@ -89,7 +89,7 @@ class Adapter(ABC):
         chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
         rngs: Generator | Iterable[Generator],
-    ):
+    ) -> None:
         """Update transition parameters based on final adapter state or states.
 
         Optionally, if multiple adapter states are available, e.g. from a set of
@@ -201,7 +201,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         iter_offset: int = 10,
         max_init_step_size_iters: int = 100,
         log_step_size_reducer: ReducerFunction | None = None,
-    ):
+    ) -> None:
         """
         Args:
             adapt_stat_target: Target value for the transition statistic
@@ -355,7 +355,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         chain_state: ChainState,  # noqa: ARG002
         trans_stats: TransitionStatistics,
         transition: Transition,
-    ):
+    ) -> None:
         adapt_state["iter"] += 1
         error_weight = 1 / (self.iter_offset + adapt_state["iter"])
         adapt_state["adapt_stat_error"] *= 1 - error_weight
@@ -378,7 +378,7 @@ class DualAveragingStepSizeAdapter(Adapter):
         chain_states: ChainState | Iterable[ChainState],  # noqa: ARG002
         transition: Transition,
         rngs: Generator | Iterable[Generator],  # noqa: ARG002
-    ):
+    ) -> None:
         if isinstance(adapt_states, dict):
             transition.integrator.step_size = exp(
                 adapt_states["smoothed_log_step_size"],
@@ -416,7 +416,7 @@ class OnlineVarianceMetricAdapter(Adapter):
 
     is_fast = False
 
-    def __init__(self, reg_iter_offset: int = 5, reg_scale: float = 1e-3):
+    def __init__(self, reg_iter_offset: int = 5, reg_scale: float = 1e-3) -> None:
         """
         Args:
             reg_iter_offset: Iteration offset used for calculating iteration dependent
@@ -447,7 +447,7 @@ class OnlineVarianceMetricAdapter(Adapter):
         chain_state: ChainState,
         trans_stats: TransitionStatistics,  # noqa: ARG002
         transition: Transition,  # noqa: ARG002
-    ):
+    ) -> None:
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online variance estimate
         # https://en.wikipedia.org/wiki/
@@ -459,7 +459,7 @@ class OnlineVarianceMetricAdapter(Adapter):
             chain_state.pos - adapt_state["mean"]
         )
 
-    def _regularize_var_est(self, var_est: ArrayLike, n_iter: int):
+    def _regularize_var_est(self, var_est: ArrayLike, n_iter: int) -> None:
         """Update variance estimates by regularizing towards common scalar.
 
         Performed in place to prevent further array allocations.
@@ -476,7 +476,7 @@ class OnlineVarianceMetricAdapter(Adapter):
         chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
         rngs: Generator | Iterable[Generator],
-    ):
+    ) -> None:
         if isinstance(adapt_states, dict):
             n_iter = adapt_states["iter"]
             var_est = adapt_states.pop("sum_diff_sq")
@@ -545,7 +545,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
 
     is_fast = False
 
-    def __init__(self, reg_iter_offset: int = 5, reg_scale: float = 1e-3):
+    def __init__(self, reg_iter_offset: int = 5, reg_scale: float = 1e-3) -> None:
         """
         Args:
             reg_iter_offset: Iteration offset used for calculating iteration
@@ -577,7 +577,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
         chain_state: ChainState,
         trans_stats: TransitionStatistics,  # noqa: ARG002
         transition: Transition,  # noqa: ARG002
-    ):
+    ) -> None:
         # Use Welford (1962) incremental algorithm to update statistics to
         # calculate online covariance estimate
         # https://en.wikipedia.org/wiki/
@@ -589,7 +589,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
             pos_minus_mean[None, :] * (chain_state.pos - adapt_state["mean"])[:, None]
         )
 
-    def _regularize_covar_est(self, covar_est: ArrayLike, n_iter: int):
+    def _regularize_covar_est(self, covar_est: ArrayLike, n_iter: int) -> None:
         """Update covariance estimate by regularising towards identity.
 
         Performed in place to prevent further array allocations.
@@ -606,7 +606,7 @@ class OnlineCovarianceMetricAdapter(Adapter):
         chain_states: ChainState | Iterable[ChainState],
         transition: Transition,
         rngs: Generator | Iterable[Generator],
-    ):
+    ) -> None:
         if isinstance(adapt_states, dict):
             n_iter = adapt_states["iter"]
             covar_est = adapt_states.pop("sum_diff_outer")

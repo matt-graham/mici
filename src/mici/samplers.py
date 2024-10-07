@@ -9,7 +9,7 @@ import tempfile
 from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from pickle import PicklingError
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, NamedTuple, TypeVar
 from warnings import warn
 
 import numpy as np
@@ -79,13 +79,13 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-def _ignore_sigint_initializer():
+def _ignore_sigint_initializer() -> None:
     """Initializer for processes to force ignoring SIGINT interrupt signals."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 @contextmanager
-def _ignore_sigint_manager():
+def _ignore_sigint_manager() -> None:
     """Context-managed SyncManager which ignores SIGINT interrupt signals."""
     manager = SyncManager()
     try:
@@ -96,7 +96,7 @@ def _ignore_sigint_manager():
 
 
 @contextmanager
-def _pool_context_manager(n_process: int):
+def _pool_context_manager(n_process: int) -> None:
     """Context-manager for process pool that ensures clean exiting.
 
     Compared to built-in context-manager protocol implementation on Pool object which
@@ -213,7 +213,10 @@ def _file_paths_to_memmaps(pytree: PyTree[Path]) -> PyTree[np.memmap]:
     return pytree
 
 
-def _zip_dict(**kwargs) -> Generator[dict, None, None]:
+T = TypeVar("T")
+
+
+def _zip_dict(**kwargs: Iterable[T]) -> Generator[dict[str, T], None, None]:
     """Zip iterable keyword arguments in to an iterable of dictionaries.
 
     Acts analogously to built-in `zip` in taking a variable number of iterables as
@@ -347,7 +350,7 @@ def _update_chain_stats(
     chain_stats: dict[str, dict[str, ArrayLike]],
     trans_key: str,
     trans_stats: dict[str, ArrayLike],
-):
+) -> None:
     """Update chain statistics arrays for current chain iteration."""
     if trans_stats is not None:
         for key, val in trans_stats.items():
@@ -359,7 +362,7 @@ def _update_monitor_stats(
     monitor_dict: dict[str, ArrayLike],
     trans_key: str,
     trans_stats: dict[str, ArrayLike],
-):
+) -> None:
     """Update dictionary of per-iteration monitored statistics."""
     if trans_key in monitor_stats:
         for stats_key in monitor_stats[trans_key]:
@@ -380,7 +383,7 @@ def _update_monitor_stats(
 def _flush_memmap_chain_data(
     chain_traces: dict[str, ArrayLike],
     chain_stats: dict[str, dict[str, ArrayLike]],
-):
+) -> None:
     """Flush all pending writes to memory-mapped chain data arrays to disk."""
     if chain_traces is not None:
         for trace in chain_traces.values():
@@ -534,9 +537,9 @@ def _sample_chain(  # noqa: PLR0912
                 if chain_traces is not None and trace_funcs is not None:
                     for trace_func in trace_funcs:
                         for key, val in trace_func(state).items():
-                            chain_traces[key][sample_index + sampling_index_offset] = (
-                                val
-                            )
+                            chain_traces[key][
+                                sample_index + sampling_index_offset
+                            ] = val
     except KeyboardInterrupt as e:
         exception = e
         logger.exception(
@@ -622,7 +625,7 @@ def _sample_chains_sequential(
 def _sample_chains_worker(
     chain_queue: Queue,
     iter_queue: Queue,
-    common_kwargs,
+    common_kwargs: dict,
 ) -> list[tuple[int, tuple[ChainState, dict[str, list[AdapterState]]]]]:
     """Worker process function for parallel sampling of chains.
 
@@ -674,7 +677,13 @@ def _sample_chains_worker(
     return chain_outputs
 
 
-def _finalize_adapters(adapter_states_dict, chain_states, adapters, transitions, rngs):
+def _finalize_adapters(
+    adapter_states_dict: dict[str, Iterable[AdapterState]],
+    chain_states: Iterable[ChainState],
+    adapters: dict[str, Iterable[Adapter]],
+    transitions: dict[str, Transition],
+    rngs: Iterable[Generator],
+) -> None:
     """Finalize adapter updates to transitions based on final adapter states."""
     for trans_key, adapter_states_list in adapter_states_dict.items():
         for adapter_states, adapter in zip(
@@ -828,7 +837,7 @@ class MarkovChainMonteCarloMethod:
     of Markov transition operators.
     """
 
-    def __init__(self, rng: Generator, transitions: dict[str, Transition]):
+    def __init__(self, rng: Generator, transitions: dict[str, Transition]) -> None:
         """
         Args:
             rng: Numpy random number generator.
@@ -1174,7 +1183,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
         rng: Generator,
         integration_transition: IntegrationTransition,
         momentum_transition: MomentumTransition | None = None,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated, corresponding to joint
@@ -1412,7 +1421,7 @@ class StaticMetropolisHMC(HamiltonianMonteCarlo):
         rng: Generator,
         n_step: int,
         momentum_transition: MomentumTransition | None = None,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -1441,7 +1450,7 @@ class StaticMetropolisHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].n_step
 
     @n_step.setter
-    def n_step(self, value: int):
+    def n_step(self, value: int) -> None:
         if value <= 0:
             msg = "n_step must be non-negative"
             raise ValueError(msg)
@@ -1481,7 +1490,7 @@ class RandomMetropolisHMC(HamiltonianMonteCarlo):
         rng: Generator,
         n_step_range: tuple[int, int],
         momentum_transition: MomentumTransition | None = None,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -1514,7 +1523,7 @@ class RandomMetropolisHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].n_step_range
 
     @n_step_range.setter
-    def n_step_range(self, value: tuple[int, int]):
+    def n_step_range(self, value: tuple[int, int]) -> None:
         n_step_lower, n_step_upper = value
         if not (n_step_lower > 0 and n_step_lower < n_step_upper):
             msg = "Range bounds must be non-negative and first entry less than last."
@@ -1558,7 +1567,7 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
         termination_criterion: TerminationCriterion = riemannian_no_u_turn_criterion,
         do_extra_subtree_checks: bool = True,
         momentum_transition: MomentumTransition | None = None,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -1617,7 +1626,7 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].max_tree_depth
 
     @max_tree_depth.setter
-    def max_tree_depth(self, value: int):
+    def max_tree_depth(self, value: int) -> None:
         if value <= 0:
             msg = "max_tree_depth must be non-negative"
             raise ValueError(msg)
@@ -1629,7 +1638,7 @@ class DynamicMultinomialHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].max_delta_h
 
     @max_delta_h.setter
-    def max_delta_h(self, value: float):
+    def max_delta_h(self, value: float) -> None:
         self.transitions["integration_transition"].max_delta_h = value
 
 
@@ -1666,7 +1675,7 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
         termination_criterion: TerminationCriterion = euclidean_no_u_turn_criterion,
         do_extra_subtree_checks: bool = False,
         momentum_transition: MomentumTransition | None = None,
-    ):
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to be simulated.
@@ -1725,7 +1734,7 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].max_tree_depth
 
     @max_tree_depth.setter
-    def max_tree_depth(self, value: int):
+    def max_tree_depth(self, value: int) -> None:
         if value <= 0:
             msg = "max_tree_depth must be non-negative"
             raise ValueError(msg)
@@ -1737,5 +1746,5 @@ class DynamicSliceHMC(HamiltonianMonteCarlo):
         return self.transitions["integration_transition"].max_delta_h
 
     @max_delta_h.setter
-    def max_delta_h(self, value: float):
+    def max_delta_h(self, value: float) -> None:
         self.transitions["integration_transition"].max_delta_h = value

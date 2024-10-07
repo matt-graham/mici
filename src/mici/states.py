@@ -18,9 +18,13 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
     from typing import Any
 
-    from numpy.typing import ArrayLike
-
     from mici.systems import System
+    from mici.types import (
+        ArrayLike,
+        ScalarLike,
+        SystemStateMethod,
+        SystemStateWithAuxMethod,
+    )
 
 
 def _cache_key_func(system: System, method: Callable) -> tuple[str, int]:
@@ -32,10 +36,7 @@ def _cache_key_func(system: System, method: Callable) -> tuple[str, int]:
 
 def cache_in_state(
     *depends_on: str,
-) -> Callable[
-    [Callable[[System, ChainState], ArrayLike]],
-    Callable[[System, ChainState], ArrayLike],
-]:
+) -> Callable[[SystemStateMethod], SystemStateMethod]:
     """Memoizing decorator for system methods.
 
     Used to decorate `mici.systems.System` methods which compute a function of one or
@@ -56,9 +57,9 @@ def cache_in_state(
             of any of these variables (attributes) of the state object changes.
     """
 
-    def cache_in_state_decorator(method):
+    def cache_in_state_decorator(method: SystemStateMethod) -> SystemStateMethod:
         @wraps(method)
-        def wrapper(self, state):
+        def wrapper(self: System, state: ChainState) -> ArrayLike | ScalarLike:
             key = _cache_key_func(self, method)
             if key not in state._cache:
                 for dep in depends_on:
@@ -77,10 +78,7 @@ def cache_in_state(
 def cache_in_state_with_aux(
     depends_on: Iterable[str],
     auxiliary_outputs: Iterable[str],
-) -> Callable[
-    [Callable[[System, ChainState], ArrayLike]],
-    Callable[[System, ChainState], ArrayLike],
-]:
+) -> Callable[[SystemStateWithAuxMethod], SystemStateMethod]:
     """Memoizing decorator for system methods with possible auxiliary outputs.
 
     Used to decorate `System` methods which compute a function of one or more chain
@@ -132,9 +130,11 @@ def cache_in_state_with_aux(
     if isinstance(auxiliary_outputs, str):
         auxiliary_outputs = (auxiliary_outputs,)
 
-    def cache_in_state_with_aux_decorator(method):
+    def cache_in_state_with_aux_decorator(
+        method: SystemStateWithAuxMethod,
+    ) -> SystemStateMethod:
         @wraps(method)
-        def wrapper(self, state):
+        def wrapper(self: System, state: ChainState) -> ArrayLike | ScalarLike:
             prim_key = _cache_key_func(self, method)
             keys = [prim_key] + [_cache_key_func(self, a) for a in auxiliary_outputs]
             for _i, key in enumerate(keys):
@@ -179,7 +179,7 @@ class ChainState:
         _dependencies: dict[str, set[str]] | None = None,
         _cache: dict[str, Any] | None = None,
         **variables: ArrayLike,
-    ):
+    ) -> None:
         """Create a new `ChainState` instance.
 
         Any keyword arguments passed to the constructor (with names not starting with an
@@ -245,7 +245,7 @@ class ChainState:
         msg = f"'{type(self).__name__}' object has no attribute '{name}'"
         raise AttributeError(msg)
 
-    def __setattr__(self, name: str, value: ArrayLike):
+    def __setattr__(self, name: str, value: ArrayLike) -> None:
         if self._read_only:
             msg = "ChainState instance is read-only."
             raise ReadOnlyStateError(msg)
@@ -297,7 +297,7 @@ class ChainState:
             "read_only": self._read_only,
         }
 
-    def __setstate__(self, state: dict[str, Any]):
+    def __setstate__(self, state: dict[str, Any]) -> None:
         self.__dict__["_variables"] = state["variables"]
         self.__dict__["_dependencies"] = state["dependencies"]
         self.__dict__["_cache"] = state["cache"]

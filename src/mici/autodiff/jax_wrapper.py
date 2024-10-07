@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ParamSpec, TypeAlias, TypeVar
 
 import numpy as np
 
@@ -11,24 +12,39 @@ JAX_AVAILABLE = True
 try:
     import jax
     import jax.numpy as jnp
+    from jax import Array as JaxArray
 except ImportError:
     JAX_AVAILABLE = False
+    JaxArray = TypeVar("JaxArray")
 
 if TYPE_CHECKING:
     from mici.types import (
         ArrayFunction,
         ArrayLike,
         GradientFunction,
+        HessianFunction,
         JacobianFunction,
+        MatrixHessianProduct,
         MatrixHessianProductFunction,
         MatrixTressianProduct,
+        MatrixTressianProductFunction,
         ScalarFunction,
         ScalarLike,
+        VectorJacobianProduct,
         VectorJacobianProductFunction,
     )
 
 
-def jit_and_return_numpy_arrays(function, **jit_kwargs):
+P = ParamSpec("P")
+JaxArrayFunction: TypeAlias = Callable[
+    P, "JaxArray | JaxArrayFunction | tuple[JaxArray | JaxArrayFunction, ...]"
+]
+NumPyArrayFunction: TypeAlias = Callable[
+    P, "np.ndarray | NumPyArrayFunction | tuple[np.ndarray | NumPyArrayFunction, ...]"
+]
+
+
+def jit_and_return_numpy_arrays(function: JaxArrayFunction) -> NumPyArrayFunction:
     """Wrap a JIT compiled function returning JAX arrays to instead return NumPy arrays.
 
     Args:
@@ -42,11 +58,11 @@ def jit_and_return_numpy_arrays(function, **jit_kwargs):
         will instead be NumPy arrays, while any values which are callables returning
         JAX arrays will instead return NumPy arrays.
     """
-    jitted_function = jax.jit(function, **jit_kwargs)
+    jitted_function = jax.jit(function)
     return return_numpy_arrays(jitted_function)
 
 
-def return_numpy_arrays(function: callable) -> callable:
+def return_numpy_arrays(function: JaxArrayFunction) -> NumPyArrayFunction:
     """Wrap a function returning JAX arrays to instead return NumPy arrays.
 
     Args:
@@ -60,14 +76,18 @@ def return_numpy_arrays(function: callable) -> callable:
         JAX arrays will instead return NumPy arrays.
     """
 
-    def as_numpy_array(value):
+    def as_numpy_array(
+        value: JaxArray | JaxArrayFunction,
+    ) -> np.ndarray | NumPyArrayFunction:
         if callable(value):
             return return_numpy_arrays(value)
         if isinstance(value, jax.Array):
             return np.asarray(value)
         return value
 
-    def function_returning_numpy_arrays(*args, **kwargs):
+    def function_returning_numpy_arrays(
+        *args: P.args, **kwargs: P.kwargs
+    ) -> np.ndarray | NumPyArrayFunction | tuple[np.ndarray | NumPyArrayFunction, ...]:
         return_value = function(*args, **kwargs)
         if isinstance(return_value, tuple):
             return tuple(as_numpy_array(value) for value in return_value)
@@ -79,14 +99,14 @@ def return_numpy_arrays(function: callable) -> callable:
 def grad_and_value(func: ScalarFunction) -> GradientFunction:
     """Makes a function that returns both the Jacobian and value of a function."""
 
-    def grad_and_value_func(x):
+    def grad_and_value_func(x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         value, grad = jax.value_and_grad(func)(x)
         return grad, value
 
     return grad_and_value_func
 
 
-def _detuple_vjp(vjp_func):
+def _detuple_vjp(vjp_func: jax.tree_util.Partial) -> jax.tree_util.Partial:
     """Transform a VJP of function with one return value so it returns an array."""
     return jax.tree_util.Partial(
         lambda *args, **kwargs: vjp_func.func(*args, **kwargs)[0],
@@ -110,7 +130,7 @@ def vjp_and_value(func: ArrayFunction) -> VectorJacobianProductFunction:
         j[i, k] = ∂f[i] / ∂x[k]
     """
 
-    def vjp_and_value_func(x):
+    def vjp_and_value_func(x: ArrayLike) -> tuple[VectorJacobianProduct, ArrayLike]:
         value, vjp = jax.vjp(func, x)
         return _detuple_vjp(vjp), value
 
@@ -120,7 +140,7 @@ def vjp_and_value(func: ArrayFunction) -> VectorJacobianProductFunction:
 def jacobian_and_value(func: ArrayFunction) -> JacobianFunction:
     """Makes a function that returns both the Jacobian and value of a function."""
 
-    def jacobian_and_value_func(x):
+    def jacobian_and_value_func(x: ArrayLike) -> tuple[ArrayLike, ArrayLike]:
         value, pullback = jax.vjp(func, x)
         basis = jnp.eye(value.size, dtype=value.dtype)
         (jac,) = jax.vmap(pullback)(basis)
@@ -144,19 +164,21 @@ def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
         h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])
     """
 
-    def mhp_jacobian_and_value_func(x):
+    def mhp_jacobian_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[MatrixHessianProduct, ArrayLike, ArrayLike]:
         jac, mhp, value = jax.vjp(jacobian_and_value(func), x, has_aux=True)
         return _detuple_vjp(mhp), jac, value
 
     return mhp_jacobian_and_value_func
 
 
-def hessian_grad_and_value(
-    func: ScalarFunction,
-) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
+def hessian_grad_and_value(func: ScalarFunction) -> HessianFunction:
     """Makes a function that returns the Hessian, gradient and value of a function."""
 
-    def hessian_grad_and_value_func(x):
+    def hessian_grad_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[ArrayLike, ArrayLike, ScalarLike]:
         basis = jnp.eye(x.size, dtype=x.dtype)
         grad_and_value_func = grad_and_value(func)
         pushforward = partial(jax.jvp, grad_and_value_func, (x,), has_aux=True)
@@ -168,9 +190,7 @@ def hessian_grad_and_value(
     return hessian_grad_and_value_func
 
 
-def mtp_hessian_grad_and_value(
-    func: ScalarFunction,
-) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
+def mtp_hessian_grad_and_value(func: ScalarFunction) -> MatrixTressianProductFunction:
     """Makes a function that returns MTP, Jacobian and value of a function.
 
     For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
@@ -184,11 +204,15 @@ def mtp_hessian_grad_and_value(
         t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])
     """
 
-    def hessian_and_aux_func(x):
+    def hessian_and_aux_func(
+        x: ArrayLike,
+    ) -> tuple[ArrayLike, tuple[ArrayLike, ScalarLike]]:
         hessian, grad, value = hessian_grad_and_value(func)(x)
         return hessian, (grad, value)
 
-    def mtp_hessian_grad_and_value_func(x):
+    def mtp_hessian_grad_and_value_func(
+        x: ArrayLike,
+    ) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
         hessian, mtp, (grad, value) = jax.vjp(hessian_and_aux_func, x, has_aux=True)
         return _detuple_vjp(mtp), hessian, grad, value
 

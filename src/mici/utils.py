@@ -15,6 +15,8 @@ except ImportError:
     XXHASH_AVAILABLE = False
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from mici.types import ScalarLike
 
 
@@ -87,7 +89,7 @@ class LogRepFloat:
     numerically stable implementations where possible.
     """
 
-    def __init__(self, val: float | None = None, log_val: float | None = None):
+    def __init__(self, val: float | None = None, log_val: float | None = None) -> None:
         if log_val is None:
             if val is None:
                 msg = "One of val or log_val must be specified."
@@ -120,7 +122,7 @@ class LogRepFloat:
     def __radd__(self, other: ScalarLike) -> ScalarLike:
         return self.__add__(other)
 
-    def __iadd__(self, other: ScalarLike):
+    def __iadd__(self, other: ScalarLike) -> Self:
         if other == 0:
             return self
         if isinstance(other, LogRepFloat):
