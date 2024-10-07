@@ -1,85 +1,85 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-    "setuptools",
-    "setuptools-scm",
+  "setuptools",
+  "setuptools-scm"
 ]
 
 [project]
 authors = [
-    {email = "m.graham@ucl.ac.uk", name = "Matt Graham"},
+  {email = "m.graham@ucl.ac.uk", name = "Matt Graham"}
 ]
 classifiers = [
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Typing :: Typed",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed"
 ]
 dependencies = [
-    "numpy>=1.22",
-    "scipy>=1.1",
+  "numpy>=1.22",
+  "scipy>=1.1"
 ]
 description = "MCMC samplers based on simulating Hamiltonian dynamics on a manifold."
 dynamic = [
-    "version",
+  "version"
 ]
 keywords = [
-    "inference",
-    "sampling",
-    "MCMC",
-    "HMC",
+  "inference",
+  "sampling",
+  "MCMC",
+  "HMC"
 ]
 name = "mici"
 readme = "README.md"
 requires-python = ">=3.10"
 license.file = "LICENCE"
-urls.homepage = "https://github.com/matt-graham/mici"
-urls.documentation = "https://matt-graham.github.io/mici"
 
 [project.optional-dependencies]
 dev = [
-    "black",
-    "build",
-    "mypy",
-    "pre-commit",
-    "pytest",
-    "ruff",
-    "tox>=4",
-    "twine",
+  "black",
+  "build",
+  "mypy",
+  "pre-commit",
+  "pytest",
+  "ruff",
+  "tox>=4",
+  "twine"
 ]
 autograd = [
-    "autograd>=1.3",
-    "multiprocess>=0.7.0",
+  "autograd>=1.3",
+  "multiprocess>=0.7.0"
 ]
 jax = [
-    "jax>=0.4.1",
-    "multiprocess>=0.7.0",
+  "jax>=0.4.1",
+  "multiprocess>=0.7.0"
 ]
 symnum = [
-    "symnum>=0.2.1",
+  "symnum>=0.2.1"
 ]
+urls.homepage = "https://github.com/matt-graham/mici"
+urls.documentation = "https://matt-graham.github.io/mici"
 
 [tool.coverage]
 report = {skip_covered = true, sort = "cover"}
 run = {branch = true, parallel = true, relative_files = true, source = [
-    "mici",
+  "mici"
 ]}
 paths.source = [
-    "src",
-    ".tox*/*/lib/python*/site-packages",
+  "src",
+  ".tox*/*/lib/python*/site-packages"
 ]
 
 [tool.pytest.ini_options]
 addopts = "--color=yes -v"
 testpaths = [
-    "tests",
+  "tests"
 ]
 
 [tool.ruff]
@@ -88,81 +88,81 @@ target-version = "py310"
 
 [tool.ruff.lint]
 ignore = [
-    "ANN003",  # missing-type-kwargs
-    "ANN101",  # missing-type-self
-    "ANN102",  # missing-type-cls
-    "D102",  # missing docstrings on public methods
-    "D105",  # missing docstrings on magic methods
-    "D107",  # missing docstring on __init__ method
-    "D205",  # blank line between summary and description in docstrings
-    "D212", # multi-line-summary-first-line
-    "D417", # argument description in docstring (unreliable)
-    "COM812",  # missing-trailing-comma (conflicts with ruff format)
-    "ISC001",  # single-line-implicit-string-concatenation (conflifts with ruff format)
+  "ANN003", # missing-type-kwargs
+  "ANN101", # missing-type-self
+  "ANN102", # missing-type-cls
+  "D102", # missing docstrings on public methods
+  "D105", # missing docstrings on magic methods
+  "D107", # missing docstring on __init__ method
+  "D205", # blank line between summary and description in docstrings
+  "D212", # multi-line-summary-first-line
+  "D417", # argument description in docstring (unreliable)
+  "COM812", # missing-trailing-comma (conflicts with ruff format)
+  "ISC001" # single-line-implicit-string-concatenation (conflifts with ruff format)
 ]
-per-file-ignores = { "test_*" = ["ANN", "ARG002", "D100", "D101", "D102", "D103", "INP001", "S101", "SLF"], "__init__.py" = ["F401"] }
+per-file-ignores = {"test_*" = ["ANN", "ARG002", "D100", "D101", "D102", "D103", "INP001", "S101", "SLF"], "docs/**.py" = ["ANN", "D", "INP001"], "__init__.py" = ["F401"]}
 select = [
-    "A",
-    "ANN",
-    "ARG",
-    "ASYNC",
-    "B",
-    "BLE",
-    "C",
-    "C4",
-    "C90",
-    "COM",
-    "D",
-    "DJ",
-    "DTZ",
-    "E",
-    "EM",
-    "ERA",
-    "EXE",
-    "F",
-    "FA",
-    "FBT",
-    "FLY",
-    "I",
-    "ICN",
-    "INP",
-    "ISC",
-    "LOG",
-    "N",
-    "NPY",
-    "PD",
-    "PERF",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "Q",
-    "RET",
-    "RSE",
-    "RUF",
-    "S",
-    "SIM",
-    "SLF",
-    "SLOT",
-    "T",
-    "T20",
-    "TCH",
-    "TD",
-    "TID",
-    "TRY",
-    "UP",
-    "W",
-    "YTT",
+  "A",
+  "ANN",
+  "ARG",
+  "ASYNC",
+  "B",
+  "BLE",
+  "C",
+  "C4",
+  "C90",
+  "COM",
+  "D",
+  "DJ",
+  "DTZ",
+  "E",
+  "EM",
+  "ERA",
+  "EXE",
+  "F",
+  "FA",
+  "FBT",
+  "FLY",
+  "I",
+  "ICN",
+  "INP",
+  "ISC",
+  "LOG",
+  "N",
+  "NPY",
+  "PD",
+  "PERF",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "Q",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "SLOT",
+  "T",
+  "T20",
+  "TCH",
+  "TD",
+  "TID",
+  "TRY",
+  "UP",
+  "W",
+  "YTT"
 ]
 isort.known-first-party = [
-    "mici",
+  "mici"
 ]
 mccabe.max-complexity = 18
 pep8-naming.classmethod-decorators = [
-    "classmethod",
-    "pydantic.validator",
+  "classmethod",
+  "pydantic.validator"
 ]
 pydocstyle.convention = "google"
 pylint.max-args = 20
@@ -182,7 +182,7 @@ legacy_tox_ini = """
     [testenv]
     commands =
         pytest --cov {posargs}
-    extras = 
+    extras =
         autograd
         jax
         symnum
