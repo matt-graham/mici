@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Test status](https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/tests.yml)
 [![Linting status](https://github.com/matt-graham/mici/actions/workflows/linting.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/linting.yml)
-[![Docs status](https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg)](https://matt-graham.github.io/mici)
+[![Docs status](https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/docs.yml)
 
 </div>
 </div>
