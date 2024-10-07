@@ -32,17 +32,22 @@ ON_COLAB = (
 )
 
 
-def _in_zmq_interactive_shell() -> bool:
-    """Check if in interactive ZMQ shell which supports updateable displays."""
+def _in_interactive_shell() -> bool:
+    """Check if in interactive shell which supports updateable displays."""
     if not IPYTHON_AVAILABLE:
         return False
     if ON_COLAB:
         return True
     try:
-        shell = get_ipython().__class__.__name__
+        ipython = get_ipython()
+        ipython_module = ipython.__module__
+        ipython_class = ipython.__class__.__name__
     except NameError:
         return False
-    return shell == "ZMQInteractiveShell"
+    return (ipython_module, ipython_class) in {
+        ("ipykernel.zmqshell", "ZMQInteractiveShell"),
+        ("pyodide_kernel.interpreter", "Interpreter"),
+    }
 
 
 class UpdateableDisplay(Protocol):
@@ -67,7 +72,7 @@ def _create_display(
     Returns:
         Object with `update` method to update displayed content.
     """
-    if _in_zmq_interactive_shell():
+    if _in_interactive_shell():
         return ipython_display(obj, display_id=True)
     return FileDisplay(position)
 
