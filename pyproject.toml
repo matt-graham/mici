@@ -42,6 +42,10 @@ requires-python = ">=3.10"
 license.file = "LICENCE"
 
 [project.optional-dependencies]
+autograd = [
+  "autograd>=1.3",
+  "multiprocess>=0.7.0"
+]
 dev = [
   "black",
   "build",
@@ -52,10 +56,6 @@ dev = [
   "tox>=4",
   "twine"
 ]
-autograd = [
-  "autograd>=1.3",
-  "multiprocess>=0.7.0"
-]
 jax = [
   "jax>=0.4.1",
   "multiprocess>=0.7.0"
@@ -63,8 +63,10 @@ jax = [
 symnum = [
   "symnum>=0.2.1"
 ]
-urls.homepage = "https://github.com/matt-graham/mici"
-urls.documentation = "https://matt-graham.github.io/mici"
+
+[project.urls]
+documentation = "https://matt-graham.github.io/mici"
+homepage = "https://github.com/matt-graham/mici"
 
 [tool.coverage]
 report = {skip_covered = true, sort = "cover"}
@@ -100,7 +102,23 @@ ignore = [
   "COM812", # missing-trailing-comma (conflicts with ruff format)
   "ISC001" # single-line-implicit-string-concatenation (conflifts with ruff format)
 ]
-per-file-ignores = {"test_*" = ["ANN", "ARG002", "D100", "D101", "D102", "D103", "INP001", "S101", "SLF"], "docs/**.py" = ["ANN", "D", "INP001"], "__init__.py" = ["F401"]}
+per-file-ignores = {"test_*" = [
+  "ANN",
+  "ARG002",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "INP001",
+  "S101",
+  "SLF"
+], "docs/**.py" = [
+  "ANN",
+  "D",
+  "INP001"
+], "__init__.py" = [
+  "F401"
+]}
 select = [
   "A",
   "ANN",
