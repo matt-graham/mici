@@ -579,13 +579,13 @@ def _get_per_chain_rngs(base_rng: Generator, n_chain: int) -> list[Generator]:
     if hasattr(base_rng, "bit_generator"):
         bit_generator = base_rng.bit_generator
     elif hasattr(base_rng, "_bit_generator"):
-        bit_generator = base_rng._bit_generator
+        bit_generator = base_rng._bit_generator  # noqa: SLF001
     else:
         bit_generator = None
     if bit_generator is not None and hasattr(bit_generator, "jumped"):
         return [default_rng(bit_generator.jumped(i)) for i in range(n_chain)]
     if bit_generator is not None and hasattr(bit_generator, "_seed_seq"):
-        seed_sequence = bit_generator._seed_seq
+        seed_sequence = bit_generator._seed_seq  # noqa: SLF001
         return [default_rng(seed) for seed in seed_sequence.spawn(n_chain)]
     msg = f"Unsupported random number generator type {type(base_rng)}."
     raise ValueError(msg)
@@ -843,7 +843,7 @@ class MarkovChainMonteCarloMethod:
                 DeprecationWarning,
                 stacklevel=2,
             )
-            rng = np.random.Generator(rng._bit_generator)
+            rng = np.random.Generator(rng._bit_generator)  # noqa: SLF001
         self._rng = rng
         self._transitions = transitions
 

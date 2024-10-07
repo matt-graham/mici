@@ -1,5 +1,10 @@
 """Objects for recording state of a Markov chain and caching computations."""
 
+# Disable checks on private member access in this file as we use underscore prefixed
+# names within state to avoid name clashes with state variables similar to usage in
+# namedtuple
+# ruff: noqa: SLF001
+
 from __future__ import annotations
 
 import copy
