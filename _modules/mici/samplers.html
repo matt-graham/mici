@@ -351,7 +351,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">ExitStack</span><span class="p">,</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">nullcontext</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">pickle</span> <span class="kn">import</span> <span class="n">PicklingError</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypeVar</span>
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -379,7 +379,6 @@ document.write(`
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
 
@@ -422,13 +421,13 @@ document.write(`
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_ignore_sigint_initializer</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">_ignore_sigint_initializer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializer for processes to force ignoring SIGINT interrupt signals.&quot;&quot;&quot;</span>
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span>
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">_ignore_sigint_manager</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">_ignore_sigint_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-managed SyncManager which ignores SIGINT interrupt signals.&quot;&quot;&quot;</span>
     <span class="n">manager</span> <span class="o">=</span> <span class="n">SyncManager</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
@@ -439,7 +438,7 @@ document.write(`
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-manager for process pool that ensures clean exiting.</span>
 
 <span class="sd">    Compared to built-in context-manager protocol implementation on Pool object which</span>
@@ -524,14 +523,13 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">pytree</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_memmaps_to_file_paths</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">_memmaps_to_file_paths</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_memmaps_to_file_paths</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pytree</span>
+    <span class="k">return</span> <span class="n">pytree</span>
 
 
 <span class="k">def</span> <span class="nf">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">pytree</span><span class="p">:</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">]:</span>
@@ -548,17 +546,19 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">lib</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">open_memmap</span><span class="p">(</span><span class="n">pytree</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="p">]</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pytree</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pytree</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">pytree</span>
+    <span class="k">return</span> <span class="n">pytree</span>
 
 
-<span class="k">def</span> <span class="nf">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Zip iterable keyword arguments in to an iterable of dictionaries.</span>
 
 <span class="sd">    Acts analogously to built-in `zip` in taking a variable number of iterables as</span>
@@ -575,11 +575,14 @@ document.write(`
 
 <span class="sd">        [{&#39;a&#39;: 1, &#39;b&#39;: 4}, {&#39;a&#39;: 2, &#39;b&#39;: 5}, {&#39;a&#39;: 3, &#39;b&#39;: 6}]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">val_set</span><span class="p">))</span> <span class="k">for</span> <span class="n">val_set</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">val_set</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">val_set</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">kwargs</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_check_and_process_init_state</span><span class="p">(</span>
-    <span class="n">state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check initial chain state is valid and convert dict to ChainState.&quot;&quot;&quot;</span>
@@ -591,7 +594,7 @@ document.write(`
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2"> transition.&quot;</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="p">(</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;init_state should be a dictionary or ChainState.&quot;</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ChainState</span><span class="p">(</span><span class="o">**</span><span class="n">state</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">state</span>
@@ -603,7 +606,7 @@ document.write(`
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">use_memmap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">memmap_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">memmap_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize dictionary of per-transition chain statistics array dicts.&quot;&quot;&quot;</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="p">{}</span>
@@ -632,7 +635,7 @@ document.write(`
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">use_memmap</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="n">memmap_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">memmap_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize dictionary of chain trace arrays.&quot;&quot;&quot;</span>
     <span class="n">traces</span> <span class="o">=</span> <span class="p">{}</span>
@@ -689,7 +692,7 @@ document.write(`
     <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
     <span class="n">trans_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">trans_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update chain statistics arrays for current chain iteration.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">trans_stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trans_stats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -701,7 +704,7 @@ document.write(`
     <span class="n">monitor_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">trans_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">trans_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update dictionary of per-iteration monitored statistics.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">trans_key</span> <span class="ow">in</span> <span class="n">monitor_stats</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">stats_key</span> <span class="ow">in</span> <span class="n">monitor_stats</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]:</span>
@@ -722,7 +725,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">_flush_memmap_chain_data</span><span class="p">(</span>
     <span class="n">chain_traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Flush all pending writes to memory-mapped chain data arrays to disk.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">chain_traces</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="n">chain_traces</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -735,21 +738,21 @@ document.write(`
                     <span class="n">stat</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_sample_chain</span><span class="p">(</span>
-    <span class="n">init_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
+<span class="k">def</span> <span class="nf">_sample_chain</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
+    <span class="n">init_state</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">chain_iterator</span><span class="p">:</span> <span class="n">ChainIterator</span><span class="p">,</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">chain_traces</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">chain_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chain_traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">load_memmaps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">chain_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">sampling_index_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="n">monitor_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Container</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]]:</span>
+    <span class="n">monitor_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Container</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample a chain by iteratively appyling a sequence of transition kernels.</span>
 
 <span class="sd">    Args:</span>
@@ -836,9 +839,9 @@ document.write(`
                         <span class="n">adapter</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">transitions</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]),</span>
                     <span class="p">)</span>
     <span class="k">except</span> <span class="n">AdaptationError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Initialisation of </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> for chain &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">exception</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> failed.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">adapter_states</span><span class="p">,</span> <span class="n">exception</span>
     <span class="k">try</span><span class="p">:</span>
@@ -851,6 +854,7 @@ document.write(`
                         <span class="k">for</span> <span class="n">adapter</span><span class="p">,</span> <span class="n">adapter_state</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                             <span class="n">adapters</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span>
                             <span class="n">adapter_states</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span>
+                            <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="p">):</span>
                             <span class="n">adapter</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                                 <span class="n">adapter_state</span><span class="p">,</span>
@@ -875,12 +879,12 @@ document.write(`
                 <span class="k">if</span> <span class="n">chain_traces</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">trace_funcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">trace_func</span> <span class="ow">in</span> <span class="n">trace_funcs</span><span class="p">:</span>
                         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                            <span class="n">chain_traces</span><span class="p">[</span><span class="n">key</span><span class="p">][</span>
-                                <span class="n">sample_index</span> <span class="o">+</span> <span class="n">sampling_index_offset</span>
-                            <span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+                            <span class="n">chain_traces</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">sample_index</span> <span class="o">+</span> <span class="n">sampling_index_offset</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">val</span>
+                            <span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">exception</span> <span class="o">=</span> <span class="n">e</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Sampling manually interrupted for chain </span><span class="si">{</span><span class="n">chain_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> at&quot;</span>
             <span class="sa">f</span><span class="s2">&quot; iteration </span><span class="si">{</span><span class="n">sample_index</span><span class="si">}</span><span class="s2">. Arrays containing chain traces and&quot;</span>
             <span class="sa">f</span><span class="s2">&quot; statistics computed before interruption will be returned.&quot;</span><span class="p">,</span>
@@ -920,29 +924,28 @@ document.write(`
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base_rng</span><span class="p">,</span> <span class="s2">&quot;bit_generator&quot;</span><span class="p">):</span>
         <span class="n">bit_generator</span> <span class="o">=</span> <span class="n">base_rng</span><span class="o">.</span><span class="n">bit_generator</span>
     <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">base_rng</span><span class="p">,</span> <span class="s2">&quot;_bit_generator&quot;</span><span class="p">):</span>
-        <span class="n">bit_generator</span> <span class="o">=</span> <span class="n">base_rng</span><span class="o">.</span><span class="n">_bit_generator</span>
+        <span class="n">bit_generator</span> <span class="o">=</span> <span class="n">base_rng</span><span class="o">.</span><span class="n">_bit_generator</span>  <span class="c1"># noqa: SLF001</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">bit_generator</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">bit_generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bit_generator</span><span class="p">,</span> <span class="s2">&quot;jumped&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">default_rng</span><span class="p">(</span><span class="n">bit_generator</span><span class="o">.</span><span class="n">jumped</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)]</span>
-    <span class="k">elif</span> <span class="n">bit_generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bit_generator</span><span class="p">,</span> <span class="s2">&quot;_seed_seq&quot;</span><span class="p">):</span>
-        <span class="n">seed_sequence</span> <span class="o">=</span> <span class="n">bit_generator</span><span class="o">.</span><span class="n">_seed_seq</span>
+    <span class="k">if</span> <span class="n">bit_generator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bit_generator</span><span class="p">,</span> <span class="s2">&quot;_seed_seq&quot;</span><span class="p">):</span>
+        <span class="n">seed_sequence</span> <span class="o">=</span> <span class="n">bit_generator</span><span class="o">.</span><span class="n">_seed_seq</span>  <span class="c1"># noqa: SLF001</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="k">for</span> <span class="n">seed</span> <span class="ow">in</span> <span class="n">seed_sequence</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported random number generator type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">base_rng</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported random number generator type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">base_rng</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_sample_chains_sequential</span><span class="p">(</span>
     <span class="n">chain_iterators</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainIterator</span><span class="p">],</span>
     <span class="n">per_chain_kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
     <span class="o">**</span><span class="n">common_kwargs</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]],</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]],</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample multiple chains sequentially in a single process.&quot;&quot;&quot;</span>
     <span class="n">chain_outputs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">exception</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">chain_index</span><span class="p">,</span> <span class="p">(</span><span class="n">chain_iterator</span><span class="p">,</span> <span class="n">chain_kwargs</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-        <span class="nb">zip</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">,</span> <span class="n">per_chain_kwargs</span><span class="p">),</span>
+        <span class="nb">zip</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">,</span> <span class="n">per_chain_kwargs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">):</span>
         <span class="o">*</span><span class="n">outputs</span><span class="p">,</span> <span class="n">exception</span> <span class="o">=</span> <span class="n">_sample_chain</span><span class="p">(</span>
             <span class="n">chain_iterator</span><span class="o">=</span><span class="n">chain_iterator</span><span class="p">,</span>
@@ -964,7 +967,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">_sample_chains_worker</span><span class="p">(</span>
     <span class="n">chain_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
     <span class="n">iter_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
-    <span class="n">common_kwargs</span><span class="p">,</span>
+    <span class="n">common_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Worker process function for parallel sampling of chains.</span>
 
@@ -1008,21 +1011,28 @@ document.write(`
                 <span class="k">break</span>
         <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
             <span class="k">pass</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
             <span class="c1"># Log exception here so that correct traceback is logged</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="s2">&quot;Exception encountered in chain worker process:&quot;</span><span class="p">,</span>
-                <span class="n">exc_info</span><span class="o">=</span><span class="n">exception</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Exception encountered in chain worker process&quot;</span><span class="p">)</span>
             <span class="c1"># Put exception on iteration queue to be reraised in parent process</span>
             <span class="n">iter_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">chain_outputs</span>
 
 
-<span class="k">def</span> <span class="nf">_finalize_adapters</span><span class="p">(</span><span class="n">adapter_states_dict</span><span class="p">,</span> <span class="n">chain_states</span><span class="p">,</span> <span class="n">adapters</span><span class="p">,</span> <span class="n">transitions</span><span class="p">,</span> <span class="n">rngs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_finalize_adapters</span><span class="p">(</span>
+    <span class="n">adapter_states_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
+    <span class="n">chain_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
+    <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]],</span>
+    <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
+    <span class="n">rngs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Finalize adapter updates to transitions based on final adapter states.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">trans_key</span><span class="p">,</span> <span class="n">adapter_states_list</span> <span class="ow">in</span> <span class="n">adapter_states_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">adapter_states</span><span class="p">,</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">adapter_states_list</span><span class="p">,</span> <span class="n">adapters</span><span class="p">[</span><span class="n">trans_key</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">adapter_states</span><span class="p">,</span> <span class="n">adapter</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">adapter_states_list</span><span class="p">,</span>
+            <span class="n">adapters</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span>
+            <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">):</span>
             <span class="n">adapter</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">adapter_states</span><span class="p">,</span> <span class="n">chain_states</span><span class="p">,</span> <span class="n">transitions</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span> <span class="n">rngs</span><span class="p">)</span>
 
 
@@ -1031,7 +1041,7 @@ document.write(`
     <span class="n">per_chain_kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="o">**</span><span class="n">common_kwargs</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]],</span> <span class="n">Optional</span><span class="p">[</span><span class="ne">Exception</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]],</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample multiple chains in parallel over multiple processes.&quot;&quot;&quot;</span>
     <span class="n">n_iters</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">it</span><span class="p">)</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">chain_iterators</span><span class="p">]</span>
     <span class="n">n_chain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">)</span>
@@ -1044,7 +1054,9 @@ document.write(`
             <span class="c1"># Shared queue for workers to get arguments for _sample_chain calls</span>
             <span class="c1"># from on initialising each chain</span>
             <span class="n">chain_queue</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">chain_kwargs</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">per_chain_kwargs</span><span class="p">,</span> <span class="n">n_iters</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">chain_kwargs</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="nb">zip</span><span class="p">(</span><span class="n">per_chain_kwargs</span><span class="p">,</span> <span class="n">n_iters</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">):</span>
                 <span class="c1"># Map memmaps to their filepaths prior to putting on argument queue to</span>
                 <span class="c1"># avoid serializing potentially large memory mapped arrays</span>
                 <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_stats&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_memmaps_to_file_paths</span><span class="p">(</span>
@@ -1114,13 +1126,13 @@ document.write(`
                     <span class="s2">&quot;this package when available, may resolve this error.&quot;</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-            <span class="k">raise</span> <span class="n">e</span>
+            <span class="k">raise</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Interrupts handled in child processes therefore ignore here</span>
             <span class="n">exception</span> <span class="o">=</span> <span class="n">e</span>
         <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Join all output lists from per-process workers in to single list</span>
-            <span class="n">indexed_chain_outputs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">res</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">()),</span> <span class="p">[])</span>
+            <span class="n">indexed_chain_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
             <span class="c1"># Sort list by chain index (first element of tuple entries) and</span>
             <span class="c1"># then create new list with chain index removed</span>
             <span class="n">chain_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outp</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">outp</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">indexed_chain_outputs</span><span class="p">)]</span>
@@ -1172,7 +1184,7 @@ document.write(`
 <span class="sd">    of Markov transition operators.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            rng: Numpy random number generator.</span>
@@ -1187,7 +1199,7 @@ document.write(`
                 <span class="ne">DeprecationWarning</span><span class="p">,</span>
                 <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">_bit_generator</span><span class="p">)</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">_bit_generator</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span> <span class="o">=</span> <span class="n">rng</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_transitions</span> <span class="o">=</span> <span class="n">transitions</span>
 
@@ -1203,23 +1215,23 @@ document.write(`
 
 <div class="viewcode-block" id="MarkovChainMonteCarloMethod.sample_chains">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.sample_chains">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample_chains</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">sample_chains</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]],</span>
+        <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">stager</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Stager</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">stager</span><span class="p">:</span> <span class="n">Stager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">trace_warm_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">max_threads_per_process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_threads_per_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">force_memmap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">memmap_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">monitor_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">memmap_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">monitor_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">display_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">progress_bar_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProgressBar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">progress_bar_class</span><span class="p">:</span> <span class="n">ProgressBar</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MCMCSampleChainsOutputs</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample Markov chains from initial states with optional adaptive warm up.</span>
 
@@ -1276,7 +1288,7 @@ document.write(`
 <span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
 <span class="sd">                up stages with only the fast-type adapters active in some - see</span>
 <span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If </span>
+<span class="sd">            n_process: Number of parallel processes to run chains over. If</span>
 <span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
 <span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
 <span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
@@ -1349,7 +1361,7 @@ document.write(`
             <span class="n">memmap_path_context</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">memmap_path_context</span> <span class="o">=</span> <span class="n">nullcontext</span><span class="p">(</span><span class="n">memmap_path</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">memmap_path_context</span> <span class="k">as</span> <span class="n">memmap_path</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">memmap_path_context</span> <span class="k">as</span> <span class="n">memmap_path</span><span class="p">:</span>  <span class="c1"># noqa: PLR1704</span>
             <span class="n">traces</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="kc">None</span>
                 <span class="k">if</span> <span class="n">trace_funcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">trace_funcs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
@@ -1426,12 +1438,16 @@ document.write(`
                         <span class="n">per_chain_kwargs</span><span class="o">=</span><span class="n">_zip_dict</span><span class="p">(</span>
                             <span class="n">init_state</span><span class="o">=</span><span class="n">chain_states</span><span class="p">,</span>
                             <span class="n">rng</span><span class="o">=</span><span class="n">per_chain_rngs</span><span class="p">,</span>
-                            <span class="n">chain_traces</span><span class="o">=</span><span class="n">per_chain_traces</span>
-                            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">trace_funcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                            <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span><span class="p">,</span>
-                            <span class="n">chain_stats</span><span class="o">=</span><span class="n">per_chain_stats</span>
-                            <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">record_stats</span>
-                            <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span><span class="p">,</span>
+                            <span class="n">chain_traces</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">per_chain_traces</span>
+                                <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">trace_funcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                                <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span>
+                            <span class="p">),</span>
+                            <span class="n">chain_stats</span><span class="o">=</span><span class="p">(</span>
+                                <span class="n">per_chain_stats</span>
+                                <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">record_stats</span>
+                                <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span>
+                            <span class="p">),</span>
                         <span class="p">),</span>
                         <span class="n">sampling_index_offset</span><span class="o">=</span><span class="n">sampling_index_offset</span><span class="p">,</span>
                         <span class="n">trace_funcs</span><span class="o">=</span><span class="n">stage</span><span class="o">.</span><span class="n">trace_funcs</span><span class="p">,</span>
@@ -1522,8 +1538,8 @@ document.write(`
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
         <span class="n">integration_transition</span><span class="p">:</span> <span class="n">IntegrationTransition</span><span class="p">,</span>
-        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MomentumTransition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">MomentumTransition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated, corresponding to joint</span>
@@ -1559,7 +1575,7 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_preprocess_init_state</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">init_state</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">],</span>
+        <span class="n">init_state</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make sure initial state is a ChainState and has momentum.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">init_state</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
@@ -1586,7 +1602,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]],</span>
+        <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span> <span class="o">|</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">],</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HMCSampleChainsOutputs</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample Markov chains from given initial states with adaptive warm up.</span>
@@ -1656,7 +1672,7 @@ document.write(`
 <span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
 <span class="sd">                up stages with only the fast-type adapters active in some - see</span>
 <span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If </span>
+<span class="sd">            n_process: Number of parallel processes to run chains over. If</span>
 <span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
 <span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
 <span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
@@ -1766,8 +1782,8 @@ document.write(`
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
         <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MomentumTransition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">MomentumTransition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -1796,7 +1812,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step</span>
 
     <span class="nd">@n_step</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;n_step must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1838,8 +1854,8 @@ document.write(`
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
         <span class="n">n_step_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MomentumTransition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">MomentumTransition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -1872,7 +1888,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step_range</span>
 
     <span class="nd">@n_step_range</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">n_step_lower</span><span class="p">,</span> <span class="n">n_step_upper</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last.&quot;</span>
@@ -1918,8 +1934,8 @@ document.write(`
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
         <span class="n">do_extra_subtree_checks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MomentumTransition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">MomentumTransition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -1978,7 +1994,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span>
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1990,7 +2006,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span>
 
     <span class="nd">@max_delta_h</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
@@ -2029,8 +2045,8 @@ document.write(`
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">euclidean_no_u_turn_criterion</span><span class="p">,</span>
         <span class="n">do_extra_subtree_checks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MomentumTransition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">momentum_transition</span><span class="p">:</span> <span class="n">MomentumTransition</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -2089,7 +2105,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span>
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2101,7 +2117,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span>
 
     <span class="nd">@max_delta_h</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">value</span></div>
 
 </pre></div>

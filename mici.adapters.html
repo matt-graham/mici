@@ -401,19 +401,22 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>Union</em><em>[</em><em>AdapterState</em><em>, </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
-<li><p><strong>chain_states</strong> (<em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em><em>]</em>) – Final state of chain (or states of chains) in current
+<li><p><strong>chain_states</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em>) – Final state of chain (or states of chains) in current
 sampling stage. May be updated in-place if transition parameters altered
 by adapter require updating any state components.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being dapted. Attributes of the transition or
 child objects will be updated in-place by the method.</p></li>
-<li><p><strong>rngs</strong> (<em>Union</em><em>[</em><em>Generator</em><em>, </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
+<li><p><strong>rngs</strong> (<em>Generator</em><em> | </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
 number generators. Used to resample any components of states needing to
 be updated due to adaptation if required.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -470,6 +473,9 @@ be mutated by method.</p></li>
 child objects may be updated in-place by the method.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -499,11 +505,11 @@ Mathematical programming 120(1), pp.221-259.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Target value for the transition statistic
 being controlled during adaptation.</p></li>
-<li><p><strong>adapt_stat_func</strong> (<em>Optional</em><em>[</em><em>AdaptationStatisticFunction</em><em>]</em>) – Function which given a dictionary of transition statistics
+<li><p><strong>adapt_stat_func</strong> (<em>AdaptationStatisticFunction</em><em> | </em><em>None</em>) – Function which given a dictionary of transition statistics
 outputs the value of the statistic to control during adaptation. By
 default this is set to a function which simply selects the
 :code:’accept_stat’ value in the statistics dictionary.</p></li>
-<li><p><strong>log_step_size_reg_target</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em>) – Value to regularize the controlled output
+<li><p><strong>log_step_size_reg_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em> | </em><em>None</em>) – Value to regularize the controlled output
 (logarithm of the integrator step size) towards. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> set to
 <code class="code docutils literal notranslate"><span class="pre">log(10</span> <span class="pre">*</span> <span class="pre">init_step_size)</span></code> where <code class="code docutils literal notranslate"><span class="pre">init_step_size</span></code> is the
 initial ‘reasonable’ step size found by a coarse search as recommended
@@ -530,7 +536,7 @@ value of 10 as recommended in Hoffman and Gelman (2014).</p></li>
 search for a reasonable step size with an
 <a class="reference internal" href="mici.errors.html#mici.errors.AdaptationError" title="mici.errors.AdaptationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.AdaptationError</span></code></a> exception raised if a suitable
 step size is not found within this many iterations.</p></li>
-<li><p><strong>log_step_size_reducer</strong> (<em>Optional</em><em>[</em><em>ReducerFunction</em><em>]</em>) – Reduction to apply to final per-chain step sizes
+<li><p><strong>log_step_size_reducer</strong> (<em>ReducerFunction</em><em> | </em><em>None</em>) – Reduction to apply to final per-chain step sizes
 estimates to produce overall integrator step size for main chain stages.
 The specified function should accept a sequence of logarithms of
 estimated step sizes and output a non-negative step size to use. If
@@ -549,19 +555,22 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>Union</em><em>[</em><em>AdapterState</em><em>, </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
-<li><p><strong>chain_states</strong> (<em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em><em>]</em>) – Final state of chain (or states of chains) in current
+<li><p><strong>chain_states</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em>) – Final state of chain (or states of chains) in current
 sampling stage. May be updated in-place if transition parameters altered
 by adapter require updating any state components.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being dapted. Attributes of the transition or
 child objects will be updated in-place by the method.</p></li>
-<li><p><strong>rngs</strong> (<em>Union</em><em>[</em><em>Generator</em><em>, </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
+<li><p><strong>rngs</strong> (<em>Generator</em><em> | </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
 number generators. Used to resample any components of states needing to
 be updated due to adaptation if required.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -612,6 +621,9 @@ be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
 child objects may be updated in-place by the method.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -669,19 +681,22 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>Union</em><em>[</em><em>AdapterState</em><em>, </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
-<li><p><strong>chain_states</strong> (<em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em><em>]</em>) – Final state of chain (or states of chains) in current
+<li><p><strong>chain_states</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em>) – Final state of chain (or states of chains) in current
 sampling stage. May be updated in-place if transition parameters altered
 by adapter require updating any state components.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being dapted. Attributes of the transition or
 child objects will be updated in-place by the method.</p></li>
-<li><p><strong>rngs</strong> (<em>Union</em><em>[</em><em>Generator</em><em>, </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
+<li><p><strong>rngs</strong> (<em>Generator</em><em> | </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
 number generators. Used to resample any components of states needing to
 be updated due to adaptation if required.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -732,6 +747,9 @@ be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
 child objects may be updated in-place by the method.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -787,19 +805,22 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>Union</em><em>[</em><em>AdapterState</em><em>, </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
-<li><p><strong>chain_states</strong> (<em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em><em>]</em>) – Final state of chain (or states of chains) in current
+<li><p><strong>chain_states</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>]</em>) – Final state of chain (or states of chains) in current
 sampling stage. May be updated in-place if transition parameters altered
 by adapter require updating any state components.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being dapted. Attributes of the transition or
 child objects will be updated in-place by the method.</p></li>
-<li><p><strong>rngs</strong> (<em>Union</em><em>[</em><em>Generator</em><em>, </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
+<li><p><strong>rngs</strong> (<em>Generator</em><em> | </em><em>Iterable</em><em>[</em><em>Generator</em><em>]</em>) – Random number generator for the chain or a list of per-chain random
 number generators. Used to resample any components of states needing to
 be updated due to adaptation if required.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -850,6 +871,9 @@ be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
 child objects may be updated in-place by the method.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>

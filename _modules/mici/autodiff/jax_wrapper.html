@@ -347,8 +347,9 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">ParamSpec</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -356,26 +357,41 @@ document.write(`
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">jax</span>
     <span class="kn">import</span> <span class="nn">jax.numpy</span> <span class="k">as</span> <span class="nn">jnp</span>
+    <span class="kn">from</span> <span class="nn">jax</span> <span class="kn">import</span> <span class="n">Array</span> <span class="k">as</span> <span class="n">JaxArray</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="n">JAX_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">JaxArray</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;JaxArray&quot;</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
         <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="n">ArrayLike</span><span class="p">,</span>
         <span class="n">GradientFunction</span><span class="p">,</span>
+        <span class="n">HessianFunction</span><span class="p">,</span>
         <span class="n">JacobianFunction</span><span class="p">,</span>
+        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
         <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
         <span class="n">MatrixTressianProduct</span><span class="p">,</span>
+        <span class="n">MatrixTressianProductFunction</span><span class="p">,</span>
         <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">VectorJacobianProduct</span><span class="p">,</span>
         <span class="n">VectorJacobianProductFunction</span><span class="p">,</span>
     <span class="p">)</span>
 
 
+<span class="n">P</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">)</span>
+<span class="n">JaxArrayFunction</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="n">P</span><span class="p">,</span> <span class="s2">&quot;JaxArray | JaxArrayFunction | tuple[JaxArray | JaxArrayFunction, ...]&quot;</span>
+<span class="p">]</span>
+<span class="n">NumPyArrayFunction</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[</span>
+    <span class="n">P</span><span class="p">,</span> <span class="s2">&quot;np.ndarray | NumPyArrayFunction | tuple[np.ndarray | NumPyArrayFunction, ...]&quot;</span>
+<span class="p">]</span>
+
+
 <div class="viewcode-block" id="jit_and_return_numpy_arrays">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.jit_and_return_numpy_arrays">[docs]</a>
-<span class="k">def</span> <span class="nf">jit_and_return_numpy_arrays</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">jit_kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">jit_and_return_numpy_arrays</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">JaxArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumPyArrayFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a JIT compiled function returning JAX arrays to instead return NumPy arrays.</span>
 
 <span class="sd">    Args:</span>
@@ -389,14 +405,14 @@ document.write(`
 <span class="sd">        will instead be NumPy arrays, while any values which are callables returning</span>
 <span class="sd">        JAX arrays will instead return NumPy arrays.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">jitted_function</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">**</span><span class="n">jit_kwargs</span><span class="p">)</span>
+    <span class="n">jitted_function</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">return_numpy_arrays</span><span class="p">(</span><span class="n">jitted_function</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="return_numpy_arrays">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.return_numpy_arrays">[docs]</a>
-<span class="k">def</span> <span class="nf">return_numpy_arrays</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="nb">callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">callable</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">return_numpy_arrays</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">JaxArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NumPyArrayFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a function returning JAX arrays to instead return NumPy arrays.</span>
 
 <span class="sd">    Args:</span>
@@ -410,20 +426,22 @@ document.write(`
 <span class="sd">        JAX arrays will instead return NumPy arrays.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">as_numpy_array</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">as_numpy_array</span><span class="p">(</span>
+        <span class="n">value</span><span class="p">:</span> <span class="n">JaxArray</span> <span class="o">|</span> <span class="n">JaxArrayFunction</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">NumPyArrayFunction</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">return_numpy_arrays</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">function_returning_numpy_arrays</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">function_returning_numpy_arrays</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">NumPyArrayFunction</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">NumPyArrayFunction</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
         <span class="n">return_value</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">as_numpy_array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">return_value</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">as_numpy_array</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">as_numpy_array</span><span class="p">(</span><span class="n">return_value</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">function_returning_numpy_arrays</span></div>
 
@@ -432,9 +450,9 @@ document.write(`
 <div class="viewcode-block" id="grad_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.grad_and_value">[docs]</a>
 <span class="k">def</span> <span class="nf">grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GradientFunction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns both the Jacobian and value of a function.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns both the gradient and value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">grad</span><span class="p">,</span> <span class="n">value</span>
 
@@ -442,7 +460,7 @@ document.write(`
 
 
 
-<span class="k">def</span> <span class="nf">_detuple_vjp</span><span class="p">(</span><span class="n">vjp_func</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_detuple_vjp</span><span class="p">(</span><span class="n">vjp_func</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform a VJP of function with one return value so it returns an array.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">(</span>
         <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">vjp_func</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
@@ -468,7 +486,7 @@ document.write(`
 <span class="sd">        j[i, k] = ∂f[i] / ∂x[k]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">vjp_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">vjp_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">VectorJacobianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">vjp</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">vjp</span><span class="p">),</span> <span class="n">value</span>
 
@@ -481,7 +499,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JacobianFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns both the Jacobian and value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">pullback</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
         <span class="n">basis</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="p">(</span><span class="n">jac</span><span class="p">,)</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span><span class="n">pullback</span><span class="p">)(</span><span class="n">basis</span><span class="p">)</span>
@@ -494,8 +512,7 @@ document.write(`
 <div class="viewcode-block" id="mhp_jacobian_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.mhp_jacobian_and_value">[docs]</a>
 <span class="k">def</span> <span class="nf">mhp_jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixHessianProductFunction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes a function that returns MHP, Jacobian and value of a function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns MHP, Jacobian and value of a function.</span>
 
 <span class="sd">    For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here</span>
 <span class="sd">    defined as a function of a matrix `m` corresponding to</span>
@@ -509,7 +526,9 @@ document.write(`
 <span class="sd">        h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">mhp_jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">mhp_jacobian_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">jac</span><span class="p">,</span> <span class="n">mhp</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">mhp</span><span class="p">),</span> <span class="n">jac</span><span class="p">,</span> <span class="n">value</span>
 
@@ -519,12 +538,12 @@ document.write(`
 
 <div class="viewcode-block" id="hessian_grad_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.hessian_grad_and_value">[docs]</a>
-<span class="k">def</span> <span class="nf">hessian_grad_and_value</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HessianFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns the Hessian, gradient and value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">hessian_grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">hessian_grad_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">basis</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">grad_and_value_func</span> <span class="o">=</span> <span class="n">grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
         <span class="n">pushforward</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">jvp</span><span class="p">,</span> <span class="n">grad_and_value_func</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,),</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -539,11 +558,8 @@ document.write(`
 
 <div class="viewcode-block" id="mtp_hessian_grad_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.mtp_hessian_grad_and_value">[docs]</a>
-<span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value</span><span class="p">(</span>
-    <span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes a function that returns MTP, Jacobian and value of a function.</span>
+<span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixTressianProductFunction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns MTP, Jacobian and value of a function.</span>
 
 <span class="sd">    For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is</span>
 <span class="sd">    here defined as a function of a matrix `m` corresponding to</span>
@@ -556,11 +572,15 @@ document.write(`
 <span class="sd">        t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">hessian_and_aux_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">hessian_and_aux_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
         <span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">hessian</span><span class="p">,</span> <span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">hessian</span><span class="p">,</span> <span class="n">mtp</span><span class="p">,</span> <span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">hessian_and_aux_func</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">mtp</span><span class="p">),</span> <span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">value</span>
 

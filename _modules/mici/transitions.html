@@ -360,8 +360,6 @@ document.write(`
 <span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">LogRepFloat</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
-
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
 
@@ -374,7 +372,7 @@ document.write(`
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_process_integrator_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">Error</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+<span class="k">def</span> <span class="nf">_process_integrator_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">Error</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating trajectory due to error:</span><span class="se">\n</span><span class="si">{</span><span class="n">exception</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1"># Only set stats fields to True if exception is of matching type.</span>
     <span class="c1"># Corresponding fields should be set to False by default for transitions</span>
@@ -400,7 +398,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A set of names of state variables accessed by this transition.&quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A dictionary describing the statistics computed during transition.</span>
 
 <span class="sd">        Either :code:`None` if no statistics are returned by :py:meth:`sample` method or</span>
@@ -419,7 +417,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new chain state from the Markov transition kernel.</span>
 
 <span class="sd">        Args:</span>
@@ -448,7 +446,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mom&quot;</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
@@ -463,7 +461,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a new momentum component to state.</span>
 
 <span class="sd">        Assigns a new momentum component to state by sampling from a Markov transition</span>
@@ -497,7 +495,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="kc">None</span></div>
 </div>
@@ -534,7 +532,7 @@ document.write(`
 <span class="sd">         B, 268(CERN-TH-6172-91), pp.247-252.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">mom_resample_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">mom_resample_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
@@ -554,7 +552,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mom_resample_coeff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
@@ -584,7 +582,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -608,7 +606,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a position-momentum pair using integration based proposal(s).</span>
 
 <span class="sd">        Samples new position and momentum values from a Markov transition kernel which</span>
@@ -644,7 +642,7 @@ document.write(`
 <span class="sd">    integration direction will be the negation of its initial value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
@@ -709,7 +707,7 @@ document.write(`
 <span class="sd">         Monte Carlo, 2(11), p.2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -729,7 +727,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
 </div>
 
@@ -759,7 +757,7 @@ document.write(`
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
         <span class="n">n_step_range</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -784,7 +782,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="n">n_step</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_step_range</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sample_n_step</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">n_step</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
 </div>
@@ -908,7 +906,7 @@ document.write(`
         <span class="n">max_delta_h</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="p">,</span>
         <span class="n">termination_criterion</span><span class="p">:</span> <span class="n">TerminationCriterion</span> <span class="o">=</span> <span class="n">riemannian_no_u_turn_criterion</span><span class="p">,</span>
         <span class="n">do_extra_subtree_checks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -972,7 +970,7 @@ document.write(`
             <span class="n">tree</span><span class="o">.</span><span class="n">sum_mom</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">tree</span><span class="o">.</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_extra_subtree_checks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tree</span><span class="o">.</span><span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_extra_subtree_checks</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">termination_criterion</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="p">,</span>
                 <span class="n">neg_subtree</span><span class="o">.</span><span class="n">negative</span><span class="p">,</span>
@@ -1015,7 +1013,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
-        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;h_init&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)}</span>
 
@@ -1036,7 +1034,7 @@ document.write(`
         <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
 
     <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span>
@@ -1046,7 +1044,7 @@ document.write(`
         <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
         <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_SubTree</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">_SubTree</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># recursion base case</span>
             <span class="k">try</span><span class="p">:</span>
@@ -1123,7 +1121,7 @@ document.write(`
         <span class="n">next_state</span> <span class="o">=</span> <span class="n">state</span>
         <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tree_depth</span><span class="p">):</span>
             <span class="c1"># uniformly sample direction to expand tree in</span>
-            <span class="n">direction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># noqa: PLR2004</span>
             <span class="n">state</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">positive</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">tree</span><span class="o">.</span><span class="n">negative</span>
             <span class="n">state</span><span class="o">.</span><span class="n">dir</span> <span class="o">=</span> <span class="n">direction</span>
             <span class="c1"># expand tree by building new subtree of current depth</span>
@@ -1195,7 +1193,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
-        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
+        <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>  <span class="c1"># noqa: ARG002</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=-</span><span class="n">h</span><span class="p">)</span>
 
@@ -1206,7 +1204,7 @@ document.write(`
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;h_init&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
@@ -1258,7 +1256,7 @@ document.write(`
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">denominator</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">+</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;log_u&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>

@@ -355,7 +355,6 @@ document.write(`
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Iterable</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
@@ -416,7 +415,7 @@ document.write(`
         <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update adapter state after sampling from transition being adapted.</span>
 
 <span class="sd">        Args:</span>
@@ -438,11 +437,11 @@ document.write(`
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
-        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">AdapterState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
-    <span class="p">):</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Generator</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update transition parameters based on final adapter state or states.</span>
 
 <span class="sd">        Optionally, if multiple adapter states are available, e.g. from a set of</span>
@@ -563,14 +562,14 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">adapt_stat_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
-        <span class="n">adapt_stat_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AdaptationStatisticFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">log_step_size_reg_target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">adapt_stat_func</span><span class="p">:</span> <span class="n">AdaptationStatisticFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_step_size_reg_target</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_step_size_reg_coefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
         <span class="n">iter_decay_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span>
         <span class="n">iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
         <span class="n">max_init_step_size_iters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
-        <span class="n">log_step_size_reducer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReducerFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">log_step_size_reducer</span><span class="p">:</span> <span class="n">ReducerFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            adapt_stat_target: Target value for the transition statistic</span>
@@ -703,11 +702,11 @@ document.write(`
                     <span class="ow">not</span> <span class="n">step_size_too_big</span> <span class="ow">and</span> <span class="n">delta_h</span> <span class="o">&gt;</span> <span class="n">delta_h_threshold</span>
                 <span class="p">):</span>
                     <span class="k">return</span> <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span>
-                <span class="k">elif</span> <span class="n">step_size_too_big</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">step_size_too_big</span><span class="p">:</span>
                     <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">/=</span> <span class="mi">2</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">*=</span> <span class="mi">2</span>
-            <span class="k">except</span> <span class="n">IntegratorError</span><span class="p">:</span>
+            <span class="k">except</span> <span class="n">IntegratorError</span><span class="p">:</span>  <span class="c1"># noqa: PERF203</span>
                 <span class="n">step_size_too_big</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">/=</span> <span class="mi">2</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -726,10 +725,10 @@ document.write(`
     <span class="k">def</span> <span class="nf">update</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
-        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
         <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="n">error_weight</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iter_offset</span> <span class="o">+</span> <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">])</span>
         <span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;adapt_stat_error&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">error_weight</span>
@@ -751,11 +750,11 @@ document.write(`
 <a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.DualAveragingStepSizeAdapter.finalize">[docs]</a>
     <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
-        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">AdapterState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>  <span class="c1"># noqa: ARG002</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
-    <span class="p">):</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Generator</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">],</span>  <span class="c1"># noqa: ARG002</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">transition</span><span class="o">.</span><span class="n">integrator</span><span class="o">.</span><span class="n">step_size</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span>
                 <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;smoothed_log_step_size&quot;</span><span class="p">],</span>
@@ -797,7 +796,7 @@ document.write(`
 
     <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            reg_iter_offset: Iteration offset used for calculating iteration dependent</span>
@@ -816,7 +815,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
-        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;iter&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
@@ -831,9 +830,9 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
         <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
-        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
-        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Use Welford (1962) incremental algorithm to update statistics to</span>
         <span class="c1"># calculate online variance estimate</span>
         <span class="c1"># https://en.wikipedia.org/wiki/</span>
@@ -846,7 +845,7 @@ document.write(`
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_regularize_var_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_regularize_var_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update variance estimates by regularizing towards common scalar.</span>
 
 <span class="sd">        Performed in place to prevent further array allocations.</span>
@@ -861,11 +860,11 @@ document.write(`
 <a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineVarianceMetricAdapter.finalize">[docs]</a>
     <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
-        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">AdapterState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
-    <span class="p">):</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Generator</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
             <span class="n">var_est</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_sq&quot;</span><span class="p">)</span>
@@ -892,14 +891,14 @@ document.write(`
                     <span class="n">var_est</span> <span class="o">+=</span> <span class="p">(</span>
                         <span class="n">mean_diff</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_iter</span>
                     <span class="p">)</span>
-        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># noqa: PLR2004</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;At least two chain samples required to compute a variance estimates.&quot;</span>
             <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">var_est</span> <span class="o">/=</span> <span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_regularize_var_est</span><span class="p">(</span><span class="n">var_est</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span>
         <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="n">var_est</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span>
         <span class="c1"># Resample momentum to account for altered distribution due to new metric</span>
-        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">chain_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
 </div>
 
@@ -938,7 +937,7 @@ document.write(`
 
     <span class="n">is_fast</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg_iter_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">reg_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            reg_iter_offset: Iteration offset used for calculating iteration</span>
@@ -956,7 +955,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
-        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdapterState</span><span class="p">:</span>
         <span class="n">dim_pos</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">chain_state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">dtype</span>
@@ -973,9 +972,9 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">adapt_state</span><span class="p">:</span> <span class="n">AdapterState</span><span class="p">,</span>
         <span class="n">chain_state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
-        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>
-        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">trans_stats</span><span class="p">:</span> <span class="n">TransitionStatistics</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
+        <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Use Welford (1962) incremental algorithm to update statistics to</span>
         <span class="c1"># calculate online covariance estimate</span>
         <span class="c1"># https://en.wikipedia.org/wiki/</span>
@@ -988,7 +987,7 @@ document.write(`
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_regularize_covar_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_regularize_covar_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covar_est</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update covariance estimate by regularising towards identity.</span>
 
 <span class="sd">        Performed in place to prevent further array allocations.</span>
@@ -1003,11 +1002,11 @@ document.write(`
 <a class="viewcode-back" href="../../mici.adapters.html#mici.adapters.OnlineCovarianceMetricAdapter.finalize">[docs]</a>
     <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
-        <span class="n">chain_states</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">]],</span>
+        <span class="n">adapt_states</span><span class="p">:</span> <span class="n">AdapterState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">],</span>
+        <span class="n">chain_states</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
         <span class="n">transition</span><span class="p">:</span> <span class="n">Transition</span><span class="p">,</span>
-        <span class="n">rngs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">]],</span>
-    <span class="p">):</span>
+        <span class="n">rngs</span><span class="p">:</span> <span class="n">Generator</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Generator</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">adapt_states</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="n">n_iter</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span>
             <span class="n">covar_est</span> <span class="o">=</span> <span class="n">adapt_states</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;sum_diff_outer&quot;</span><span class="p">)</span>
@@ -1034,14 +1033,14 @@ document.write(`
                         <span class="o">*</span> <span class="p">(</span><span class="n">adapt_state</span><span class="p">[</span><span class="s2">&quot;iter&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_iter_prev</span><span class="p">)</span>
                         <span class="o">/</span> <span class="n">n_iter</span>
                     <span class="p">)</span>
-        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># noqa: PLR2004</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;At least two chain samples required to compute a variance estimates.&quot;</span>
             <span class="k">raise</span> <span class="n">AdaptationError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">covar_est</span> <span class="o">/=</span> <span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_regularize_covar_est</span><span class="p">(</span><span class="n">covar_est</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span>
         <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span><span class="n">covar_est</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span>
         <span class="c1"># Resample momentum to account for altered distribution due to new metric</span>
-        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chain_states</span><span class="p">,</span> <span class="n">rngs</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">chain_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">transition</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">chain_state</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
 </div>
 

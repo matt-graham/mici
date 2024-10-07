@@ -440,7 +440,7 @@ termination criterion checks are performed on overlapping subtrees which
 help to reduce this resonant behaviour at the cost of more conservative
 trajectory termination in some correlated models and some overhead from
 additional checks.</p></li>
-<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – Markov transition kernel which leaves the conditional
+<li><p><strong>momentum_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em> | </em><em>None</em>) – Markov transition kernel which leaves the conditional
 distribution on the momentum under the canonical distribution invariant,
 updating only the momentum component of the chain state. If set to
 <code class="code docutils literal notranslate"><span class="pre">None</span></code> the momentum transition operator
@@ -495,7 +495,7 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>NDArray</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each state can be either an array
 specifying the state position component or a
 <a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.states.ChainState</span></code></a> instance. If an array is passed or
 the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set, a momentum component
@@ -663,7 +663,7 @@ help to reduce this resonant behaviour at the cost of more conservative
 trajectory termination in some correlated models and some overhead from
 additional checks.</p>
 </p></li>
-<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – Markov transition kernel which leaves the conditional
+<li><p><strong>momentum_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em> | </em><em>None</em>) – Markov transition kernel which leaves the conditional
 distribution on the momentum under the canonical distribution invariant,
 updating only the momentum component of the chain state. If set to
 <code class="code docutils literal notranslate"><span class="pre">None</span></code> the momentum transition operator
@@ -718,7 +718,7 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>NDArray</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each state can be either an array
 specifying the state position component or a
 <a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.states.ChainState</span></code></a> instance. If an array is passed or
 the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set, a momentum component
@@ -897,7 +897,7 @@ distribution on augmented space.</p></li>
 distribution invariant and jointly updates the position and momentum
 components of the chain state by integrating the Hamiltonian dynamics of
 the system to propose new values for the state.</p></li>
-<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – Markov transition kernel which leaves the conditional
+<li><p><strong>momentum_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em> | </em><em>None</em>) – Markov transition kernel which leaves the conditional
 distribution on the momentum under the join distribution invariant,
 updating only the momentum component of the chain state. If set to
 <code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code> the momentum transition operator
@@ -940,7 +940,7 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>NDArray</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each state can be either an array
 specifying the state position component or a
 <a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.states.ChainState</span></code></a> instance. If an array is passed or
 the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set, a momentum component
@@ -1127,11 +1127,11 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each entry can be either a
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each entry can be either a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">ChainState</span></code> object or a dictionary with entries specifying
 initial values for all state variables used by chain transition
 <code class="code docutils literal notranslate"><span class="pre">sample</span></code> methods.</p></li>
-<li><p><strong>trace_funcs</strong> (<em>Optional</em><em>[</em><em>Sequence</em><em>[</em><em>TraceFunction</em><em>]</em><em>]</em>) – Sequence of functions which compute the variables to be
+<li><p><strong>trace_funcs</strong> (<em>Sequence</em><em>[</em><em>TraceFunction</em><em>] </em><em>| </em><em>None</em>) – Sequence of functions which compute the variables to be
 recorded at each chain iteration (during only the main non-adaptive
 sampling stage if <code class="code docutils literal notranslate"><span class="pre">trace_warm_up</span> <span class="pre">==</span> <span class="pre">False</span></code>), with each trace
 function passed the current state and returning a dictionary of scalar
@@ -1141,7 +1141,7 @@ returned traces dictionary. If a key appears in multiple dictionaries
 only the the value corresponding to the last trace function to return
 that key will be stored. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> or an empty sequence no
 variables are traced.</p></li>
-<li><p><strong>adapters</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>]</em><em>]</em>) – Dictionary of sequences of <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.adapters.Adapter</span></code></a>
+<li><p><strong>adapters</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Sequence</em><em>[</em><a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><em>Adapter</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Dictionary of sequences of <a class="reference internal" href="mici.adapters.html#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.adapters.Adapter</span></code></a>
 instances keyed by strings corresponding to the key of the transition in
 the <a class="reference internal" href="#mici.samplers.MarkovChainMonteCarloMethod.transitions" title="mici.samplers.MarkovChainMonteCarloMethod.transitions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transitions</span></code></a> dictionary to apply the adapters to, to use
 to adaptatively set parameters of the transitions during the adaptive
@@ -1149,7 +1149,7 @@ stages of the chains. Note that the adapter updates are applied in the
 order the adapters appear in the sequence and so if multiple adapters
 change the same parameter(s) the order will matter. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> or
 an empty sequence no adapters are used.</p></li>
-<li><p><strong>stager</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.stagers.html#mici.stagers.Stager" title="mici.stagers.Stager"><em>Stager</em></a><em>]</em>) – Chain iteration stager object which controls the split of the chain
+<li><p><strong>stager</strong> (<a class="reference internal" href="mici.stagers.html#mici.stagers.Stager" title="mici.stagers.Stager"><em>Stager</em></a><em> | </em><em>None</em>) – Chain iteration stager object which controls the split of the chain
 iterations into the adaptive warm up and non-adaptive main stages. If
 set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) and all adapters specified by the
 <code class="code docutils literal notranslate"><span class="pre">adapters</span></code> argument are of the fast type (i.e. their
@@ -1162,7 +1162,7 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Number of parallel processes to run chains over. If
+<li><p><strong>n_process</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of parallel processes to run chains over. If
 <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
 assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
@@ -1172,7 +1172,7 @@ the number of processes will be set to the output of
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_process</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
@@ -1187,12 +1187,12 @@ for long chains and/or large chain states. The chain data is written to
 temporary directory if <code class="code docutils literal notranslate"><span class="pre">memmap_path</span></code> is <cite>None</cite>). Chain data is
 always memory mapped when sampling chains in parallel on multiple
 processes.</p></li>
-<li><p><strong>memmap_path</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Path to directory to write memory-mapped chain data to. If
+<li><p><strong>memmap_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Path to directory to write memory-mapped chain data to. If
 <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) and memory-mapping is enabled then a
 temporary directory will be created and the chain data written to files
 there, with the created files being deleted in this case once the last
 reference to them is closed.</p></li>
-<li><p><strong>monitor_stats</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – String-keyed dictionary of lists of strings, with dictionary
+<li><p><strong>monitor_stats</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – String-keyed dictionary of lists of strings, with dictionary
 key the key of a Markov transition in the <code class="code docutils literal notranslate"><span class="pre">transitions</span></code> dict
 passed to the the <code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> method and the corresponding list,
 the keys of statistics returned by the transition (as defined by the
@@ -1204,7 +1204,7 @@ monitored.</p></li>
 <li><p><strong>display_progress</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to display a progress bar to track the completed
 chain sampling iterations. Default value is <code class="code docutils literal notranslate"><span class="pre">True</span></code>, i.e. to
 display progress bar.</p></li>
-<li><p><strong>progress_bar_class</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.progressbars.html#mici.progressbars.ProgressBar" title="mici.progressbars.ProgressBar"><em>ProgressBar</em></a><em>]</em>) – Class or factory function for progress bar to use to
+<li><p><strong>progress_bar_class</strong> (<a class="reference internal" href="mici.progressbars.html#mici.progressbars.ProgressBar" title="mici.progressbars.ProgressBar"><em>ProgressBar</em></a><em> | </em><em>None</em>) – Class or factory function for progress bar to use to
 show chain progress if enabled (<code class="code docutils literal notranslate"><span class="pre">display_progress=True</span></code>). Defaults
 to <a class="reference internal" href="mici.progressbars.html#mici.progressbars.SequenceProgressBar" title="mici.progressbars.SequenceProgressBar"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.progressbars.SequenceProgressBar</span></code></a> if <code class="code docutils literal notranslate"><span class="pre">None</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">display_progress=True</span></code>.</p></li>
@@ -1266,7 +1266,7 @@ transition.</p></li>
 lower and upper bounds (inclusive) of integer interval to uniformly draw
 random number integrator steps to simulate in each integration
 transition.</p></li>
-<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – Markov transition kernel which leaves the conditional
+<li><p><strong>momentum_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em> | </em><em>None</em>) – Markov transition kernel which leaves the conditional
 distribution on the momentum under the canonical distribution invariant,
 updating only the momentum component of the chain state. If set to
 <code class="code docutils literal notranslate"><span class="pre">None</span></code> the momentum transition operator
@@ -1315,7 +1315,7 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>NDArray</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each state can be either an array
 specifying the state position component or a
 <a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.states.ChainState</span></code></a> instance. If an array is passed or
 the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set, a momentum component
@@ -1457,7 +1457,7 @@ Handbook of Markov Chain Monte Carlo, 2(11), p.2.</p></li>
 transition.</p></li>
 <li><p><strong>n_step</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of integrator steps to simulate in each integration
 transition.</p></li>
-<li><p><strong>momentum_transition</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em>]</em>) – Markov transition kernel which leaves the conditional
+<li><p><strong>momentum_transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.MomentumTransition" title="mici.transitions.MomentumTransition"><em>MomentumTransition</em></a><em> | </em><em>None</em>) – Markov transition kernel which leaves the conditional
 distribution on the momentum under the canonical distribution invariant,
 updating only the momentum component of the chain state. If set to
 <cite>None</cite> the momentum transition operator
@@ -1505,7 +1505,7 @@ or more adaptive stages. If zero, only a single non-adaptive stage is
 used.</p></li>
 <li><p><strong>n_main_iter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of iterations (samples to draw) per chain during main
 (non-adaptive) sampling stage.</p></li>
-<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em>, </em><em>NDArray</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em><em>]</em>) – Initial chain states. Each state can be either an array
+<li><p><strong>init_states</strong> (<em>Iterable</em><em>[</em><a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a><em> | </em><em>NDArray</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>]</em>) – Initial chain states. Each state can be either an array
 specifying the state position component or a
 <a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.states.ChainState</span></code></a> instance. If an array is passed or
 the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set, a momentum component

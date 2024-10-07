@@ -386,7 +386,7 @@ document.write(`
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.autodiff.jax_wrapper.grad_and_value">
 <span class="sig-prename descclassname"><span class="pre">mici.autodiff.jax_wrapper.</span></span><span class="sig-name descname"><span class="pre">grad_and_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff/jax_wrapper.html#grad_and_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.jax_wrapper.grad_and_value" title="Link to this definition">#</a></dt>
-<dd><p>Makes a function that returns both the Jacobian and value of a function.</p>
+<dd><p>Makes a function that returns both the gradient and value of a function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>func</strong> (<em>ScalarFunction</em>)</p>
@@ -406,7 +406,7 @@ document.write(`
 <dd class="field-odd"><p><strong>func</strong> (<em>ScalarFunction</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[ArrayLike, ArrayLike, ScalarLike]</p>
+<dd class="field-even"><p>HessianFunction</p>
 </dd>
 </dl>
 </dd></dl>
@@ -427,12 +427,12 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mici.autodiff.jax_wrapper.jit_and_return_numpy_arrays">
-<span class="sig-prename descclassname"><span class="pre">mici.autodiff.jax_wrapper.</span></span><span class="sig-name descname"><span class="pre">jit_and_return_numpy_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">jit_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff/jax_wrapper.html#jit_and_return_numpy_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.jax_wrapper.jit_and_return_numpy_arrays" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">mici.autodiff.jax_wrapper.</span></span><span class="sig-name descname"><span class="pre">jit_and_return_numpy_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/autodiff/jax_wrapper.html#jit_and_return_numpy_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.autodiff.jax_wrapper.jit_and_return_numpy_arrays" title="Link to this definition">#</a></dt>
 <dd><p>Wrap a JIT compiled function returning JAX arrays to instead return NumPy arrays.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>function</strong> – Function to wrap. Should return one of: a single JAX array, a callable
+<li><p><strong>function</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>Array</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em>, </em><em>...</em><em>]</em><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>Array</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em>, </em><em>...</em><em>]</em><em>]</em><em>, </em><em>...</em><em>]</em><em>]</em>) – Function to wrap. Should return one of: a single JAX array, a callable
 returning one or more JAX array or a tuple of one or more JAX arrays or
 functions returning one or more JAX arrays.</p></li>
 <li><p><strong>**jit_kwargs</strong> – Any keyword arguments to pass to <cite>jax.jit</cite> operator.</p></li>
@@ -442,6 +442,9 @@ functions returning one or more JAX arrays.</p></li>
 <dd class="field-even"><p>Wrapped function. Any values returned by original function which are JAX arrays
 will instead be NumPy arrays, while any values which are callables returning
 JAX arrays will instead return NumPy arrays.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a> | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], np.ndarray | NumPyArrayFunction | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[np.ndarray | NumPyArrayFunction, …]] | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a> | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], np.ndarray | NumPyArrayFunction | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[np.ndarray | NumPyArrayFunction, …]], …]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -490,7 +493,7 @@ third-order partial derivatives of the scalar-valued function such that</p>
 <dd class="field-odd"><p><strong>func</strong> (<em>ScalarFunction</em>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]</p>
+<dd class="field-even"><p>MatrixTressianProductFunction</p>
 </dd>
 </dl>
 </dd></dl>
@@ -501,7 +504,7 @@ third-order partial derivatives of the scalar-valued function such that</p>
 <dd><p>Wrap a function returning JAX arrays to instead return NumPy arrays.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>function</strong> (<em>callable</em>) – Function to wrap. Should return one of: a single JAX array, a callable
+<dd class="field-odd"><p><strong>function</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>Array</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em>, </em><em>...</em><em>]</em><em>] </em><em>| </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>Array</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a><em>[</em><em>[</em><em>~P</em><em>]</em><em>, </em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>JaxArray</em><em> | </em><em>JaxArrayFunction</em><em>, </em><em>...</em><em>]</em><em>]</em><em>, </em><em>...</em><em>]</em><em>]</em>) – Function to wrap. Should return one of: a single JAX array, a callable
 returning one or more JAX array or a tuple of one or more JAX arrays or
 functions returning one or more JAX arrays.</p>
 </dd>
@@ -511,7 +514,7 @@ will instead be NumPy arrays, while any values which are callables returning
 JAX arrays will instead return NumPy arrays.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>callable</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a> | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], np.ndarray | NumPyArrayFunction | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[np.ndarray | NumPyArrayFunction, …]] | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>ndarray</em></a> | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.12)"><em>Callable</em></a>[[~P], np.ndarray | NumPyArrayFunction | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a>[np.ndarray | NumPyArrayFunction, …]], …]]</p>
 </dd>
 </dl>
 </dd></dl>

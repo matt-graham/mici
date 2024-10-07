@@ -354,7 +354,7 @@ document.write(`
 <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">cache_in_state</span><span class="p">,</span> <span class="n">cache_in_state_with_aux</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
 
     <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
 
@@ -405,9 +405,9 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -498,7 +498,7 @@ document.write(`
 
 <div class="viewcode-block" id="System.h1_flow">
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.System.h1_flow">[docs]</a>
-    <span class="k">def</span> <span class="nf">h1_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">h1_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply exact flow map corresponding to `h1` Hamiltonian component.</span>
 
 <span class="sd">        `state` argument is modified in place.</span>
@@ -598,8 +598,7 @@ document.write(`
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.System.sample_momentum">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">sample_momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sample a momentum from its conditional distribution given a position.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample a momentum from its conditional distribution given a position.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: State defining position to condition on.</span>
@@ -636,7 +635,7 @@ document.write(`
 <div class="viewcode-block" id="TractableFlowSystem.h2_flow">
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.TractableFlowSystem.h2_flow">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply exact flow map corresponding to `h2` Hamiltonian component.</span>
 
 <span class="sd">        `state` argument is modified in place.</span>
@@ -679,10 +678,10 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -724,7 +723,7 @@ document.write(`
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">metric</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="n">metric</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># noqa: PLR2004</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -763,7 +762,7 @@ document.write(`
 
 <div class="viewcode-block" id="EuclideanMetricSystem.h2_flow">
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.EuclideanMetricSystem.h2_flow">[docs]</a>
-    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">+=</span> <span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dh2_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 
@@ -817,10 +816,10 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -883,7 +882,7 @@ document.write(`
 
 <div class="viewcode-block" id="GaussianEuclideanMetricSystem.h2_flow">
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianEuclideanMetricSystem.h2_flow">[docs]</a>
-    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">h2_flow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
         <span class="n">sin_omega_dt</span><span class="p">,</span> <span class="n">cos_omega_dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">omega</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
         <span class="n">eigvec_trans_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigvec</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span>
@@ -987,7 +986,7 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jacob_constr_1</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">,</span>
         <span class="n">inner_product_matrix</span><span class="p">:</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
-        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">MatrixLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute inner product of rows of constraint Jacobian matrices.</span>
 
@@ -1133,12 +1132,12 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dens_wrt_hausdorff</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JacobianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">JacobianFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -1248,7 +1247,7 @@ document.write(`
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.ConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>
     <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
         <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">dt</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">inv</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">IdentityMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span></div>
@@ -1323,8 +1322,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">h1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dens_wrt_hausdorff</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_det_sqrt_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_det_sqrt_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.dh1_dpos">
@@ -1332,8 +1330,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">dh1_dpos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dens_wrt_hausdorff</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_log_det_sqrt_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_neg_log_dens</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_log_det_sqrt_gram</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ConstrainedEuclideanMetricSystem.project_onto_cotangent_space">
@@ -1367,13 +1364,13 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dens_wrt_hausdorff</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JacobianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">mhp_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixHessianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">JacobianFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mhp_constr</span><span class="p">:</span> <span class="n">MatrixHessianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -1498,16 +1495,15 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jacob_constr_1</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">,</span>
         <span class="n">inner_product_matrix</span><span class="p">:</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
-        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">MatrixLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="n">jacob_constr_1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DensePositiveDefiniteMatrix</span><span class="p">(</span>
                 <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
-            <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
+            <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DenseConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">
@@ -1542,12 +1538,12 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetricLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JacobianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">mhp_constr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixHessianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">JacobianFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mhp_constr</span><span class="p">:</span> <span class="n">MatrixHessianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -1655,23 +1651,22 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">jacob_constr_1</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">,</span>
         <span class="n">inner_product_matrix</span><span class="p">:</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
-        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">jacob_constr_2</span><span class="p">:</span> <span class="n">MatrixLike</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">jacob_constr_2</span> <span class="ow">is</span> <span class="n">jacob_constr_1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSymmetricMatrix</span><span class="p">(</span>
                 <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_1</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
-            <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">matrices</span><span class="o">.</span><span class="n">DenseSquareMatrix</span><span class="p">(</span>
+            <span class="n">jacob_constr_1</span> <span class="o">@</span> <span class="p">(</span><span class="n">inner_product_matrix</span> <span class="o">@</span> <span class="n">jacob_constr_2</span><span class="o">.</span><span class="n">T</span><span class="p">),</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem.dh2_flow_dmom">[docs]</a>
     <span class="k">def</span> <span class="nf">dh2_flow_dmom</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
         <span class="n">dt</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">matrices</span><span class="o">.</span><span class="n">Matrix</span><span class="p">]:</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="o">.</span><span class="n">eigval</span><span class="o">**</span><span class="mf">0.5</span>
@@ -1736,11 +1731,11 @@ document.write(`
         <span class="n">metric_matrix_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">],</span>
         <span class="n">metric_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metric_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">VectorJacobianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metric_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -1828,8 +1823,7 @@ document.write(`
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem.metric_func">[docs]</a>
     <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">metric_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function computing the parameter of the metric matrix representation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function computing the parameter of the metric matrix representation.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: State to compute value at.</span>
@@ -1844,8 +1838,7 @@ document.write(`
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem.vjp_metric_func">[docs]</a>
     <span class="nd">@cache_in_state_with_aux</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;metric_func&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">vjp_metric_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VectorJacobianProduct</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function constructing a vector-Jacobian-product for `metric_func`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function constructing a vector-Jacobian-product for `metric_func`.</span>
 
 <span class="sd">        The vector-Jacobian-product is here defined as a function of an array `v` (of</span>
 <span class="sd">        the same shape as the output of `metric_func`) corresponding to</span>
@@ -1874,8 +1867,7 @@ document.write(`
 <a class="viewcode-back" href="../../mici.systems.html#mici.systems.RiemannianMetricSystem.metric">[docs]</a>
     <span class="nd">@cache_in_state</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">matrices</span><span class="o">.</span><span class="n">PositiveDefiniteMatrix</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Function computing the metric matrix representation.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Function computing the metric matrix representation.</span>
 
 <span class="sd">        The returned type of this function is that specified by the</span>
 <span class="sd">        `metric_matrix_class` argument to the initializer.</span>
@@ -1961,10 +1953,10 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_scalar_func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">vjp_metric_scalar_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">vjp_metric_scalar_func</span><span class="p">:</span> <span class="n">VectorJacobianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -2055,10 +2047,10 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_diagonal_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">vjp_metric_diagonal_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">vjp_metric_diagonal_func</span><span class="p">:</span> <span class="n">VectorJacobianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -2138,10 +2130,10 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_chol_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">vjp_metric_chol_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">vjp_metric_chol_func</span><span class="p">:</span> <span class="n">VectorJacobianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -2223,10 +2215,10 @@ document.write(`
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="n">metric_func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VectorJacobianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">vjp_metric_func</span><span class="p">:</span> <span class="n">VectorJacobianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>
@@ -2332,12 +2324,12 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradientFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">hess_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">HessianFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">mtp_neg_log_dens</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MatrixTressianProductFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hess_neg_log_dens</span><span class="p">:</span> <span class="n">HessianFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mtp_neg_log_dens</span><span class="p">:</span> <span class="n">MatrixTressianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">softabs_coeff</span><span class="p">:</span> <span class="n">ScalarLike</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            neg_log_dens: Function which given a position array returns the negative</span>

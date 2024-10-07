@@ -403,7 +403,7 @@ wished to draw approximate samples from.</p></li>
 <li><p><strong>metric_chol_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 2D array
 with zeros above the diagonal corresponding to the lower-triangular
 Cholesky-factor of the positive definite metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_chol_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_chol_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a lower-triangular 2D array as an argument (any
 values in the array above the diagonal are ignored) and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_chol_func</cite> with respect to
@@ -426,7 +426,7 @@ automatic differentiation fallback will be used to attempt to construct
 a function which calculates the VJP (and value) of <cite>metric_chol_func</cite>
 automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -434,7 +434,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -589,6 +589,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -791,7 +794,7 @@ metric on the ambient space.</p></li>
 <li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
 passed (the default), the identity matrix will be used. If a 1D array is
@@ -812,7 +815,7 @@ to the posterior distribution when conditioning on the event
 the base Hausdorff measure on the manifold depends on the metric defined
 on the ambient space, with the Hausdorff measure being defined with
 respect to the metric induced on the manifold from this ambient metric.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -821,7 +824,7 @@ passed position array. If <code class="code docutils literal notranslate"><span 
 automatic differentiation fallback will be used to attempt to construct
 a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
 automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
 array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
@@ -833,7 +836,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -1073,6 +1076,9 @@ the ambient space.</p>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -1104,6 +1110,9 @@ the ambient space.</p>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1155,7 +1164,7 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -1288,7 +1297,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -1296,7 +1305,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -1494,6 +1503,9 @@ momentum component of the initial input state.</p>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -1525,6 +1537,9 @@ momentum component of the initial input state.</p>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1559,7 +1574,7 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -1668,7 +1683,7 @@ metric on the ambient space.</p></li>
 <li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
 passed (the default), the identity matrix will be used. If a 1D array is
@@ -1689,7 +1704,7 @@ to the posterior distribution when conditioning on the event
 the base Hausdorff measure on the manifold depends on the metric defined
 on the ambient space, with the Hausdorff measure being defined with
 respect to the metric induced on the manifold from this ambient metric.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -1698,7 +1713,7 @@ passed position array. If <code class="code docutils literal notranslate"><span 
 automatic differentiation fallback will be used to attempt to construct
 a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
 automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
 array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
@@ -1710,7 +1725,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – Function which given a position array returns another function
+<li><p><strong>mhp_constr</strong> (<em>MatrixHessianProductFunction</em><em> | </em><em>None</em>) – Function which given a position array returns another function
 which takes a 2D array as an argument and returns the
 <em>matrix-Hessian-product</em> (MHP) of the constraint function <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 with respect to the position array argument. The MHP is here defined as
@@ -1728,7 +1743,7 @@ the Jacobian of <code class="code docutils literal notranslate"><span class="pre
 fallback will be used to attempt to construct a function which
 calculates the MHP (and Jacobian and value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -1968,6 +1983,9 @@ the ambient space.</p>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -1999,6 +2017,9 @@ the ambient space.</p>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2050,7 +2071,7 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -2175,7 +2196,7 @@ corresponding to the positive definite metric matrix representation. The
 returned matrices (2D arrays) are assumed to be positive-definite for
 all input positions and a <cite>LinAlgError</cite> exception may be raised if this
 fails to be the case.</p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a 2D array as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_func</cite> with respect to the
 position array argument. The VJP is here defined as a function of a 2D
@@ -2196,7 +2217,7 @@ passed position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -2204,7 +2225,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -2360,6 +2381,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -2505,7 +2529,7 @@ wished to draw approximate samples from.</p></li>
 <li><p><strong>metric_diagonal_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 1D
 array with strictly positive values corresponding to the diagonal values
 (left-to-right) of the diagonal metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_diagonal_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns
+<li><p><strong>vjp_metric_diagonal_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns
 another function which takes a 1D array as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_diagonal_func</cite> with respect
 to the position array argument. The VJP is here defined as a function of
@@ -2527,7 +2551,7 @@ default) an automatic differentiation fallback will be used to attempt
 to construct a function which calculates the VJP (and value) of
 <cite>metric_diagonal_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -2535,7 +2559,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -2691,6 +2715,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -2838,7 +2865,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 position space and covariance of Gaussian marginal distribution on
 momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
 will be used. If a 1D array is passed then this is assumed to specify a
@@ -2848,7 +2875,7 @@ a metric with a dense positive definite matrix representation specified
 by the array. Otherwise if the value is a subclass of
 <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
 the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -2856,7 +2883,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -3012,6 +3039,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -3043,6 +3073,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3119,7 +3152,7 @@ space.</p>
 <li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
 (the default), the identity matrix will be used. If a 1D array is passed
@@ -3129,7 +3162,7 @@ passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if a
 subclass of <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to
 directly specify the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3137,7 +3170,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>Optional</em><em>[</em><em>JacobianFunction</em><em>]</em>) – <p>Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <cite>c = constr(q)</cite> with respect to the position array
 argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
@@ -3151,7 +3184,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <cite>neg_log_dens</cite> automatically.</p>
 </p></li>
-<li><p><strong>mhp_constr</strong> (<em>Optional</em><em>[</em><em>MatrixHessianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another function
+<li><p><strong>mhp_constr</strong> (<em>MatrixHessianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another function
 which takes a 2D array as an argument and returns the
 <em>matrix-Hessian-product</em> (MHP) of the constraint function <cite>constr</cite> with
 respect to the position array argument. The MHP is here defined as a
@@ -3173,7 +3206,7 @@ passed (the default) an automatic differentiation fallback will be used
 to attempt to construct a function which calculates the MHP (and
 Jacobian and value) of <cite>constr</cite> automatically.</p>
 </p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -3413,6 +3446,9 @@ the ambient space.</p>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -3444,6 +3480,9 @@ the ambient space.</p>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3495,7 +3534,7 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>Optional</em><em>[</em><em>MatrixLike</em><em>]</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -3634,7 +3673,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to the standard Gaussian measure on the position space,
 with the corresponding distribution on the position space being the
 target distribution it is wished to draw approximate samples from.</p></li>
-<li><p><strong>metric</strong> (<em>Optional</em><em>[</em><em>MetricLike</em><em>]</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 position space and covariance of Gaussian marginal distribution on
 momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
 will be used. If a 1D array is passed then this is assumed to specify a
@@ -3644,7 +3683,7 @@ a metric with a dense positive definite matrix representation specified
 by the array. Otherwise if the value is a subclass of
 <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
 the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3652,7 +3691,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -3808,6 +3847,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -3839,6 +3881,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3947,7 +3992,7 @@ behaviour of these methods).</p>
 containing the parameter value of the metric matrix representation
 passed as the single positional argument to the <cite>metric_matrix_class</cite>
 initializer.</p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes an array as an argument and returns the
 <strong>vector-Jacobian-product</strong> (VJP) of <cite>metric_func</cite> with respect to the
 position array argument. The VJP is here defined as a function of an
@@ -3968,7 +4013,7 @@ passed position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3976,9 +4021,9 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>metric_kwargs</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – An optional dictionary of any additional keyword arguments to
+<li><p><strong>metric_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – An optional dictionary of any additional keyword arguments to
 the initializer of <cite>metric_matrix_class</cite>.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4134,6 +4179,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -4279,7 +4327,7 @@ wished to draw approximate samples from.</p></li>
 <li><p><strong>metric_scalar_func</strong> (<em>ScalarFunction</em>) – Function which given a position array returns a strictly
 positive scalar corresponding to the parameter value of the scaled
 identity metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_scalar_func</strong> (<em>Optional</em><em>[</em><em>VectorJacobianProductFunction</em><em>]</em>) – <p>Function which given a position array returns
+<li><p><strong>vjp_metric_scalar_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns
 another function which takes a scalar as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_scalar_func</cite> with respect to
 the position array argument. The VJP is here defined as a function of a
@@ -4301,7 +4349,7 @@ automatic differentiation fallback will be used to attempt to construct
 a function which calculates the VJP (and value) of <cite>metric_scalar_func</cite>
 automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -4309,7 +4357,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4464,6 +4512,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4630,7 +4681,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -4638,7 +4689,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>hess_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>HessianFunction</em><em>]</em>) – Function which given a position array returns the Hessian
+<li><p><strong>hess_neg_log_dens</strong> (<em>HessianFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the Hessian
 of <cite>neg_log_dens</cite> with respect to the position array argument as a 2D
 array. Optionally the function may instead return a 3-tuple of values
 with the first a 2D array containting the Hessian of <cite>neg_log_dens</cite>, the
@@ -4648,7 +4699,7 @@ array. If <cite>None</cite> is passed (the default) an automatic differentiation
 fallback will be used to attempt to construct a function which
 calculates the Hessian (and gradient and value) of <cite>neg_log_dens</cite>
 automatically.</p></li>
-<li><p><strong>mtp_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>MatrixTressianProductFunction</em><em>]</em>) – <p>Function which given a position array returns another
+<li><p><strong>mtp_neg_log_dens</strong> (<em>MatrixTressianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a 2D array (matrix) as an argument and returns the
 <em>matrix-Tressian-product</em> (MTP) of <cite>neg_log_dens</cite> with respect to the
 position array argument. The MTP is here defined as a function of a
@@ -4675,7 +4726,7 @@ and gradient and value) of <cite>neg_log_dens</cite> automatically.</p>
 to absolute value used to regularize Hessian eigenvalues in metric
 matrix representation. As the value tends to infinity the approximation
 becomes increasingly close to the absolute function.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4830,6 +4881,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5027,7 +5081,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -5035,7 +5089,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -5191,6 +5245,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -5274,7 +5331,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>Optional</em><em>[</em><em>GradientFunction</em><em>]</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -5282,7 +5339,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -5438,6 +5495,9 @@ explicitly.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -5469,6 +5529,9 @@ explicitly.</p></li>
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
 <li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>

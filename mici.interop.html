@@ -441,11 +441,11 @@ any remaining dimensions, the variable dimensions.</p></li>
 statistics traced over sampled chains with the dictionary keys the
 statistics names and the values a list of arrays, one array per sampled
 chain, with the array dimension corresponding to the draw index.</p></li>
-<li><p><strong>energy_key</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the
+<li><p><strong>energy_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the
 value of the Hamiltonian energy for the accepted proposal (up to an additive
 constant). If present the corresponding values will be added to the
 <cite>sample_stats</cite> group of the returned <cite>InferenceData</cite> object.</p></li>
-<li><p><strong>lp_key</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the value
+<li><p><strong>lp_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – The key of an entry in the <cite>traces</cite> dictionary corresponding the value
 of the joint log posterior density for the model (up to an additive
 constant). If present the corresponding values will be added to the
 <cite>sample_stats</cite> group of the returned <cite>InferenceData</cite> object.</p></li>
@@ -493,13 +493,13 @@ allow using as a (partial) drop-in replacement.</p>
 sizes, scalings or similar during tuning. Tuning samples will be drawn in
 addition to the number specified in the <cite>draws</cite> argument, and will be
 discarded.</p></li>
-<li><p><strong>chains</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – The number of chains to sample. Running independent chains is important
+<li><p><strong>chains</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – The number of chains to sample. Running independent chains is important
 for some convergence statistics and can also reveal multiple modes in the
 posterior. If :code::<cite>None</cite>, then set to either <code class="code docutils literal notranslate"><span class="pre">cores</span></code> or 2,
 whichever is larger.</p></li>
-<li><p><strong>cores</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – The number of chains to run in parallel. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, set to the
+<li><p><strong>cores</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – The number of chains to run in parallel. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, set to the
 number of CPU cores in the system, but at most 4.</p></li>
-<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Seed for NumPy random number generator used for generating random
+<li><p><strong>random_seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Seed for NumPy random number generator used for generating random
 variables while sampling chains. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> then generator will be
 seeded with entropy from operating system.</p></li>
 <li><p><strong>progressbar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether or not to display a progress bar.</p></li>
@@ -524,7 +524,7 @@ applies to <cite>“jitter+adapt_diag”</cite> and <code class="code docutils l
 <li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to return the traces as an
 <a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.20.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">arviz.InferenceData</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) object or a
 <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> (<code class="code docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
-<li><p><strong>model</strong> (<em>Optional</em><em>[</em><em>pymc.Model</em><em>]</em>) – PyMC model defining posterior distribution to sample from. May be
+<li><p><strong>model</strong> (<em>pymc.Model</em><em> | </em><em>None</em>) – PyMC model defining posterior distribution to sample from. May be
 <code class="code docutils literal notranslate"><span class="pre">None</span></code> if function is called from within model context manager.</p></li>
 <li><p><strong>target_accept</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Target value for the acceptance statistic being controlled during
 adaptive warm-up.</p></li>
@@ -547,7 +547,7 @@ data stored in the <code class="code docutils literal notranslate"><span class="
 the <code class="code docutils literal notranslate"><span class="pre">sample_stats</span></code> group.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.20.0)"><em>InferenceData</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>, ArrayLike]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.20.0)"><em>InferenceData</em></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>, ArrayLike]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -587,7 +587,7 @@ matrix representation based on estimates of the posterior covariance matrix.</p>
 <li><p><strong>term_buffer</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Width of final fast adaptation interval.</p></li>
 <li><p><strong>window</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Initial width of slow adaptation interval.</p></li>
 <li><p><strong>max_depth</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Maximum depth of binary trajectory tree.</p></li>
-<li><p><strong>seed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Seed for Numpy random number generator used for generating random
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Seed for Numpy random number generator used for generating random
 variables while sampling chains. If <cite>None</cite> then generator will be seeded
 with entropy from operating system.</p></li>
 <li><p><strong>return_inferencedata</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to return the traces as an <cite>arviz.InferenceData</cite>
@@ -607,7 +607,7 @@ with traced chain data stored in the <cite>posterior</cite> group and additional
 statistics in the <cite>sample_stats</cite> group.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Union</em>[<a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.20.0)"><em>InferenceData</em></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>, ArrayLike]]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://python.arviz.org/en/stable/api/generated/arviz.InferenceData.html#arviz.InferenceData" title="(in ArviZ v0.20.0)"><em>InferenceData</em></a> | <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a>, ArrayLike]</p>
 </dd>
 </dl>
 </dd></dl>

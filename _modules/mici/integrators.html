@@ -359,8 +359,8 @@ document.write(`
 <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Sequence</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
 
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span>
 
@@ -393,7 +393,7 @@ document.write(`
 <span class="sd">    of the Hamiltonian dynamics.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of.</span>
@@ -427,7 +427,7 @@ document.write(`
 
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Implementation of single integrator step.</span>
 
 <span class="sd">        Args:</span>
@@ -457,7 +457,9 @@ document.write(`
 <span class="sd">    exactly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of with tractable</span>
@@ -518,7 +520,7 @@ document.write(`
 <span class="sd">         Cambridge University Press.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h2_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span></div>
@@ -590,9 +592,9 @@ document.write(`
         <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span>
         <span class="n">free_coefficients</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">initial_h1_flow_step</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of with tractable</span>
@@ -625,8 +627,8 @@ document.write(`
         <span class="n">flow_b</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">h2_flow</span> <span class="k">if</span> <span class="n">initial_h1_flow_step</span> <span class="k">else</span> <span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flows</span> <span class="o">=</span> <span class="p">[</span><span class="n">flow_a</span><span class="p">,</span> <span class="n">flow_b</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_free_coefficients</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">flow_a</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">flow</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flows</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">coefficient</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span></div>
 
 
@@ -647,7 +649,9 @@ document.write(`
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of with tractable</span>
@@ -678,7 +682,9 @@ document.write(`
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of with tractable</span>
@@ -715,7 +721,9 @@ document.write(`
 <span class="sd">         SIAM Journal on Scientific Computing, 36(4), A1556-A1580.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">TractableFlowSystem</span><span class="p">,</span> <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of with tractable</span>
@@ -798,12 +806,12 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
-        <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
         <span class="n">fixed_point_solver</span><span class="p">:</span> <span class="n">FixedPointSolver</span> <span class="o">=</span> <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of.</span>
@@ -850,18 +858,18 @@ document.write(`
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_b_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">mom</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_b_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">mom</span>
             <span class="k">return</span> <span class="n">mom_init</span> <span class="o">-</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh2_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="n">mom_init</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_fixed_point</span><span class="p">(</span><span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">mom_init</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_b_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_b_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">mom_init</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">-=</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh2_dpos</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">state_back</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -874,7 +882,7 @@ document.write(`
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_c_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_c_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pos_init</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">+=</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh2_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="n">state_back</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -887,15 +895,15 @@ document.write(`
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_c_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_c_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span>
             <span class="k">return</span> <span class="n">pos_init</span> <span class="o">+</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh2_dmom</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="n">pos_init</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pos</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_fixed_point</span><span class="p">(</span><span class="n">fixed_point_func</span><span class="p">,</span> <span class="n">pos_init</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_b_fwd</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_c_fwd</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
@@ -952,12 +960,12 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
-        <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
         <span class="n">fixed_point_solver</span><span class="p">:</span> <span class="n">FixedPointSolver</span> <span class="o">=</span> <span class="n">solve_fixed_point_direct</span><span class="p">,</span>
-        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">fixed_point_solver_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the dynamics of.</span>
@@ -1004,10 +1012,10 @@ document.write(`
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_point_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_a_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_a_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pos_mom_init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span><span class="p">])</span>
 
-        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">pos_mom</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">fixed_point_func</span><span class="p">(</span><span class="n">pos_mom</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
             <span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">pos_mom</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">pos_mom_init</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
                 <span class="p">[</span>
@@ -1021,7 +1029,7 @@ document.write(`
             <span class="mi">2</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_a_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_a_adj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">state_prev</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pos</span> <span class="o">+=</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dmom</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">-=</span> <span class="n">time_step</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">dh_dpos</span><span class="p">(</span><span class="n">state_prev</span><span class="p">)</span>
@@ -1039,7 +1047,7 @@ document.write(`
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a_fwd</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a_adj</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span></div>
 
@@ -1221,13 +1229,13 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
-        <span class="n">step_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">step_size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_inner_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">reverse_check_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2e-8</span><span class="p">,</span>
         <span class="n">reverse_check_norm</span><span class="p">:</span> <span class="n">NormFunction</span> <span class="o">=</span> <span class="n">maximum_norm</span><span class="p">,</span>
         <span class="n">projection_solver</span><span class="p">:</span> <span class="n">ProjectionSolver</span> <span class="o">=</span> <span class="n">solve_projection_onto_manifold_newton</span><span class="p">,</span>
-        <span class="n">projection_solver_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">projection_solver_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to integrate the constrained dynamics of.</span>
@@ -1297,7 +1305,7 @@ document.write(`
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h2_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">projection_solver</span><span class="p">(</span>
             <span class="n">state</span><span class="p">,</span>
@@ -1307,14 +1315,14 @@ document.write(`
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">projection_solver_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_project_onto_cotangent_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_project_onto_cotangent_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">project_onto_cotangent_space</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">mom</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_a</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h1_flow</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_project_onto_cotangent_space</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">time_step_inner</span> <span class="o">=</span> <span class="n">time_step</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_inner_step</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inner_step</span><span class="p">):</span>
             <span class="n">state_prev</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1344,7 +1352,7 @@ document.write(`
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="n">NonReversibleStepError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_b</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_a</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">time_step</span><span class="p">)</span></div>

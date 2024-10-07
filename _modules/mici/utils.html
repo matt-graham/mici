@@ -357,7 +357,7 @@ document.write(`
     <span class="n">XXHASH_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Self</span>
 
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ScalarLike</span>
 
@@ -383,9 +383,8 @@ document.write(`
         <span class="c1"># between different views of same array</span>
         <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="si">}{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}{</span><span class="n">array</span><span class="o">.</span><span class="n">strides</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">intdigest</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Evaluate built-in hash function on *copy* of data as a byte sequence</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span></div>
+    <span class="c1"># Evaluate built-in hash function on *copy* of data as a byte sequence</span>
+    <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">tobytes</span><span class="p">())</span></div>
 
 
 
@@ -398,8 +397,7 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Numerically stable implementation of `log(1 + exp(val))`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">val</span> <span class="o">+</span> <span class="n">log1p</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">val</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">log1p</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">log1p</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
 
 
 
@@ -409,10 +407,9 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Numerically stable implementation of `log(1 - exp(val))`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">nan</span>
-    <span class="k">elif</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="n">LOG_2</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="n">LOG_2</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">expm1</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">log1p</span><span class="p">(</span><span class="o">-</span><span class="n">exp</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">log1p</span><span class="p">(</span><span class="o">-</span><span class="n">exp</span><span class="p">(</span><span class="n">val</span><span class="p">))</span></div>
 
 
 
@@ -422,10 +419,9 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Numerically stable implementation of `log(exp(val1) + exp(val2))`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">val1</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">val2</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">inf</span>
-    <span class="k">elif</span> <span class="n">val1</span> <span class="o">&gt;</span> <span class="n">val2</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">val1</span> <span class="o">&gt;</span> <span class="n">val2</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">val1</span> <span class="o">+</span> <span class="n">log1p_exp</span><span class="p">(</span><span class="n">val2</span> <span class="o">-</span> <span class="n">val1</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">val2</span> <span class="o">+</span> <span class="n">log1p_exp</span><span class="p">(</span><span class="n">val1</span> <span class="o">-</span> <span class="n">val2</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">val2</span> <span class="o">+</span> <span class="n">log1p_exp</span><span class="p">(</span><span class="n">val1</span> <span class="o">-</span> <span class="n">val2</span><span class="p">)</span></div>
 
 
 
@@ -435,12 +431,11 @@ document.write(`
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Numerically stable implementation of `log(exp(val1) - exp(val2))`.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">val1</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">val2</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">inf</span>
-    <span class="k">elif</span> <span class="n">val1</span> <span class="o">&lt;</span> <span class="n">val2</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">val1</span> <span class="o">&lt;</span> <span class="n">val2</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">nan</span>
-    <span class="k">elif</span> <span class="n">val1</span> <span class="o">==</span> <span class="n">val2</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">val1</span> <span class="o">==</span> <span class="n">val2</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">inf</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">val1</span> <span class="o">+</span> <span class="n">log1m_exp</span><span class="p">(</span><span class="n">val2</span> <span class="o">-</span> <span class="n">val1</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">val1</span> <span class="o">+</span> <span class="n">log1m_exp</span><span class="p">(</span><span class="n">val2</span> <span class="o">-</span> <span class="n">val1</span><span class="p">)</span></div>
 
 
 
@@ -453,7 +448,7 @@ document.write(`
 <span class="sd">    numerically stable implementations where possible.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_val</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_val</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">log_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;One of val or log_val must be specified.&quot;</span>
@@ -481,16 +476,15 @@ document.write(`
     <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=</span><span class="n">log_sum_exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__add__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">=</span> <span class="n">log_sum_exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">=</span> <span class="n">log_sum_exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span><span class="p">,</span> <span class="n">log</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
@@ -500,10 +494,8 @@ document.write(`
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=</span><span class="n">log_diff_exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">-</span> <span class="n">other</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">-</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__radd__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
@@ -511,8 +503,7 @@ document.write(`
     <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
@@ -520,8 +511,7 @@ document.write(`
     <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">/</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">/</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">other</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span>
@@ -532,38 +522,32 @@ document.write(`
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;=</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LogRepFloat</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_val</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">log_val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="n">other</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>

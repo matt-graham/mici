@@ -346,6 +346,7 @@ document.write(`
 
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">pairwise</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -357,9 +358,10 @@ document.write(`
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span>
 
     <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">NDArray</span>
+    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Self</span>
 
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">MatrixLike</span><span class="p">,</span> <span class="n">ScalarLike</span>
 
@@ -371,13 +373,11 @@ document.write(`
             <span class="n">InvertibleMatrix</span><span class="p">,</span>
         <span class="p">):</span>
             <span class="k">return</span> <span class="n">InvertibleMatrixProduct</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SquareMatrixProduct</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">MatrixProduct</span>
+        <span class="k">return</span> <span class="n">SquareMatrixProduct</span>
+    <span class="k">return</span> <span class="n">MatrixProduct</span>
 
 
-<span class="k">def</span> <span class="nf">_is_scalar</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_is_scalar</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># noqa: ANN401</span>
     <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
         <span class="nb">hasattr</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="s2">&quot;__array__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="p">)</span>
@@ -395,10 +395,10 @@ document.write(`
 
     <span class="n">__array_priority__</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">           shape: Shape of matrix `(num_rows, num_columns)`.</span>
+<span class="sd">            shape: Shape of matrix `(num_rows, num_columns)`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="kc">None</span>
@@ -417,8 +417,7 @@ document.write(`
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar multiplication by zero not implemented.&quot;</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
@@ -429,13 +428,12 @@ document.write(`
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar division by zero not implemented.&quot;</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">other</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
 
     <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
@@ -445,10 +443,9 @@ document.write(`
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">matrix_product_class</span> <span class="o">=</span> <span class="n">_choose_matrix_product_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">matrix_product_class</span><span class="p">((</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">),</span> <span class="n">check_shapes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_left_matrix_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_left_matrix_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Matrix</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span> <span class="o">|</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Inconsistent dimensions for matrix multiplication: </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and &quot;</span>
@@ -458,8 +455,7 @@ document.write(`
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
             <span class="n">matrix_product_class</span> <span class="o">=</span> <span class="n">_choose_matrix_product_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">matrix_product_class</span><span class="p">((</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span> <span class="n">check_shapes</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right_matrix_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right_matrix_multiply</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
@@ -555,7 +551,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">ExplicitArrayMatrix</span><span class="p">(</span><span class="n">Matrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix with an explicit array representation.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="s2">&quot;_array&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;_array must be specified in kwargs&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -589,10 +585,10 @@ document.write(`
 <span class="k">class</span> <span class="nc">ImplicitArrayMatrix</span><span class="p">(</span><span class="n">Matrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix with an implicit array representation.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
-<span class="sd">           shape: Shape of matrix `(num_rows, num_columns)`.</span>
+<span class="sd">        shape: Shape of matrix `(num_rows, num_columns)`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="kc">None</span>
@@ -628,7 +624,9 @@ document.write(`
 <span class="sd">    Each adjacent pair of matrices in the sequence must have compatible shapes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            matrices: Sequence of matrices forming product in left-to-right order.</span>
@@ -637,7 +635,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">check_shapes</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">matrix_l</span><span class="p">,</span> <span class="n">matrix_r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">matrices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">for</span> <span class="n">matrix_l</span><span class="p">,</span> <span class="n">matrix_r</span> <span class="ow">in</span> <span class="n">pairwise</span><span class="p">(</span><span class="n">matrices</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">matrix_l</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrix_r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Matrices </span><span class="si">{</span><span class="n">matrix_l</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">matrix_r</span><span class="si">}</span><span class="s2"> have inconsistent inner &quot;</span>
@@ -675,7 +673,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">MatrixProduct</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">matrices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
             <span class="n">matrix_s</span> <span class="o">==</span> <span class="n">matrix_o</span>
-            <span class="k">for</span> <span class="n">matrix_s</span><span class="p">,</span> <span class="n">matrix_o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">matrices</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">matrix_s</span><span class="p">,</span> <span class="n">matrix_o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrices</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">matrices</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 
@@ -685,7 +683,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">SquareMatrix</span><span class="p">(</span><span class="n">Matrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for matrices with equal numbers of rows and columns.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2"> is not a valid shape for a square matrix.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -711,7 +709,9 @@ document.write(`
 <span class="sd">    All the matrices must have the same shape.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">check_shapes</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
@@ -734,7 +734,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">InvertibleMatrix</span><span class="p">(</span><span class="n">SquareMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for non-singular square matrices.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inv</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -776,12 +776,12 @@ document.write(`
         <span class="n">matrices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">InvertibleMatrix</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">check_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">matrices</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">matrices</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;matrix </span><span class="si">{</span><span class="n">matrix</span><span class="si">}</span><span class="s2"> is not invertible.&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">matrices</span><span class="p">,</span> <span class="n">check_shapes</span><span class="o">=</span><span class="n">check_shapes</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InvertibleMatrixProduct</span><span class="p">:</span>
@@ -796,12 +796,12 @@ document.write(`
 <span class="k">class</span> <span class="nc">SymmetricMatrix</span><span class="p">(</span><span class="n">SquareMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for square matrices which are equal to their transpose.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_compute_eigendecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compute_eigendecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">nla</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigvec</span> <span class="o">=</span> <span class="n">OrthogonalMatrix</span><span class="p">(</span><span class="n">eigvec</span><span class="p">)</span>
 
@@ -833,7 +833,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">PositiveDefiniteMatrix</span><span class="p">(</span><span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for positive definite matrices.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sqrt</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -871,7 +871,7 @@ document.write(`
 <span class="sd">    known.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            size: Number of rows / columns in matrix or `None` if matrix is to be</span>
@@ -882,8 +882,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ScaledIdentityMatrix</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ScaledIdentityMatrix</span><span class="p">(</span><span class="n">scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">other</span>
@@ -985,7 +984,7 @@ document.write(`
 <span class="sd">    is not required to be known.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            scalar: Scalar multiplier for identity matrix.</span>
@@ -1048,7 +1047,7 @@ document.write(`
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">grad_log_abs_det</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">grad_log_abs_det</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span>
 
 <div class="viewcode-block" id="ScaledIdentityMatrix.grad_quadratic_form_inv">
@@ -1076,7 +1075,7 @@ document.write(`
 <span class="sd">    Restricts the `scalar` parameter to be strictly positive.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Scalar multiplier must be positive.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1085,8 +1084,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScaledIdentityMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">PositiveScaledIdentityMatrix</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -1101,7 +1099,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">DiagonalMatrix</span><span class="p">(</span><span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">DifferentiableMatrix</span><span class="p">,</span> <span class="n">ImplicitArrayMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix with non-zero elements only along its diagonal.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            diagonal: 1D array specifying diagonal elements of matrix.</span>
@@ -1119,16 +1117,15 @@ document.write(`
         <span class="k">return</span> <span class="n">DiagonalMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_left_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># noqa: PLR2004</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">other</span>
-        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">other</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Left matrix multiplication only defined for one or two dimensional &quot;</span>
-                <span class="s2">&quot;right hand sides.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Left matrix multiplication only defined for one or two dimensional &quot;</span>
+            <span class="s2">&quot;right hand sides.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_right_matrix_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NDArray</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">other</span>
@@ -1173,7 +1170,7 @@ document.write(`
 <span class="sd">    Restricts all values in `diagonal` array parameter to be strictly positive.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diagonal</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">diagonal</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Diagonal values must all be positive.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1182,8 +1179,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiagonalMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">scalar</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">PositiveDiagonalMatrix</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagonal</span><span class="p">)</span>
@@ -1209,7 +1205,7 @@ document.write(`
         <span class="o">*</span><span class="p">,</span>
         <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: 2D array containing lower / upper triangular element values of</span>
@@ -1270,7 +1266,7 @@ document.write(`
         <span class="o">*</span><span class="p">,</span>
         <span class="n">lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">make_triangular</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            inverse_array: 2D containing values of *inverse* of this matrix, with the</span>
@@ -1358,12 +1354,12 @@ document.write(`
         <span class="k">return</span> <span class="n">hash_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InverseTriangularMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_inverse_array</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span></div>
 
 
 
 <span class="k">class</span> <span class="nc">_BaseTriangularFactoredDefiniteMatrix</span><span class="p">(</span><span class="n">SymmetricMatrix</span><span class="p">,</span> <span class="n">InvertibleMatrix</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">sign</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;sign must be equal to +1 or -1&quot;</span>
@@ -1371,7 +1367,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span> <span class="o">=</span> <span class="n">sign</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Triangular matrix with `matrix = sign * factor @ factor.T`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span>
 
@@ -1415,10 +1411,10 @@ document.write(`
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">],</span>
+        <span class="n">factor</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">,</span>
         <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="n">factor_is_lower</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">factor_is_lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            factor: The triangular factor parameterising the matrix. Defined either a</span>
@@ -1431,7 +1427,7 @@ document.write(`
 <span class="sd">                strictly positive- or negative-definite matrix.</span>
 <span class="sd">            factor_is_lower: Whether the array `factor` is lower- or upper-triangular.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="p">(</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">factor_is_lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="s2">&quot;For array `factor` parameter `factor_is_lower` must be specified &quot;</span>
@@ -1499,10 +1495,10 @@ document.write(`
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">factor</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">],</span>
+        <span class="n">factor</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">factor_is_lower</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            factor: The triangular factor parameterising the matrix. Defined either a</span>
@@ -1520,13 +1516,12 @@ document.write(`
             <span class="k">return</span> <span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">(</span>
                 <span class="n">factor</span><span class="o">=</span><span class="n">scalar</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">TriangularFactoredPositiveDefiniteMatrix</span><span class="p">(</span><span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span></div>
 
 
@@ -1543,10 +1538,10 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
-        <span class="n">factor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">factor</span><span class="p">:</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">is_posdef</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array : 2D array specifying matrix entries.</span>
@@ -1571,15 +1566,14 @@ document.write(`
                 <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
                 <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">DenseDefiniteMatrix</span><span class="p">(</span>
-                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
-                <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span><span class="p">,</span>
-                <span class="n">is_posdef</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DenseDefiniteMatrix</span><span class="p">(</span>
+            <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span><span class="p">,</span>
+            <span class="n">is_posdef</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_factor</span> <span class="o">=</span> <span class="n">TriangularMatrix</span><span class="p">(</span>
@@ -1620,8 +1614,8 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
-        <span class="n">factor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">factor</span><span class="p">:</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: 2D array specifying matrix entries.</span>
@@ -1638,7 +1632,7 @@ document.write(`
             <span class="n">factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">factor</span><span class="o">.</span><span class="n">inv</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TriangularMatrix</span><span class="p">,</span> <span class="n">InverseTriangularMatrix</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TriangularMatrix</span> <span class="o">|</span> <span class="n">InverseTriangularMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">factor</span></div>
 
 
@@ -1660,9 +1654,9 @@ document.write(`
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">rect_matrix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">],</span>
-        <span class="n">pos_def_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PositiveDefiniteMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">rect_matrix</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">Matrix</span><span class="p">,</span>
+        <span class="n">pos_def_matrix</span><span class="p">:</span> <span class="n">PositiveDefiniteMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            rect_matrix: Rectangular matrix of shape `(dim_0, dim_1)` with it and its</span>
@@ -1708,9 +1702,9 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
-        <span class="n">lu_and_piv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">lu_transposed</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">lu_and_piv</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">lu_transposed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: 2D array specifying matrix entries.</span>
@@ -1730,15 +1724,14 @@ document.write(`
     <span class="k">def</span> <span class="nf">_scalar_multiply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DenseSquareMatrix</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_and_piv</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">old_lu</span><span class="p">,</span> <span class="n">piv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_and_piv</span>
-            <span class="c1"># Multiply upper-triangle by scalar</span>
-            <span class="n">new_lu</span> <span class="o">=</span> <span class="n">old_lu</span> <span class="o">+</span> <span class="p">(</span><span class="n">scalar</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">old_lu</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span>
-                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">new_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="n">old_lu</span><span class="p">,</span> <span class="n">piv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_and_piv</span>
+        <span class="c1"># Multiply upper-triangle by scalar</span>
+        <span class="n">new_lu</span> <span class="o">=</span> <span class="n">old_lu</span> <span class="o">+</span> <span class="p">(</span><span class="n">scalar</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">old_lu</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DenseSquareMatrix</span><span class="p">(</span>
+            <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">new_lu</span><span class="p">,</span> <span class="n">piv</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lu_transposed</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">lu_and_piv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
@@ -1778,7 +1771,7 @@ document.write(`
         <span class="n">inv_lu_and_piv</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">inv_lu_transposed</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            inv_array: 2D array specifying inverse matrix entries.</span>
@@ -1847,7 +1840,7 @@ document.write(`
         <span class="k">return</span> <span class="n">hash_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">InverseLUFactoredSquareMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_inv_array</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span></div>
 
 
 
@@ -1859,9 +1852,9 @@ document.write(`
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span>
-        <span class="n">eigvec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">OrthogonalMatrix</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">eigval</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+        <span class="n">eigvec</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">OrthogonalMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: Explicit 2D array representation of matrix.</span>
@@ -1895,7 +1888,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">OrthogonalMatrix</span><span class="p">(</span><span class="n">InvertibleMatrix</span><span class="p">,</span> <span class="n">ExplicitArrayMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Square matrix with columns and rows that are orthogonal unit vectors.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: Explicit 2D array representation of matrix.</span>
@@ -1930,7 +1923,7 @@ document.write(`
 <span class="sd">    represented as a square 2D array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">orth_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">orth_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            scalar: Scalar multiplier as a floating point value.</span>
@@ -1969,8 +1962,8 @@ document.write(`
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span><span class="p">,</span> <span class="n">hash_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orth_array</span><span class="p">)))</span>
 
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">ScaledOrthogonalMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_scalar</span> <span class="ow">and</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orth_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_orth_array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scalar</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_scalar</span> <span class="ow">and</span> <span class="p">(</span>  <span class="c1"># noqa: SLF001</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orth_array</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_orth_array</span><span class="p">)</span>  <span class="c1"># noqa: SLF001</span>
         <span class="p">)</span></div>
 
 
@@ -1993,7 +1986,7 @@ document.write(`
 <span class="sd">    of `matrix`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">OrthogonalMatrix</span><span class="p">],</span> <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">OrthogonalMatrix</span><span class="p">,</span> <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            eigvec: Either a 2D array or an `OrthogonalMatrix` instance, in both cases</span>
@@ -2037,7 +2030,7 @@ document.write(`
     <span class="k">def</span> <span class="nf">_compute_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="n">hash_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">EigendecomposedSymmetricMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">eigvec</span>
         <span class="p">)</span></div>
@@ -2061,7 +2054,7 @@ document.write(`
 <span class="sd">    positive eigenvalues of `matrix`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">NDArray</span><span class="p">,</span> <span class="n">OrthogonalMatrix</span><span class="p">],</span> <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">OrthogonalMatrix</span><span class="p">,</span> <span class="n">eigval</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">eigval</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Eigenvalues must all be positive.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2073,8 +2066,7 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">*</span> <span class="n">scalar</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">EigendecomposedPositiveDefiniteMatrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>
@@ -2098,7 +2090,7 @@ document.write(`
 <span class="sd">    a smooth approximation to the absolute function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetric_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">softabs_coeff</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symmetric_array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">softabs_coeff</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            symmetric_array: 2D square array with symmetric values, i.e.</span>
@@ -2168,7 +2160,8 @@ document.write(`
 
     <span class="k">def</span> <span class="nf">_check_equality</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="n">block_s</span> <span class="o">==</span> <span class="n">block_o</span> <span class="k">for</span> <span class="n">block_s</span><span class="p">,</span> <span class="n">block_o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+            <span class="n">block_s</span> <span class="o">==</span> <span class="n">block_o</span>
+            <span class="k">for</span> <span class="n">block_s</span><span class="p">,</span> <span class="n">block_o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">)</span></div>
 
 
@@ -2178,7 +2171,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">SquareBlockDiagonalMatrix</span><span class="p">(</span><span class="n">InvertibleMatrix</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Square matrix with non-zero values only in blocks along diagonal.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SquareMatrix</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SquareMatrix</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            blocks: Sequence of square matrices defining non-zero blocks along diagonal</span>
@@ -2199,7 +2192,7 @@ document.write(`
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Blocks containing non-zero values left-to-right along diagonal.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span>
 
-    <span class="k">def</span> <span class="nf">_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">NDArray</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot split other along axis with size </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -2209,7 +2202,11 @@ document.write(`
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">block</span> <span class="o">@</span> <span class="n">part</span>
-                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">],</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
@@ -2218,7 +2215,11 @@ document.write(`
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
             <span class="p">[</span>
                 <span class="n">part</span> <span class="o">@</span> <span class="n">block</span>
-                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">],</span>
             <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
@@ -2267,7 +2268,7 @@ document.write(`
 <span class="sd">    block`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SymmetricMatrix</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SymmetricMatrix</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            blocks: Sequence of symmetric matrices defining non-zero blocks along</span>
@@ -2301,7 +2302,7 @@ document.write(`
 <span class="sd">    All matrix blocks in diagonal are restricted to be positive definite.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PositiveDefiniteMatrix</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PositiveDefiniteMatrix</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            blocks: Sequence of positive-definite matrices defining non-zero blocks</span>
@@ -2321,10 +2322,9 @@ document.write(`
             <span class="k">return</span> <span class="n">PositiveDefiniteBlockDiagonalMatrix</span><span class="p">(</span>
                 <span class="nb">tuple</span><span class="p">(</span><span class="n">scalar</span> <span class="o">*</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">),</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_scalar_multiply</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">PositiveDefiniteBlockDiagonalMatrix</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_construct_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">_construct_sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SquareBlockDiagonalMatrix</span><span class="p">:</span>
@@ -2334,9 +2334,8 @@ document.write(`
     <span class="k">def</span> <span class="nf">grad_log_abs_det</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_differentiable</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">grad_log_abs_det</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PositiveDefiniteBlockDiagonalMatrix.grad_quadratic_form_inv">
 <a class="viewcode-back" href="../../mici.matrices.html#mici.matrices.PositiveDefiniteBlockDiagonalMatrix.grad_quadratic_form_inv">[docs]</a>
@@ -2344,11 +2343,14 @@ document.write(`
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_differentiable</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
                 <span class="n">block</span><span class="o">.</span><span class="n">grad_quadratic_form_inv</span><span class="p">(</span><span class="n">vector_part</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">vector_part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">vector_part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_split</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not all blocks are differentiable&quot;</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 </div>
 
 
@@ -2358,7 +2360,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">DenseRectangularMatrix</span><span class="p">(</span><span class="n">ExplicitArrayMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dense rectangular matrix.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            array: 2D array specifying matrix entries.</span>
@@ -2378,7 +2380,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">BlockRowMatrix</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix composed of horizontal concatenation of a series of blocks.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            blocks: Sequence of matrices defining a row of blocks in order left-to-right</span>
@@ -2410,6 +2412,7 @@ document.write(`
                 <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
         <span class="p">)</span>
@@ -2433,7 +2436,7 @@ document.write(`
 <span class="k">class</span> <span class="nc">BlockColumnMatrix</span><span class="p">(</span><span class="n">BlockMatrix</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Matrix composed of vertical concatenation of a series of blocks.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Matrix</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            blocks : Sequence of matrices defining a column of blocks in order</span>
@@ -2469,6 +2472,7 @@ document.write(`
                 <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_splits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">],</span>
         <span class="p">)</span>
@@ -2514,10 +2518,10 @@ document.write(`
         <span class="n">left_factor_matrix</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span>
         <span class="n">right_factor_matrix</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span>
         <span class="n">square_matrix</span><span class="p">:</span> <span class="n">SquareMatrix</span><span class="p">,</span>
-        <span class="n">inner_square_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SquareMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SquareMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inner_square_matrix</span><span class="p">:</span> <span class="n">SquareMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">SquareMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            left_factor_matrix: Rectangular matrix with shape `(dim_outer, dim_inner)`</span>
@@ -2600,9 +2604,11 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">right_factor_matrix</span><span class="p">,</span>
             <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span><span class="p">,</span>
             <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_square_matrix</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -2636,9 +2642,11 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">left_factor_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">square_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inner_square_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span><span class="o">.</span><span class="n">T</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span><span class="o">.</span><span class="n">T</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -2713,10 +2721,10 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">factor_matrix</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span>
         <span class="n">symmetric_matrix</span><span class="p">:</span> <span class="n">SymmetricMatrix</span><span class="p">,</span>
-        <span class="n">inner_symmetric_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SymmetricMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SymmetricMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inner_symmetric_matrix</span><span class="p">:</span> <span class="n">SymmetricMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">SymmetricMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            factor_matrix (Matrix): Rectangular matrix with shape</span>
@@ -2768,9 +2776,11 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="p">,</span>
             <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetric_matrix</span><span class="p">,</span>
             <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_symmetric_matrix</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -2842,10 +2852,10 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">factor_matrix</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span>
         <span class="n">pos_def_matrix</span><span class="p">:</span> <span class="n">PositiveDefiniteMatrix</span><span class="p">,</span>
-        <span class="n">inner_pos_def_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PositiveDefiniteMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PositiveDefiniteMatrix</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inner_pos_def_matrix</span><span class="p">:</span> <span class="n">PositiveDefiniteMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">capacitance_matrix</span><span class="p">:</span> <span class="n">PositiveDefiniteMatrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">sign</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            factor_matrix: Rectangular matrix with shape `(dim_outer, dim_inner)` with</span>
@@ -2890,21 +2900,24 @@ document.write(`
                 <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="p">,</span>
                 <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="p">,</span>
                 <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="p">,</span>
-                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="p">,</span>
-                <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">SymmetricLowRankUpdateMatrix</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">factor_matrix</span><span class="p">,</span>
+            <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pos_def_matrix</span><span class="p">,</span>
+            <span class="n">scalar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_pos_def_matrix</span><span class="p">,</span>
+            <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="o">/</span> <span class="n">scalar</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_capacitance_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
-            <span class="p">)</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sign</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">capacitance_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DensePositiveDefiniteMatrix</span><span class="p">:</span>
@@ -2930,8 +2943,11 @@ document.write(`
             <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">make_triangular</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">i_outer</span><span class="p">,</span> <span class="n">i_inner</span> <span class="o">=</span> <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span>
-            <span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">i_outer</span><span class="p">,</span> <span class="n">i_inner</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">IdentityMatrix</span><span class="p">(</span><span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span>
+                <span class="n">u_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">),</span>
         <span class="p">)</span>
         <span class="n">m_matrix</span> <span class="o">=</span> <span class="n">sla</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">i_inner</span> <span class="o">+</span> <span class="n">l_matrix</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">k_matrix</span> <span class="o">@</span> <span class="n">l_matrix</span><span class="o">.</span><span class="n">array</span><span class="p">))</span>
         <span class="n">x_matrix</span> <span class="o">=</span> <span class="n">DenseSymmetricMatrix</span><span class="p">(</span>

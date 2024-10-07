@@ -378,8 +378,9 @@ document.write(`
 <span class="kn">from</span> <span class="nn">mici.autodiff</span> <span class="kn">import</span> <span class="n">autograd_wrapper</span><span class="p">,</span> <span class="n">jax_wrapper</span><span class="p">,</span> <span class="n">symnum_wrapper</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
     <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">ModuleType</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 
 <span class="sd">&quot;&quot;&quot;Names of valid differential operators.</span>
@@ -416,7 +417,7 @@ document.write(`
 
     <span class="n">module</span><span class="p">:</span> <span class="n">ModuleType</span>
     <span class="n">available</span><span class="p">:</span> <span class="nb">bool</span>
-    <span class="n">function_wrapper</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">function_wrapper</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -437,7 +438,7 @@ document.write(`
 <span class="p">}</span>
 
 
-<span class="k">def</span> <span class="nf">_get_backend</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_backend</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AutodiffBackend</span><span class="p">:</span>
     <span class="c1"># Normalize name string to all lowercase to make invariant to capitalization</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_REGISTERED_BACKENDS</span><span class="p">:</span>
@@ -451,7 +452,7 @@ document.write(`
 
 <div class="viewcode-block" id="wrap_function">
 <a class="viewcode-back" href="../../mici.autodiff.html#mici.autodiff.wrap_function">[docs]</a>
-<span class="k">def</span> <span class="nf">wrap_function</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="k">def</span> <span class="nf">wrap_function</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply function wrapper for automatic differentiation backend to a function.</span>
 
 <span class="sd">    Backends may define a function wrapper which applies any post processing required to</span>
@@ -471,19 +472,18 @@ document.write(`
     <span class="n">backend</span> <span class="o">=</span> <span class="n">_get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">backend</span><span class="o">.</span><span class="n">function_wrapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">function_wrapper</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">function</span></div>
+    <span class="k">return</span> <span class="n">function</span></div>
 
 
 
 <div class="viewcode-block" id="autodiff_fallback">
 <a class="viewcode-back" href="../../mici.autodiff.html#mici.autodiff.autodiff_fallback">[docs]</a>
 <span class="k">def</span> <span class="nf">autodiff_fallback</span><span class="p">(</span>
-    <span class="n">diff_func</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
+    <span class="n">diff_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
     <span class="n">diff_op_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate derivative function automatically if not provided.</span>
 
@@ -508,26 +508,24 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">diff_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">diff_func</span>
-    <span class="k">elif</span> <span class="n">diff_func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">diff_func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Automatic differentiation backend specified as `None` so </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must&quot;</span>
             <span class="s2">&quot;be provided directly.&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">diff_op_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DIFF_OPS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">diff_op_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DIFF_OPS</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Differential operator </span><span class="si">{</span><span class="n">diff_op_name</span><span class="si">}</span><span class="s2"> is not defined.&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">autodiff_backend</span> <span class="o">=</span> <span class="n">_get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">autodiff_backend</span><span class="o">.</span><span class="n">available</span><span class="p">:</span>
-            <span class="n">diff_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">autodiff_backend</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">diff_op_name</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">wrap_function</span><span class="p">(</span><span class="n">diff_func</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2"> selected as autodiff backend but is not available in &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;current environment therefore </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be provided directly.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+    <span class="n">autodiff_backend</span> <span class="o">=</span> <span class="n">_get_backend</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">autodiff_backend</span><span class="o">.</span><span class="n">available</span><span class="p">:</span>
+        <span class="n">diff_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">autodiff_backend</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">diff_op_name</span><span class="p">)(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrap_function</span><span class="p">(</span><span class="n">diff_func</span><span class="p">,</span> <span class="n">backend</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2"> selected as autodiff backend but is not available in &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;current environment therefore </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be provided directly.&quot;</span>
+    <span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 </pre></div>
 

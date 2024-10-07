@@ -390,7 +390,7 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sequence</strong> (<em>Collection</em>) – Sequence to iterate over. Must be iterable _and_ have a defined
 length such that <cite>len(sequence)</cite> is valid.</p></li>
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Description of task to prefix progress bar with.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Description of task to prefix progress bar with.</p></li>
 <li><p><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Tuple specifying position of progress bar within a sequence with
 first entry corresponding to zero-indexed position and the second entry
 the total number of progress bars.</p></li>
@@ -416,10 +416,13 @@ the total number of progress bars.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>iter_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – New value for iteration counter.</p></li>
-<li><p><strong>iter_dict</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em><em>]</em>) – Dictionary of iteration statistics key-value pairs to use to
+<li><p><strong>iter_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of iteration statistics key-value pairs to use to
 update postfix stats.</p></li>
 <li><p><strong>refresh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to refresh display(s).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -437,7 +440,7 @@ update postfix stats.</p></li>
 <li><p><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Tuple specifying position of display line within a sequence lines
 with first entry corresponding to zero-indexed line and the second entry
 the total number of lines.</p></li>
-<li><p><strong>file</strong> (<em>Optional</em><em>[</em><em>TextIO</em><em>]</em>) – File object to write updates to. Must support ANSI escape sequences
+<li><p><strong>file</strong> (<em>TextIO</em><em> | </em><em>None</em>) – File object to write updates to. Must support ANSI escape sequences
 <cite>x1b[A}</cite> (cursor up) and <cite>\x1b[B</cite> (cursor down) for manipulating
 write position. Defaults to <cite>sys.stdout</cite> if <cite>None</cite>.</p></li>
 </ul>
@@ -461,7 +464,10 @@ write position. Defaults to <cite>sys.stdout</cite> if <cite>None</cite>.</p></l
 <dd><p>Update display with string representation of object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>obj</strong> – Object to display.</p>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>) – Object to display.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -479,11 +485,11 @@ write position. Defaults to <cite>sys.stdout</cite> if <cite>None</cite>.</p></l
 <li><p><strong>labelled_sequence</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Ordered dictionary with string keys corresponding to
 labels for stages represented by sequence and values the entries in the
 sequence being iterated over.</p></li>
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Description of task to prefix progress bar with.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Description of task to prefix progress bar with.</p></li>
 <li><p><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Tuple specifying position of progress bar within a sequence with
 first entry corresponding to zero-indexed position and the second entry
 the total number of progress bars.</p></li>
-<li><p><strong>displays</strong> (<em>Optional</em><em>[</em><em>Collection</em><em>]</em>) – List of objects to use to display visual representation(s) of
+<li><p><strong>displays</strong> (<em>Collection</em><em> | </em><em>None</em>) – List of objects to use to display visual representation(s) of
 progress bar. Each object much have an <cite>update</cite> method which will be
 passed a single argument corresponding to the current progress bar.</p></li>
 </ul>
@@ -540,12 +546,22 @@ passed a single argument corresponding to the current progress bar.</p></li>
 <dt class="sig sig-object py" id="mici.progressbars.LabelledSequenceProgressBar.refresh">
 <span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#LabelledSequenceProgressBar.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.LabelledSequenceProgressBar.refresh" title="Link to this definition">#</a></dt>
 <dd><p>Refresh visual display(s) of status bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.LabelledSequenceProgressBar.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#LabelledSequenceProgressBar.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.LabelledSequenceProgressBar.reset" title="Link to this definition">#</a></dt>
 <dd><p>Reset progress bar state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -574,10 +590,13 @@ passed a single argument corresponding to the current progress bar.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>iter_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – New value for iteration counter.</p></li>
-<li><p><strong>iter_dict</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em><em>]</em>) – Dictionary of iteration statistics key-value pairs to use to
+<li><p><strong>iter_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of iteration statistics key-value pairs to use to
 update postfix stats.</p></li>
 <li><p><strong>refresh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to refresh display(s).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -594,7 +613,7 @@ update postfix stats.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sequence</strong> (<em>Collection</em>) – Sequence to iterate over. Must be iterable _and_ have a defined
 length such that <cite>len(sequence)</cite> is valid.</p></li>
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Description of task to prefix progress bar with.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Description of task to prefix progress bar with.</p></li>
 <li><p><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Tuple specifying position of progress bar within a sequence with
 first entry corresponding to zero-indexed position and the second entry
 the total number of progress bars.</p></li>
@@ -620,10 +639,13 @@ the total number of progress bars.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>iter_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – New value for iteration counter.</p></li>
-<li><p><strong>iter_dict</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em><em>]</em>) – Dictionary of iteration statistics key-value pairs to use to
+<li><p><strong>iter_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of iteration statistics key-value pairs to use to
 update postfix stats.</p></li>
 <li><p><strong>refresh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to refresh display(s).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -643,11 +665,11 @@ notebooks or interactive terminals.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sequence</strong> (<em>Collection</em>) – Sequence to iterate over. Must be iterable <strong>and</strong> have a defined
 length such that <cite>len(sequence)</cite> is valid.</p></li>
-<li><p><strong>description</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em>) – Description of task to prefix progress bar with.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em> | </em><em>None</em>) – Description of task to prefix progress bar with.</p></li>
 <li><p><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Tuple specifying position of progress bar within a sequence with
 first entry corresponding to zero-indexed position and the second entry
 the total number of progress bars.</p></li>
-<li><p><strong>displays</strong> (<em>Optional</em><em>[</em><em>Collection</em><em>]</em>) – List of objects to use to display visual representation(s) of
+<li><p><strong>displays</strong> (<em>Collection</em><em> | </em><em>None</em>) – List of objects to use to display visual representation(s) of
 progress bar. Each object much have an <cite>update</cite> method which will be
 passed a single argument corresponding to the current progress bar.</p></li>
 <li><p><strong>n_col</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – Number of columns (characters) to use in string representation of
@@ -776,12 +798,22 @@ bar visual representation.</p></li>
 <dt class="sig sig-object py" id="mici.progressbars.SequenceProgressBar.refresh">
 <span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#SequenceProgressBar.refresh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.SequenceProgressBar.refresh" title="Link to this definition">#</a></dt>
 <dd><p>Refresh visual display(s) of progress bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.progressbars.SequenceProgressBar.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#SequenceProgressBar.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.SequenceProgressBar.reset" title="Link to this definition">#</a></dt>
 <dd><p>Reset progress bar state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>None</em></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -804,10 +836,34 @@ bar visual representation.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>iter_count</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – New value for iteration counter.</p></li>
-<li><p><strong>iter_dict</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>]</em><em>]</em>) – Dictionary of iteration statistics key-value pairs to use to
+<li><p><strong>iter_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of iteration statistics key-value pairs to use to
 update postfix stats.</p></li>
 <li><p><strong>refresh</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – Whether to refresh display(s).</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mici.progressbars.UpdateableDisplay">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.progressbars.</span></span><span class="sig-name descname"><span class="pre">UpdateableDisplay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#UpdateableDisplay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.UpdateableDisplay" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Updateable display.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mici.progressbars.UpdateableDisplay.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/progressbars.html#UpdateableDisplay.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.progressbars.UpdateableDisplay.update" title="Link to this definition">#</a></dt>
+<dd><p>Update display with representation of object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Any</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>None</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -922,6 +978,10 @@ update postfix stats.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.progressbars.SequenceProgressBar.sequence"><code class="docutils literal notranslate"><span class="pre">SequenceProgressBar.sequence</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.progressbars.SequenceProgressBar.stats"><code class="docutils literal notranslate"><span class="pre">SequenceProgressBar.stats</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.progressbars.SequenceProgressBar.update"><code class="docutils literal notranslate"><span class="pre">SequenceProgressBar.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.progressbars.UpdateableDisplay"><code class="docutils literal notranslate"><span class="pre">UpdateableDisplay</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mici.progressbars.UpdateableDisplay.update"><code class="docutils literal notranslate"><span class="pre">UpdateableDisplay.update()</span></code></a></li>
 </ul>
 </li>
 </ul>

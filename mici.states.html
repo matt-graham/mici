@@ -413,7 +413,7 @@ will be blocked by the <cite>copy</cite> method.</p>
 <li><p><strong>**variables</strong> (<em>ArrayLike</em>) – Keyword arguments corresponding to state variables. All names
 must not begin with an underscore and no name can be <cite>copy</cite>. See
 description above for details.</p></li>
-<li><p><strong>_call_counts</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em><em>]</em>) – If a dictionary (or <cite>Counter</cite>) is passed this will be used to
+<li><p><strong>_call_counts</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – If a dictionary (or <cite>Counter</cite>) is passed this will be used to
 store counts of the number of calls of system methods decorated with
 <cite>cache_in_state</cite> or <cite>cache_in_state_with_aux</cite> when called on this state
 object and when no cached value for the method is available so that the
@@ -425,11 +425,11 @@ number of method call while sampling a chain.</p></li>
 <li><p><strong>_read_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a>) – If <cite>True</cite> a <cite>mici.errors.ReadOnlyStateError</cite> exception will be
 raised when attempting to set any attributes of the state object after
 construction. Defaults to <cite>False</cite>.</p></li>
-<li><p><strong>_dependencies</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.12)"><em>set</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>]</em><em>]</em>) – Intended for internal use only. If not <cite>None</cite> this should be
+<li><p><strong>_dependencies</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.12)"><em>set</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>]</em><em>] </em><em>| </em><em>None</em>) – Intended for internal use only. If not <cite>None</cite> this should be
 a dictionary with string keys corresponding to the state variable names
 and values which are sets of strings indicating any dependencies of the
 relevant state variable in the cache.</p></li>
-<li><p><strong>_cache</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>]</em>) – Intended for internal use only. If not <cite>None</cite> this should be a
+<li><p><strong>_cache</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.12)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Intended for internal use only. If not <cite>None</cite> this should be a
 dictionary with keys corresponding to unique identifiers for methods
 decorated with the <cite>cache_in_state</cite> or <cite>cache_in_state_with_aux</cite>
 decorators and values corresponding to cached computed outputs of these
@@ -478,7 +478,7 @@ such that the cache in the state object is correctly cleared when the value
 of any of these variables (attributes) of the state object changes.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Callable</em>[[<em>Callable</em>[[<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>, <a class="reference internal" href="#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], ArrayLike]], <em>Callable</em>[[<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>, <a class="reference internal" href="#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], ArrayLike]]</p>
+<dd class="field-even"><p><em>Callable</em>[[SystemStateMethod], SystemStateMethod]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -532,7 +532,7 @@ outputs are being returned.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Callable</em>[[<em>Callable</em>[[<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>, <a class="reference internal" href="#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], ArrayLike]], <em>Callable</em>[[<a class="reference internal" href="mici.systems.html#mici.systems.System" title="mici.systems.System"><em>System</em></a>, <a class="reference internal" href="#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>], ArrayLike]]</p>
+<dd class="field-even"><p><em>Callable</em>[[SystemStateWithAuxMethod], SystemStateMethod]</p>
 </dd>
 </dl>
 </dd></dl>

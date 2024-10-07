@@ -359,15 +359,19 @@ document.write(`
     <span class="n">AUTOGRAD_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-
     <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
         <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="n">ArrayLike</span><span class="p">,</span>
         <span class="n">GradientFunction</span><span class="p">,</span>
         <span class="n">HessianFunction</span><span class="p">,</span>
         <span class="n">JacobianFunction</span><span class="p">,</span>
+        <span class="n">MatrixHessianProduct</span><span class="p">,</span>
         <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
+        <span class="n">MatrixTressianProduct</span><span class="p">,</span>
         <span class="n">MatrixTressianProductFunction</span><span class="p">,</span>
         <span class="n">ScalarFunction</span><span class="p">,</span>
+        <span class="n">ScalarLike</span><span class="p">,</span>
+        <span class="n">VectorJacobianProduct</span><span class="p">,</span>
         <span class="n">VectorJacobianProductFunction</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -377,7 +381,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GradientFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns both gradient and value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">vjp</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;grad_and_value only applies to real scalar-output functions.&quot;</span>
@@ -391,8 +395,7 @@ document.write(`
 <div class="viewcode-block" id="vjp_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.vjp_and_value">[docs]</a>
 <span class="k">def</span> <span class="nf">vjp_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VectorJacobianProductFunction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes a function that returns vector-Jacobian-product and value of a function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns vector-Jacobian-product and value of a function.</span>
 
 <span class="sd">    For a vector-valued function `fun` the vector-Jacobian-product (VJP) is here</span>
 <span class="sd">    defined as a function of a vector `v` corresponding to</span>
@@ -406,7 +409,7 @@ document.write(`
 <span class="sd">        j[i, k] = ∂f[i] / ∂x[k]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">vjp_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">vjp_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VectorJacobianProduct</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">vjp_and_value_func</span></div>
@@ -418,7 +421,7 @@ document.write(`
 <span class="k">def</span> <span class="nf">jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JacobianFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns both the Jacobian and value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">vjp</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
         <span class="n">val_vspace</span> <span class="o">=</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
         <span class="n">jacobian_shape</span> <span class="o">=</span> <span class="n">val_vspace</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">vspace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
@@ -432,8 +435,7 @@ document.write(`
 <div class="viewcode-block" id="mhp_jacobian_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.mhp_jacobian_and_value">[docs]</a>
 <span class="k">def</span> <span class="nf">mhp_jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixHessianProductFunction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes a function that returns MHP, Jacobian and value of a function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns MHP, Jacobian and value of a function.</span>
 
 <span class="sd">    For a vector-valued function `fun` the matrix-Hessian-product (MHP) is here</span>
 <span class="sd">    defined as a function of a matrix `m` corresponding to</span>
@@ -447,7 +449,9 @@ document.write(`
 <span class="sd">        h[i, j, k] = ∂²f[i] / (∂x[j] ∂x[k])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">mhp_jacobian_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">mhp_jacobian_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">mhp</span><span class="p">,</span> <span class="p">(</span><span class="n">jacob</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">mhp</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">zeros</span><span class="p">())),</span> <span class="n">jacob</span><span class="p">,</span> <span class="n">val</span>
 
@@ -460,11 +464,13 @@ document.write(`
 <span class="k">def</span> <span class="nf">hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HessianFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns the Hessian, gradient &amp; value of a function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">grad_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">grad_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">vjp</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">vjp</span><span class="p">(</span><span class="n">vspace</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">ones</span><span class="p">()),</span> <span class="n">val</span>
 
-    <span class="k">def</span> <span class="nf">hessian_grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">hessian_grad_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">x_vspace</span> <span class="o">=</span> <span class="n">vspace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">vjp_grad</span><span class="p">,</span> <span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">grad_func</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
         <span class="n">hessian_shape</span> <span class="o">=</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="n">x_vspace</span><span class="o">.</span><span class="n">shape</span>
@@ -479,8 +485,7 @@ document.write(`
 <div class="viewcode-block" id="mtp_hessian_grad_and_value">
 <a class="viewcode-back" href="../../../mici.autodiff.autograd_wrapper.html#mici.autodiff.autograd_wrapper.mtp_hessian_grad_and_value">[docs]</a>
 <span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixTressianProductFunction</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Makes a function that returns MTP, Jacobian and value of a function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes a function that returns MTP, Jacobian and value of a function.</span>
 
 <span class="sd">    For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is</span>
 <span class="sd">    here defined as a function of a matrix `m` corresponding to</span>
@@ -493,7 +498,9 @@ document.write(`
 <span class="sd">        t[i, j, k] = ∂³f / (∂x[i] ∂x[j] ∂x[k])</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">mtp_hessian_grad_and_value_func</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">mtp</span><span class="p">,</span> <span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span> <span class="o">=</span> <span class="n">make_vjp</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">atuple</span><span class="p">(</span><span class="n">hessian_grad_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">x</span><span class="p">)),</span>
             <span class="n">x</span><span class="p">,</span>

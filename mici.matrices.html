@@ -438,9 +438,11 @@ with it will not be able to exploit any structure in the matrix.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.matrices.</span></span><span class="sig-name descname"><span class="pre">BlockMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/matrices.html#BlockMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.matrices.BlockMatrix" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.matrices.ImplicitArrayMatrix" title="mici.matrices.ImplicitArrayMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImplicitArrayMatrix</span></code></a></p>
 <p>Matrix with non-zero entries defined by a series of submatrix blocks.</p>
+<p>Args:
+shape: Shape of matrix <cite>(num_rows, num_columns)</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Shape of matrix <cite>(num_rows, num_columns)</cite>.</p>
+<dd class="field-odd"><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>)</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -545,7 +547,7 @@ with it will not be able to exploit any structure in the matrix.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>NDArray</em>) – 2D array specifying matrix entries.</p></li>
-<li><p><strong>factor</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em>, </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em>]</em><em>]</em>) – Optional argument giving the triangular factorisation of the matrix
+<li><p><strong>factor</strong> (<a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em> | </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em> | </em><em>None</em>) – Optional argument giving the triangular factorisation of the matrix
 such that <cite>matrix = factor &#64; factor.T</cite> if <cite>is_posdef=True</cite> or <cite>matrix =
 -factor &#64; factor.T</cite> otherwise. If not pre-computed and specified at
 initialisation a factorisation will only be computed when first required
@@ -663,7 +665,7 @@ Lebesgue measure.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>NDArray</em>) – 2D array specifying matrix entries.</p></li>
-<li><p><strong>factor</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em>, </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em>]</em><em>]</em>) – Optional argument giving the triangular factorisation of the matrix
+<li><p><strong>factor</strong> (<a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em> | </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em> | </em><em>None</em>) – Optional argument giving the triangular factorisation of the matrix
 such that <cite>matrix = factor &#64; factor.T</cite>. If not pre-computed and
 specified at initialisation a factorisation will only be computed when
 first required by an operation which depends on the factor.</p></li>
@@ -790,10 +792,10 @@ has full row rank.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rect_matrix</strong> (<em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a><em>]</em>) – Rectangular matrix of shape <cite>(dim_0, dim_1)</cite> with it and its
+<li><p><strong>rect_matrix</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>) – Rectangular matrix of shape <cite>(dim_0, dim_1)</cite> with it and its
 transpose forming the leftmost and righmost term respectively in the
 symmetric matrix product defining the matrix.</p></li>
-<li><p><strong>pos_def_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – Optional positive positive definite matrix with shape
+<li><p><strong>pos_def_matrix</strong> (<a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em> | </em><em>None</em>) – Optional positive positive definite matrix with shape
 <cite>(dim_inner, dim_inner)</cite> specifying inner term in symmetric matrix
 product defining matrix. If <cite>None</cite> an identity matrix is used.</p></li>
 </ul>
@@ -954,13 +956,13 @@ above property.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>NDArray</em>) – 2D array specifying matrix entries.</p></li>
-<li><p><strong>lu_and_piv</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>NDArray</em><em>, </em><em>NDArray</em><em>]</em><em>]</em>) – Pivoted LU factorisation represented as a tuple with first
+<li><p><strong>lu_and_piv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><em>NDArray</em><em>, </em><em>NDArray</em><em>] </em><em>| </em><em>None</em>) – Pivoted LU factorisation represented as a tuple with first
 element a 2D array containing the lower and upper triangular factors
 (with the unit diagonal of the lower triangular factor not stored) and
 the second element a 1D array containing the pivot indices. Corresponds
 to the output of <cite>scipy.linalg.lu_factor</cite> and input to
 <cite>scipy.linalg.lu_solve</cite>.</p></li>
-<li><p><strong>lu_transposed</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>]</em>) – Whether LU factorisation is of original array or its
+<li><p><strong>lu_transposed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em> | </em><em>None</em>) – Whether LU factorisation is of original array or its
 transpose.</p></li>
 </ul>
 </dd>
@@ -1031,10 +1033,10 @@ Lebesgue measure.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>array</strong> (<em>NDArray</em>) – Explicit 2D array representation of matrix.</p></li>
-<li><p><strong>eigvec</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a><em>]</em><em>]</em>) – Optional. If specified either a 2D array or an <cite>OrthogonalMatrix</cite>
+<li><p><strong>eigvec</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a><em> | </em><em>None</em>) – Optional. If specified either a 2D array or an <cite>OrthogonalMatrix</cite>
 instance, in both cases the columns of the matrix corresponding to the
 orthonormal set of eigenvectors of the matrix being constructed.</p></li>
-<li><p><strong>eigval</strong> (<em>Optional</em><em>[</em><em>NDArray</em><em>]</em>) – Optional. If specified a 1D array containing the eigenvalues of the
+<li><p><strong>eigval</strong> (<em>NDArray</em><em> | </em><em>None</em>) – Optional. If specified a 1D array containing the eigenvalues of the
 matrix being constructed, with <cite>eigval[i]</cite> the eigenvalue associated
 with column <cite>i</cite> of <cite>eigvec</cite>.</p></li>
 </ul>
@@ -1312,7 +1314,7 @@ positive eigenvalues of <cite>matrix</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>eigvec</strong> (<em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a><em>]</em>) – Either a 2D array or an <cite>OrthogonalMatrix</cite> instance, in both cases
+<li><p><strong>eigvec</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a>) – Either a 2D array or an <cite>OrthogonalMatrix</cite> instance, in both cases
 the columns of the matrix corresponding to the orthonormal set of
 eigenvectors of the matrix being constructed.</p></li>
 <li><p><strong>eigval</strong> (<em>NDArray</em>) – A 1D array containing the eigenvalues of the matrix being
@@ -1411,7 +1413,7 @@ of <cite>matrix</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>eigvec</strong> (<em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a><em>]</em>) – Either a 2D array or an <cite>OrthogonalMatrix</cite> instance, in both cases
+<li><p><strong>eigvec</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.OrthogonalMatrix" title="mici.matrices.OrthogonalMatrix"><em>OrthogonalMatrix</em></a>) – Either a 2D array or an <cite>OrthogonalMatrix</cite> instance, in both cases
 the columns of the matrix corresponding to the orthonormal set of
 eigenvectors of the matrix being constructed.</p></li>
 <li><p><strong>eigval</strong> (<em>NDArray</em>) – A 1D array containing the eigenvalues of the matrix being
@@ -1539,7 +1541,7 @@ will allow use for subset of operations where shape is not required to be
 known.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Number of rows / columns in matrix or <cite>None</cite> if matrix is to be
+<dd class="field-odd"><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of rows / columns in matrix or <cite>None</cite> if matrix is to be
 implicitly shaped.</p>
 </dd>
 </dl>
@@ -1623,9 +1625,11 @@ above property.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.matrices.</span></span><span class="sig-name descname"><span class="pre">ImplicitArrayMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/matrices.html#ImplicitArrayMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.matrices.ImplicitArrayMatrix" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.matrices.Matrix" title="mici.matrices.Matrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a></p>
 <p>Matrix with an implicit array representation.</p>
+<p>Args:
+shape: Shape of matrix <cite>(num_rows, num_columns)</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Shape of matrix <cite>(num_rows, num_columns)</cite>.</p>
+<dd class="field-odd"><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.12)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>)</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -2259,10 +2263,10 @@ it and its transpose forming the leftmost and righmost term respectively
 in the matrix product defining the low-rank update.</p></li>
 <li><p><strong>pos_def_matrix</strong> (<a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix to perform low-rank update (or
 downdate) to.</p></li>
-<li><p><strong>inner_pos_def_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – Optional positive definite matrix with shape
+<li><p><strong>inner_pos_def_matrix</strong> (<a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em> | </em><em>None</em>) – Optional positive definite matrix with shape
 <cite>(dim_inner, dim_inner)</cite> specifying inner term in matrix product
 defining low-rank update. If <cite>None</cite> an identity matrix is used.</p></li>
-<li><p><strong>capacitance_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – <p>Positive-definite matrix equal to.</p>
+<li><p><strong>capacitance_matrix</strong> (<a class="reference internal" href="#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em> | </em><em>None</em>) – <p>Positive-definite matrix equal to.</p>
 <blockquote>
 <div><p>inner_pos_def_matrix.inv
 + factor_matrix.T &#64; pos_def_matrix.inv &#64; factor_matrix</p>
@@ -2575,7 +2579,7 @@ above property.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>scalar</strong> (<em>ScalarLike</em>) – Scalar multiplier for identity matrix.</p></li>
-<li><p><strong>size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Number of rows / columns in matrix. If <cite>None</cite> the matrix will be
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of rows / columns in matrix. If <cite>None</cite> the matrix will be
 implicitly-shaped and only the subset of operations which do not rely on
 an explicit shape will be available.</p></li>
 </ul>
@@ -2616,7 +2620,7 @@ with it will not be able to exploit any structure in the matrix.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.matrices.PositiveScaledIdentityMatrix.grad_log_abs_det">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_abs_det</span></span><a class="headerlink" href="#mici.matrices.PositiveScaledIdentityMatrix.grad_log_abs_det" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_abs_det</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ScalarLike</span></em><a class="headerlink" href="#mici.matrices.PositiveScaledIdentityMatrix.grad_log_abs_det" title="Link to this definition">#</a></dt>
 <dd><p>Gradient of logarithm of absolute value of determinant of matrix.</p>
 </dd></dl>
 
@@ -2695,7 +2699,7 @@ is not required to be known.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>scalar</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Scalar multiplier for identity matrix.</p></li>
-<li><p><strong>size</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>]</em>) – Number of rows / columns in matrix. If <cite>None</cite> the matrix will be
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em> | </em><em>None</em>) – Number of rows / columns in matrix. If <cite>None</cite> the matrix will be
 implicitly-shaped and only the subset of operations which do not rely on
 an explicit shape will be available.</p></li>
 </ul>
@@ -2736,7 +2740,7 @@ with it will not be able to exploit any structure in the matrix.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.matrices.ScaledIdentityMatrix.grad_log_abs_det">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_abs_det</span></span><a class="headerlink" href="#mici.matrices.ScaledIdentityMatrix.grad_log_abs_det" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_abs_det</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ScalarLike</span></em><a class="headerlink" href="#mici.matrices.ScaledIdentityMatrix.grad_log_abs_det" title="Link to this definition">#</a></dt>
 <dd><p>Gradient of logarithm of absolute value of determinant of matrix.</p>
 </dd></dl>
 
@@ -3124,10 +3128,10 @@ forming leftmost term in matrix product defining low-rank update.</p></li>
 <li><p><strong>right_factor_matrix</strong> (<a class="reference internal" href="#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>) – Rectangular matrix with shape <cite>(dim_inner, dim_outer)</cite>
 forming rightmost term in matrix product defining low-rank update.</p></li>
 <li><p><strong>square_matrix</strong> (<a class="reference internal" href="#mici.matrices.SquareMatrix" title="mici.matrices.SquareMatrix"><em>SquareMatrix</em></a>) – Square matrix to perform low-rank update (or downdate) to.</p></li>
-<li><p><strong>inner_square_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.SquareMatrix" title="mici.matrices.SquareMatrix"><em>SquareMatrix</em></a><em>]</em>) – Optional square matrix with shape
+<li><p><strong>inner_square_matrix</strong> (<a class="reference internal" href="#mici.matrices.SquareMatrix" title="mici.matrices.SquareMatrix"><em>SquareMatrix</em></a><em> | </em><em>None</em>) – Optional square matrix with shape
 <cite>(dim_inner, dim_inner)</cite> specifying inner term in matrix product
 defining low-rank update. If <cite>None</cite> an identity matrix is used.</p></li>
-<li><p><strong>capacitance_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.SquareMatrix" title="mici.matrices.SquareMatrix"><em>SquareMatrix</em></a><em>]</em>) – <p>Square matrix equal to.</p>
+<li><p><strong>capacitance_matrix</strong> (<a class="reference internal" href="#mici.matrices.SquareMatrix" title="mici.matrices.SquareMatrix"><em>SquareMatrix</em></a><em> | </em><em>None</em>) – <p>Square matrix equal to.</p>
 <blockquote>
 <div><p>inner_square_matrix.inv
 + right_factor_matrix &#64; square_matrix.inv &#64; left_factor_matrix</p>
@@ -3434,10 +3438,10 @@ leftmost and righmost term respectively in the matrix product
 defining the low-rank update.</p></li>
 <li><p><strong>symmetric_matrix</strong> (<a class="reference internal" href="#mici.matrices.SymmetricMatrix" title="mici.matrices.SymmetricMatrix"><em>SymmetricMatrix</em></a>) – Symmetric matrix to perform low-rank update (or downdate)
 to.</p></li>
-<li><p><strong>inner_symmetric_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.SymmetricMatrix" title="mici.matrices.SymmetricMatrix"><em>SymmetricMatrix</em></a><em>]</em>) – Optional symmetric matrix with shape
+<li><p><strong>inner_symmetric_matrix</strong> (<a class="reference internal" href="#mici.matrices.SymmetricMatrix" title="mici.matrices.SymmetricMatrix"><em>SymmetricMatrix</em></a><em> | </em><em>None</em>) – Optional symmetric matrix with shape
 <cite>(dim_inner, dim_inner)</cite> specifying inner term in matrix product
 defining low-rank update. If <cite>None</cite> an identity matrix is used.</p></li>
-<li><p><strong>capacitance_matrix</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="#mici.matrices.SymmetricMatrix" title="mici.matrices.SymmetricMatrix"><em>SymmetricMatrix</em></a><em>]</em>) – <p>Symmetric matrix  equal to.</p>
+<li><p><strong>capacitance_matrix</strong> (<a class="reference internal" href="#mici.matrices.SymmetricMatrix" title="mici.matrices.SymmetricMatrix"><em>SymmetricMatrix</em></a><em> | </em><em>None</em>) – <p>Symmetric matrix  equal to.</p>
 <blockquote>
 <div><p>inner_symmetric_matrix.inv
 + factor_matrix.T &#64;  symmetric_matrix.inv &#64; factor_matrix</p>
@@ -3602,7 +3606,7 @@ non-singular.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>factor</strong> (<em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em>, </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em>]</em>) – The triangular factor parameterising the matrix. Defined either a
+<li><p><strong>factor</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em> | </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a>) – The triangular factor parameterising the matrix. Defined either a
 2D array, in which case only the lower- or upper-triangular elements are
 used depending on the value of the <cite>factor_is_lower</cite> boolean keyword
 argument, or as a <cite>TriangularMatrix</cite> / <cite>InverseTriangularMatrix</cite>
@@ -3610,7 +3614,7 @@ instance in which case <cite>factor_is_lower</cite> is ignored, with <cite>facto
 instead determining if the factor is lower- or upper-triangular.</p></li>
 <li><p><strong>sign</strong> (<em>Literal</em><em>[</em><em>-1</em><em>, </em><em>1</em><em>]</em>) – +/-1 multiplier of factor product, corresponding respectively to a
 strictly positive- or negative-definite matrix.</p></li>
-<li><p><strong>factor_is_lower</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>]</em>) – Whether the array <cite>factor</cite> is lower- or upper-triangular.</p></li>
+<li><p><strong>factor_is_lower</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em> | </em><em>None</em>) – Whether the array <cite>factor</cite> is lower- or upper-triangular.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3727,7 +3731,7 @@ positive definite matrix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>factor</strong> (<em>Union</em><em>[</em><em>NDArray</em><em>, </em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em>, </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a><em>]</em>) – The triangular factor parameterising the matrix. Defined either a
+<li><p><strong>factor</strong> (<em>NDArray</em><em> | </em><a class="reference internal" href="#mici.matrices.TriangularMatrix" title="mici.matrices.TriangularMatrix"><em>TriangularMatrix</em></a><em> | </em><a class="reference internal" href="#mici.matrices.InverseTriangularMatrix" title="mici.matrices.InverseTriangularMatrix"><em>InverseTriangularMatrix</em></a>) – The triangular factor parameterising the matrix. Defined either a
 2D array, in which case only the lower- or upper-triangular elements are
 used depending on the value of the <cite>factor_is_lower</cite> boolean keyword
 argument, or as a <cite>TriangularMatrix</cite> / <cite>InverseTriangularMatrix</cite>
