@@ -335,7 +335,7 @@ class DualAveragingStepSizeAdapter(Adapter):
                     integrator.step_size /= 2
                 else:
                     integrator.step_size *= 2
-            except IntegratorError:
+            except IntegratorError:  # noqa: PERF203
                 step_size_too_big = True
                 integrator.step_size /= 2
         msg = (

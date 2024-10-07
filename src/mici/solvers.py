@@ -71,8 +71,8 @@ def solve_fixed_point_direct(
             :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`
             during the iteration.
     """
-    for i in range(max_iters):
-        try:
+    try:
+        for i in range(max_iters):
             x = func(x0)
             error = norm(x - x0)
             if error > divergence_tol or np.isnan(error):
@@ -84,10 +84,10 @@ def solve_fixed_point_direct(
             if error < convergence_tol:
                 return x
             x0 = x
-        except (ValueError, LinAlgError) as e:
-            # Make robust to errors in intermediate linear algebra ops
-            msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
-            raise ConvergenceError(msg) from e
+    except (ValueError, LinAlgError) as e:
+        # Make robust to errors in intermediate linear algebra ops
+        msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
+        raise ConvergenceError(msg) from e
     msg = f"Fixed point iteration did not converge. Last error={error:.1e}."
     raise ConvergenceError(msg)
 
@@ -125,8 +125,8 @@ def solve_fixed_point_steffensen(
             :code:`max_iters` iterations, diverges or encounters a :py:exc:`ValueError`
             during the iteration.
     """
-    for i in range(max_iters):
-        try:
+    try:
+        for i in range(max_iters):
             x1 = func(x0)
             x2 = func(x1)
             denom = x2 - 2 * x1 + x0
@@ -144,10 +144,10 @@ def solve_fixed_point_steffensen(
             if error < convergence_tol:
                 return x
             x0 = x
-        except (ValueError, LinAlgError) as e:
-            # Make robust to errors in intermediate linear algebra ops
-            msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
-            raise ConvergenceError(msg) from e
+    except (ValueError, LinAlgError) as e:
+        # Make robust to errors in intermediate linear algebra ops
+        msg = f"{type(e)} at iteration {i} of fixed point solver ({e})."
+        raise ConvergenceError(msg) from e
     msg = f"Fixed point iteration did not converge. Last error={error:.1e}."
     raise ConvergenceError(msg)
 
@@ -313,8 +313,8 @@ def solve_projection_onto_manifold_quasi_newton(
         jacob_constr_prev,
         dh2_flow_pos_dmom,
     ).inv
-    for i in range(max_iters):
-        try:
+    try:
+        for i in range(max_iters):
             constr = system.constr(state)
             error = norm(constr)
             delta_mu = jacob_constr_prev.T @ (inv_jacob_constr_inner_product @ constr)
@@ -330,10 +330,10 @@ def solve_projection_onto_manifold_quasi_newton(
                 return state
             mu += delta_mu
             state.pos -= delta_pos
-        except (ValueError, LinAlgError) as e:
-            # Make robust to errors in intermediate linear algebra ops
-            msg = f"{type(e)} at iteration {i} of quasi-Newton solver ({e})."
-            raise ConvergenceError(msg) from e
+    except (ValueError, LinAlgError) as e:
+        # Make robust to errors in intermediate linear algebra ops
+        msg = f"{type(e)} at iteration {i} of quasi-Newton solver ({e})."
+        raise ConvergenceError(msg) from e
     msg = (
         f"Quasi-Newton solver did not converge with {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
@@ -431,8 +431,8 @@ def solve_projection_onto_manifold_newton(
         state_prev,
         abs(time_step),
     )
-    for i in range(max_iters):
-        try:
+    try:
+        for i in range(max_iters):
             jacob_constr = system.jacob_constr(state)
             constr = system.constr(state)
             error = norm(constr)
@@ -456,10 +456,10 @@ def solve_projection_onto_manifold_newton(
                 return state
             mu += delta_mu
             state.pos -= delta_pos
-        except (ValueError, LinAlgError) as e:
-            # Make robust to errors in intermediate linear algebra ops
-            msg = f"{type(e)} at iteration {i} of Newton solver ({e})."
-            raise ConvergenceError(msg) from e
+    except (ValueError, LinAlgError) as e:
+        # Make robust to errors in intermediate linear algebra ops
+        msg = f"{type(e)} at iteration {i} of Newton solver ({e})."
+        raise ConvergenceError(msg) from e
     msg = (
         f"Newton solver did not converge in {max_iters} iterations. "
         f"Last |constr|={error:.1e}, |delta_pos|={norm(delta_pos)}."
