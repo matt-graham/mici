@@ -537,9 +537,9 @@ def _sample_chain(  # noqa: PLR0912
                 if chain_traces is not None and trace_funcs is not None:
                     for trace_func in trace_funcs:
                         for key, val in trace_func(state).items():
-                            chain_traces[key][
-                                sample_index + sampling_index_offset
-                            ] = val
+                            chain_traces[key][sample_index + sampling_index_offset] = (
+                                val
+                            )
     except KeyboardInterrupt as e:
         exception = e
         logger.exception(
