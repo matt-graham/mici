@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import numbers
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -15,9 +16,10 @@ from mici.utils import hash_array
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from typing import Literal, Optional, Union
+    from typing import Any, Literal
 
     from numpy.typing import NDArray
+    from typing_extensions import Self
 
     from mici.types import MatrixLike, ScalarLike
 
@@ -29,13 +31,11 @@ def _choose_matrix_product_class(matrix_l: Matrix, matrix_r: Matrix) -> MatrixPr
             InvertibleMatrix,
         ):
             return InvertibleMatrixProduct
-        else:
-            return SquareMatrixProduct
-    else:
-        return MatrixProduct
+        return SquareMatrixProduct
+    return MatrixProduct
 
 
-def _is_scalar(val) -> bool:
+def _is_scalar(val: Any) -> bool:  # noqa: ANN401
     return isinstance(val, numbers.Number) or (
         hasattr(val, "__array__") and np.ndim(val) == 0
     )
@@ -51,10 +51,10 @@ class Matrix(abc.ABC):
 
     __array_priority__ = 1
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         """
         Args:
-           shape: Shape of matrix `(num_rows, num_columns)`.
+            shape: Shape of matrix `(num_rows, num_columns)`.
         """
         self._shape = shape
         self._hash = None
@@ -73,8 +73,7 @@ class Matrix(abc.ABC):
                 msg = "Scalar multiplication by zero not implemented."
                 raise NotImplementedError(msg)
             return self._scalar_multiply(other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other: ScalarLike) -> Matrix:
         return self.__mul__(other)
@@ -85,13 +84,12 @@ class Matrix(abc.ABC):
                 msg = "Scalar division by zero not implemented."
                 raise NotImplementedError(msg)
             return self._scalar_multiply(1 / other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __neg__(self) -> Matrix:
         return self._scalar_multiply(-1)
 
-    def __matmul__(self, other: MatrixLike) -> Union[Matrix, NDArray]:
+    def __matmul__(self, other: MatrixLike) -> Matrix | NDArray:
         if self.shape[1] is not None and other.shape[0] != self.shape[1]:
             msg = (
                 f"Inconsistent dimensions for matrix multiplication: {self.shape} and "
@@ -101,10 +99,9 @@ class Matrix(abc.ABC):
         if isinstance(other, Matrix):
             matrix_product_class = _choose_matrix_product_class(self, other)
             return matrix_product_class((self, other), check_shapes=False)
-        else:
-            return self._left_matrix_multiply(other)
+        return self._left_matrix_multiply(other)
 
-    def __rmatmul__(self, other: MatrixLike) -> Union[Matrix, NDArray]:
+    def __rmatmul__(self, other: MatrixLike) -> Matrix | NDArray:
         if self.shape[0] is not None and other.shape[-1] != self.shape[0]:
             msg = (
                 f"Inconsistent dimensions for matrix multiplication: {other.shape} and "
@@ -114,8 +111,7 @@ class Matrix(abc.ABC):
         if isinstance(other, Matrix):
             matrix_product_class = _choose_matrix_product_class(self, other)
             return matrix_product_class((other, self), check_shapes=False)
-        else:
-            return self._right_matrix_multiply(other)
+        return self._right_matrix_multiply(other)
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -208,7 +204,7 @@ class Matrix(abc.ABC):
 class ExplicitArrayMatrix(Matrix):
     """Matrix with an explicit array representation."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         if "_array" not in kwargs:
             msg = "_array must be specified in kwargs"
             raise ValueError(msg)
@@ -239,10 +235,10 @@ class ExplicitArrayMatrix(Matrix):
 class ImplicitArrayMatrix(Matrix):
     """Matrix with an implicit array representation."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         """
         Args:
-           shape: Shape of matrix `(num_rows, num_columns)`.
+        shape: Shape of matrix `(num_rows, num_columns)`.
         """
         super().__init__(shape, **kwargs)
         self._array = None
@@ -275,7 +271,9 @@ class MatrixProduct(ImplicitArrayMatrix):
     Each adjacent pair of matrices in the sequence must have compatible shapes.
     """
 
-    def __init__(self, matrices: Iterable[Matrix], *, check_shapes: bool = True):
+    def __init__(
+        self, matrices: Iterable[Matrix], *, check_shapes: bool = True
+    ) -> None:
         """
         Args:
             matrices: Sequence of matrices forming product in left-to-right order.
@@ -284,7 +282,7 @@ class MatrixProduct(ImplicitArrayMatrix):
         """
         self._matrices = tuple(matrices)
         if check_shapes:
-            for matrix_l, matrix_r in zip(matrices[:-1], matrices[1:]):
+            for matrix_l, matrix_r in pairwise(matrices):
                 if matrix_l.shape[1] != matrix_r.shape[0]:
                     msg = (
                         f"Matrices {matrix_l} and {matrix_r} have inconsistent inner "
@@ -322,14 +320,14 @@ class MatrixProduct(ImplicitArrayMatrix):
     def _check_equality(self, other: MatrixProduct) -> bool:
         return len(other.matrices) == len(self.matrices) and all(
             matrix_s == matrix_o
-            for matrix_s, matrix_o in zip(self.matrices, other.matrices)
+            for matrix_s, matrix_o in zip(self.matrices, other.matrices, strict=True)
         )
 
 
 class SquareMatrix(Matrix):
     """Base class for matrices with equal numbers of rows and columns."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         if shape[0] != shape[1]:
             msg = f"{shape} is not a valid shape for a square matrix."
             raise ValueError(msg)
@@ -352,7 +350,9 @@ class SquareMatrixProduct(MatrixProduct, SquareMatrix):
     All the matrices must have the same shape.
     """
 
-    def __init__(self, matrices: Iterable[Matrix], *, check_shapes: bool = True):
+    def __init__(
+        self, matrices: Iterable[Matrix], *, check_shapes: bool = True
+    ) -> None:
         matrices = tuple(matrices)
         if check_shapes:
             if matrices[0].shape[0] != matrices[0].shape[1]:
@@ -372,7 +372,7 @@ class SquareMatrixProduct(MatrixProduct, SquareMatrix):
 class InvertibleMatrix(SquareMatrix):
     """Base class for non-singular square matrices."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         super().__init__(shape, **kwargs)
         self._inv = None
 
@@ -411,12 +411,12 @@ class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
         matrices: Iterable[InvertibleMatrix],
         *,
         check_shapes: bool = True,
-    ):
+    ) -> None:
         matrices = tuple(matrices)
         for matrix in matrices:
             if not isinstance(matrix, InvertibleMatrix):
                 msg = f"matrix {matrix} is not invertible."
-                raise ValueError(msg)
+                raise TypeError(msg)
         super().__init__(matrices, check_shapes=check_shapes)
 
     def _construct_inv(self) -> InvertibleMatrixProduct:
@@ -428,12 +428,12 @@ class InvertibleMatrixProduct(SquareMatrixProduct, InvertibleMatrix):
 class SymmetricMatrix(SquareMatrix):
     """Base class for square matrices which are equal to their transpose."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         self._eigval = None
         self._eigvec = None
         super().__init__(shape, **kwargs)
 
-    def _compute_eigendecomposition(self):
+    def _compute_eigendecomposition(self) -> None:
         self._eigval, eigvec = nla.eigh(self.array)
         self._eigvec = OrthogonalMatrix(eigvec)
 
@@ -462,7 +462,7 @@ class SymmetricMatrix(SquareMatrix):
 class PositiveDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
     """Base class for positive definite matrices."""
 
-    def __init__(self, shape: tuple[int, int], **kwargs):
+    def __init__(self, shape: tuple[int, int], **kwargs) -> None:
         self._sqrt = None
         super().__init__(shape, **kwargs)
 
@@ -497,7 +497,7 @@ class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     known.
     """
 
-    def __init__(self, size: Optional[int] = None):
+    def __init__(self, size: int | None = None) -> None:
         """
         Args:
             size: Number of rows / columns in matrix or `None` if matrix is to be
@@ -508,8 +508,7 @@ class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
     def _scalar_multiply(self, scalar: ScalarLike) -> Matrix:
         if scalar > 0:
             return PositiveScaledIdentityMatrix(scalar, self.shape[0])
-        else:
-            return ScaledIdentityMatrix(scalar, self.shape[0])
+        return ScaledIdentityMatrix(scalar, self.shape[0])
 
     def _left_matrix_multiply(self, other: NDArray) -> NDArray:
         return other
@@ -602,7 +601,7 @@ class ScaledIdentityMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayM
     is not required to be known.
     """
 
-    def __init__(self, scalar: float, size: Optional[int] = None):
+    def __init__(self, scalar: float, size: int | None = None) -> None:
         """
         Args:
             scalar: Scalar multiplier for identity matrix.
@@ -665,7 +664,7 @@ class ScaledIdentityMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayM
         return self.shape[0] * np.log(abs(self._scalar))
 
     @property
-    def grad_log_abs_det(self):
+    def grad_log_abs_det(self) -> ScalarLike:
         return self.shape[0] / self._scalar
 
     def grad_quadratic_form_inv(self, vector: NDArray) -> float:
@@ -687,7 +686,7 @@ class PositiveScaledIdentityMatrix(ScaledIdentityMatrix, PositiveDefiniteMatrix)
     Restricts the `scalar` parameter to be strictly positive.
     """
 
-    def __init__(self, scalar: ScalarLike, size: Optional[int] = None):
+    def __init__(self, scalar: ScalarLike, size: int | None = None) -> None:
         if scalar <= 0:
             msg = "Scalar multiplier must be positive."
             raise ValueError(msg)
@@ -696,8 +695,7 @@ class PositiveScaledIdentityMatrix(ScaledIdentityMatrix, PositiveDefiniteMatrix)
     def _scalar_multiply(self, scalar: ScalarLike) -> ScaledIdentityMatrix:
         if scalar > 0:
             return PositiveScaledIdentityMatrix(scalar * self._scalar, self.shape[0])
-        else:
-            return super()._scalar_multiply(scalar)
+        return super()._scalar_multiply(scalar)
 
     def _construct_inv(self) -> PositiveScaledIdentityMatrix:
         return PositiveScaledIdentityMatrix(1 / self._scalar, self.shape[0])
@@ -709,7 +707,7 @@ class PositiveScaledIdentityMatrix(ScaledIdentityMatrix, PositiveDefiniteMatrix)
 class DiagonalMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix):
     """Matrix with non-zero elements only along its diagonal."""
 
-    def __init__(self, diagonal: NDArray):
+    def __init__(self, diagonal: NDArray) -> None:
         """
         Args:
             diagonal: 1D array specifying diagonal elements of matrix.
@@ -727,16 +725,15 @@ class DiagonalMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayMatrix)
         return DiagonalMatrix(self.diagonal * scalar)
 
     def _left_matrix_multiply(self, other: NDArray) -> NDArray:
-        if other.ndim == 2:
+        if other.ndim == 2:  # noqa: PLR2004
             return self.diagonal[:, None] * other
-        elif other.ndim == 1:
+        if other.ndim == 1:
             return self.diagonal * other
-        else:
-            msg = (
-                "Left matrix multiplication only defined for one or two dimensional "
-                "right hand sides."
-            )
-            raise ValueError(msg)
+        msg = (
+            "Left matrix multiplication only defined for one or two dimensional "
+            "right hand sides."
+        )
+        raise ValueError(msg)
 
     def _right_matrix_multiply(self, other: NDArray) -> NDArray:
         return self.diagonal * other
@@ -775,7 +772,7 @@ class PositiveDiagonalMatrix(DiagonalMatrix, PositiveDefiniteMatrix):
     Restricts all values in `diagonal` array parameter to be strictly positive.
     """
 
-    def __init__(self, diagonal: NDArray):
+    def __init__(self, diagonal: NDArray) -> None:
         if not np.all(diagonal > 0):
             msg = "Diagonal values must all be positive."
             raise ValueError(msg)
@@ -784,8 +781,7 @@ class PositiveDiagonalMatrix(DiagonalMatrix, PositiveDefiniteMatrix):
     def _scalar_multiply(self, scalar: ScalarLike) -> DiagonalMatrix:
         if scalar > 0:
             return PositiveDiagonalMatrix(self.diagonal * scalar)
-        else:
-            return super()._scalar_multiply(scalar)
+        return super()._scalar_multiply(scalar)
 
     def _construct_inv(self) -> PositiveDiagonalMatrix:
         return PositiveDiagonalMatrix(1.0 / self.diagonal)
@@ -808,7 +804,7 @@ class TriangularMatrix(InvertibleMatrix, ExplicitArrayMatrix):
         *,
         lower: bool = True,
         make_triangular: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             array: 2D array containing lower / upper triangular element values of
@@ -866,7 +862,7 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         *,
         lower: bool = True,
         make_triangular: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             inverse_array: 2D containing values of *inverse* of this matrix, with the
@@ -954,11 +950,11 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash_array(self._inverse_array)
 
     def _check_equality(self, other: InverseTriangularMatrix) -> bool:
-        return np.array_equal(self._inverse_array, other._inverse_array)
+        return np.array_equal(self._inverse_array, other._inverse_array)  # noqa: SLF001
 
 
 class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
-    def __init__(self, size: int, sign: Literal[-1, 1] = 1, **kwargs):
+    def __init__(self, size: int, sign: Literal[-1, 1] = 1, **kwargs) -> None:
         super().__init__((size, size), **kwargs)
         if sign not in (-1, 1):
             msg = "sign must be equal to +1 or -1"
@@ -966,7 +962,7 @@ class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
         self._sign = sign
 
     @property
-    def factor(self) -> Union[TriangularMatrix, InverseTriangularMatrix]:
+    def factor(self) -> TriangularMatrix | InverseTriangularMatrix:
         """Triangular matrix with `matrix = sign * factor @ factor.T`."""
         return self._factor
 
@@ -1008,10 +1004,10 @@ class TriangularFactoredDefiniteMatrix(
 
     def __init__(
         self,
-        factor: Union[NDArray, TriangularMatrix, InverseTriangularMatrix],
+        factor: NDArray | TriangularMatrix | InverseTriangularMatrix,
         sign: Literal[-1, 1] = 1,
-        factor_is_lower: Optional[bool] = None,
-    ):
+        factor_is_lower: bool | None = None,
+    ) -> None:
         """
         Args:
             factor: The triangular factor parameterising the matrix. Defined either a
@@ -1024,7 +1020,7 @@ class TriangularFactoredDefiniteMatrix(
                 strictly positive- or negative-definite matrix.
             factor_is_lower: Whether the array `factor` is lower- or upper-triangular.
         """
-        if not isinstance(factor, (TriangularMatrix, InverseTriangularMatrix)):
+        if not isinstance(factor, TriangularMatrix | InverseTriangularMatrix):
             if factor_is_lower not in (True, False):
                 msg = (
                     "For array `factor` parameter `factor_is_lower` must be specified "
@@ -1086,10 +1082,10 @@ class TriangularFactoredPositiveDefiniteMatrix(
 
     def __init__(
         self,
-        factor: Union[NDArray, TriangularMatrix, InverseTriangularMatrix],
+        factor: NDArray | TriangularMatrix | InverseTriangularMatrix,
         *,
         factor_is_lower: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             factor: The triangular factor parameterising the matrix. Defined either a
@@ -1107,13 +1103,12 @@ class TriangularFactoredPositiveDefiniteMatrix(
             return TriangularFactoredPositiveDefiniteMatrix(
                 factor=scalar**0.5 * self.factor,
             )
-        else:
-            return super()._scalar_multiply(scalar)
+        return super()._scalar_multiply(scalar)
 
     def _construct_inv(self) -> TriangularFactoredPositiveDefiniteMatrix:
         return TriangularFactoredPositiveDefiniteMatrix(factor=self.factor.inv.T)
 
-    def _construct_sqrt(self) -> Union[TriangularMatrix, InverseTriangularMatrix]:
+    def _construct_sqrt(self) -> TriangularMatrix | InverseTriangularMatrix:
         return self.factor
 
 
@@ -1127,10 +1122,10 @@ class DenseDefiniteMatrix(
     def __init__(
         self,
         array: NDArray,
-        factor: Optional[Union[TriangularMatrix, InverseTriangularMatrix]] = None,
+        factor: TriangularMatrix | InverseTriangularMatrix | None = None,
         *,
         is_posdef: bool = True,
-    ):
+    ) -> None:
         """
         Args:
             array : 2D array specifying matrix entries.
@@ -1155,15 +1150,14 @@ class DenseDefiniteMatrix(
                 scalar * self.array,
                 None if self._factor is None else abs(scalar) ** 0.5 * self._factor,
             )
-        else:
-            return DenseDefiniteMatrix(
-                scalar * self.array,
-                None if self._factor is None else abs(scalar) ** 0.5 * self._factor,
-                is_posdef=False,
-            )
+        return DenseDefiniteMatrix(
+            scalar * self.array,
+            None if self._factor is None else abs(scalar) ** 0.5 * self._factor,
+            is_posdef=False,
+        )
 
     @property
-    def factor(self) -> Union[TriangularMatrix, InverseTriangularMatrix]:
+    def factor(self) -> TriangularMatrix | InverseTriangularMatrix:
         if self._factor is None:
             try:
                 self._factor = TriangularMatrix(
@@ -1198,8 +1192,8 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
     def __init__(
         self,
         array: NDArray,
-        factor: Optional[Union[TriangularMatrix, InverseTriangularMatrix]] = None,
-    ):
+        factor: TriangularMatrix | InverseTriangularMatrix | None = None,
+    ) -> None:
         """
         Args:
             array: 2D array specifying matrix entries.
@@ -1216,7 +1210,7 @@ class DensePositiveDefiniteMatrix(DenseDefiniteMatrix, PositiveDefiniteMatrix):
             factor=self.factor.inv.T,
         )
 
-    def _construct_sqrt(self) -> Union[TriangularMatrix, InverseTriangularMatrix]:
+    def _construct_sqrt(self) -> TriangularMatrix | InverseTriangularMatrix:
         return self.factor
 
 
@@ -1235,9 +1229,9 @@ class DensePositiveDefiniteProductMatrix(DensePositiveDefiniteMatrix):
 
     def __init__(
         self,
-        rect_matrix: Union[NDArray, Matrix],
-        pos_def_matrix: Optional[PositiveDefiniteMatrix] = None,
-    ):
+        rect_matrix: NDArray | Matrix,
+        pos_def_matrix: PositiveDefiniteMatrix | None = None,
+    ) -> None:
         """
         Args:
             rect_matrix: Rectangular matrix of shape `(dim_0, dim_1)` with it and its
@@ -1277,9 +1271,9 @@ class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     def __init__(
         self,
         array: NDArray,
-        lu_and_piv: Optional[tuple[NDArray, NDArray]] = None,
-        lu_transposed: Optional[bool] = None,
-    ):
+        lu_and_piv: tuple[NDArray, NDArray] | None = None,
+        lu_transposed: bool | None = None,
+    ) -> None:
         """
         Args:
             array: 2D array specifying matrix entries.
@@ -1299,15 +1293,14 @@ class DenseSquareMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     def _scalar_multiply(self, scalar: ScalarLike) -> DenseSquareMatrix:
         if self._lu_and_piv is None or self._lu_transposed is None:
             return DenseSquareMatrix(scalar * self._array)
-        else:
-            old_lu, piv = self._lu_and_piv
-            # Multiply upper-triangle by scalar
-            new_lu = old_lu + (scalar - 1) * np.triu(old_lu)
-            return DenseSquareMatrix(
-                scalar * self._array,
-                (new_lu, piv),
-                self._lu_transposed,
-            )
+        old_lu, piv = self._lu_and_piv
+        # Multiply upper-triangle by scalar
+        new_lu = old_lu + (scalar - 1) * np.triu(old_lu)
+        return DenseSquareMatrix(
+            scalar * self._array,
+            (new_lu, piv),
+            self._lu_transposed,
+        )
 
     @property
     def lu_and_piv(self) -> tuple[NDArray, NDArray]:
@@ -1344,7 +1337,7 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         inv_lu_and_piv: tuple[NDArray, NDArray],
         *,
         inv_lu_transposed: bool,
-    ):
+    ) -> None:
         """
         Args:
             inv_array: 2D array specifying inverse matrix entries.
@@ -1413,7 +1406,7 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash_array(self._inv_array)
 
     def _check_equality(self, other: InverseLUFactoredSquareMatrix) -> bool:
-        return np.array_equal(self._inv_array, other._inv_array)
+        return np.array_equal(self._inv_array, other._inv_array)  # noqa: SLF001
 
 
 class DenseSymmetricMatrix(SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
@@ -1422,9 +1415,9 @@ class DenseSymmetricMatrix(SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatri
     def __init__(
         self,
         array: NDArray,
-        eigvec: Optional[Union[NDArray, OrthogonalMatrix]] = None,
-        eigval: Optional[NDArray] = None,
-    ):
+        eigvec: NDArray | OrthogonalMatrix | None = None,
+        eigval: NDArray | None = None,
+    ) -> None:
         """
         Args:
             array: Explicit 2D array representation of matrix.
@@ -1455,7 +1448,7 @@ class DenseSymmetricMatrix(SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatri
 class OrthogonalMatrix(InvertibleMatrix, ExplicitArrayMatrix):
     """Square matrix with columns and rows that are orthogonal unit vectors."""
 
-    def __init__(self, array: NDArray):
+    def __init__(self, array: NDArray) -> None:
         """
         Args:
             array: Explicit 2D array representation of matrix.
@@ -1487,7 +1480,7 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
     represented as a square 2D array.
     """
 
-    def __init__(self, scalar: float, orth_array: NDArray):
+    def __init__(self, scalar: float, orth_array: NDArray) -> None:
         """
         Args:
             scalar: Scalar multiplier as a floating point value.
@@ -1526,8 +1519,8 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash((self._scalar, hash_array(self._orth_array)))
 
     def _check_equality(self, other: ScaledOrthogonalMatrix) -> bool:
-        return self._scalar == other._scalar and (
-            np.array_equal(self._orth_array, other._orth_array)
+        return self._scalar == other._scalar and (  # noqa: SLF001
+            np.array_equal(self._orth_array, other._orth_array)  # noqa: SLF001
         )
 
 
@@ -1547,7 +1540,7 @@ class EigendecomposedSymmetricMatrix(
     of `matrix`.
     """
 
-    def __init__(self, eigvec: Union[NDArray, OrthogonalMatrix], eigval: NDArray):
+    def __init__(self, eigvec: NDArray | OrthogonalMatrix, eigval: NDArray) -> None:
         """
         Args:
             eigvec: Either a 2D array or an `OrthogonalMatrix` instance, in both cases
@@ -1591,7 +1584,7 @@ class EigendecomposedSymmetricMatrix(
     def _compute_hash(self) -> int:
         return hash((hash_array(self.eigval), self.eigvec))
 
-    def _check_equality(self, other) -> bool:
+    def _check_equality(self, other: EigendecomposedSymmetricMatrix) -> bool:
         return np.array_equal(self.eigval, other.eigval) and (
             self.eigvec == other.eigvec
         )
@@ -1612,7 +1605,7 @@ class EigendecomposedPositiveDefiniteMatrix(
     positive eigenvalues of `matrix`.
     """
 
-    def __init__(self, eigvec: Union[NDArray, OrthogonalMatrix], eigval: NDArray):
+    def __init__(self, eigvec: NDArray | OrthogonalMatrix, eigval: NDArray) -> None:
         if not np.all(eigval > 0):
             msg = "Eigenvalues must all be positive."
             raise ValueError(msg)
@@ -1624,8 +1617,7 @@ class EigendecomposedPositiveDefiniteMatrix(
                 self.eigvec,
                 self.eigval * scalar,
             )
-        else:
-            return super()._scalar_multiply(scalar)
+        return super()._scalar_multiply(scalar)
 
     def _construct_inv(self) -> EigendecomposedPositiveDefiniteMatrix:
         return EigendecomposedPositiveDefiniteMatrix(self.eigvec, 1 / self.eigval)
@@ -1646,7 +1638,7 @@ class SoftAbsRegularizedPositiveDefiniteMatrix(
     a smooth approximation to the absolute function.
     """
 
-    def __init__(self, symmetric_array: NDArray, softabs_coeff: float):
+    def __init__(self, symmetric_array: NDArray, softabs_coeff: float) -> None:
         """
         Args:
             symmetric_array: 2D square array with symmetric values, i.e.
@@ -1704,14 +1696,15 @@ class BlockMatrix(ImplicitArrayMatrix):
 
     def _check_equality(self, other: BlockMatrix) -> bool:
         return len(other.blocks) == len(self.blocks) and all(
-            block_s == block_o for block_s, block_o in zip(self.blocks, other.blocks)
+            block_s == block_o
+            for block_s, block_o in zip(self.blocks, other.blocks, strict=True)
         )
 
 
 class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
     """Square matrix with non-zero values only in blocks along diagonal."""
 
-    def __init__(self, blocks: Iterable[SquareMatrix]):
+    def __init__(self, blocks: Iterable[SquareMatrix]) -> None:
         """
         Args:
             blocks: Sequence of square matrices defining non-zero blocks along diagonal
@@ -1732,7 +1725,7 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
         """Blocks containing non-zero values left-to-right along diagonal."""
         return self._blocks
 
-    def _split(self, other: NDArray, axis: int = 0):
+    def _split(self, other: NDArray, axis: int = 0) -> list[NDArray]:
         if other.shape[axis] != self.shape[0]:
             msg = f"Cannot split other along axis with size {other.shape[axis]}."
             raise ValueError(msg)
@@ -1742,7 +1735,11 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
         return np.concatenate(
             [
                 block @ part
-                for block, part in zip(self._blocks, self._split(other, axis=0))
+                for block, part in zip(
+                    self._blocks,
+                    self._split(other, axis=0),
+                    strict=True,
+                )
             ],
             axis=0,
         )
@@ -1751,7 +1748,11 @@ class SquareBlockDiagonalMatrix(InvertibleMatrix, BlockMatrix):
         return np.concatenate(
             [
                 part @ block
-                for block, part in zip(self._blocks, self._split(other, axis=-1))
+                for block, part in zip(
+                    self._blocks,
+                    self._split(other, axis=-1),
+                    strict=True,
+                )
             ],
             axis=-1,
         )
@@ -1797,7 +1798,7 @@ class SymmetricBlockDiagonalMatrix(SquareBlockDiagonalMatrix, SymmetricMatrix):
     block`.
     """
 
-    def __init__(self, blocks: Iterable[SymmetricMatrix]):
+    def __init__(self, blocks: Iterable[SymmetricMatrix]) -> None:
         """
         Args:
             blocks: Sequence of symmetric matrices defining non-zero blocks along
@@ -1828,7 +1829,7 @@ class PositiveDefiniteBlockDiagonalMatrix(
     All matrix blocks in diagonal are restricted to be positive definite.
     """
 
-    def __init__(self, blocks: Iterable[PositiveDefiniteMatrix]):
+    def __init__(self, blocks: Iterable[PositiveDefiniteMatrix]) -> None:
         """
         Args:
             blocks: Sequence of positive-definite matrices defining non-zero blocks
@@ -1848,10 +1849,9 @@ class PositiveDefiniteBlockDiagonalMatrix(
             return PositiveDefiniteBlockDiagonalMatrix(
                 tuple(scalar * block for block in self._blocks),
             )
-        else:
-            return super()._scalar_multiply(scalar)
+        return super()._scalar_multiply(scalar)
 
-    def _construct_transpose(self: PositiveDefiniteBlockDiagonalMatrix):
+    def _construct_transpose(self) -> Self:
         return self
 
     def _construct_sqrt(self) -> SquareBlockDiagonalMatrix:
@@ -1861,25 +1861,27 @@ class PositiveDefiniteBlockDiagonalMatrix(
     def grad_log_abs_det(self) -> float:
         if self.is_differentiable:
             return tuple(block.grad_log_abs_det for block in self._blocks)
-        else:
-            msg = "Not all blocks are differentiable"
-            raise RuntimeError(msg)
+        msg = "Not all blocks are differentiable"
+        raise RuntimeError(msg)
 
     def grad_quadratic_form_inv(self, vector: NDArray) -> NDArray:
         if self.is_differentiable:
             return tuple(
                 block.grad_quadratic_form_inv(vector_part)
-                for block, vector_part in zip(self._blocks, self._split(vector, axis=0))
+                for block, vector_part in zip(
+                    self._blocks,
+                    self._split(vector, axis=0),
+                    strict=True,
+                )
             )
-        else:
-            msg = "Not all blocks are differentiable"
-            raise RuntimeError(msg)
+        msg = "Not all blocks are differentiable"
+        raise RuntimeError(msg)
 
 
 class DenseRectangularMatrix(ExplicitArrayMatrix):
     """Dense rectangular matrix."""
 
-    def __init__(self, array: NDArray):
+    def __init__(self, array: NDArray) -> None:
         """
         Args:
             array: 2D array specifying matrix entries.
@@ -1896,7 +1898,7 @@ class DenseRectangularMatrix(ExplicitArrayMatrix):
 class BlockRowMatrix(BlockMatrix):
     """Matrix composed of horizontal concatenation of a series of blocks."""
 
-    def __init__(self, blocks: Iterable[Matrix]):
+    def __init__(self, blocks: Iterable[Matrix]) -> None:
         """
         Args:
             blocks: Sequence of matrices defining a row of blocks in order left-to-right
@@ -1928,6 +1930,7 @@ class BlockRowMatrix(BlockMatrix):
                 for block, part in zip(
                     self._blocks,
                     np.split(other, self._splits, axis=0),
+                    strict=True,
                 )
             ],
         )
@@ -1948,7 +1951,7 @@ class BlockRowMatrix(BlockMatrix):
 class BlockColumnMatrix(BlockMatrix):
     """Matrix composed of vertical concatenation of a series of blocks."""
 
-    def __init__(self, blocks: Iterable[Matrix]):
+    def __init__(self, blocks: Iterable[Matrix]) -> None:
         """
         Args:
             blocks : Sequence of matrices defining a column of blocks in order
@@ -1984,6 +1987,7 @@ class BlockColumnMatrix(BlockMatrix):
                 for block, part in zip(
                     self._blocks,
                     np.split(other, self._splits, axis=-1),
+                    strict=True,
                 )
             ],
         )
@@ -2026,10 +2030,10 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         left_factor_matrix: Matrix,
         right_factor_matrix: Matrix,
         square_matrix: SquareMatrix,
-        inner_square_matrix: Optional[SquareMatrix] = None,
-        capacitance_matrix: Optional[SquareMatrix] = None,
+        inner_square_matrix: SquareMatrix | None = None,
+        capacitance_matrix: SquareMatrix | None = None,
         sign: Literal[-1, 1] = 1,
-    ):
+    ) -> None:
         """
         Args:
             left_factor_matrix: Rectangular matrix with shape `(dim_outer, dim_inner)`
@@ -2112,9 +2116,11 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             self.right_factor_matrix,
             scalar * self.square_matrix,
             scalar * self.inner_square_matrix,
-            self._capacitance_matrix / scalar
-            if self._capacitance_matrix is not None
-            else None,
+            (
+                self._capacitance_matrix / scalar
+                if self._capacitance_matrix is not None
+                else None
+            ),
             self._sign,
         )
 
@@ -2148,9 +2154,11 @@ class SquareLowRankUpdateMatrix(InvertibleMatrix, ImplicitArrayMatrix):
             self.left_factor_matrix.T,
             self.square_matrix.T,
             self.inner_square_matrix.T,
-            self._capacitance_matrix.T
-            if self._capacitance_matrix is not None
-            else None,
+            (
+                self._capacitance_matrix.T
+                if self._capacitance_matrix is not None
+                else None
+            ),
             self._sign,
         )
 
@@ -2222,10 +2230,10 @@ class SymmetricLowRankUpdateMatrix(
         self,
         factor_matrix: Matrix,
         symmetric_matrix: SymmetricMatrix,
-        inner_symmetric_matrix: Optional[SymmetricMatrix] = None,
-        capacitance_matrix: Optional[SymmetricMatrix] = None,
+        inner_symmetric_matrix: SymmetricMatrix | None = None,
+        capacitance_matrix: SymmetricMatrix | None = None,
         sign: Literal[-1, 1] = 1,
-    ):
+    ) -> None:
         """
         Args:
             factor_matrix (Matrix): Rectangular matrix with shape
@@ -2277,9 +2285,11 @@ class SymmetricLowRankUpdateMatrix(
             self.factor_matrix,
             scalar * self.symmetric_matrix,
             scalar * self.inner_symmetric_matrix,
-            self._capacitance_matrix / scalar
-            if self._capacitance_matrix is not None
-            else None,
+            (
+                self._capacitance_matrix / scalar
+                if self._capacitance_matrix is not None
+                else None
+            ),
             self._sign,
         )
 
@@ -2348,10 +2358,10 @@ class PositiveDefiniteLowRankUpdateMatrix(
         self,
         factor_matrix: Matrix,
         pos_def_matrix: PositiveDefiniteMatrix,
-        inner_pos_def_matrix: Optional[PositiveDefiniteMatrix] = None,
-        capacitance_matrix: Optional[PositiveDefiniteMatrix] = None,
+        inner_pos_def_matrix: PositiveDefiniteMatrix | None = None,
+        capacitance_matrix: PositiveDefiniteMatrix | None = None,
         sign: Literal[-1, 1] = 1,
-    ):
+    ) -> None:
         """
         Args:
             factor_matrix: Rectangular matrix with shape `(dim_outer, dim_inner)` with
@@ -2396,21 +2406,24 @@ class PositiveDefiniteLowRankUpdateMatrix(
                 self.factor_matrix,
                 scalar * self.pos_def_matrix,
                 scalar * self.inner_pos_def_matrix,
-                self._capacitance_matrix / scalar
-                if self._capacitance_matrix is not None
-                else None,
+                (
+                    self._capacitance_matrix / scalar
+                    if self._capacitance_matrix is not None
+                    else None
+                ),
                 self._sign,
             )
-        else:
-            return SymmetricLowRankUpdateMatrix(
-                self.factor_matrix,
-                scalar * self.pos_def_matrix,
-                scalar * self.inner_pos_def_matrix,
+        return SymmetricLowRankUpdateMatrix(
+            self.factor_matrix,
+            scalar * self.pos_def_matrix,
+            scalar * self.inner_pos_def_matrix,
+            (
                 self._capacitance_matrix / scalar
                 if self._capacitance_matrix is not None
-                else None,
-                self._sign,
-            )
+                else None
+            ),
+            self._sign,
+        )
 
     @property
     def capacitance_matrix(self) -> DensePositiveDefiniteMatrix:
@@ -2436,8 +2449,11 @@ class PositiveDefiniteLowRankUpdateMatrix(
             lower=True,
             make_triangular=False,
         )
-        i_outer, i_inner = IdentityMatrix(u_matrix.shape[0]), np.identity(
-            u_matrix.shape[1],
+        i_outer, i_inner = (
+            IdentityMatrix(u_matrix.shape[0]),
+            np.identity(
+                u_matrix.shape[1],
+            ),
         )
         m_matrix = sla.sqrtm(i_inner + l_matrix.T @ (k_matrix @ l_matrix.array))
         x_matrix = DenseSymmetricMatrix(

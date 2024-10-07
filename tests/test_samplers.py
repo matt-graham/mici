@@ -8,7 +8,7 @@ STATE_DIM = 2
 N_CHAIN = 2
 
 
-@pytest.fixture()
+@pytest.fixture
 def rng():
     return np.random.default_rng(SEED)
 
@@ -21,7 +21,7 @@ def grad_neg_log_dens(pos):
     return pos
 
 
-@pytest.fixture()
+@pytest.fixture
 def system():
     return mici.systems.EuclideanMetricSystem(
         neg_log_dens=neg_log_dens,
@@ -29,7 +29,7 @@ def system():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def integrator(system):
     return mici.integrators.LeapfrogIntegrator(system, step_size=0.5)
 
@@ -89,10 +89,9 @@ def test_zip_dict():
 def base_rng(request):
     if request.param == "Generator(PCG64)":
         return np.random.Generator(np.random.PCG64(SEED))
-    elif request.param == "Generator(SFC64)":
+    if request.param == "Generator(SFC64)":
         return np.random.Generator(np.random.SFC64(SEED))
-    else:
-        return np.random.RandomState(SEED)
+    return np.random.RandomState(SEED)
 
 
 def test_get_per_chain_rngs(base_rng):
@@ -200,13 +199,12 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def trace_funcs(self, request):
         if request.param == "pos_mom_trace_func":
             return [self.pos_mom_trace_func]
-        elif request.param == "empty":
+        if request.param == "empty":
             return []
-        elif request.param is None:
+        if request.param is None:
             return None
-        else:
-            msg = f"Invalid param {request.param}"
-            raise ValueError(msg)
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
 
     @pytest.fixture(params=(None, (("integration", "accept_stat"),)))
     def monitor_stats(self, request):
@@ -216,23 +214,21 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def adapters(self, request):
         if request.param is None:
             return None
-        elif request.param == "empty":
+        if request.param == "empty":
             return {}
-        elif request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "DualAveragingStepSizeAdapter":
             return {"integration": [mici.adapters.DualAveragingStepSizeAdapter()]}
-        else:
-            msg = f"Invalid param {request.param}"
-            raise ValueError(msg)
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
 
     @pytest.fixture(params=(None, "WarmUpStager"))
     def stager(self, request):
         if request.param is None:
             return None
-        elif request.param == "WarmUpStager":
+        if request.param == "WarmUpStager":
             return mici.stagers.WarmUpStager()
-        else:
-            msg = f"Invalid param {request.param}"
-            raise ValueError(msg)
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
 
     @pytest.fixture(params=((True, None), (True, "tmp"), (False, None)))
     def force_memmap_and_memmap_path(self, request, tmp_path_factory):
@@ -245,7 +241,7 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def display_progress(self, request):
         return request.param
 
-    @pytest.fixture()
+    @pytest.fixture
     def kwargs(
         self,
         monitor_stats,
@@ -264,7 +260,7 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
             "display_progress": display_progress,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def sampler(self, integrator, system, rng):
         return mici.samplers.MarkovChainMonteCarloMethod(
             rng=rng,
@@ -303,13 +299,12 @@ class HamiltonianMCMCTests(MarkovChainMonteCarloMethodTests):
     def adapters(self, request):
         if request.param is None:
             return None
-        elif request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "DualAveragingStepSizeAdapter":
             return [mici.adapters.DualAveragingStepSizeAdapter()]
-        else:
-            msg = f"Invalid param {request.param}"
-            raise ValueError(msg)
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
 
-    @pytest.fixture()
+    @pytest.fixture
     def kwargs(self, monitor_stats, adapters):
         kwargs = {}
         if monitor_stats is not None:
@@ -318,7 +313,7 @@ class HamiltonianMCMCTests(MarkovChainMonteCarloMethodTests):
             kwargs["adapters"] = adapters
         return kwargs
 
-    @pytest.fixture()
+    @pytest.fixture
     def trace_funcs(self, sampler):
         return [sampler._default_trace_func]
 
@@ -355,7 +350,7 @@ class TestStaticMetropolisHMC(HamiltonianMCMCTests):
         assert sampler.n_step == new_n_step
         assert sampler.transitions["integration_transition"].n_step == (new_n_step)
 
-    @pytest.fixture()
+    @pytest.fixture
     def sampler(self, integrator, system, rng):
         return mici.samplers.StaticMetropolisHMC(
             system=system,
@@ -377,7 +372,7 @@ class TestRandomMetropolisHMC(HamiltonianMCMCTests):
             new_n_step_range
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def sampler(self, integrator, system, rng):
         return mici.samplers.RandomMetropolisHMC(
             system=system,
@@ -411,7 +406,7 @@ class DynamicHMCTests(HamiltonianMCMCTests):
 
 
 class TestDynamicMultinomialHMC(DynamicHMCTests):
-    @pytest.fixture()
+    @pytest.fixture
     def sampler(self, integrator, system, rng):
         return mici.samplers.DynamicMultinomialHMC(
             system=system,
@@ -423,7 +418,7 @@ class TestDynamicMultinomialHMC(DynamicHMCTests):
 
 
 class TestDynamicDynamicSliceHMC(DynamicHMCTests):
-    @pytest.fixture()
+    @pytest.fixture
     def sampler(self, integrator, system, rng):
         return mici.samplers.DynamicSliceHMC(
             system=system,

@@ -11,21 +11,27 @@ import numpy as np
 import mici
 
 if TYPE_CHECKING:
-    from typing import Literal, Optional, Union
+    from typing import Literal
 
     import arviz
     import pymc
     import stan
-    from numpy.typing import ArrayLike
 
-    from mici.types import GradientFunction, ScalarFunction, TraceFunction
+    from mici.states import ChainState
+    from mici.types import (
+        ArrayLike,
+        GradientFunction,
+        ScalarFunction,
+        ScalarLike,
+        TraceFunction,
+    )
 
 
 def convert_to_inference_data(
     traces: dict[str, list[ArrayLike]],
     stats: dict[str, list[ArrayLike]],
-    energy_key: Optional[str] = "energy",
-    lp_key: Optional[str] = "lp",
+    energy_key: str | None = "energy",
+    lp_key: str | None = "lp",
 ) -> arviz.InferenceData:
     """Convert Mici :code:`sample_chains` output to :py:class:`arviz.InferenceData`.
 
@@ -92,15 +98,15 @@ def construct_pymc_model_functions(
     val_and_grad_log_dens = model.logp_dlogp_function()
     val_and_grad_log_dens.set_extra_values({})
 
-    def grad_neg_log_dens(pos):
+    def grad_neg_log_dens(pos: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         val, grad = val_and_grad_log_dens(pos)
         return -grad, -val
 
-    def neg_log_dens(pos):
+    def neg_log_dens(pos: ArrayLike) -> ScalarLike:
         val, _ = val_and_grad_log_dens(pos)
         return -val
 
-    def trace_func(state):
+    def trace_func(state: ChainState) -> dict[str, ScalarLike]:
         raveled_vars = pymc.blocking.RaveledVars(
             state.pos,
             raveled_initial_point.point_map_info,
@@ -126,17 +132,17 @@ def sample_pymc_model(
     draws: int = 1000,
     *,
     tune: int = 1000,
-    chains: Optional[int] = None,
-    cores: Optional[int] = None,
-    random_seed: Optional[int] = None,
+    chains: int | None = None,
+    cores: int | None = None,
+    random_seed: int | None = None,
     progressbar: bool = True,
     init: Literal["auto", "adapt_diag", "jitter+adapt_diag", "adapt_full"] = "auto",
     jitter_max_retries: int = 10,
     return_inferencedata: bool = False,
-    model: Optional[pymc.Model] = None,
+    model: pymc.Model | None = None,
     target_accept: float = 0.8,
     max_treedepth: int = 10,
-) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
+) -> arviz.InferenceData | dict[str, ArrayLike]:
     """Generate approximate samples from posterior defined by a PyMC model.
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
@@ -273,8 +279,7 @@ def sample_pymc_model(
 
     if return_inferencedata:
         return convert_to_inference_data(traces, stats)
-    else:
-        return {k: np.stack(v) for k, v in traces.items()}
+    return {k: np.stack(v) for k, v in traces.items()}
 
 
 def get_stan_model_unconstrained_param_dim(model: stan.Model) -> int:
@@ -291,10 +296,11 @@ def get_stan_model_unconstrained_param_dim(model: stan.Model) -> int:
     while True:
         try:
             model.log_prob([0] * n_dim)
-            return n_dim
-        except RuntimeError:
+        except RuntimeError:  # noqa: PERF203
             param_size_list.pop()
             n_dim = sum(param_size_list)
+        else:
+            return n_dim
 
 
 def construct_stan_model_functions(
@@ -314,15 +320,15 @@ def construct_stan_model_functions(
         parameter values from chain state for tracing during sampling.
     """
 
-    def neg_log_dens(u):
+    def neg_log_dens(u: ArrayLike) -> ScalarLike:
         return -model.log_prob(list(u))
 
-    def grad_neg_log_dens(u):
+    def grad_neg_log_dens(u: ArrayLike) -> ArrayLike:
         return -np.array(model.grad_log_prob(list(u)))
 
     param_size_list = [np.prod(dim, dtype=np.int64) for dim in model.dims]
 
-    def trace_func(state):
+    def trace_func(state: ChainState) -> dict[str, ScalarLike]:
         param_array = np.array(model.constrain_pars(list(state.pos)))
         trace_dict = {
             name: val.reshape(shape)
@@ -330,6 +336,7 @@ def construct_stan_model_functions(
                 model.param_names,
                 np.split(param_array, np.cumsum(param_size_list)[:-1]),
                 model.dims,
+                strict=True,
             )
         }
         trace_dict["lp"] = -neg_log_dens(state.pos)
@@ -357,9 +364,9 @@ def sample_stan_model(
     term_buffer: int = 50,
     window: int = 25,
     max_depth: int = 10,
-    seed: Optional[int] = None,
+    seed: int | None = None,
     return_inferencedata: bool = False,
-) -> Union[arviz.InferenceData, dict[str, ArrayLike]]:
+) -> arviz.InferenceData | dict[str, ArrayLike]:
     """Generate approximate samples from posterior defined by a Stan model.
 
     Uses dynamic multinomial HMC algorithm in Mici with adaptive warm-up phase.
@@ -478,5 +485,4 @@ def sample_stan_model(
 
     if return_inferencedata:
         return convert_to_inference_data(traces, stats)
-    else:
-        return {k: np.concatenate(v).swapaxes(0, -1) for k, v in traces.items()}
+    return {k: np.concatenate(v).swapaxes(0, -1) for k, v in traces.items()}

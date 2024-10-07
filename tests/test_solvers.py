@@ -1,4 +1,5 @@
-from typing import Callable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 import numpy as np
 import pytest
@@ -10,7 +11,7 @@ import mici
 def fixed_point_solver(request):
     if request.param == "direct":
         return mici.solvers.solve_fixed_point_direct
-    elif request.param == "steffensen":
+    if request.param == "steffensen":
         return mici.solvers.solve_fixed_point_steffensen
     return None
 
@@ -26,10 +27,10 @@ def convergent_fixed_point_problem(request):
     if request.param == "babylonian":
         y = np.array([3.0, 5.0, 7.0])
         return FixedPointProblem(lambda x: (y / x + x) / 2, y**0.5, np.ones_like(y))
-    elif request.param == "ratio":
+    if request.param == "ratio":
         y = np.array([3.0, 5.0, 7.0])
         return FixedPointProblem(lambda x: (x + y) / (x + 1), y**0.5, np.ones_like(y))
-    elif request.param == "cosine":
+    if request.param == "cosine":
         return FixedPointProblem(
             lambda x: np.cos(x),
             np.array([0.7390851332151607]),
@@ -42,7 +43,7 @@ def convergent_fixed_point_problem(request):
 def divergent_fixed_point_problem(request):
     if request.param == "doubling":
         return FixedPointProblem(lambda x: 2 * x, None, np.arange(3))
-    elif request.param == "quadratic":
+    if request.param == "quadratic":
         return FixedPointProblem(lambda x: 1 + x**2, None, np.arange(3))
     return None
 
@@ -56,7 +57,7 @@ def convergence_tol(request):
 def norm(request):
     if request.param == "maximum":
         return mici.solvers.maximum_norm
-    elif request.param == "euclidean":
+    if request.param == "euclidean":
         return mici.solvers.euclidean_norm
     return None
 

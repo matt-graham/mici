@@ -78,8 +78,7 @@ def hessian_grad_and_value(
 def mtp_hessian_grad_and_value(
     func: ScalarFunction,
 ) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
-    """
-    Makes a function that returns MTP, Jacobian and value of a function.
+    """Makes a function that returns MTP, Jacobian and value of a function.
 
     For a scalar-valued function `fun` the matrix-Tressian-product (MTP) is
     here defined as a function of a matrix `m` corresponding to

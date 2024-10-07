@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable
-from typing import Any, Callable, TypeVar, Union
+from collections.abc import Callable, Collection, Iterable
+from typing import Any, TypeAlias, TypeVar
 
 from numpy import number
 from numpy.typing import ArrayLike
@@ -13,61 +13,61 @@ from mici.states import ChainState
 from mici.systems import System
 from mici.utils import LogRepFloat
 
-ScalarLike = Union[bool, int, float, LogRepFloat, number]
+ScalarLike: TypeAlias = bool | int | float | LogRepFloat | number
 """Scalar like objects."""
 
-MatrixLike = Union[ArrayLike, Matrix]
+MatrixLike: TypeAlias = ArrayLike | Matrix
 """Matrix like objects."""
 
-MetricLike = Union[ArrayLike, PositiveDefiniteMatrix]
+MetricLike: TypeAlias = ArrayLike | PositiveDefiniteMatrix
 """Metric (positive definite matrix) like objects."""
 
-TransitionStatistics = dict[str, ScalarLike]
+TransitionStatistics: TypeAlias = dict[str, ScalarLike]
 """Dictionary of statistics computed by :py:meth:`mici.transitions.Transition.sample`"""
 
-AdaptationStatisticFunction = Callable[[TransitionStatistics], float]
+AdaptationStatisticFunction: TypeAlias = Callable[[TransitionStatistics], float]
 """Function returning adaptation statistic given dictionary of transition statistics."""
 
-ReducerFunction = Callable[[Collection[float]], float]
+ReducerFunction: TypeAlias = Callable[[Collection[float]], float]
 """Function combining per-chain control variables from adapters."""
 
-AdapterState = dict[str, Any]
+AdapterState: TypeAlias = dict[str, Any]
 """Dictionary defining current state of an :py:class:`mici.adapters.Adapter`."""
 
-ScalarFunction = Callable[[ArrayLike], ScalarLike]
+ScalarFunction: TypeAlias = Callable[[ArrayLike], ScalarLike]
 """Function taking an array-like input and returning a scalar-like output."""
 
-ArrayFunction = Callable[[ArrayLike], ArrayLike]
+ArrayFunction: TypeAlias = Callable[[ArrayLike], ArrayLike]
 """Function taking an array-like input and returning a array-like output."""
 
-GradientFunction = Callable[[ArrayLike], Union[ArrayLike, tuple[ArrayLike, ScalarLike]]]
+GradientFunction: TypeAlias = Callable[
+    [ArrayLike], ArrayLike | tuple[ArrayLike, ScalarLike]
+]
 """Function returning the gradient of a scalar-valued function.
 
 May optionally also return scalar-like value of  function.
 """
 
-HessianFunction = Callable[
+HessianFunction: TypeAlias = Callable[
     [ArrayLike],
-    Union[ArrayLike, tuple[ArrayLike, ArrayLike, ScalarLike]],
+    ArrayLike | tuple[ArrayLike, ArrayLike, ScalarLike],
 ]
 """Function returning the Hessian matrix of a scalar-valued function.
 
 May optionally also return gradient and value of function.
 """
 
-MatrixTressianProduct = Callable[[ArrayLike], ArrayLike]
+MatrixTressianProduct: TypeAlias = Callable[[ArrayLike], ArrayLike]
 """Function returning the product between a matrix and 'Tressian' of a scalar function.
 
 Tressian here is the 3-dimensional array of third-order derivatives of a scalar
 function.
 """
 
-MatrixTressianProductFunction = Callable[
+MatrixTressianProductFunction: TypeAlias = Callable[
     [ArrayLike],
-    Union[
-        MatrixTressianProduct,
-        tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike],
-    ],
+    MatrixTressianProduct
+    | tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike],
 ]
 """Function returning a matrix-Tressian product function for a scalar function.
 
@@ -77,25 +77,24 @@ function.
 May optionally also return the Hessian matrix, gradient and value of function.
 """
 
-JacobianFunction = Callable[[ArrayLike], Union[ArrayLike, tuple[ArrayLike, ArrayLike]]]
+JacobianFunction: TypeAlias = Callable[
+    [ArrayLike], ArrayLike | tuple[ArrayLike, ArrayLike]
+]
 """Function returning the Jacobian of a array (vector) valued function.
 
 May optionally aslo return the array value of the function.
 """
 
-MatrixHessianProduct = Callable[[ArrayLike], ArrayLike]
+MatrixHessianProduct: TypeAlias = Callable[[ArrayLike], ArrayLike]
 """Function returning the product between a matrix and Hessian of an array function.
 
 Hessian here is the 3-dimensional array of second-order derivatives of an array-valued
 function.
 """
 
-MatrixHessianProductFunction = Callable[
+MatrixHessianProductFunction: TypeAlias = Callable[
     [ArrayLike],
-    Union[
-        MatrixHessianProduct,
-        tuple[MatrixHessianProduct, ArrayLike, ArrayLike],
-    ],
+    MatrixHessianProduct | tuple[MatrixHessianProduct, ArrayLike, ArrayLike],
 ]
 """Function returning a matrix-Hessian product function for an array function.
 
@@ -105,16 +104,16 @@ function.
 May optionally also return the Jacobian matrix and array value of function.
 """
 
-VectorJacobianProduct = Callable[[ArrayLike], ArrayLike]
+VectorJacobianProduct: TypeAlias = Callable[[ArrayLike], ArrayLike]
 """Function returning the product between an array and Jacobian of a array function.
 
 Jacobian here is the (d+1)-dimensional array of first-order derivatives of an
 d-dimensional array-valued function taking a 1-dimensional array as input.
 """
 
-VectorJacobianProductFunction = Callable[
+VectorJacobianProductFunction: TypeAlias = Callable[
     [ArrayLike],
-    Union[VectorJacobianProduct, tuple[VectorJacobianProduct, ArrayLike]],
+    VectorJacobianProduct | tuple[VectorJacobianProduct, ArrayLike],
 ]
 """Function returning a vector-Jaccobian product function for an array function.
 
@@ -125,13 +124,23 @@ May optionally also return the array value of function.
 """
 
 T = TypeVar("T")
-PyTree = Union[dict[Any, "PyTree"], list["PyTree"], tuple["PyTree"], T]
+PyTree = dict[Any, "PyTree"] | list["PyTree"] | tuple["PyTree"] | T
 """Arbitrarily nested structure of Python dict, list and tuple types."""
 
-TraceFunction = Callable[[ChainState], dict[str, ArrayLike]]
+TraceFunction: TypeAlias = Callable[[ChainState], dict[str, ArrayLike]]
 """Function returning a dictionary of chain variables to trace given chain state."""
 
-TerminationCriterion = Callable[[System, ChainState, ChainState, ArrayLike], bool]
+TerminationCriterion: TypeAlias = Callable[
+    [System, ChainState, ChainState, ArrayLike], bool
+]
 """Function indicating whether to terminate trajectory tree expansion."""
 
-ChainIterator = Iterable[tuple[int, dict]]
+ChainIterator: TypeAlias = Iterable[tuple[int, dict]]
+
+SystemStateMethod: TypeAlias = Callable[[System, "ChainState"], ArrayLike | ScalarLike]
+"""System method computing function of chain state."""
+
+SystemStateWithAuxMethod: TypeAlias = Callable[
+    [System, ChainState], tuple[ArrayLike | ScalarLike, ...]
+]
+"""System method computing function chain state with auxiliary return values."""

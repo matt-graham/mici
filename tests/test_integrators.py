@@ -12,7 +12,7 @@ N_STATE = 5
 N_METRIC = 5
 
 
-@pytest.fixture()
+@pytest.fixture
 def rng():
     return np.random.default_rng(SEED)
 
@@ -27,7 +27,7 @@ def size_more_than_one(request):
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def metric_list(rng, size):
     eigval = np.exp(0.1 * rng.standard_normal(size))
     eigvec = np.linalg.qr(rng.standard_normal((size, size)))[0]
@@ -45,7 +45,7 @@ def metric(metric_list, request):
     return metric_list[request.param]
 
 
-@pytest.fixture()
+@pytest.fixture
 def init_state_list(rng, size):
     return [
         ChainState(pos=q, mom=p, dir=1)
@@ -143,7 +143,7 @@ class LinearSystemIntegratorTests(IntegratorTests):
 
 
 class ConstrainedSystemIntegratorTests(IntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def metric_list(self, rng, size_more_than_one):
         size = size_more_than_one
         eigval = np.exp(0.1 * rng.standard_normal(size))
@@ -159,13 +159,14 @@ class ConstrainedSystemIntegratorTests(IntegratorTests):
     @pytest.mark.parametrize("n_step", N_STEPS)
     def test_position_constraint(self, integrator, init_state, n_step):
         init_error = np.max(np.abs(integrator.system.constr(init_state)))
-        assert init_error < 1e-8, (
+        tolerance = 1e-8
+        assert init_error < tolerance, (
             "Position constraint not satisfied at initial state "
             f"(|c| = {init_error:.1e})"
         )
         final_state = _integrate_with_reversal(integrator, init_state, n_step)
         final_error = np.max(np.abs(integrator.system.constr(final_state)))
-        assert final_error < 1e-8, (
+        assert final_error < tolerance, (
             "Position constraint not satisfied at final state "
             f"(|c| = {final_error:.1e})"
         )
@@ -178,7 +179,8 @@ class ConstrainedSystemIntegratorTests(IntegratorTests):
                 @ integrator.system.dh_dmom(init_state),
             ),
         )
-        assert init_error < 1e-8, (
+        tolerance = 1e-8
+        assert init_error < tolerance, (
             "Momentum constraint not satisfied at initial state "
             f"(|dc/dq @ dq/dt| = {init_error:.1e})"
         )
@@ -189,7 +191,7 @@ class ConstrainedSystemIntegratorTests(IntegratorTests):
                 @ integrator.system.dh_dmom(final_state),
             ),
         )
-        assert final_error < 1e-8, (
+        assert final_error < tolerance, (
             "Momentum constraint not satisfied at final state "
             f"(|dc/dq @ dq/dt| = {final_error:.1e})"
         )
@@ -199,7 +201,7 @@ class ConstrainedLinearSystemIntegratorTests(
     ConstrainedSystemIntegratorTests,
     LinearSystemIntegratorTests,
 ):
-    @pytest.fixture()
+    @pytest.fixture
     def init_state_list(self, rng, size_more_than_one, metric):
         return [
             ChainState(
@@ -212,7 +214,7 @@ class ConstrainedLinearSystemIntegratorTests(
 
 
 class ConstrainedNonLinearSystemIntegratorTests(ConstrainedSystemIntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def init_state_list(self, rng, size_more_than_one, system):
         init_state_list = [
             ChainState(
@@ -223,6 +225,7 @@ class ConstrainedNonLinearSystemIntegratorTests(ConstrainedSystemIntegratorTests
             for theta, q in zip(
                 rng.uniform(size=N_STATE) * 2 * np.pi,
                 rng.standard_normal((N_STATE, size_more_than_one - 2)),
+                strict=True,
             )
         ]
         for state in init_state_list:
@@ -231,7 +234,7 @@ class ConstrainedNonLinearSystemIntegratorTests(ConstrainedSystemIntegratorTests
 
 
 class LinearEuclideanMetricSystemTests(LinearSystemIntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.EuclideanMetricSystem(
             neg_log_dens=lambda q: 0.5 * np.sum(q**2),
@@ -241,7 +244,7 @@ class LinearEuclideanMetricSystemTests(LinearSystemIntegratorTests):
 
 
 class NonLinearEuclideanMetricSystemTests(IntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.EuclideanMetricSystem(
             neg_log_dens=lambda q: 0.25 * np.sum(q**4),
@@ -251,7 +254,7 @@ class NonLinearEuclideanMetricSystemTests(IntegratorTests):
 
 
 class LinearGaussianEuclideanMetricSystem(LinearSystemIntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.GaussianEuclideanMetricSystem(
             neg_log_dens=lambda _: 0,
@@ -261,7 +264,7 @@ class LinearGaussianEuclideanMetricSystem(LinearSystemIntegratorTests):
 
 
 class NonLinearGaussianEuclideanMetricSystem(IntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.GaussianEuclideanMetricSystem(
             neg_log_dens=lambda q: 0.125 * np.sum(q**4),
@@ -271,7 +274,7 @@ class NonLinearGaussianEuclideanMetricSystem(IntegratorTests):
 
 
 class LeapfrogIntegratorTests:
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system):
         return integrators.LeapfrogIntegrator(system, self.step_size)
 
@@ -309,7 +312,7 @@ class TestLeapfrogIntegratorNonLinearGaussianEuclideanMetricSystem(
 
 
 class BCSSTwoStageIntegratorTests:
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system):
         return integrators.BCSSTwoStageIntegrator(system, self.step_size)
 
@@ -347,7 +350,7 @@ class TestBCSSTwoStageIntegratorNonLinearGaussianEuclideanMetricSystem(
 
 
 class BCSSThreeStageIntegratorTests:
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system):
         return integrators.BCSSThreeStageIntegrator(system, self.step_size)
 
@@ -385,7 +388,7 @@ class TestBCSSThreeStageIntegratorNonLinearGaussianEuclideanMetricSystem(
 
 
 class BCSSFourStageIntegratorTests:
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system):
         return integrators.BCSSFourStageIntegrator(system, self.step_size)
 
@@ -423,17 +426,17 @@ class TestBCSSFourStageIntegratorNonLinearGaussianEuclideanMetricSystem(
 
 
 class ImplicitIntegratorTests:
-    @pytest.fixture()
+    @pytest.fixture
     def fixed_point_solver(self):
         return solvers.solve_fixed_point_direct
 
-    @pytest.fixture()
+    @pytest.fixture
     def reverse_check_norm(self):
         return solvers.maximum_norm
 
 
 class ImplicitLeapfrogIntegratorTests(ImplicitIntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system, fixed_point_solver, reverse_check_norm):
         return integrators.ImplicitLeapfrogIntegrator(
             system,
@@ -444,7 +447,7 @@ class ImplicitLeapfrogIntegratorTests(ImplicitIntegratorTests):
 
 
 class ImplicitMidpointIntegratorTests(ImplicitIntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, system, fixed_point_solver, reverse_check_norm):
         return integrators.ImplicitMidpointIntegrator(
             system,
@@ -487,7 +490,7 @@ class TestImplicitMidpointIntegratorNonLinearEuclideanMetricSystem(
 
 
 class NonLinearDiagonalRiemannianMetricSystemTests(IntegratorTests):
-    @pytest.fixture()
+    @pytest.fixture
     def system(self):
         return systems.DiagonalRiemannianMetricSystem(
             lambda q: np.sum(q**2) / 2 + np.sum(q**4) / 12,
@@ -518,7 +521,7 @@ class TestConstrainedLeapfrogIntegratorLinearSystem(
 ):
     h_diff_tol = 1e-2
 
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, metric):
         system = systems.DenseConstrainedEuclideanMetricSystem(
             neg_log_dens=lambda q: 0.5 * np.sum(q**2),
@@ -535,7 +538,7 @@ class TestConstrainedLeapfrogIntegratorNonLinearSystem(
 ):
     h_diff_tol = 1e-2
 
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.DenseConstrainedEuclideanMetricSystem(
             neg_log_dens=lambda q: 0.125 * np.sum(q**4),
@@ -567,7 +570,7 @@ class TestConstrainedLeapfrogIntegratorGaussianLinearSystem(
 ):
     h_diff_tol = 1e-4
 
-    @pytest.fixture()
+    @pytest.fixture
     def integrator(self, metric):
         system = systems.GaussianDenseConstrainedEuclideanMetricSystem(
             lambda _: 0.0,
@@ -585,7 +588,7 @@ class TestConstrainedLeapfrogIntegratorGaussianNonLinearSystem(
 ):
     h_diff_tol = 5e-2
 
-    @pytest.fixture()
+    @pytest.fixture
     def system(self, metric):
         return systems.GaussianDenseConstrainedEuclideanMetricSystem(
             neg_log_dens=lambda q: 0.125 * np.sum(q**4),

@@ -33,7 +33,7 @@ NUM_CHAIN = 2
 NUM_SAMPLE = 10
 
 
-@pytest.fixture()
+@pytest.fixture
 def rng():
     return np.random.default_rng(SEED)
 
@@ -70,7 +70,7 @@ if ARVIZ_AVAILABLE:
 
 if PYMC_AVAILABLE:
 
-    @pytest.fixture()
+    @pytest.fixture
     def pymc_model():
         with pymc.Model() as model:
             pymc.Normal("x", mu=0, sigma=1)
@@ -116,7 +116,7 @@ if PYMC_AVAILABLE:
 
 if STAN_AVAILABLE:
 
-    @pytest.fixture()
+    @pytest.fixture
     def stan_model_code_data_and_params():
         model_code = """
         parameters {

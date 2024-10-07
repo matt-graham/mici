@@ -20,7 +20,7 @@ def _bind_with_decorator(instance, name, func, decorator):
     return bound_method
 
 
-@pytest.fixture()
+@pytest.fixture
 def state_vars():
     return {"spam": np.array([0.5, -1.0]), "ham": np.array(1), "eggs": -2.0}
 
@@ -172,7 +172,7 @@ def test_cache_in_state(state_vars):
             ), f"cached value for key {cache_key} should be None"
         ret_val_3 = bound_memoized_method(state)
         assert (
-            mocked_method.call_count == 2
+            mocked_method.call_count == 2  # noqa: PLR2004
         ), f"memoized method should be recalled after {var_names} update"
         assert (
             call_counts[cache_key] == mocked_method.call_count
@@ -340,7 +340,7 @@ def test_cache_in_state_with_aux(state_vars):
             ), f"cached value for key {aux_cache_key} should be None"
         ret_val_3 = bound_memoized_method(state)
         assert (
-            mocked_method.call_count == 2
+            mocked_method.call_count == 2  # noqa: PLR2004
         ), f"memoized method should be recalled after {var_names} update"
         assert (
             call_counts[prim_cache_key] == mocked_method.call_count

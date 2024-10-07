@@ -17,8 +17,8 @@ from mici.solvers import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Any, Callable, Optional
+    from collections.abc import Callable, Sequence
+    from typing import Any
 
     from numpy.typing import ArrayLike
 
@@ -49,7 +49,7 @@ class Integrator(ABC):
     of the Hamiltonian dynamics.
     """
 
-    def __init__(self, system: System, step_size: Optional[float] = None):
+    def __init__(self, system: System, step_size: float | None = None) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
@@ -80,7 +80,7 @@ class Integrator(ABC):
         return state
 
     @abstractmethod
-    def _step(self, state: ChainState, time_step: float):
+    def _step(self, state: ChainState, time_step: float) -> None:
         """Implementation of single integrator step.
 
         Args:
@@ -107,7 +107,9 @@ class TractableFlowIntegrator(Integrator):
     exactly.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(
+        self, system: TractableFlowSystem, step_size: float | None = None
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -165,7 +167,7 @@ class LeapfrogIntegrator(TractableFlowIntegrator):
          Cambridge University Press.
     """
 
-    def _step(self, state: ChainState, time_step: float):
+    def _step(self, state: ChainState, time_step: float) -> None:
         self.system.h1_flow(state, 0.5 * time_step)
         self.system.h2_flow(state, time_step)
         self.system.h1_flow(state, 0.5 * time_step)
@@ -234,9 +236,9 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         system: TractableFlowSystem,
         free_coefficients: Sequence[float],
         *,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         initial_h1_flow_step: bool = True,
-    ):
+    ) -> None:
         r"""
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -269,8 +271,8 @@ class SymmetricCompositionIntegrator(TractableFlowIntegrator):
         flow_b = system.h2_flow if initial_h1_flow_step else system.h1_flow
         self.flows = [flow_a, flow_b] * (n_free_coefficients + 1) + [flow_a]
 
-    def _step(self, state, time_step):
-        for coefficient, flow in zip(self.coefficients, self.flows):
+    def _step(self, state: ChainState, time_step: float) -> None:
+        for coefficient, flow in zip(self.coefficients, self.flows, strict=True):
             flow(state, coefficient * time_step)
 
 
@@ -288,7 +290,9 @@ class BCSSTwoStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(
+        self, system: TractableFlowSystem, step_size: float | None = None
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -316,7 +320,9 @@ class BCSSThreeStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(
+        self, system: TractableFlowSystem, step_size: float | None = None
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -350,7 +356,9 @@ class BCSSFourStageIntegrator(SymmetricCompositionIntegrator):
          SIAM Journal on Scientific Computing, 36(4), A1556-A1580.
     """
 
-    def __init__(self, system: TractableFlowSystem, step_size: Optional[float] = None):
+    def __init__(
+        self, system: TractableFlowSystem, step_size: float | None = None
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of with tractable
@@ -430,12 +438,12 @@ class ImplicitLeapfrogIntegrator(Integrator):
     def __init__(
         self,
         system: System,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
-    ):
+        fixed_point_solver_kwargs: dict[str, Any] | None = None,
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
@@ -482,18 +490,18 @@ class ImplicitLeapfrogIntegrator(Integrator):
             **self.fixed_point_solver_kwargs,
         )
 
-    def _step_a(self, state: ChainState, time_step: float):
+    def _step_a(self, state: ChainState, time_step: float) -> None:
         self.system.h1_flow(state, time_step)
 
-    def _step_b_fwd(self, state: ChainState, time_step: float):
-        def fixed_point_func(mom):
+    def _step_b_fwd(self, state: ChainState, time_step: float) -> None:
+        def fixed_point_func(mom: ArrayLike) -> ArrayLike:
             state.mom = mom
             return mom_init - time_step * self.system.dh2_dpos(state)
 
         mom_init = state.mom
         state.mom = self._solve_fixed_point(fixed_point_func, mom_init)
 
-    def _step_b_adj(self, state: ChainState, time_step: float):
+    def _step_b_adj(self, state: ChainState, time_step: float) -> None:
         mom_init = state.mom.copy()
         state.mom -= time_step * self.system.dh2_dpos(state)
         state_back = state.copy()
@@ -506,7 +514,7 @@ class ImplicitLeapfrogIntegrator(Integrator):
             )
             raise NonReversibleStepError(msg)
 
-    def _step_c_fwd(self, state: ChainState, time_step: float):
+    def _step_c_fwd(self, state: ChainState, time_step: float) -> None:
         pos_init = state.pos.copy()
         state.pos += time_step * self.system.dh2_dmom(state)
         state_back = state.copy()
@@ -519,15 +527,15 @@ class ImplicitLeapfrogIntegrator(Integrator):
             )
             raise NonReversibleStepError(msg)
 
-    def _step_c_adj(self, state: ChainState, time_step: float):
-        def fixed_point_func(pos):
+    def _step_c_adj(self, state: ChainState, time_step: float) -> None:
+        def fixed_point_func(pos: ArrayLike) -> ArrayLike:
             state.pos = pos
             return pos_init + time_step * self.system.dh2_dmom(state)
 
         pos_init = state.pos
         state.pos = self._solve_fixed_point(fixed_point_func, pos_init)
 
-    def _step(self, state: ChainState, time_step: float):
+    def _step(self, state: ChainState, time_step: float) -> None:
         self._step_a(state, time_step)
         self._step_b_fwd(state, time_step)
         self._step_c_fwd(state, time_step)
@@ -581,12 +589,12 @@ class ImplicitMidpointIntegrator(Integrator):
     def __init__(
         self,
         system: System,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         fixed_point_solver: FixedPointSolver = solve_fixed_point_direct,
-        fixed_point_solver_kwargs: Optional[dict[str, Any]] = None,
-    ):
+        fixed_point_solver_kwargs: dict[str, Any] | None = None,
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the dynamics of.
@@ -633,10 +641,10 @@ class ImplicitMidpointIntegrator(Integrator):
             **self.fixed_point_solver_kwargs,
         )
 
-    def _step_a_fwd(self, state: ChainState, time_step: float):
+    def _step_a_fwd(self, state: ChainState, time_step: float) -> None:
         pos_mom_init = np.concatenate([state.pos, state.mom])
 
-        def fixed_point_func(pos_mom):
+        def fixed_point_func(pos_mom: ArrayLike) -> ArrayLike:
             state.pos, state.mom = np.split(pos_mom, 2)
             return pos_mom_init + np.concatenate(
                 [
@@ -650,7 +658,7 @@ class ImplicitMidpointIntegrator(Integrator):
             2,
         )
 
-    def _step_a_adj(self, state: ChainState, time_step: float):
+    def _step_a_adj(self, state: ChainState, time_step: float) -> None:
         state_prev = state.copy()
         state.pos += time_step * self.system.dh_dmom(state_prev)
         state.mom -= time_step * self.system.dh_dpos(state_prev)
@@ -668,7 +676,7 @@ class ImplicitMidpointIntegrator(Integrator):
             )
             raise NonReversibleStepError(msg)
 
-    def _step(self, state: ChainState, time_step: float):
+    def _step(self, state: ChainState, time_step: float) -> None:
         self._step_a_fwd(state, time_step / 2)
         self._step_a_adj(state, time_step / 2)
 
@@ -847,13 +855,13 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
     def __init__(
         self,
         system: ConstrainedTractableFlowSystem,
-        step_size: Optional[float] = None,
+        step_size: float | None = None,
         n_inner_step: int = 1,
         reverse_check_tol: float = 2e-8,
         reverse_check_norm: NormFunction = maximum_norm,
         projection_solver: ProjectionSolver = solve_projection_onto_manifold_newton,
-        projection_solver_kwargs: Optional[dict[str, Any]] = None,
-    ):
+        projection_solver_kwargs: dict[str, Any] | None = None,
+    ) -> None:
         """
         Args:
             system: Hamiltonian system to integrate the constrained dynamics of.
@@ -923,7 +931,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
         state: ChainState,
         state_prev: ChainState,
         time_step: float,
-    ):
+    ) -> None:
         self.system.h2_flow(state, time_step)
         self.projection_solver(
             state,
@@ -933,14 +941,14 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
             **self.projection_solver_kwargs,
         )
 
-    def _project_onto_cotangent_space(self, state: ChainState):
+    def _project_onto_cotangent_space(self, state: ChainState) -> None:
         state.mom = self.system.project_onto_cotangent_space(state.mom, state)
 
-    def _step_a(self, state: ChainState, time_step: float):
+    def _step_a(self, state: ChainState, time_step: float) -> None:
         self.system.h1_flow(state, time_step)
         self._project_onto_cotangent_space(state)
 
-    def _step_b(self, state: ChainState, time_step: float):
+    def _step_b(self, state: ChainState, time_step: float) -> None:
         time_step_inner = time_step / self.n_inner_step
         for i in range(self.n_inner_step):
             state_prev = state.copy()
@@ -970,7 +978,7 @@ class ConstrainedLeapfrogIntegrator(TractableFlowIntegrator):
                 )
                 raise NonReversibleStepError(msg)
 
-    def _step(self, state: ChainState, time_step: float):
+    def _step(self, state: ChainState, time_step: float) -> None:
         self._step_a(state, 0.5 * time_step)
         self._step_b(state, time_step)
         self._step_a(state, 0.5 * time_step)

@@ -13,4 +13,3 @@ Mici is a Python package providing implementations of Markov chain Monte Carlo (
    :caption: Contents:
 
    mici
-

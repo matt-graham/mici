@@ -7,7 +7,7 @@ import html
 import importlib
 import sys
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 try:
     from IPython import get_ipython
@@ -20,7 +20,10 @@ except ImportError:
 if TYPE_CHECKING:
     from collections.abc import Collection, Generator
     from queue import Queue
-    from typing import Any, Optional, TextIO
+    from types import TracebackType
+    from typing import Any, TextIO
+
+    from typing_extensions import Self
 
 
 ON_COLAB = (
@@ -33,22 +36,26 @@ def _in_zmq_interactive_shell() -> bool:
     """Check if in interactive ZMQ shell which supports updateable displays."""
     if not IPYTHON_AVAILABLE:
         return False
-    elif ON_COLAB:
+    if ON_COLAB:
         return True
-    else:
-        try:
-            shell = get_ipython().__class__.__name__
-            if shell == "ZMQInteractiveShell":
-                return True
-            elif shell == "TerminalInteractiveShell":
-                return False
-            else:
-                return False
-        except NameError:
-            return False
+    try:
+        shell = get_ipython().__class__.__name__
+    except NameError:
+        return False
+    return shell == "ZMQInteractiveShell"
 
 
-def _create_display(obj, position: tuple[int, int]):
+class UpdateableDisplay(Protocol):
+    """Updateable display."""
+
+    def update(self, obj: Any) -> None:  # noqa: ANN401
+        """Update display with representation of object."""
+
+
+def _create_display(
+    obj: Any,  # noqa: ANN401
+    position: tuple[int, int],
+) -> UpdateableDisplay:
     """Create an updateable display object.
 
     Args:
@@ -62,8 +69,7 @@ def _create_display(obj, position: tuple[int, int]):
     """
     if _in_zmq_interactive_shell():
         return ipython_display(obj, display_id=True)
-    else:
-        return FileDisplay(position)
+    return FileDisplay(position)
 
 
 def _format_time(total_seconds: float) -> str:
@@ -72,15 +78,14 @@ def _format_time(total_seconds: float) -> str:
     hours, mins = divmod(total_mins, 60)
     if hours != 0:
         return f"{hours:d}:{mins:02d}:{seconds:02d}"
-    else:
-        return f"{mins:02d}:{seconds:02d}"
+    return f"{mins:02d}:{seconds:02d}"
 
 
 def _update_stats_running_means(
     iter_: int,
     means: dict[str, float],
     new_vals: dict[str, float],
-):
+) -> None:
     """Update dictionary of running statistics means with latest values."""
     if iter_ == 1:
         means.update({key: float(val) for key, val in new_vals.items()})
@@ -95,9 +100,9 @@ class ProgressBar(abc.ABC):
     def __init__(
         self,
         sequence: Collection,
-        description: Optional[str],
+        description: str | None,
         position: tuple[int, int] = (0, 1),
-    ):
+    ) -> None:
         """
         Args:
             sequence: Sequence to iterate over. Must be iterable _and_ have a defined
@@ -119,7 +124,7 @@ class ProgressBar(abc.ABC):
         return self._sequence
 
     @sequence.setter
-    def sequence(self, value: Collection):
+    def sequence(self, value: Collection) -> None:
         if self._active:
             msg = "Cannot set sequence of active progress bar."
             raise RuntimeError(msg)
@@ -143,10 +148,10 @@ class ProgressBar(abc.ABC):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]],
+        iter_dict: dict[str, float] | None,
         *,
         refresh: bool = True,
-    ):
+    ) -> None:
         """Update progress bar state.
 
         Args:
@@ -156,12 +161,17 @@ class ProgressBar(abc.ABC):
             refresh: Whether to refresh display(s).
         """
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         """Set up progress bar and any associated resource."""
         self._active = True
         return self
 
-    def __exit__(self, *args) -> bool:
+    def __exit__(
+        self,
+        _exc_type: None | type[BaseException],
+        _exc_value: None | BaseException,
+        _traceback: None | TracebackType,
+    ) -> bool:
         """Close down progress bar and any associated resources."""
         self._active = False
         return False
@@ -173,10 +183,10 @@ class DummyProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]],
+        iter_dict: dict[str, float] | None,
         *,
         refresh: bool = True,
-    ):
+    ) -> None:
         pass
 
 
@@ -194,13 +204,13 @@ class SequenceProgressBar(ProgressBar):
     def __init__(
         self,
         sequence: Collection,
-        description: Optional[str] = None,
+        description: str | None = None,
         position: tuple[int, int] = (0, 1),
-        displays: Optional[Collection] = None,
+        displays: Collection | None = None,
         n_col: int = 10,
         unit: str = "it",
         min_refresh_time: float = 0.25,
-    ):
+    ) -> None:
         """
         Args:
             sequence: Sequence to iterate over. Must be iterable **and** have a defined
@@ -239,7 +249,7 @@ class SequenceProgressBar(ProgressBar):
         return self._counter
 
     @counter.setter
-    def counter(self, value: int):
+    def counter(self, value: int) -> None:
         self._counter = max(0, min(value, self.n_iter))
 
     @property
@@ -262,21 +272,19 @@ class SequenceProgressBar(ProgressBar):
         """Mean iteration rate if ≥ 1 `it/s` or reciprocal `s/it` as string."""
         if self.prop_complete == 0:
             return "?"
-        else:
-            mean_time = self._elapsed_time / self.counter
-            return (
-                f"{mean_time:.2f}s/{self._unit}"
-                if mean_time > 1
-                else f"{1/mean_time:.2f}{self._unit}/s"
-            )
+        mean_time = self._elapsed_time / self.counter
+        return (
+            f"{mean_time:.2f}s/{self._unit}"
+            if mean_time > 1
+            else f"{1/mean_time:.2f}{self._unit}/s"
+        )
 
     @property
     def est_remaining_time(self) -> str:
         """Estimated remaining time to completion formatted as string."""
         if self.prop_complete == 0:
             return "?"
-        else:
-            return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
+        return _format_time((1 / self.prop_complete - 1) * self._elapsed_time)
 
     @property
     def n_block_filled(self) -> int:
@@ -303,16 +311,14 @@ class SequenceProgressBar(ProgressBar):
         """Empty blocks string."""
         if self.prop_partial_block == 0:
             return self.GLYPHS[0] * self.n_block_empty
-        else:
-            return self.GLYPHS[0] * (self.n_block_empty - 1)
+        return self.GLYPHS[0] * (self.n_block_empty - 1)
 
     @property
     def partial_block(self) -> str:
         """Partial block character."""
         if self.prop_partial_block == 0:
             return ""
-        else:
-            return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
+        return self.GLYPHS[int(len(self.GLYPHS) * self.prop_partial_block)]
 
     @property
     def progress_bar(self) -> str:
@@ -324,10 +330,9 @@ class SequenceProgressBar(ProgressBar):
         """CSS color property for HTML progress bar."""
         if self.counter == self.n_iter:
             return "var(--jp-success-color1, #4caf50)"
-        elif self._active:
+        if self._active:
             return "var(--jp-brand-color1, #2196f3)"
-        else:
-            return "var(--jp-error-color1, #f44336)"
+        return "var(--jp-error-color1, #f44336)"
 
     @property
     def stats(self) -> str:
@@ -352,7 +357,7 @@ class SequenceProgressBar(ProgressBar):
             f'{", " + self.stats if self._stats_dict else ""}]'
         )
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset progress bar state."""
         self._counter = 0
         self._start_time = timer()
@@ -362,10 +367,10 @@ class SequenceProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]] = None,
+        iter_dict: dict[str, float] | None = None,
         *,
         refresh: bool = True,
-    ):
+    ) -> None:
         """Update progress bar state.
 
         Args:
@@ -389,7 +394,7 @@ class SequenceProgressBar(ProgressBar):
             self.refresh()
             self._last_refresh_time = timer()
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh visual display(s) of progress bar."""
         for display in self._displays:
             display.update(self)
@@ -427,15 +432,20 @@ class SequenceProgressBar(ProgressBar):
         </div>
         """
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         super().__enter__()
         self.reset()
         if self._displays is None:
             self._displays = [_create_display(self, self._position)]
         return self
 
-    def __exit__(self, *args) -> bool:
-        ret_val = super().__exit__()
+    def __exit__(
+        self,
+        exc_type: None | type[BaseException],
+        exc_value: None | BaseException,
+        traceback: None | TracebackType,
+    ) -> bool:
+        ret_val = super().__exit__(exc_type, exc_value, traceback)
         if self.counter != self.n_iter:
             self.refresh()
         return ret_val
@@ -447,10 +457,10 @@ class LabelledSequenceProgressBar(ProgressBar):
     def __init__(
         self,
         labelled_sequence: dict[str, Any],
-        description: Optional[str] = None,
+        description: str | None = None,
         position: tuple[int, int] = (0, 1),
-        displays: Optional[Collection] = None,
-    ):
+        displays: Collection | None = None,
+    ) -> None:
         """
         Args:
             labelled_sequence: Ordered dictionary with string keys corresponding to
@@ -480,7 +490,7 @@ class LabelledSequenceProgressBar(ProgressBar):
         return self._counter
 
     @counter.setter
-    def counter(self, value: int):
+    def counter(self, value: int) -> None:
         self._counter = max(0, min(value, self.n_iter))
 
     @property
@@ -511,6 +521,7 @@ class LabelledSequenceProgressBar(ProgressBar):
             for label, time in zip(
                 self._labels[: self._counter],
                 self._iter_times[: self._counter],
+                strict=True,
             )
         ]
 
@@ -532,7 +543,7 @@ class LabelledSequenceProgressBar(ProgressBar):
             labels.append(self.current_label)
         return " > ".join(labels)
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset progress bar state."""
         self._counter = 0
         self._prev_time = timer()
@@ -542,10 +553,10 @@ class LabelledSequenceProgressBar(ProgressBar):
     def update(
         self,
         iter_count: int,
-        iter_dict: Optional[dict[str, float]] = None,
+        iter_dict: dict[str, float] | None = None,
         *,
         refresh: bool = True,
-    ):
+    ) -> None:
         """Update progress bar state.
 
         Args:
@@ -566,7 +577,7 @@ class LabelledSequenceProgressBar(ProgressBar):
         if refresh:
             self.refresh()
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh visual display(s) of status bar."""
         for display in self._displays:
             display.update(self)
@@ -626,7 +637,7 @@ class LabelledSequenceProgressBar(ProgressBar):
         html_string += "</div>"
         return html_string
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         super().__enter__()
         self.reset()
         if self._displays is None:
@@ -634,8 +645,13 @@ class LabelledSequenceProgressBar(ProgressBar):
         self.refresh()
         return self
 
-    def __exit__(self, *args) -> bool:
-        ret_val = super().__exit__()
+    def __exit__(
+        self,
+        exc_type: None | type[BaseException],
+        exc_value: None | BaseException,
+        traceback: None | TracebackType,
+    ) -> bool:
+        ret_val = super().__exit__(exc_type, exc_value, traceback)
         if self.counter != self.n_iter:
             self.refresh()
         return ret_val
@@ -653,8 +669,8 @@ class FileDisplay:
     def __init__(
         self,
         position: tuple[int, int] = (0, 1),
-        file: Optional[TextIO] = None,
-    ):
+        file: TextIO | None = None,
+    ) -> None:
         r"""
         Args:
             position: Tuple specifying position of display line within a sequence lines
@@ -671,11 +687,11 @@ class FileDisplay:
             self._file.write("\n" * self._position[1])
         self._file.flush()
 
-    def _move_line(self, offset: int):
+    def _move_line(self, offset: int) -> None:
         self._file.write(self.CURSOR_DOWN * offset + self.CURSOR_UP * -offset)
         self._file.flush()
 
-    def update(self, obj):
+    def update(self, obj: Any) -> None:  # noqa: ANN401
         """Update display with string representation of object.
 
         Args:
@@ -696,7 +712,7 @@ class _ProxySequenceProgressBar:
     when distributing tasks across multiple processes.
     """
 
-    def __init__(self, sequence: Collection, job_id: int, iter_queue: Queue):
+    def __init__(self, sequence: Collection, job_id: int, iter_queue: Queue) -> None:
         """
         Args:
             sequence: Sequence to iterate over. Must be iterable _and_ have a defined
@@ -713,11 +729,16 @@ class _ProxySequenceProgressBar:
     def __len__(self) -> int:
         return self._n_iter
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self._iter_queue.put((self._job_id, 0, None))
         return self
 
-    def __exit__(self, *args) -> bool:
+    def __exit__(
+        self,
+        exc_type: None | type[BaseException],
+        exc_value: None | BaseException,
+        traceback: None | TracebackType,
+    ) -> bool:
         return False
 
     def __iter__(self) -> Generator[tuple[Any, dict[str, float]], None, None]:
