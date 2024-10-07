@@ -97,7 +97,7 @@ def return_numpy_arrays(function: JaxArrayFunction) -> NumPyArrayFunction:
 
 
 def grad_and_value(func: ScalarFunction) -> GradientFunction:
-    """Makes a function that returns both the Jacobian and value of a function."""
+    """Makes a function that returns both the gradient and value of a function."""
 
     def grad_and_value_func(x: ArrayLike) -> tuple[ArrayLike, ScalarLike]:
         value, grad = jax.value_and_grad(func)(x)
