@@ -1,15 +1,17 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
+Configuration file for the Sphinx documentation builder.
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+For the full list of built-in configuration values, see the documentation:
+https://www.sphinx-doc.org/en/master/usage/configuration.html
+
+-- Project information -----------------------------------------------------
+https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+"""
 
 import collections
 
 project = "Mici"
-copyright = "2023, Matt Graham"
+copyright = "2023, Matt Graham"  # noqa: A001
 author = "Matt Graham"
 release = "0.2.0"
 
@@ -36,7 +38,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pymc": ("https://www.pymc.io/projects/docs/en/latest/", None),
     "arviz": ("https://python.arviz.org/en/stable/", None),
-    "pystan": ("https://pystan.readthedocs.io/en/latest/", None)
+    "pystan": ("https://pystan.readthedocs.io/en/latest/", None),
 }
 
 templates_path = ["_templates"]
@@ -71,20 +73,25 @@ html_theme_options = {
 # https://stackoverflow.com/a/70459782 and also remove default constructor
 # docstring for NamedTuple instances
 
-def remove_namedtuple_attrib_docstring(app, what, name, obj, skip, options):
-    if isinstance(obj, collections._tuplegetter) or str(obj) in {
-        "<method 'count' of 'tuple' objects>", "<method 'index' of 'tuple' objects>"
+
+def _remove_namedtuple_attrib_docstring(_app, _what, _name, obj, skip, _options):
+    if isinstance(obj, collections._tuplegetter) or str(obj) in {  # noqa: SLF001
+        "<method 'count' of 'tuple' objects>",
+        "<method 'index' of 'tuple' objects>",
     }:
         return True
     return skip
 
 
-def remove_namedtuple_constructor_lines(app, what, name, obj, options, lines):
-    if isinstance(obj, type) and issubclass(obj, tuple):
-        if "Create new instance of" in lines[0]:
-            lines.clear()
+def _remove_namedtuple_constructor_lines(_app, _what, _name, obj, _options, lines):
+    if (
+        isinstance(obj, type)
+        and issubclass(obj, tuple)
+        and "Create new instance of" in lines[0]
+    ):
+        lines.clear()
 
 
 def setup(app):
-    app.connect("autodoc-skip-member", remove_namedtuple_attrib_docstring)
-    app.connect("autodoc-process-docstring", remove_namedtuple_constructor_lines)
+    app.connect("autodoc-skip-member", _remove_namedtuple_attrib_docstring)
+    app.connect("autodoc-process-docstring", _remove_namedtuple_constructor_lines)
