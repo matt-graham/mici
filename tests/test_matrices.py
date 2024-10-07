@@ -557,7 +557,7 @@ class TestDensePositiveDefiniteMatrix(
     ExplicitShapePositiveDefiniteMatrixTests,
 ):
     @staticmethod
-    def matrix_class(array, _is_posdef):
+    def matrix_class(array, is_posdef):  # noqa: ARG004
         return matrices.DensePositiveDefiniteMatrix(array)
 
     @pytest.fixture
