@@ -15,24 +15,27 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
   
-  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
@@ -42,6 +45,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -57,19 +61,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -77,7 +70,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -85,8 +77,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -120,7 +112,7 @@
     
     
     <img src="../../_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <script>document.write(`<img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
+    <img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
   
   
 </a></div>
@@ -152,29 +144,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -199,15 +183,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -224,7 +204,8 @@ document.write(`
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -257,15 +238,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -289,9 +266,14 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -309,8 +291,6 @@ document.write(`
       
         <div class="header-article-item">
 
-
-
 <nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
@@ -322,7 +302,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mici.samplers</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mici.samplers</span></li>
   </ul>
 </nav>
 </div>
@@ -342,32 +322,32 @@ document.write(`
   <h1>Source code for mici.samplers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Monte Carlo sampler classes for peforming inference.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">queue</span>
-<span class="kn">import</span> <span class="nn">signal</span>
-<span class="kn">import</span> <span class="nn">tempfile</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">ExitStack</span><span class="p">,</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">nullcontext</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">pickle</span> <span class="kn">import</span> <span class="n">PicklingError</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypeVar</span>
-<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExitStack</span><span class="p">,</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">nullcontext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pickle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PicklingError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">default_rng</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">default_rng</span>
 
-<span class="kn">from</span> <span class="nn">mici.adapters</span> <span class="kn">import</span> <span class="n">DualAveragingStepSizeAdapter</span>
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">AdaptationError</span>
-<span class="kn">from</span> <span class="nn">mici.progressbars</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">DualAveragingStepSizeAdapter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdaptationError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.progressbars</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DummyProgressBar</span><span class="p">,</span>
     <span class="n">LabelledSequenceProgressBar</span><span class="p">,</span>
     <span class="n">SequenceProgressBar</span><span class="p">,</span>
     <span class="n">_ProxySequenceProgressBar</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">mici.stagers</span> <span class="kn">import</span> <span class="n">WarmUpStager</span><span class="p">,</span> <span class="n">WindowedWarmUpStager</span>
-<span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-<span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.stagers</span><span class="w"> </span><span class="kn">import</span> <span class="n">WarmUpStager</span><span class="p">,</span> <span class="n">WindowedWarmUpStager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.transitions</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">IndependentMomentumTransition</span><span class="p">,</span>
     <span class="n">MetropolisRandomIntegrationTransition</span><span class="p">,</span>
     <span class="n">MetropolisStaticIntegrationTransition</span><span class="p">,</span>
@@ -378,17 +358,17 @@ document.write(`
 <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 
-    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
 
-    <span class="kn">from</span> <span class="nn">mici.adapters</span> <span class="kn">import</span> <span class="n">Adapter</span>
-    <span class="kn">from</span> <span class="nn">mici.integrators</span> <span class="kn">import</span> <span class="n">Integrator</span>
-    <span class="kn">from</span> <span class="nn">mici.progressbars</span> <span class="kn">import</span> <span class="n">ProgressBar</span>
-    <span class="kn">from</span> <span class="nn">mici.stagers</span> <span class="kn">import</span> <span class="n">Stager</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
-    <span class="kn">from</span> <span class="nn">mici.transitions</span> <span class="kn">import</span> <span class="n">IntegrationTransition</span><span class="p">,</span> <span class="n">MomentumTransition</span><span class="p">,</span> <span class="n">Transition</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.adapters</span><span class="w"> </span><span class="kn">import</span> <span class="n">Adapter</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.integrators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integrator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.progressbars</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProgressBar</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.stagers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stager</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.systems</span><span class="w"> </span><span class="kn">import</span> <span class="n">System</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.transitions</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntegrationTransition</span><span class="p">,</span> <span class="n">MomentumTransition</span><span class="p">,</span> <span class="n">Transition</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">AdapterState</span><span class="p">,</span>
         <span class="n">ChainIterator</span><span class="p">,</span>
         <span class="n">PyTree</span><span class="p">,</span>
@@ -400,18 +380,18 @@ document.write(`
 <span class="c1"># Preferentially import from multiprocess library if available as able to</span>
 <span class="c1"># serialize much wider range of types including autograd functions</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">multiprocess</span> <span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
-    <span class="kn">from</span> <span class="nn">multiprocess.managers</span> <span class="kn">import</span> <span class="n">SyncManager</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SyncManager</span>
 
     <span class="n">MULTIPROCESS_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
-    <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">SyncManager</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SyncManager</span>
 
     <span class="n">MULTIPROCESS_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">threadpoolctl</span> <span class="kn">import</span> <span class="n">threadpool_limits</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">threadpoolctl</span><span class="w"> </span><span class="kn">import</span> <span class="n">threadpool_limits</span>
 
     <span class="n">THREADPOOLCTL_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -421,13 +401,13 @@ document.write(`
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_ignore_sigint_initializer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ignore_sigint_initializer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializer for processes to force ignoring SIGINT interrupt signals.&quot;&quot;&quot;</span>
     <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span>
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">_ignore_sigint_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_ignore_sigint_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-managed SyncManager which ignores SIGINT interrupt signals.&quot;&quot;&quot;</span>
     <span class="n">manager</span> <span class="o">=</span> <span class="n">SyncManager</span><span class="p">()</span>
     <span class="k">try</span><span class="p">:</span>
@@ -438,7 +418,7 @@ document.write(`
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-manager for process pool that ensures clean exiting.</span>
 
 <span class="sd">    Compared to built-in context-manager protocol implementation on Pool object which</span>
@@ -455,7 +435,7 @@ document.write(`
         <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_get_valid_filename</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_valid_filename</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a valid filename from a string.</span>
 
 <span class="sd">    Strips all characters which are not alphanumeric or a period (.), dash (-)</span>
@@ -472,7 +452,7 @@ document.write(`
     <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">string</span> <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isalnum</span><span class="p">()</span> <span class="ow">or</span> <span class="n">c</span> <span class="ow">in</span> <span class="s2">&quot;._- &quot;</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_generate_memmap_filenames</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_memmap_filenames</span><span class="p">(</span>
     <span class="n">dir_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -484,7 +464,7 @@ document.write(`
     <span class="k">return</span> <span class="p">[</span><span class="n">dir_path</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">key_str</span><span class="si">}</span><span class="s2">.npy&quot;</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_open_new_memmap</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_open_new_memmap</span><span class="p">(</span>
     <span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="n">default_val</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
@@ -509,7 +489,7 @@ document.write(`
     <span class="k">return</span> <span class="n">memmap</span>
 
 
-<span class="k">def</span> <span class="nf">_memmaps_to_file_paths</span><span class="p">(</span><span class="n">pytree</span><span class="p">:</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_memmaps_to_file_paths</span><span class="p">(</span><span class="n">pytree</span><span class="p">:</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert any memmaps in pytree to corresponding file paths.</span>
 
 <span class="sd">    Acts recursively on arbitrary &#39;pytrees&#39; of nested dict/tuple/lists with any object</span>
@@ -532,7 +512,7 @@ document.write(`
     <span class="k">return</span> <span class="n">pytree</span>
 
 
-<span class="k">def</span> <span class="nf">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">pytree</span><span class="p">:</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_file_paths_to_memmaps</span><span class="p">(</span><span class="n">pytree</span><span class="p">:</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">memmap</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert any paths in pytree to corresponding memory-mapped arrays.</span>
 
 <span class="sd">    Acts recursively on arbitrary &#39;pytrees&#39; of nested dict/tuple/lists with any object</span>
@@ -558,7 +538,7 @@ document.write(`
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Zip iterable keyword arguments in to an iterable of dictionaries.</span>
 
 <span class="sd">    Acts analogously to built-in `zip` in taking a variable number of iterables as</span>
@@ -581,7 +561,7 @@ document.write(`
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_check_and_process_init_state</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_and_process_init_state</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
@@ -600,7 +580,7 @@ document.write(`
     <span class="k">return</span> <span class="n">ChainState</span><span class="p">(</span><span class="o">**</span><span class="n">state</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">state</span>
 
 
-<span class="k">def</span> <span class="nf">_init_stats</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_stats</span><span class="p">(</span>
     <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">],</span>
     <span class="n">n_chain</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -629,7 +609,7 @@ document.write(`
     <span class="k">return</span> <span class="n">stats</span>
 
 
-<span class="k">def</span> <span class="nf">_init_traces</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_traces</span><span class="p">(</span>
     <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">TraceFunction</span><span class="p">,</span>
     <span class="n">init_states</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -670,7 +650,7 @@ document.write(`
     <span class="k">return</span> <span class="n">traces</span>
 
 
-<span class="k">def</span> <span class="nf">_construct_chain_iterators</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_construct_chain_iterators</span><span class="p">(</span>
     <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">chain_iterator_class</span><span class="p">:</span> <span class="n">ProgressBar</span><span class="p">,</span>
     <span class="n">n_chain</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -687,7 +667,7 @@ document.write(`
     <span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_update_chain_stats</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_chain_stats</span><span class="p">(</span>
     <span class="n">sample_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
     <span class="n">trans_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -699,7 +679,7 @@ document.write(`
             <span class="n">chain_stats</span><span class="p">[</span><span class="n">trans_key</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="n">sample_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
 
-<span class="k">def</span> <span class="nf">_update_monitor_stats</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_monitor_stats</span><span class="p">(</span>
     <span class="n">monitor_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Container</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">monitor_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">trans_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -715,14 +695,14 @@ document.write(`
                     <span class="sa">f</span><span class="s2">&quot;Monitored statistics key </span><span class="si">{</span><span class="n">stats_key</span><span class="si">}</span><span class="s2"> is not present in &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;statistics returned by transition </span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2">.&quot;</span>
                 <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
             <span class="k">if</span> <span class="n">stats_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">monitor_dict</span><span class="p">:</span>
                 <span class="n">monitor_dict</span><span class="p">[</span><span class="n">stats_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">monitor_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trans_key</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">stats_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
 
-<span class="k">def</span> <span class="nf">_flush_memmap_chain_data</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_flush_memmap_chain_data</span><span class="p">(</span>
     <span class="n">chain_traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">chain_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -738,7 +718,7 @@ document.write(`
                     <span class="n">stat</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_sample_chain</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sample_chain</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
     <span class="n">init_state</span><span class="p">:</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">],</span>
     <span class="n">chain_iterator</span><span class="p">:</span> <span class="n">ChainIterator</span><span class="p">,</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -897,7 +877,7 @@ document.write(`
     <span class="k">return</span> <span class="n">state</span><span class="p">,</span> <span class="n">adapter_states</span><span class="p">,</span> <span class="n">exception</span>
 
 
-<span class="k">def</span> <span class="nf">_collate_chain_outputs</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_collate_chain_outputs</span><span class="p">(</span>
     <span class="n">chain_outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">ChainState</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Unzip list of tuples of chain outputs in to tuple of stacked outputs.&quot;&quot;&quot;</span>
@@ -914,7 +894,7 @@ document.write(`
     <span class="k">return</span> <span class="n">final_states_stack</span><span class="p">,</span> <span class="n">adapt_states_stack</span>
 
 
-<span class="k">def</span> <span class="nf">_get_per_chain_rngs</span><span class="p">(</span><span class="n">base_rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_per_chain_rngs</span><span class="p">(</span><span class="n">base_rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">n_chain</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Generator</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct random number generators (RNGs) for each of a set of chains.</span>
 
 <span class="sd">    If the base RNG bit generator has a `jumped` method this is used to produce a</span>
@@ -936,7 +916,7 @@ document.write(`
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_sample_chains_sequential</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sample_chains_sequential</span><span class="p">(</span>
     <span class="n">chain_iterators</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainIterator</span><span class="p">],</span>
     <span class="n">per_chain_kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
     <span class="o">**</span><span class="n">common_kwargs</span><span class="p">,</span>
@@ -964,7 +944,7 @@ document.write(`
     <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">_collate_chain_outputs</span><span class="p">(</span><span class="n">chain_outputs</span><span class="p">),</span> <span class="n">exception</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_sample_chains_worker</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sample_chains_worker</span><span class="p">(</span>
     <span class="n">chain_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
     <span class="n">iter_queue</span><span class="p">:</span> <span class="n">Queue</span><span class="p">,</span>
     <span class="n">common_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -1019,7 +999,7 @@ document.write(`
     <span class="k">return</span> <span class="n">chain_outputs</span>
 
 
-<span class="k">def</span> <span class="nf">_finalize_adapters</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_finalize_adapters</span><span class="p">(</span>
     <span class="n">adapter_states_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]],</span>
     <span class="n">chain_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span>
     <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]],</span>
@@ -1036,7 +1016,7 @@ document.write(`
             <span class="n">adapter</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">adapter_states</span><span class="p">,</span> <span class="n">chain_states</span><span class="p">,</span> <span class="n">transitions</span><span class="p">[</span><span class="n">trans_key</span><span class="p">],</span> <span class="n">rngs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_sample_chains_parallel</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sample_chains_parallel</span><span class="p">(</span>
     <span class="n">chain_iterators</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainIterator</span><span class="p">],</span>
     <span class="n">per_chain_kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
     <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1102,7 +1082,7 @@ document.write(`
                     <span class="c1"># Re raise any other exception passed from worker processes</span>
                     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_queue_item</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
                         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unhandled exception in chain worker process.&quot;</span>
-                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">iter_queue_item</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">iter_queue_item</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="c1"># Otherwise unpack and update progress bar</span>
                         <span class="n">chain_index</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">,</span> <span class="n">data_dict</span> <span class="o">=</span> <span class="n">iter_queue_item</span>
@@ -1125,7 +1105,7 @@ document.write(`
                     <span class="s2">&quot;functions and will be used in preference to multiprocessing by &quot;</span>
                     <span class="s2">&quot;this package when available, may resolve this error.&quot;</span>
                 <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
             <span class="k">raise</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Interrupts handled in child processes therefore ignore here</span>
@@ -1143,7 +1123,7 @@ document.write(`
 
 <div class="viewcode-block" id="MCMCSampleChainsOutputs">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MCMCSampleChainsOutputs">[docs]</a>
-<span class="k">class</span> <span class="nc">MCMCSampleChainsOutputs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MCMCSampleChainsOutputs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Outputs returned by :py:meth:`MarkovChainMonteCarloMethod.sample_chains` call.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1177,14 +1157,14 @@ document.write(`
 
 <div class="viewcode-block" id="MarkovChainMonteCarloMethod">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod">[docs]</a>
-<span class="k">class</span> <span class="nc">MarkovChainMonteCarloMethod</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MarkovChainMonteCarloMethod</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generic Markov chain Monte Carlo (MCMC) sampler.</span>
 
 <span class="sd">    Generates a Markov chain from some initial state by iteratively applying a sequence</span>
 <span class="sd">    of Markov transition operators.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">transitions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            rng: Numpy random number generator.</span>
@@ -1204,18 +1184,18 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_transitions</span> <span class="o">=</span> <span class="n">transitions</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">transitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Transition</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dictionary of transition kernels sampled from in each chain iteration.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transitions</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rng</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;NumPy random number generator object.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span>
 
 <div class="viewcode-block" id="MarkovChainMonteCarloMethod.sample_chains">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.MarkovChainMonteCarloMethod.sample_chains">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample_chains</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_chains</span><span class="p">(</span>  <span class="c1"># noqa: PLR0912</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1473,7 +1453,7 @@ document.write(`
 
 <div class="viewcode-block" id="HMCSampleChainsOutputs">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.HMCSampleChainsOutputs">[docs]</a>
-<span class="k">class</span> <span class="nc">HMCSampleChainsOutputs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HMCSampleChainsOutputs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Outputs returned by :py:meth:`HamiltonianMonteCarlo.sample_chains` call.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1505,7 +1485,7 @@ document.write(`
 
 <div class="viewcode-block" id="HamiltonianMonteCarlo">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.HamiltonianMonteCarlo">[docs]</a>
-<span class="k">class</span> <span class="nc">HamiltonianMonteCarlo</span><span class="p">(</span><span class="n">MarkovChainMonteCarloMethod</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HamiltonianMonteCarlo</span><span class="p">(</span><span class="n">MarkovChainMonteCarloMethod</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper class for Hamiltonian Monte Carlo (HMC) methods.</span>
 
 <span class="sd">    Here HMC is defined as a Markov chain Monte Carlo method which augments the original</span>
@@ -1533,7 +1513,7 @@ document.write(`
 <span class="sd">         Handbook of Markov Chain Monte Carlo, 2(11), p.2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -1569,11 +1549,11 @@ document.write(`
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">system</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">System</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">system</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">System</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hamiltonian system corresponding to joint distribution on augmented space.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_system</span>
 
-    <span class="k">def</span> <span class="nf">_preprocess_init_state</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_init_state</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">init_state</span><span class="p">:</span> <span class="n">NDArray</span> <span class="o">|</span> <span class="n">ChainState</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChainState</span><span class="p">:</span>
@@ -1588,7 +1568,7 @@ document.write(`
             <span class="n">init_state</span><span class="o">.</span><span class="n">mom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">sample_momentum</span><span class="p">(</span><span class="n">init_state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">init_state</span>
 
-    <span class="k">def</span> <span class="nf">_default_trace_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_trace_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">NDArray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Default function of the chain state traced while sampling.&quot;&quot;&quot;</span>
         <span class="c1"># This needs to be a method rather than for example a local nested</span>
         <span class="c1"># function in the __set_sample_chains_kwargs_defaults method to ensure</span>
@@ -1598,7 +1578,7 @@ document.write(`
 
 <div class="viewcode-block" id="HamiltonianMonteCarlo.sample_chains">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.HamiltonianMonteCarlo.sample_chains">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample_chains</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_chains</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1752,7 +1732,7 @@ document.write(`
 
 <div class="viewcode-block" id="StaticMetropolisHMC">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.StaticMetropolisHMC">[docs]</a>
-<span class="k">class</span> <span class="nc">StaticMetropolisHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StaticMetropolisHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Static integration time HMC method with Metropolis sampling.</span>
 
 <span class="sd">    In each transition a trajectory is generated by integrating the Hamiltonian dynamics</span>
@@ -1776,7 +1756,7 @@ document.write(`
 <span class="sd">         Handbook of Markov Chain Monte Carlo, 2(11), p.2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -1807,12 +1787,12 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of integrator steps per integrator transition.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step</span>
 
     <span class="nd">@n_step</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;n_step must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1822,7 +1802,7 @@ document.write(`
 
 <div class="viewcode-block" id="RandomMetropolisHMC">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.RandomMetropolisHMC">[docs]</a>
-<span class="k">class</span> <span class="nc">RandomMetropolisHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RandomMetropolisHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Random integration time HMC method with Metropolis sampling of new state.</span>
 
 <span class="sd">    In each transition a trajectory is generated by integrating the Hamiltonian dynamics</span>
@@ -1848,7 +1828,7 @@ document.write(`
 <span class="sd">         Physics Letters B, 226(3-4), pp.369-371.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -1883,12 +1863,12 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Interval to uniformly draw number of integrator steps from.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">n_step_range</span>
 
     <span class="nd">@n_step_range</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">n_step_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">n_step_lower</span><span class="p">,</span> <span class="n">n_step_upper</span> <span class="o">=</span> <span class="n">value</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">n_step_lower</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">n_step_lower</span> <span class="o">&lt;</span> <span class="n">n_step_upper</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Range bounds must be non-negative and first entry less than last.&quot;</span>
@@ -1899,7 +1879,7 @@ document.write(`
 
 <div class="viewcode-block" id="DynamicMultinomialHMC">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.DynamicMultinomialHMC">[docs]</a>
-<span class="k">class</span> <span class="nc">DynamicMultinomialHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamicMultinomialHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration time HMC method with multinomial sampling from trajectory.</span>
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
@@ -1924,7 +1904,7 @@ document.write(`
 <span class="sd">         arXiv preprint arXiv:1701.02434.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -1989,31 +1969,31 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Maximum depth to expand trajectory binary tree to.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span>
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Change in Hamiltonian over trajectory to trigger divergence.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span>
 
     <span class="nd">@max_delta_h</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
 
 <div class="viewcode-block" id="DynamicSliceHMC">
 <a class="viewcode-back" href="../../mici.samplers.html#mici.samplers.DynamicSliceHMC">[docs]</a>
-<span class="k">class</span> <span class="nc">DynamicSliceHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamicSliceHMC</span><span class="p">(</span><span class="n">HamiltonianMonteCarlo</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration time HMC method with slice sampling from trajectory.</span>
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
@@ -2035,7 +2015,7 @@ document.write(`
 <span class="sd">         Journal of Machine Learning Research, 15(1), pp.1593-1623.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -2100,24 +2080,24 @@ document.write(`
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">integration_transition</span><span class="p">,</span> <span class="n">momentum_transition</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Maximum depth to expand trajectory binary tree to.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span>
 
     <span class="nd">@max_tree_depth</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_tree_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;max_tree_depth must be non-negative&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_tree_depth</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Change in Hamiltonian over trajectory to trigger divergence.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span>
 
     <span class="nd">@max_delta_h</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">max_delta_h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">[</span><span class="s2">&quot;integration_transition&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max_delta_h</span> <span class="o">=</span> <span class="n">value</span></div>
 
 </pre></div>
@@ -2149,8 +2129,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2183,7 +2163,8 @@ document.write(`
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>

@@ -15,24 +15,27 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
   
-  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
@@ -42,6 +45,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -57,19 +61,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -77,7 +70,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -85,8 +77,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -120,7 +112,7 @@
     
     
     <img src="../../_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <script>document.write(`<img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
+    <img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
   
   
 </a></div>
@@ -152,29 +144,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -199,15 +183,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -224,7 +204,8 @@ document.write(`
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -257,15 +238,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -289,9 +266,14 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -309,8 +291,6 @@ document.write(`
       
         <div class="header-article-item">
 
-
-
 <nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
@@ -322,7 +302,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mici.solvers</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mici.solvers</span></li>
   </ul>
 </nav>
 </div>
@@ -342,26 +322,26 @@ document.write(`
   <h1>Source code for mici.solvers</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Solvers for non-linear systems of equations for implicit integrators.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Protocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Protocol</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="n">ConvergenceError</span><span class="p">,</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvergenceError</span><span class="p">,</span> <span class="n">LinAlgError</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainState</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.systems</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">ConstrainedEuclideanMetricSystem</span><span class="p">,</span>
         <span class="n">ConstrainedTractableFlowSystem</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ScalarLike</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">ScalarLike</span>
 
 
 <div class="viewcode-block" id="euclidean_norm">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.euclidean_norm">[docs]</a>
-<span class="k">def</span> <span class="nf">euclidean_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">euclidean_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the Euclidean (L-2) norm of a vector.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">vct</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">**</span> <span class="mf">0.5</span></div>
 
@@ -369,7 +349,7 @@ document.write(`
 
 <div class="viewcode-block" id="maximum_norm">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.maximum_norm">[docs]</a>
-<span class="k">def</span> <span class="nf">maximum_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">maximum_norm</span><span class="p">(</span><span class="n">vct</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate the maximum (L-infinity) norm of a vector.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">vct</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
 
@@ -377,12 +357,12 @@ document.write(`
 
 <div class="viewcode-block" id="FixedPointSolver">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver">[docs]</a>
-<span class="k">class</span> <span class="nc">FixedPointSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FixedPointSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Solver for fixed point equation :code:`func(x) = x`.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="FixedPointSolver.__call__">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.FixedPointSolver.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span> <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">ScalarFunction</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve fixed point equation.</span>
@@ -400,7 +380,7 @@ document.write(`
 
 <div class="viewcode-block" id="solve_fixed_point_direct">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_fixed_point_direct">[docs]</a>
-<span class="k">def</span> <span class="nf">solve_fixed_point_direct</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_fixed_point_direct</span><span class="p">(</span>
     <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
     <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">convergence_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
@@ -445,7 +425,7 @@ document.write(`
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
     <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
@@ -453,7 +433,7 @@ document.write(`
 
 <div class="viewcode-block" id="solve_fixed_point_steffensen">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_fixed_point_steffensen">[docs]</a>
-<span class="k">def</span> <span class="nf">solve_fixed_point_steffensen</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_fixed_point_steffensen</span><span class="p">(</span>
     <span class="n">func</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
     <span class="n">x0</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="n">convergence_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-9</span><span class="p">,</span>
@@ -508,7 +488,7 @@ document.write(`
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of fixed point solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Fixed point iteration did not converge. Last error=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">.&quot;</span>
     <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
@@ -516,7 +496,7 @@ document.write(`
 
 <div class="viewcode-block" id="ProjectionSolver">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver">[docs]</a>
-<span class="k">class</span> <span class="nc">ProjectionSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProjectionSolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solver for projection on to manifold step in constrained integrator.</span>
 
 <span class="sd">    Solves an equation of the form</span>
@@ -534,7 +514,7 @@ document.write(`
 
 <div class="viewcode-block" id="ProjectionSolver.__call__">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.ProjectionSolver.__call__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
@@ -560,7 +540,7 @@ document.write(`
 
 <div class="viewcode-block" id="solve_projection_onto_manifold_quasi_newton">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_projection_onto_manifold_quasi_newton">[docs]</a>
-<span class="k">def</span> <span class="nf">solve_projection_onto_manifold_quasi_newton</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_projection_onto_manifold_quasi_newton</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -703,7 +683,7 @@ document.write(`
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of quasi-Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Quasi-Newton solver did not converge with </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -714,7 +694,7 @@ document.write(`
 
 <div class="viewcode-block" id="solve_projection_onto_manifold_newton">
 <a class="viewcode-back" href="../../mici.solvers.html#mici.solvers.solve_projection_onto_manifold_newton">[docs]</a>
-<span class="k">def</span> <span class="nf">solve_projection_onto_manifold_newton</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_projection_onto_manifold_newton</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -834,7 +814,7 @@ document.write(`
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Newton solver did not converge in </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -843,7 +823,7 @@ document.write(`
 
 
 
-<span class="k">def</span> <span class="nf">solve_projection_onto_manifold_newton_with_line_search</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_projection_onto_manifold_newton_with_line_search</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_prev</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">time_step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -980,7 +960,7 @@ document.write(`
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># Make robust to errors in intermediate linear algebra ops</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2"> at iteration </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> of Newton solver (</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">).&quot;</span>
-            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">ConvergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Newton solver did not converge in </span><span class="si">{</span><span class="n">max_iters</span><span class="si">}</span><span class="s2"> iterations. &quot;</span>
         <span class="sa">f</span><span class="s2">&quot;Last |constr|=</span><span class="si">{</span><span class="n">error</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2">, |delta_pos|=</span><span class="si">{</span><span class="n">norm</span><span class="p">(</span><span class="n">step_size</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">delta_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -1016,8 +996,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1050,7 +1030,8 @@ document.write(`
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>

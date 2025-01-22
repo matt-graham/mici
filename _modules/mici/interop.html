@@ -15,24 +15,27 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
   
-  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
@@ -42,6 +45,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -57,19 +61,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -77,7 +70,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -85,8 +77,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -120,7 +112,7 @@
     
     
     <img src="../../_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <script>document.write(`<img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
+    <img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
   
   
 </a></div>
@@ -152,29 +144,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -199,15 +183,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -224,7 +204,8 @@ document.write(`
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -257,15 +238,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -289,9 +266,14 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -309,8 +291,6 @@ document.write(`
       
         <div class="header-article-item">
 
-
-
 <nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
@@ -322,7 +302,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mici.interop</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mici.interop</span></li>
   </ul>
 </nav>
 </div>
@@ -342,25 +322,25 @@ document.write(`
   <h1>Source code for mici.interop</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Utilities for interfacing with external probabilistic programming libraries.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">importlib</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">mici</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mici</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
-    <span class="kn">import</span> <span class="nn">arviz</span>
-    <span class="kn">import</span> <span class="nn">pymc</span>
-    <span class="kn">import</span> <span class="nn">stan</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">arviz</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pymc</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">stan</span>
 
-    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainState</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">ArrayLike</span><span class="p">,</span>
         <span class="n">GradientFunction</span><span class="p">,</span>
         <span class="n">ScalarFunction</span><span class="p">,</span>
@@ -371,7 +351,7 @@ document.write(`
 
 <div class="viewcode-block" id="convert_to_inference_data">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.convert_to_inference_data">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_to_inference_data</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_to_inference_data</span><span class="p">(</span>
     <span class="n">traces</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]],</span>
     <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]],</span>
     <span class="n">energy_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;energy&quot;</span><span class="p">,</span>
@@ -403,7 +383,7 @@ document.write(`
 <span class="sd">        ArviZ inference data object with traced chain data stored in the `posterior`</span>
 <span class="sd">        group and additional chain statistics in the `sample_stats` group.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">arviz</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">arviz</span>
 
     <span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;n_steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;n_step&quot;</span><span class="p">)</span>
@@ -421,7 +401,7 @@ document.write(`
 
 <div class="viewcode-block" id="construct_pymc_model_functions">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.construct_pymc_model_functions">[docs]</a>
-<span class="k">def</span> <span class="nf">construct_pymc_model_functions</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">construct_pymc_model_functions</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">pymc</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">GradientFunction</span><span class="p">,</span> <span class="n">TraceFunction</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct functions for sampling from PyMC model using Mici.</span>
@@ -437,7 +417,7 @@ document.write(`
 <span class="sd">        position array argument and :code:`trace_func` a function which extract model</span>
 <span class="sd">        parameter values from chain state for tracing during sampling.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">pymc</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pymc</span>
 
     <span class="n">initial_point</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">initial_point</span><span class="p">()</span>
     <span class="n">raveled_initial_point</span> <span class="o">=</span> <span class="n">pymc</span><span class="o">.</span><span class="n">blocking</span><span class="o">.</span><span class="n">DictToArrayBijection</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">initial_point</span><span class="p">)</span>
@@ -445,15 +425,15 @@ document.write(`
     <span class="n">val_and_grad_log_dens</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">logp_dlogp_function</span><span class="p">()</span>
     <span class="n">val_and_grad_log_dens</span><span class="o">.</span><span class="n">set_extra_values</span><span class="p">({})</span>
 
-    <span class="k">def</span> <span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">val</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">grad</span><span class="p">,</span> <span class="o">-</span><span class="n">val</span>
 
-    <span class="k">def</span> <span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="n">val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">val_and_grad_log_dens</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">val</span>
 
-    <span class="k">def</span> <span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">raveled_vars</span> <span class="o">=</span> <span class="n">pymc</span><span class="o">.</span><span class="n">blocking</span><span class="o">.</span><span class="n">RaveledVars</span><span class="p">(</span>
             <span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">,</span>
             <span class="n">raveled_initial_point</span><span class="o">.</span><span class="n">point_map_info</span><span class="p">,</span>
@@ -478,7 +458,7 @@ document.write(`
 
 <div class="viewcode-block" id="sample_pymc_model">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.sample_pymc_model">[docs]</a>
-<span class="k">def</span> <span class="nf">sample_pymc_model</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_pymc_model</span><span class="p">(</span>
     <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">tune</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
@@ -557,7 +537,7 @@ document.write(`
 <span class="sd">        data stored in the :code:`posterior` group and additional chain statistics in</span>
 <span class="sd">        the :code:`sample_stats` group.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">pymc</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">pymc</span>
 
     <span class="k">if</span> <span class="n">return_inferencedata</span> <span class="ow">and</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;arviz&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot return InferenceData as ArviZ is not installed&quot;</span>
@@ -635,7 +615,7 @@ document.write(`
 
 <div class="viewcode-block" id="get_stan_model_unconstrained_param_dim">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.get_stan_model_unconstrained_param_dim">[docs]</a>
-<span class="k">def</span> <span class="nf">get_stan_model_unconstrained_param_dim</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">stan</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_stan_model_unconstrained_param_dim</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">stan</span><span class="o">.</span><span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get total dimension of unconstrained parameters in Stan model.</span>
 
 <span class="sd">    Args:</span>
@@ -659,7 +639,7 @@ document.write(`
 
 <div class="viewcode-block" id="construct_stan_model_functions">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.construct_stan_model_functions">[docs]</a>
-<span class="k">def</span> <span class="nf">construct_stan_model_functions</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">construct_stan_model_functions</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">stan</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ScalarFunction</span><span class="p">,</span> <span class="n">GradientFunction</span><span class="p">,</span> <span class="n">TraceFunction</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct functions for sampling from Stan model using Mici.</span>
@@ -676,15 +656,15 @@ document.write(`
 <span class="sd">        parameter values from chain state for tracing during sampling.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">grad_neg_log_dens</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grad_log_prob</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
 
     <span class="n">param_size_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">dims</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trace_func</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">param_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">constrain_pars</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">pos</span><span class="p">)))</span>
         <span class="n">trace_dict</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">name</span><span class="p">:</span> <span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
@@ -704,7 +684,7 @@ document.write(`
 
 <div class="viewcode-block" id="sample_stan_model">
 <a class="viewcode-back" href="../../mici.interop.html#mici.interop.sample_stan_model">[docs]</a>
-<span class="k">def</span> <span class="nf">sample_stan_model</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_stan_model</span><span class="p">(</span>
     <span class="n">model_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -777,7 +757,7 @@ document.write(`
 <span class="sd">        with traced chain data stored in the `posterior` group and additional chain</span>
 <span class="sd">        statistics in the `sample_stats` group.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">stan</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">stan</span>
 
     <span class="k">if</span> <span class="n">return_inferencedata</span> <span class="ow">and</span> <span class="n">importlib</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">find_spec</span><span class="p">(</span><span class="s2">&quot;arviz&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot return InferenceData as ArviZ is not installed&quot;</span>
@@ -875,8 +855,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -909,7 +889,8 @@ document.write(`
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>

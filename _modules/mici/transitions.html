@@ -15,24 +15,27 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
   
-  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
@@ -42,6 +45,7 @@
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -57,19 +61,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../../search.html"
       method="get">
@@ -77,7 +70,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -85,8 +77,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -120,7 +112,7 @@
     
     
     <img src="../../_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <script>document.write(`<img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark" alt="Mici 0.2.0 documentation - Home"/>`);</script>
+    <img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
   
   
 </a></div>
@@ -152,29 +144,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
         <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -199,15 +183,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -224,7 +204,8 @@ document.write(`
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -257,15 +238,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
           <div class="navbar-item"><ul class="navbar-icon-links"
     aria-label="Icon Links">
@@ -289,9 +266,14 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -309,8 +291,6 @@ document.write(`
       
         <div class="header-article-item">
 
-
-
 <nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
@@ -322,7 +302,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">mici.transitions</li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mici.transitions</span></li>
   </ul>
 </nav>
 </div>
@@ -342,37 +322,37 @@ document.write(`
   <h1>Source code for mici.transitions</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Markov transition kernels.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">abstractproperty</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">mici.errors</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.errors</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ConvergenceError</span><span class="p">,</span>
     <span class="n">Error</span><span class="p">,</span>
     <span class="n">HamiltonianDivergenceError</span><span class="p">,</span>
     <span class="n">IntegratorError</span><span class="p">,</span>
     <span class="n">NonReversibleStepError</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">mici.utils</span> <span class="kn">import</span> <span class="n">LogRepFloat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mici.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogRepFloat</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">Generator</span>
-    <span class="kn">from</span> <span class="nn">numpy.typing</span> <span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.random</span><span class="w"> </span><span class="kn">import</span> <span class="n">Generator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
 
-    <span class="kn">from</span> <span class="nn">mici.integrators</span> <span class="kn">import</span> <span class="n">Integrator</span>
-    <span class="kn">from</span> <span class="nn">mici.states</span> <span class="kn">import</span> <span class="n">ChainState</span>
-    <span class="kn">from</span> <span class="nn">mici.systems</span> <span class="kn">import</span> <span class="n">System</span>
-    <span class="kn">from</span> <span class="nn">mici.types</span> <span class="kn">import</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">TerminationCriterion</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.integrators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Integrator</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.states</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChainState</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.systems</span><span class="w"> </span><span class="kn">import</span> <span class="n">System</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">TerminationCriterion</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_process_integrator_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">Error</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_process_integrator_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">Error</span><span class="p">,</span> <span class="n">stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Terminating trajectory due to error:</span><span class="se">\n</span><span class="si">{</span><span class="n">exception</span><span class="si">!s}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1"># Only set stats fields to True if exception is of matching type.</span>
     <span class="c1"># Corresponding fields should be set to False by default for transitions</span>
@@ -387,18 +367,18 @@ document.write(`
 
 <div class="viewcode-block" id="Transition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.Transition">[docs]</a>
-<span class="k">class</span> <span class="nc">Transition</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Transition</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for Markov transition kernels.</span>
 
 <span class="sd">    Defines expected interface for transitions by sampler classes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@abstractproperty</span>
-    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A set of names of state variables accessed by this transition.&quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A dictionary describing the statistics computed during transition.</span>
 
 <span class="sd">        Either :code:`None` if no statistics are returned by :py:meth:`sample` method or</span>
@@ -413,7 +393,7 @@ document.write(`
 <div class="viewcode-block" id="Transition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.Transition.sample">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -434,7 +414,7 @@ document.write(`
 
 <div class="viewcode-block" id="MomentumTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MomentumTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">MomentumTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MomentumTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for momentum transitions.</span>
 
 <span class="sd">    Markov transition  kernel which leaves the conditional distribution on the momentum</span>
@@ -443,10 +423,10 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mom&quot;</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
@@ -457,7 +437,7 @@ document.write(`
 <div class="viewcode-block" id="MomentumTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MomentumTransition.sample">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -482,7 +462,7 @@ document.write(`
 
 <div class="viewcode-block" id="IndependentMomentumTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IndependentMomentumTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">IndependentMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IndependentMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Independent momentum transition.</span>
 
 <span class="sd">    Independently resamples the momentum component of the state from its conditional</span>
@@ -491,7 +471,7 @@ document.write(`
 
 <div class="viewcode-block" id="IndependentMomentumTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IndependentMomentumTransition.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -504,7 +484,7 @@ document.write(`
 
 <div class="viewcode-block" id="CorrelatedMomentumTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.CorrelatedMomentumTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">CorrelatedMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CorrelatedMomentumTransition</span><span class="p">(</span><span class="n">MomentumTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Correlated (partial) momentum transition.</span>
 
 <span class="sd">    Rather than independently sampling a new momentum, instead a pertubative</span>
@@ -532,7 +512,7 @@ document.write(`
 <span class="sd">         B, 268(CERN-TH-6172-91), pp.247-252.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">mom_resample_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">mom_resample_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system defining conditional distribution on momentum to</span>
@@ -548,7 +528,7 @@ document.write(`
 
 <div class="viewcode-block" id="CorrelatedMomentumTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.CorrelatedMomentumTransition.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -566,7 +546,7 @@ document.write(`
 
 <div class="viewcode-block" id="IntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">IntegrationTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IntegrationTransition</span><span class="p">(</span><span class="n">Transition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for integration transtions.</span>
 
 <span class="sd">    Markov transition kernel which leaves canonical distribution invariant and jointly</span>
@@ -575,14 +555,14 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pos&quot;</span><span class="p">,</span> <span class="s2">&quot;mom&quot;</span><span class="p">,</span> <span class="s2">&quot;dir&quot;</span><span class="p">}</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">statistic_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">DTypeLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -602,7 +582,7 @@ document.write(`
 <div class="viewcode-block" id="IntegrationTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.IntegrationTransition.sample">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -627,7 +607,7 @@ document.write(`
 
 <div class="viewcode-block" id="MetropolisIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">MetropolisIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetropolisIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base for HMC methods using a Metropolis accept step to sample new state.</span>
 
 <span class="sd">    In each transition a trajectory is generated by integrating the Hamiltonian dynamics</span>
@@ -642,11 +622,11 @@ document.write(`
 <span class="sd">    integration direction will be the negation of its initial value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;metrop_accept_prob&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_sample_n_step</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sample_n_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -692,7 +672,7 @@ document.write(`
 
 <div class="viewcode-block" id="MetropolisStaticIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisStaticIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">MetropolisStaticIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetropolisStaticIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Static integration transition with Metropolis sampling of new state.</span>
 
 <span class="sd">    In this variant the trajectory is generated by integrating the state through time a</span>
@@ -707,7 +687,7 @@ document.write(`
 <span class="sd">         Monte Carlo, 2(11), p.2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span> <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span> <span class="n">n_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Args:</span>
 <span class="sd">            system: Hamiltonian system to be simulated.</span>
@@ -723,7 +703,7 @@ document.write(`
 
 <div class="viewcode-block" id="MetropolisStaticIntegrationTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisStaticIntegrationTransition.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -735,7 +715,7 @@ document.write(`
 
 <div class="viewcode-block" id="MetropolisRandomIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisRandomIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">MetropolisRandomIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetropolisRandomIntegrationTransition</span><span class="p">(</span><span class="n">MetropolisIntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Random integration transition with Metropolis sampling of new state.</span>
 
 <span class="sd">    In each transition a trajectory is generated by integrating the state in the current</span>
@@ -752,7 +732,7 @@ document.write(`
 <span class="sd">         B, 226(3-4), pp.369-371.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -778,7 +758,7 @@ document.write(`
 
 <div class="viewcode-block" id="MetropolisRandomIntegrationTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MetropolisRandomIntegrationTransition.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -791,7 +771,7 @@ document.write(`
 
 <div class="viewcode-block" id="euclidean_no_u_turn_criterion">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.euclidean_no_u_turn_criterion">[docs]</a>
-<span class="k">def</span> <span class="nf">euclidean_no_u_turn_criterion</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">euclidean_no_u_turn_criterion</span><span class="p">(</span>
     <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
     <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
@@ -828,7 +808,7 @@ document.write(`
 
 <div class="viewcode-block" id="riemannian_no_u_turn_criterion">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.riemannian_no_u_turn_criterion">[docs]</a>
-<span class="k">def</span> <span class="nf">riemannian_no_u_turn_criterion</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">riemannian_no_u_turn_criterion</span><span class="p">(</span>
     <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
     <span class="n">state_1</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
     <span class="n">state_2</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
@@ -867,7 +847,7 @@ document.write(`
 
 
 
-<span class="k">class</span> <span class="nc">_SubTree</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_SubTree</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sub-tree of binary trajectory tree for dynamic integration transitions.&quot;&quot;&quot;</span>
 
     <span class="n">negative</span><span class="p">:</span> <span class="n">ChainState</span>
@@ -879,7 +859,7 @@ document.write(`
 
 <div class="viewcode-block" id="DynamicIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.DynamicIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">DynamicIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamicIntegrationTransition</span><span class="p">(</span><span class="n">IntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for dynamic integration transitions.</span>
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
@@ -897,7 +877,7 @@ document.write(`
 <span class="sd">         arXiv preprint arXiv:1701.02434.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">system</span><span class="p">:</span> <span class="n">System</span><span class="p">,</span>
         <span class="n">integrator</span><span class="p">:</span> <span class="n">Integrator</span><span class="p">,</span>
@@ -953,7 +933,7 @@ document.write(`
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;tree_depth&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_statistic_types</span><span class="p">[</span><span class="s2">&quot;diverging&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_termination_criterion</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_termination_criterion</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span>
         <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span>
@@ -984,7 +964,7 @@ document.write(`
             <span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_new_leave</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_new_leave</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
@@ -998,7 +978,7 @@ document.write(`
             <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_merge_subtrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_subtrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">neg_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">,</span> <span class="n">pos_subtree</span><span class="p">:</span> <span class="n">_SubTree</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_SubTree</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">!=</span> <span class="n">pos_subtree</span><span class="o">.</span><span class="n">depth</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot merge subtrees of different depths.&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1010,7 +990,7 @@ document.write(`
             <span class="n">depth</span><span class="o">=</span><span class="n">neg_subtree</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_aux_vars</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>  <span class="c1"># noqa: ARG002</span>
@@ -1018,7 +998,7 @@ document.write(`
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;h_init&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">state</span><span class="p">)}</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
@@ -1026,7 +1006,7 @@ document.write(`
         <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_ratio</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
@@ -1034,10 +1014,10 @@ document.write(`
         <span class="k">pass</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_tree</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
@@ -1102,7 +1082,7 @@ document.write(`
 
 <div class="viewcode-block" id="DynamicIntegrationTransition.sample">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.DynamicIntegrationTransition.sample">[docs]</a>
-    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -1171,7 +1151,7 @@ document.write(`
 
 <div class="viewcode-block" id="MultinomialDynamicIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.MultinomialDynamicIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">MultinomialDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MultinomialDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration transition with multinomial sampling of new state.</span>
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
@@ -1190,21 +1170,21 @@ document.write(`
 <span class="sd">         arXiv preprint arXiv:1701.02434.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>  <span class="c1"># noqa: ARG002</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">LogRepFloat</span><span class="p">(</span><span class="n">log_val</span><span class="o">=-</span><span class="n">h</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_ratio</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;h_init&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
@@ -1213,7 +1193,7 @@ document.write(`
 
 <div class="viewcode-block" id="SliceDynamicIntegrationTransition">
 <a class="viewcode-back" href="../../mici.transitions.html#mici.transitions.SliceDynamicIntegrationTransition">[docs]</a>
-<span class="k">class</span> <span class="nc">SliceDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SliceDynamicIntegrationTransition</span><span class="p">(</span><span class="n">DynamicIntegrationTransition</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamic integration transition with slice sampling of new state.</span>
 
 <span class="sd">    In each transition a binary tree of states is recursively computed by integrating</span>
@@ -1233,7 +1213,7 @@ document.write(`
 <span class="sd">         15(1), pp.1593-1623.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_init_aux_vars</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_aux_vars</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">ChainState</span><span class="p">,</span>
         <span class="n">rng</span><span class="p">:</span> <span class="n">Generator</span><span class="p">,</span>
@@ -1242,21 +1222,21 @@ document.write(`
         <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span> <span class="o">-</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;h_init&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">aux_vars</span>
 
-    <span class="k">def</span> <span class="nf">_weight_function</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_function</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">_weight_ratio</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_weight_ratio</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">numerator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
         <span class="n">denominator</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScalarLike</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">denominator</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">numerator</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_divergence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">ScalarLike</span><span class="p">,</span> <span class="n">aux_vars</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">h</span> <span class="o">+</span> <span class="n">aux_vars</span><span class="p">[</span><span class="s2">&quot;log_u&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_delta_h</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;delta_h = </span><span class="si">{</span><span class="n">h</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">aux_vars</span><span class="p">[</span><span class="s1">&#39;log_u&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="n">HamiltonianDivergenceError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
@@ -1290,8 +1270,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1324,7 +1304,8 @@ document.write(`
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>
