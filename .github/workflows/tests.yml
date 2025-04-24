@@ -29,6 +29,7 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
 
     steps:
       - name: Checkout source
@@ -52,3 +53,8 @@ jobs:
 
       - name: Test with tox
         run: tox
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

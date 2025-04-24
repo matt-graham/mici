@@ -13,6 +13,7 @@
 [![Test status](https://github.com/matt-graham/mici/actions/workflows/tests.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/tests.yml)
 [![Linting status](https://github.com/matt-graham/mici/actions/workflows/linting.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/linting.yml)
 [![Docs status](https://github.com/matt-graham/mici/actions/workflows/docs.yml/badge.svg)](https://github.com/matt-graham/mici/actions/workflows/docs.yml)
+[![codecov](https://codecov.io/gh/matt-graham/mici/graph/badge.svg?token=YXC1A7WONK)](https://codecov.io/gh/matt-graham/mici)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 </div>
