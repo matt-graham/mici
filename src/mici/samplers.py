@@ -9,6 +9,7 @@ import tempfile
 from contextlib import ExitStack, contextmanager, nullcontext
 from pathlib import Path
 from pickle import PicklingError
+from queue import Queue
 from typing import TYPE_CHECKING, NamedTuple, TypeVar
 from warnings import warn
 
@@ -58,13 +59,15 @@ if TYPE_CHECKING:
 # Preferentially import from multiprocess library if available as able to
 # serialize much wider range of types including autograd functions
 try:
-    from multiprocess import Pool, Queue
+    from multiprocess import Pool
     from multiprocess.managers import SyncManager
+    from multiprocess.pool import ThreadPool
 
     MULTIPROCESS_AVAILABLE = True
 except ImportError:
-    from multiprocessing import Pool, Queue
+    from multiprocessing import Pool
     from multiprocessing.managers import SyncManager
+    from multiprocessing.pool import ThreadPool
 
     MULTIPROCESS_AVAILABLE = False
 
@@ -96,7 +99,7 @@ def _ignore_sigint_manager() -> None:
 
 
 @contextmanager
-def _pool_context_manager(n_process: int) -> None:
+def _pool_context_manager(n_process: int, *, use_thread_pool: bool = False) -> None:
     """Context-manager for process pool that ensures clean exiting.
 
     Compared to built-in context-manager protocol implementation on Pool object which
@@ -105,7 +108,7 @@ def _pool_context_manager(n_process: int) -> None:
     additional jobs being submitted to pool, and then `join` to wait for processes to
     exit.
     """
-    pool = Pool(n_process)
+    pool = ThreadPool(n_process) if use_thread_pool else Pool(n_process)
     try:
         yield pool
     finally:
@@ -698,12 +701,17 @@ def _sample_chains_parallel(
     chain_iterators: Iterable[ChainIterator],
     per_chain_kwargs: Iterable[dict],
     n_process: int,
+    *,
+    use_thread_pool: bool,
     **common_kwargs,
 ) -> tuple[list[ChainState], dict[str, list[list[AdapterState]]], Exception | None]:
     """Sample multiple chains in parallel over multiple processes."""
     n_iters = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
-    with _ignore_sigint_manager() as manager, _pool_context_manager(n_process) as pool:
+    with (
+        _ignore_sigint_manager() as manager,
+        _pool_context_manager(n_process, use_thread_pool) as pool,
+    ):
         results = None
         exception = None
         try:
@@ -876,6 +884,7 @@ class MarkovChainMonteCarloMethod:
         adapters: dict[str, Sequence[Adapter]] | None = None,
         stager: Stager | None = None,
         n_process: int | None = 1,
+        use_thread_pool: bool = False,
         trace_warm_up: bool = False,
         max_threads_per_process: int | None = None,
         force_memmap: bool = False,
@@ -1048,6 +1057,7 @@ class MarkovChainMonteCarloMethod:
             else:
                 # Run chains in parallel using a multiprocess(ing).Pool
                 common_kwargs["n_process"] = n_process
+                common_kwargs["use_thread_pool"] = use_thread_pool
                 common_kwargs["max_threads_per_process"] = max_threads_per_process
                 sample_chains_func = _sample_chains_parallel
             if stager is None:
