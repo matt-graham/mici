@@ -121,7 +121,8 @@ class MarkovChainMonteCarloMethodTests:
     @pytest.mark.parametrize("n_warm_up_iter", [0, 2])
     @pytest.mark.parametrize("n_main_iter", [0, 2])
     @pytest.mark.parametrize("trace_warm_up", [True, False])
-    @pytest.mark.parametrize("n_process", [1, N_CHAIN])
+    @pytest.mark.parametrize("n_worker", [1, N_CHAIN])
+    @pytest.mark.parametrize("use_thread_pool", [False, True])
     def test_sample_chains(
         self,
         sampler,
@@ -130,7 +131,8 @@ class MarkovChainMonteCarloMethodTests:
         init_states,
         trace_funcs,
         trace_warm_up,
-        n_process,
+        n_worker,
+        use_thread_pool,
         kwargs,
     ):
         final_states, traces, stats = sampler.sample_chains(
@@ -139,7 +141,8 @@ class MarkovChainMonteCarloMethodTests:
             init_states=init_states,
             trace_funcs=trace_funcs,
             trace_warm_up=trace_warm_up,
-            n_process=n_process,
+            n_worker=n_worker,
+            use_thread_pool=use_thread_pool,
             **kwargs,
         )
         trace_vars = {}

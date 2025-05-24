@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import logging
 import queue
-import signal
 import tempfile
-from contextlib import ExitStack, contextmanager, nullcontext
+from contextlib import ExitStack, nullcontext
+from copy import deepcopy
 from pathlib import Path
 from pickle import PicklingError
 from queue import Queue
@@ -80,40 +80,6 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
-
-
-def _ignore_sigint_initializer() -> None:
-    """Initializer for processes to force ignoring SIGINT interrupt signals."""
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-@contextmanager
-def _ignore_sigint_manager() -> None:
-    """Context-managed SyncManager which ignores SIGINT interrupt signals."""
-    manager = SyncManager()
-    try:
-        manager.start(_ignore_sigint_initializer)
-        yield manager
-    finally:
-        manager.shutdown()
-
-
-@contextmanager
-def _pool_context_manager(n_process: int, *, use_thread_pool: bool = False) -> None:
-    """Context-manager for process pool that ensures clean exiting.
-
-    Compared to built-in context-manager protocol implementation on Pool object which
-    calls the `terminate` method on exit which immediately stops the worker processes,
-    this manager instead ensures a clean exit by calling `close` to prevent any
-    additional jobs being submitted to pool, and then `join` to wait for processes to
-    exit.
-    """
-    pool = ThreadPool(n_process) if use_thread_pool else Pool(n_process)
-    try:
-        yield pool
-    finally:
-        pool.close()
-        pool.join()
 
 
 def _get_valid_filename(string: str) -> str:
@@ -639,7 +605,7 @@ def _sample_chains_worker(
     while not chain_queue.empty():
         try:
             chain_index, n_iter, chain_kwargs = chain_queue.get(block=False)
-            max_threads = common_kwargs.pop("max_threads_per_process", None)
+            max_threads = common_kwargs.pop("max_threads_per_worker", None)
             context = (
                 threadpool_limits(limits=max_threads)
                 if THREADPOOLCTL_AVAILABLE
@@ -700,26 +666,26 @@ def _finalize_adapters(
 def _sample_chains_parallel(
     chain_iterators: Iterable[ChainIterator],
     per_chain_kwargs: Iterable[dict],
-    n_process: int,
+    n_worker: int,
     *,
     use_thread_pool: bool,
     **common_kwargs,
 ) -> tuple[list[ChainState], dict[str, list[list[AdapterState]]], Exception | None]:
-    """Sample multiple chains in parallel over multiple processes."""
+    """Sample multiple chains in parallel over multiple processes or threads."""
     n_iters = [len(it) for it in chain_iterators]
     n_chain = len(chain_iterators)
     with (
-        _ignore_sigint_manager() as manager,
-        _pool_context_manager(n_process, use_thread_pool) as pool,
+        nullcontext(queue) if use_thread_pool else SyncManager() as queue_factory,
+        ThreadPool(n_worker) if use_thread_pool else Pool(n_worker) as pool,
     ):
         results = None
         exception = None
         try:
             # Shared queue for workers to output chain progress updates to
-            iter_queue = manager.Queue()
+            iter_queue = queue_factory.Queue()
             # Shared queue for workers to get arguments for _sample_chain calls
             # from on initialising each chain
-            chain_queue = manager.Queue()
+            chain_queue = queue_factory.Queue()
             for c, (chain_kwargs, n_iter) in enumerate(
                 zip(per_chain_kwargs, n_iters, strict=True),
             ):
@@ -732,11 +698,11 @@ def _sample_chains_parallel(
                     chain_kwargs["chain_traces"],
                 )
                 chain_queue.put((c, n_iter, chain_kwargs))
-            # Start n_process worker processes which each have access to the
+            # Start n_worker workers which each have access to the
             # shared queues, returning results asynchronously
             results = pool.starmap_async(
                 _sample_chains_worker,
-                [(chain_queue, iter_queue, common_kwargs) for p in range(n_process)],
+                [(chain_queue, iter_queue, common_kwargs) for p in range(n_worker)],
             )
             # Start loop to use chain progress updates outputted to iter_queue
             # by worker processes to update progress bars, using an ExitStack
@@ -780,8 +746,8 @@ def _sample_chains_parallel(
                 isinstance(e, PicklingError) or "pickle" in str(e)
             ):
                 msg = (
-                    "Error encountered while trying to run chains on multipleprocesses "
-                    "in parallel. The inbuilt multiprocessing module uses pickle to "
+                    "Error encountered while trying to run chains on multiple processes"
+                    " in parallel. The inbuilt multiprocessing module uses pickle to "
                     "communicate between processes and pickle does support pickling "
                     "anonymous or nested functions. If you use anonymous or nested "
                     "functions in your model functions or are using autograd to "
@@ -793,9 +759,6 @@ def _sample_chains_parallel(
                 )
                 raise RuntimeError(msg) from e
             raise
-        except KeyboardInterrupt as e:
-            # Interrupts handled in child processes therefore ignore here
-            exception = e
         if results is not None:
             # Join all output lists from per-process workers in to single list
             indexed_chain_outputs = [r for res in results.get() for r in res]
@@ -883,10 +846,10 @@ class MarkovChainMonteCarloMethod:
         trace_funcs: Sequence[TraceFunction] | None = None,
         adapters: dict[str, Sequence[Adapter]] | None = None,
         stager: Stager | None = None,
-        n_process: int | None = 1,
+        n_worker: int | None = 1,
         use_thread_pool: bool = False,
         trace_warm_up: bool = False,
-        max_threads_per_process: int | None = None,
+        max_threads_per_worker: int | None = None,
         force_memmap: bool = False,
         memmap_path: str | None = None,
         monitor_stats: dict[str, list[str]] | None = None,
@@ -948,22 +911,32 @@ class MarkovChainMonteCarloMethod:
                 arguments) will be used, corresponding to using multiple adaptive warm
                 up stages with only the fast-type adapters active in some - see
                 documentation of :py:class:`mici.stagers.WarmUpStager` for details.
-            n_process: Number of parallel processes to run chains over. If
-                :code:`n_process=1` then chains will be run sequentially otherwise a
-                :py:class:`multiprocessing.Pool` object will be used to dynamically
-                assign the chains across multiple processes. If set to :code:`None` then
-                the number of processes will be set to the output of
-                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.
+            n_worker: Number of parallel workers (processes or threads) to run chains
+                over. If :code:`n_worker=1` then chains will be run sequentially
+                otherwise a :py:class:`multiprocessing.Pool` or
+                :py:class:`multiprocessing.pool.ThreadPool` object will be used to
+                dynamically assign the chains across multiple workers, with the pool
+                type determined by the value of the :code:`use_thread_pool` argument. If
+                set to :code:`None` then the number of workers will be set to the output
+                of :py:func:`os.cpu_count()`. Default is :code:`n_workers=1`.
+            use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
+                a pool of processes (:code:`False`) to run chain in parallel over. For
+                non free-threading builds of Python, the global interpreter lock means
+                that only one thread can execute Python bytecode at a time, so running
+                across multiple processes should be preferred where possible for
+                CPU-bound tasks. In free-threaded Python builds however using a pool of
+                threads can however sidestep incompatibility issues between the
+                `multiprocessing` module and numerical backends such as JAX.
             trace_warm_up: Whether to record chain traces and statistics during warm-up
                 stage iterations (:code:`True`) or only record traces and statistics in
                 the iterations of the final non-adaptive stage (:code:`False`, the
                 default).
-            max_threads_per_process: If :py:mod:`threadpoolctl` is available this
+            max_threads_per_worker: If :py:mod:`threadpoolctl` is available this
                 argument may be used to limit the maximum number of threads that can be
                 used in thread pools used in libraries supported by
                 :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.
-                This argument will only have an effect if :code:`n_process > 1` such
-                that chains are being run on multiple processes and only if
+                This argument will only have an effect if :code:`n_worker > 1` such
+                that chains are being run on multiple processes / threads and only if
                 :py:mod:`threadpoolctl` is installed in the current Python environment.
                 If set to :code:`None` (the default) no limits are set.
             force_memmap: Whether to force arrays used to store chain data to be
@@ -1013,8 +986,8 @@ class MarkovChainMonteCarloMethod:
             for state in init_states
         ]
         # memory-mapping of chain data used if force_memmap flag set or sampling chains
-        # in parallel
-        use_memmap = force_memmap or n_process > 1
+        # in parallel on multiple processes
+        use_memmap = force_memmap or (n_worker > 1 and not use_thread_pool)
         # use context-manager to ensure any temporary directory created for memory-maps
         # deleted before exiting
         if use_memmap and memmap_path is None:
@@ -1048,17 +1021,16 @@ class MarkovChainMonteCarloMethod:
                 _zip_dict(**{k: _zip_dict(**v) for k, v in stats.items()}),
             )
             common_kwargs = {
-                "transitions": self.transitions,
                 "monitor_stats": monitor_stats,
             }
-            if n_process == 1:
+            if n_worker == 1:
                 # Using single process therefore run chains sequentially
                 sample_chains_func = _sample_chains_sequential
             else:
                 # Run chains in parallel using a multiprocess(ing).Pool
-                common_kwargs["n_process"] = n_process
+                common_kwargs["n_worker"] = n_worker
                 common_kwargs["use_thread_pool"] = use_thread_pool
-                common_kwargs["max_threads_per_process"] = max_threads_per_process
+                common_kwargs["max_threads_per_worker"] = max_threads_per_worker
                 sample_chains_func = _sample_chains_parallel
             if stager is None:
                 # use single warm-up stage stager if no adapters or all fast type
@@ -1109,6 +1081,12 @@ class MarkovChainMonteCarloMethod:
                                 if stage.record_stats
                                 else [None] * n_chain
                             ),
+                            # Having shared transitions for all chains seems to limit
+                            # performance when parallelising with thread pool therefore
+                            # create per-chain copies
+                            transitions=[
+                                deepcopy(self.transitions) for _ in range(n_chain)
+                            ],
                         ),
                         sampling_index_offset=sampling_index_offset,
                         trace_funcs=stage.trace_funcs,
@@ -1324,22 +1302,32 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 arguments) will be used, corresponding to using multiple adaptive warm
                 up stages with only the fast-type adapters active in some - see
                 documentation of :py:class:`mici.stagers.WarmUpStager` for details.
-            n_process: Number of parallel processes to run chains over. If
-                :code:`n_process=1` then chains will be run sequentially otherwise a
-                :py:class:`multiprocessing.Pool` object will be used to dynamically
-                assign the chains across multiple processes. If set to :code:`None` then
-                the number of processes will be set to the output of
-                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.
+            n_worker: Number of parallel workers (processes or threads) to run chains
+                over. If :code:`n_worker=1` then chains will be run sequentially
+                otherwise a :py:class:`multiprocessing.Pool` or
+                :py:class:`multiprocessing.pool.ThreadPool` object will be used to
+                dynamically assign the chains across multiple workers, with the pool
+                type determined by the value of the :code:`use_thread_pool` argument. If
+                set to :code:`None` then the number of workers will be set to the output
+                of :py:func:`os.cpu_count()`. Default is :code:`n_workers=1`.
+            use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
+                a pool of processes (:code:`False`) to run chain in parallel over. For
+                non free-threading builds of Python, the global interpreter lock means
+                that only one thread can execute Python bytecode at a time, so running
+                across multiple processes should be preferred where possible for
+                CPU-bound tasks. In free-threaded Python builds however using a pool of
+                threads can however sidestep incompatibility issues between the
+                `multiprocessing` module and numerical backends such as JAX.
             trace_warm_up: Whether to record chain traces and statistics during warm-up
                 stage iterations (:code:`True`) or only record traces and statistics in
                 the iterations of the final non-adaptive stage (:code:`False`, the
                 default).
-            max_threads_per_process: If :py:mod:`threadpoolctl` is available this
+            max_threads_per_worker: If :py:mod:`threadpoolctl` is available this
                 argument may be used to limit the maximum number of threads that can be
                 used in thread pools used in libraries supported by
                 :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.
-                This argument will only have an effect if :code:`n_process > 1` such
-                that chains are being run on multiple processes and only if
+                This argument will only have an effect if :code:`n_worker > 1` such
+                that chains are being run on multiple processes / threads and only if
                 :py:mod:`threadpoolctl` is installed in the current Python environment.
                 If set to :code:`None` (the default) no limits are set.
             force_memmap: Whether to force arrays used to store chain data to be
