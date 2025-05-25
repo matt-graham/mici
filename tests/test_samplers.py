@@ -113,6 +113,23 @@ def test_random_state_raises_deprecation_warning():
         mici.samplers.MarkovChainMonteCarloMethod(rng=rng, transitions={})
 
 
+def test_sample_chains_with_n_process_raises_deprecation_warning(
+    system,
+    integrator,
+    rng,
+):
+    n_chain = 2
+    init_states = rng.standard_normal((n_chain, 1))
+    sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
+    with pytest.deprecated_call():
+        sampler.sample_chains(
+            n_warm_up_iter=1,
+            n_main_iter=1,
+            init_states=init_states,
+            n_process=n_chain,
+        )
+
+
 class MarkovChainMonteCarloMethodTests:
     def test_sampler_attributes(self, sampler, rng):
         assert sampler.rng is rng
@@ -191,19 +208,6 @@ class MarkovChainMonteCarloMethodTests:
             else:
                 assert trans_stats.keys() == statistic_types.keys()
                 self.check_trans_stats_dict(trans_stats, n_iter, statistic_types)
-
-    def test_sample_chains_with_n_process_raises_deprecation_warning(
-        self,
-        sampler,
-        init_states,
-    ):
-        with pytest.deprecated_call():
-            sampler.sample_chains(
-                n_warm_up_iter=1,
-                n_main_iter=1,
-                init_states=init_states,
-                n_process=2,
-            )
 
 
 class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
