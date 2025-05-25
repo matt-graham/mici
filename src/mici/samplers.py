@@ -800,7 +800,7 @@ def _check_n_process_and_n_worker_args(
             # os.process_cpu_count only added in Python 3.13 so try to use but
             # fallback to os.cpu_count if not available
             n_worker = os.process_cpu_count()
-        except NameError:
+        except AttributeError:
             n_worker = os.cpu_count()
     return n_worker
 
