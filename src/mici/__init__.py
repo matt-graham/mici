@@ -14,3 +14,4 @@ import mici.stagers
 import mici.states
 import mici.systems
 import mici.transitions
+from mici.interface import sample_constrained_hmc_chains, sample_hmc_chains
