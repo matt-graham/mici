@@ -70,7 +70,6 @@ documentation = "https://matt-graham.github.io/mici"
 homepage = "https://github.com/matt-graham/mici"
 
 [tool.coverage]
-report = {skip_covered = true, sort = "cover"}
 run = {branch = true, parallel = true, relative_files = true, source = [
   "mici"
 ]}
@@ -78,6 +77,13 @@ paths.source = [
   "src",
   ".tox*/*/lib/python*/site-packages"
 ]
+
+[tool.coverage.report]
+exclude_also = [
+  "if TYPE_CHECKING:"
+]
+skip_covered = true
+sort = "cover"
 
 [tool.pytest.ini_options]
 addopts = "--color=yes -v"
