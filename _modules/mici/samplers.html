@@ -325,12 +325,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExitStack</span><span class="p">,</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">nullcontext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExitStack</span><span class="p">,</span> <span class="n">nullcontext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pickle</span><span class="w"> </span><span class="kn">import</span> <span class="n">PicklingError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">queue</span><span class="w"> </span><span class="kn">import</span> <span class="n">Queue</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypeVar</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 
@@ -359,6 +361,7 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span><span class="p">,</span> <span class="n">NDArray</span>
 
@@ -380,13 +383,15 @@
 <span class="c1"># Preferentially import from multiprocess library if available as able to</span>
 <span class="c1"># serialize much wider range of types including autograd functions</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SyncManager</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocess.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPool</span>
 
     <span class="n">MULTIPROCESS_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span><span class="p">,</span> <span class="n">Queue</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pool</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.managers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SyncManager</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">multiprocessing.pool</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPool</span>
 
     <span class="n">MULTIPROCESS_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -399,40 +404,6 @@
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_ignore_sigint_initializer</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initializer for processes to force ignoring SIGINT interrupt signals.&quot;&quot;&quot;</span>
-    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span>
-
-
-<span class="nd">@contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_ignore_sigint_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-managed SyncManager which ignores SIGINT interrupt signals.&quot;&quot;&quot;</span>
-    <span class="n">manager</span> <span class="o">=</span> <span class="n">SyncManager</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">manager</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">_ignore_sigint_initializer</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="n">manager</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">manager</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-
-
-<span class="nd">@contextmanager</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context-manager for process pool that ensures clean exiting.</span>
-
-<span class="sd">    Compared to built-in context-manager protocol implementation on Pool object which</span>
-<span class="sd">    calls the `terminate` method on exit which immediately stops the worker processes,</span>
-<span class="sd">    this manager instead ensures a clean exit by calling `close` to prevent any</span>
-<span class="sd">    additional jobs being submitted to pool, and then `join` to wait for processes to</span>
-<span class="sd">    exit.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="n">n_process</span><span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">pool</span>
-    <span class="k">finally</span><span class="p">:</span>
-        <span class="n">pool</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">pool</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_get_valid_filename</span><span class="p">(</span><span class="n">string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -958,7 +929,7 @@
     <span class="k">while</span> <span class="ow">not</span> <span class="n">chain_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">chain_index</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">chain_kwargs</span> <span class="o">=</span> <span class="n">chain_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">max_threads</span> <span class="o">=</span> <span class="n">common_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_threads_per_process&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">max_threads</span> <span class="o">=</span> <span class="n">common_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_threads_per_worker&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">context</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">threadpool_limits</span><span class="p">(</span><span class="n">limits</span><span class="o">=</span><span class="n">max_threads</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">THREADPOOLCTL_AVAILABLE</span>
@@ -1019,21 +990,26 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_sample_chains_parallel</span><span class="p">(</span>
     <span class="n">chain_iterators</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ChainIterator</span><span class="p">],</span>
     <span class="n">per_chain_kwargs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
-    <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_worker</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">use_thread_pool</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="o">**</span><span class="n">common_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">ChainState</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">AdapterState</span><span class="p">]]],</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample multiple chains in parallel over multiple processes.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample multiple chains in parallel over multiple processes or threads.&quot;&quot;&quot;</span>
     <span class="n">n_iters</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">it</span><span class="p">)</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">chain_iterators</span><span class="p">]</span>
     <span class="n">n_chain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain_iterators</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">_ignore_sigint_manager</span><span class="p">()</span> <span class="k">as</span> <span class="n">manager</span><span class="p">,</span> <span class="n">_pool_context_manager</span><span class="p">(</span><span class="n">n_process</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+    <span class="k">with</span> <span class="p">(</span>
+        <span class="n">nullcontext</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_thread_pool</span> <span class="k">else</span> <span class="n">SyncManager</span><span class="p">()</span> <span class="k">as</span> <span class="n">queue_factory</span><span class="p">,</span>
+        <span class="n">ThreadPool</span><span class="p">(</span><span class="n">n_worker</span><span class="p">)</span> <span class="k">if</span> <span class="n">use_thread_pool</span> <span class="k">else</span> <span class="n">Pool</span><span class="p">(</span><span class="n">n_worker</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">exception</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># Shared queue for workers to output chain progress updates to</span>
-            <span class="n">iter_queue</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+            <span class="n">iter_queue</span> <span class="o">=</span> <span class="n">queue_factory</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
             <span class="c1"># Shared queue for workers to get arguments for _sample_chain calls</span>
             <span class="c1"># from on initialising each chain</span>
-            <span class="n">chain_queue</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+            <span class="n">chain_queue</span> <span class="o">=</span> <span class="n">queue_factory</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="n">chain_kwargs</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
                 <span class="nb">zip</span><span class="p">(</span><span class="n">per_chain_kwargs</span><span class="p">,</span> <span class="n">n_iters</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="p">):</span>
@@ -1046,11 +1022,11 @@
                     <span class="n">chain_kwargs</span><span class="p">[</span><span class="s2">&quot;chain_traces&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="n">chain_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">c</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">chain_kwargs</span><span class="p">))</span>
-            <span class="c1"># Start n_process worker processes which each have access to the</span>
+            <span class="c1"># Start n_worker workers which each have access to the</span>
             <span class="c1"># shared queues, returning results asynchronously</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">starmap_async</span><span class="p">(</span>
                 <span class="n">_sample_chains_worker</span><span class="p">,</span>
-                <span class="p">[(</span><span class="n">chain_queue</span><span class="p">,</span> <span class="n">iter_queue</span><span class="p">,</span> <span class="n">common_kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_process</span><span class="p">)],</span>
+                <span class="p">[(</span><span class="n">chain_queue</span><span class="p">,</span> <span class="n">iter_queue</span><span class="p">,</span> <span class="n">common_kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_worker</span><span class="p">)],</span>
             <span class="p">)</span>
             <span class="c1"># Start loop to use chain progress updates outputted to iter_queue</span>
             <span class="c1"># by worker processes to update progress bars, using an ExitStack</span>
@@ -1094,8 +1070,8 @@
                 <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">PicklingError</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;pickle&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
             <span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;Error encountered while trying to run chains on multipleprocesses &quot;</span>
-                    <span class="s2">&quot;in parallel. The inbuilt multiprocessing module uses pickle to &quot;</span>
+                    <span class="s2">&quot;Error encountered while trying to run chains on multiple processes&quot;</span>
+                    <span class="s2">&quot; in parallel. The inbuilt multiprocessing module uses pickle to &quot;</span>
                     <span class="s2">&quot;communicate between processes and pickle does support pickling &quot;</span>
                     <span class="s2">&quot;anonymous or nested functions. If you use anonymous or nested &quot;</span>
                     <span class="s2">&quot;functions in your model functions or are using autograd to &quot;</span>
@@ -1107,9 +1083,6 @@
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
             <span class="k">raise</span>
-        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c1"># Interrupts handled in child processes therefore ignore here</span>
-            <span class="n">exception</span> <span class="o">=</span> <span class="n">e</span>
         <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Join all output lists from per-process workers in to single list</span>
             <span class="n">indexed_chain_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="p">]</span>
@@ -1119,6 +1092,39 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">chain_outputs</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">_collate_chain_outputs</span><span class="p">(</span><span class="n">chain_outputs</span><span class="p">),</span> <span class="n">exception</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_n_process_and_n_worker_args</span><span class="p">(</span>
+    <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">],</span> <span class="n">n_worker</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">n_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n_worker</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># n_worker left as default and n_process explicitly set - assume this means</span>
+            <span class="c1"># code is using old deprecated interface and raise DeprecationWarning, and</span>
+            <span class="c1"># use</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;n_process argument is deprecated and will be removed in future. &quot;</span>
+                <span class="s2">&quot;Please use n_worker argument instead.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">n_worker</span> <span class="o">=</span> <span class="n">n_process</span>
+        <span class="k">elif</span> <span class="n">n_process</span> <span class="o">!=</span> <span class="n">n_worker</span><span class="p">:</span>
+            <span class="c1"># In this case both n_process and n_worker have been change from their</span>
+            <span class="c1"># defaults by user and with different values so raise error as unclear what</span>
+            <span class="c1"># to do</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;n_process is a deprecated alias for n_worker. Setting both &quot;</span>
+                <span class="s2">&quot;arguments is ambiguous. Please use only n_worker.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n_worker</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># os.process_cpu_count only added in Python 3.13 so try to use but</span>
+            <span class="c1"># fallback to os.cpu_count if not available</span>
+            <span class="n">n_worker</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">process_cpu_count</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">n_worker</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">n_worker</span>
 
 
 <div class="viewcode-block" id="MCMCSampleChainsOutputs">
@@ -1204,9 +1210,11 @@
         <span class="n">trace_funcs</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">TraceFunction</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">adapters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Adapter</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">stager</span><span class="p">:</span> <span class="n">Stager</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">n_worker</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">n_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;auto&quot;</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">use_thread_pool</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">trace_warm_up</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">max_threads_per_process</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_threads_per_worker</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">force_memmap</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">memmap_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">monitor_stats</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1268,22 +1276,35 @@
 <span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
 <span class="sd">                up stages with only the fast-type adapters active in some - see</span>
 <span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If</span>
-<span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
-<span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
-<span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
-<span class="sd">                the number of processes will be set to the output of</span>
-<span class="sd">                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.</span>
+<span class="sd">            n_worker: Number of parallel workers (processes or threads) to run chains</span>
+<span class="sd">                over. If :code:`n_worker=1` then chains will be run sequentially</span>
+<span class="sd">                otherwise a :py:class:`multiprocessing.Pool` or</span>
+<span class="sd">                :py:class:`multiprocessing.pool.ThreadPool` object will be used to</span>
+<span class="sd">                dynamically assign the chains across multiple workers, with the pool</span>
+<span class="sd">                type determined by the value of the :code:`use_thread_pool` argument. If</span>
+<span class="sd">                set to :code:`&quot;auto&quot;&quot;` then the number of workers will be set to the</span>
+<span class="sd">                output of :py:func:`os.cpu_count()` (on Python 3.12 and below) or</span>
+<span class="sd">                :py:func:`os.process_cpu_count()` (on Python 3.13 and above). Default</span>
+<span class="sd">                is :code:`n_worker=1`.</span>
+<span class="sd">            n_process: Deprecated alias for :code:`n_worker`.</span>
+<span class="sd">            use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than</span>
+<span class="sd">                a pool of processes (:code:`False`) to run chain in parallel over. For</span>
+<span class="sd">                non free-threading builds of Python, the global interpreter lock means</span>
+<span class="sd">                that only one thread can execute Python bytecode at a time, so running</span>
+<span class="sd">                across multiple processes should be preferred where possible for</span>
+<span class="sd">                CPU-bound tasks. In free-threaded Python builds however using a pool of</span>
+<span class="sd">                threads can however sidestep incompatibility issues between the</span>
+<span class="sd">                `multiprocessing` module and numerical backends such as JAX.</span>
 <span class="sd">            trace_warm_up: Whether to record chain traces and statistics during warm-up</span>
 <span class="sd">                stage iterations (:code:`True`) or only record traces and statistics in</span>
 <span class="sd">                the iterations of the final non-adaptive stage (:code:`False`, the</span>
 <span class="sd">                default).</span>
-<span class="sd">            max_threads_per_process: If :py:mod:`threadpoolctl` is available this</span>
+<span class="sd">            max_threads_per_worker: If :py:mod:`threadpoolctl` is available this</span>
 <span class="sd">                argument may be used to limit the maximum number of threads that can be</span>
 <span class="sd">                used in thread pools used in libraries supported by</span>
 <span class="sd">                :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.</span>
-<span class="sd">                This argument will only have an effect if :code:`n_process &gt; 1` such</span>
-<span class="sd">                that chains are being run on multiple processes and only if</span>
+<span class="sd">                This argument will only have an effect if :code:`n_worker &gt; 1` such</span>
+<span class="sd">                that chains are being run on multiple processes / threads and only if</span>
 <span class="sd">                :py:mod:`threadpoolctl` is installed in the current Python environment.</span>
 <span class="sd">                If set to :code:`None` (the default) no limits are set.</span>
 <span class="sd">            force_memmap: Whether to force arrays used to store chain data to be</span>
@@ -1326,6 +1347,7 @@
         <span class="k">elif</span> <span class="n">progress_bar_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">progress_bar_class</span> <span class="o">=</span> <span class="n">SequenceProgressBar</span>
             <span class="n">sampling_stage_bar_class</span> <span class="o">=</span> <span class="n">LabelledSequenceProgressBar</span>
+        <span class="n">n_worker</span> <span class="o">=</span> <span class="n">_check_n_process_and_n_worker_args</span><span class="p">(</span><span class="n">n_process</span><span class="p">,</span> <span class="n">n_worker</span><span class="p">)</span>
         <span class="n">n_chain</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">init_states</span><span class="p">)</span>
         <span class="n">n_trace_iter</span> <span class="o">=</span> <span class="n">n_warm_up_iter</span> <span class="o">+</span> <span class="n">n_main_iter</span> <span class="k">if</span> <span class="n">trace_warm_up</span> <span class="k">else</span> <span class="n">n_main_iter</span>
         <span class="n">init_states</span> <span class="o">=</span> <span class="p">[</span>
@@ -1333,8 +1355,8 @@
             <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">init_states</span>
         <span class="p">]</span>
         <span class="c1"># memory-mapping of chain data used if force_memmap flag set or sampling chains</span>
-        <span class="c1"># in parallel</span>
-        <span class="n">use_memmap</span> <span class="o">=</span> <span class="n">force_memmap</span> <span class="ow">or</span> <span class="n">n_process</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="c1"># in parallel on multiple processes</span>
+        <span class="n">use_memmap</span> <span class="o">=</span> <span class="n">force_memmap</span> <span class="ow">or</span> <span class="p">(</span><span class="n">n_worker</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_thread_pool</span><span class="p">)</span>
         <span class="c1"># use context-manager to ensure any temporary directory created for memory-maps</span>
         <span class="c1"># deleted before exiting</span>
         <span class="k">if</span> <span class="n">use_memmap</span> <span class="ow">and</span> <span class="n">memmap_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1368,16 +1390,16 @@
                 <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">_zip_dict</span><span class="p">(</span><span class="o">**</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">()}),</span>
             <span class="p">)</span>
             <span class="n">common_kwargs</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;transitions&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">,</span>
                 <span class="s2">&quot;monitor_stats&quot;</span><span class="p">:</span> <span class="n">monitor_stats</span><span class="p">,</span>
             <span class="p">}</span>
-            <span class="k">if</span> <span class="n">n_process</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n_worker</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="c1"># Using single process therefore run chains sequentially</span>
                 <span class="n">sample_chains_func</span> <span class="o">=</span> <span class="n">_sample_chains_sequential</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Run chains in parallel using a multiprocess(ing).Pool</span>
-                <span class="n">common_kwargs</span><span class="p">[</span><span class="s2">&quot;n_process&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_process</span>
-                <span class="n">common_kwargs</span><span class="p">[</span><span class="s2">&quot;max_threads_per_process&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_threads_per_process</span>
+                <span class="n">common_kwargs</span><span class="p">[</span><span class="s2">&quot;n_worker&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_worker</span>
+                <span class="n">common_kwargs</span><span class="p">[</span><span class="s2">&quot;use_thread_pool&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">use_thread_pool</span>
+                <span class="n">common_kwargs</span><span class="p">[</span><span class="s2">&quot;max_threads_per_worker&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_threads_per_worker</span>
                 <span class="n">sample_chains_func</span> <span class="o">=</span> <span class="n">_sample_chains_parallel</span>
             <span class="k">if</span> <span class="n">stager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># use single warm-up stage stager if no adapters or all fast type</span>
@@ -1428,6 +1450,12 @@
                                 <span class="k">if</span> <span class="n">stage</span><span class="o">.</span><span class="n">record_stats</span>
                                 <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_chain</span>
                             <span class="p">),</span>
+                            <span class="c1"># Having shared transitions for all chains seems to limit</span>
+                            <span class="c1"># performance when parallelising with thread pool therefore</span>
+                            <span class="c1"># create per-chain copies</span>
+                            <span class="n">transitions</span><span class="o">=</span><span class="p">[</span>
+                                <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transitions</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_chain</span><span class="p">)</span>
+                            <span class="p">],</span>
                         <span class="p">),</span>
                         <span class="n">sampling_index_offset</span><span class="o">=</span><span class="n">sampling_index_offset</span><span class="p">,</span>
                         <span class="n">trace_funcs</span><span class="o">=</span><span class="n">stage</span><span class="o">.</span><span class="n">trace_funcs</span><span class="p">,</span>
@@ -1652,22 +1680,35 @@
 <span class="sd">                arguments) will be used, corresponding to using multiple adaptive warm</span>
 <span class="sd">                up stages with only the fast-type adapters active in some - see</span>
 <span class="sd">                documentation of :py:class:`mici.stagers.WarmUpStager` for details.</span>
-<span class="sd">            n_process: Number of parallel processes to run chains over. If</span>
-<span class="sd">                :code:`n_process=1` then chains will be run sequentially otherwise a</span>
-<span class="sd">                :py:class:`multiprocessing.Pool` object will be used to dynamically</span>
-<span class="sd">                assign the chains across multiple processes. If set to :code:`None` then</span>
-<span class="sd">                the number of processes will be set to the output of</span>
-<span class="sd">                :py:func:`os.cpu_count()`. Default is :code:`n_process=1`.</span>
+<span class="sd">            n_worker: Number of parallel workers (processes or threads) to run chains</span>
+<span class="sd">                over. If :code:`n_worker=1` then chains will be run sequentially</span>
+<span class="sd">                otherwise a :py:class:`multiprocessing.Pool` or</span>
+<span class="sd">                :py:class:`multiprocessing.pool.ThreadPool` object will be used to</span>
+<span class="sd">                dynamically assign the chains across multiple workers, with the pool</span>
+<span class="sd">                type determined by the value of the :code:`use_thread_pool` argument. If</span>
+<span class="sd">                set to :code:`&quot;auto&quot;&quot;` then the number of workers will be set to the</span>
+<span class="sd">                output of :py:func:`os.cpu_count()` (on Python 3.12 and below) or</span>
+<span class="sd">                :py:func:`os.process_cpu_count()` (on Python 3.13 and above). Default</span>
+<span class="sd">                is :code:`n_worker=1`.</span>
+<span class="sd">            n_process: Deprecated alias for :code:`n_worker`.</span>
+<span class="sd">            use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than</span>
+<span class="sd">                a pool of processes (:code:`False`) to run chain in parallel over. For</span>
+<span class="sd">                non free-threading builds of Python, the global interpreter lock means</span>
+<span class="sd">                that only one thread can execute Python bytecode at a time, so running</span>
+<span class="sd">                across multiple processes should be preferred where possible for</span>
+<span class="sd">                CPU-bound tasks. In free-threaded Python builds however using a pool of</span>
+<span class="sd">                threads can however sidestep incompatibility issues between the</span>
+<span class="sd">                `multiprocessing` module and numerical backends such as JAX.</span>
 <span class="sd">            trace_warm_up: Whether to record chain traces and statistics during warm-up</span>
 <span class="sd">                stage iterations (:code:`True`) or only record traces and statistics in</span>
 <span class="sd">                the iterations of the final non-adaptive stage (:code:`False`, the</span>
 <span class="sd">                default).</span>
-<span class="sd">            max_threads_per_process: If :py:mod:`threadpoolctl` is available this</span>
+<span class="sd">            max_threads_per_worker: If :py:mod:`threadpoolctl` is available this</span>
 <span class="sd">                argument may be used to limit the maximum number of threads that can be</span>
 <span class="sd">                used in thread pools used in libraries supported by</span>
 <span class="sd">                :py:mod:`threadpoolctl`, which include BLAS and OpenMP implementations.</span>
-<span class="sd">                This argument will only have an effect if :code:`n_process &gt; 1` such</span>
-<span class="sd">                that chains are being run on multiple processes and only if</span>
+<span class="sd">                This argument will only have an effect if :code:`n_worker &gt; 1` such</span>
+<span class="sd">                that chains are being run on multiple processes / threads and only if</span>
 <span class="sd">                :py:mod:`threadpoolctl` is installed in the current Python environment.</span>
 <span class="sd">                If set to :code:`None` (the default) no limits are set.</span>
 <span class="sd">            force_memmap: Whether to force arrays used to store chain data to be</span>

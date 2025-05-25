@@ -518,22 +518,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> – Whether to force arrays used to store chain data to be
@@ -741,22 +754,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> – Whether to force arrays used to store chain data to be
@@ -963,22 +989,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> – Whether to force arrays used to store chain data to be
@@ -1087,7 +1126,7 @@ sequentially sample from on each chain iteration.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.samplers.MarkovChainMonteCarloMethod.sample_chains">
-<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads_per_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_memmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memmap_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sample_chains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_warm_up_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_main_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_states</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_funcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_worker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_process</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_thread_pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trace_warm_up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_threads_per_worker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_memmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memmap_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/samplers.html#MarkovChainMonteCarloMethod.sample_chains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.samplers.MarkovChainMonteCarloMethod.sample_chains" title="Link to this definition">#</a></dt>
 <dd><p>Sample Markov chains from initial states with optional adaptive warm up.</p>
 <p>One or more Markov chains are sampled, with each chain iteration consisting of
 one or more Markov transitions. The chains are split into multiple <em>stages</em> with
@@ -1142,22 +1181,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>Literal</em><em>[</em><em>'auto'</em><em>]</em>) – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>Literal</em><em>[</em><em>'auto'</em><em>] </em><em>| </em><em>None</em>) – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether to force arrays used to store chain data to be
@@ -1338,22 +1390,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> – Whether to force arrays used to store chain data to be
@@ -1528,22 +1593,35 @@ adapters argument are not all of the fast type, then a
 arguments) will be used, corresponding to using multiple adaptive warm
 up stages with only the fast-type adapters active in some - see
 documentation of <a class="reference internal" href="mici.stagers.html#mici.stagers.WarmUpStager" title="mici.stagers.WarmUpStager"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.stagers.WarmUpStager</span></code></a> for details.</p></li>
-<li><p><strong>n_process</strong> – Number of parallel processes to run chains over. If
-<code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code> then chains will be run sequentially otherwise a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> object will be used to dynamically
-assign the chains across multiple processes. If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> then
-the number of processes will be set to the output of
-<a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a>. Default is <code class="code docutils literal notranslate"><span class="pre">n_process=1</span></code>.</p></li>
+<li><p><strong>n_worker</strong> – Number of parallel workers (processes or threads) to run chains
+over. If <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code> then chains will be run sequentially
+otherwise a <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Pool</span></code> or
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.pool.ThreadPool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.pool.ThreadPool</span></code></a> object will be used to
+dynamically assign the chains across multiple workers, with the pool
+type determined by the value of the <code class="code docutils literal notranslate"><span class="pre">use_thread_pool</span></code> argument. If
+set to <code class="code docutils literal notranslate"><span class="pre">&quot;auto&quot;&quot;</span></code> then the number of workers will be set to the
+output of <a class="reference external" href="https://docs.python.org/3/library/os.html#os.cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.cpu_count()</span></code></a> (on Python 3.12 and below) or
+<a class="reference external" href="https://docs.python.org/3/library/os.html#os.process_cpu_count" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a> (on Python 3.13 and above). Default
+is <code class="code docutils literal notranslate"><span class="pre">n_worker=1</span></code>.</p></li>
+<li><p><strong>n_process</strong> – Deprecated alias for <code class="code docutils literal notranslate"><span class="pre">n_worker</span></code>.</p></li>
+<li><p><strong>use_thread_pool</strong> – Whether to use a pool of threads (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) rather than
+a pool of processes (<code class="code docutils literal notranslate"><span class="pre">False</span></code>) to run chain in parallel over. For
+non free-threading builds of Python, the global interpreter lock means
+that only one thread can execute Python bytecode at a time, so running
+across multiple processes should be preferred where possible for
+CPU-bound tasks. In free-threaded Python builds however using a pool of
+threads can however sidestep incompatibility issues between the
+<cite>multiprocessing</cite> module and numerical backends such as JAX.</p></li>
 <li><p><strong>trace_warm_up</strong> – Whether to record chain traces and statistics during warm-up
 stage iterations (<code class="code docutils literal notranslate"><span class="pre">True</span></code>) or only record traces and statistics in
 the iterations of the final non-adaptive stage (<code class="code docutils literal notranslate"><span class="pre">False</span></code>, the
 default).</p></li>
-<li><p><strong>max_threads_per_process</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
+<li><p><strong>max_threads_per_worker</strong> – If <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is available this
 argument may be used to limit the maximum number of threads that can be
 used in thread pools used in libraries supported by
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code>, which include BLAS and OpenMP implementations.
-This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_process</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
-that chains are being run on multiple processes and only if
+This argument will only have an effect if <code class="code docutils literal notranslate"><span class="pre">n_worker</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> such
+that chains are being run on multiple processes / threads and only if
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threadpoolctl</span></code> is installed in the current Python environment.
 If set to <code class="code docutils literal notranslate"><span class="pre">None</span></code> (the default) no limits are set.</p></li>
 <li><p><strong>force_memmap</strong> – Whether to force arrays used to store chain data to be
