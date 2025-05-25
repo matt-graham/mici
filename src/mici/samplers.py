@@ -11,7 +11,7 @@ from pathlib import Path
 from pickle import PicklingError
 from queue import Queue
 from typing import TYPE_CHECKING, NamedTuple, TypeVar
-from warnings import warn
+from warnings import DeprecationWarning, warn
 
 import numpy as np
 from numpy.random import default_rng
@@ -770,6 +770,26 @@ def _sample_chains_parallel(
     return (*_collate_chain_outputs(chain_outputs), exception)
 
 
+def _check_n_process_and_n_worker_args(
+    n_process: int | None, n_worker: int | None
+) -> int | None:
+    if n_process is not None:
+        if n_worker is None:
+            msg = (
+                "n_process argument is deprecated and will be removed in future. "
+                "Please use n_worker argument instead."
+            )
+            warn(msg, DeprecationWarning, stacklevel=2)
+            return n_process
+        if n_process != n_worker:
+            msg = (
+                "n_process is a deprecated alias for n_worker. Setting both "
+                "arguments is ambiguous. Please use only n_worker."
+            )
+            raise ValueError(msg)
+    return n_worker
+
+
 class MCMCSampleChainsOutputs(NamedTuple):
     """Outputs returned by :py:meth:`MarkovChainMonteCarloMethod.sample_chains` call.
 
@@ -847,6 +867,7 @@ class MarkovChainMonteCarloMethod:
         adapters: dict[str, Sequence[Adapter]] | None = None,
         stager: Stager | None = None,
         n_worker: int | None = 1,
+        n_process: int | None = 1,
         use_thread_pool: bool = False,
         trace_warm_up: bool = False,
         max_threads_per_worker: int | None = None,
@@ -919,6 +940,7 @@ class MarkovChainMonteCarloMethod:
                 type determined by the value of the :code:`use_thread_pool` argument. If
                 set to :code:`None` then the number of workers will be set to the output
                 of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
+            n_process: Deprecated alias for :code:`n_worker`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
                 non free-threading builds of Python, the global interpreter lock means
@@ -979,6 +1001,7 @@ class MarkovChainMonteCarloMethod:
         elif progress_bar_class is None:
             progress_bar_class = SequenceProgressBar
             sampling_stage_bar_class = LabelledSequenceProgressBar
+        n_worker = _check_n_process_and_n_worker_args(n_process, n_worker)
         n_chain = len(init_states)
         n_trace_iter = n_warm_up_iter + n_main_iter if trace_warm_up else n_main_iter
         init_states = [
@@ -1310,6 +1333,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 type determined by the value of the :code:`use_thread_pool` argument. If
                 set to :code:`None` then the number of workers will be set to the output
                 of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
+            n_process: Deprecated alias for :code:`n_worker`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
                 non free-threading builds of Python, the global interpreter lock means
