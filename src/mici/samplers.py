@@ -918,7 +918,7 @@ class MarkovChainMonteCarloMethod:
                 dynamically assign the chains across multiple workers, with the pool
                 type determined by the value of the :code:`use_thread_pool` argument. If
                 set to :code:`None` then the number of workers will be set to the output
-                of :py:func:`os.cpu_count()`. Default is :code:`n_workers=1`.
+                of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
                 non free-threading builds of Python, the global interpreter lock means
@@ -1309,7 +1309,7 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 dynamically assign the chains across multiple workers, with the pool
                 type determined by the value of the :code:`use_thread_pool` argument. If
                 set to :code:`None` then the number of workers will be set to the output
-                of :py:func:`os.cpu_count()`. Default is :code:`n_workers=1`.
+                of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
                 non free-threading builds of Python, the global interpreter lock means

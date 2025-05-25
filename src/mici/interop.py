@@ -272,7 +272,7 @@ def sample_pymc_model(
         init_states=init_states,
         adapters=[step_size_adapter, metric_adapter],
         trace_funcs=[trace_func],
-        n_workers=cores,
+        n_worker=cores,
         display_progress=progressbar,
         monitor_stats=["accept_stat", "n_step", "diverging"],
     )

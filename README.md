@@ -289,9 +289,6 @@ import mici
 import numpy as np
 import symnum
 import symnum.numpy as snp
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import arviz
 
 # Define fixed model parameters
 R = 1.0  # toroidal radius ∈ (0, ∞)
@@ -361,7 +358,7 @@ final_states, traces, stats = sampler.sample_chains(
     n_warm_up_iter=500,
     n_main_iter=2000,
     init_states=q_init,
-    n_process=4,
+    n_worker=4,
     trace_funcs=[trace_func],
 )
 
