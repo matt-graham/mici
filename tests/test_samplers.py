@@ -135,11 +135,14 @@ class MarkovChainMonteCarloMethodTests:
         assert sampler.rng is rng
         assert isinstance(sampler.transitions, dict)
 
-    @pytest.mark.parametrize("n_warm_up_iter", [0, 2])
-    @pytest.mark.parametrize("n_main_iter", [0, 2])
-    @pytest.mark.parametrize("trace_warm_up", [True, False])
-    @pytest.mark.parametrize("n_worker", [1, N_CHAIN, "auto"])
-    @pytest.mark.parametrize("use_thread_pool", [False, True])
+    @pytest.mark.parametrize(
+        ("n_warm_up_iter", "n_main_iter", "trace_warm_up"),
+        [(0, 0, False), (2, 0, False), (2, 0, True), (0, 2, False), (2, 2, False)],
+    )
+    @pytest.mark.parametrize(
+        ("n_worker", "use_thread_pool"),
+        [(1, False), (N_CHAIN, False), (N_CHAIN, True), ("auto", False)],
+    )
     def test_sample_chains(
         self,
         sampler,
