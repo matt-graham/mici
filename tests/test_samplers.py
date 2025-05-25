@@ -121,7 +121,7 @@ class MarkovChainMonteCarloMethodTests:
     @pytest.mark.parametrize("n_warm_up_iter", [0, 2])
     @pytest.mark.parametrize("n_main_iter", [0, 2])
     @pytest.mark.parametrize("trace_warm_up", [True, False])
-    @pytest.mark.parametrize("n_worker", [1, N_CHAIN])
+    @pytest.mark.parametrize("n_worker", [1, N_CHAIN, "auto"])
     @pytest.mark.parametrize("use_thread_pool", [False, True])
     def test_sample_chains(
         self,
@@ -191,6 +191,19 @@ class MarkovChainMonteCarloMethodTests:
             else:
                 assert trans_stats.keys() == statistic_types.keys()
                 self.check_trans_stats_dict(trans_stats, n_iter, statistic_types)
+
+    def test_sample_chains_with_n_process_raises_deprecation_warning(
+        self,
+        sampler,
+        init_states,
+    ):
+        with pytest.deprecated_call():
+            sampler.sample_chains(
+                n_warm_up_iter=1,
+                n_main_iter=1,
+                init_states=init_states,
+                n_process=2,
+            )
 
 
 class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):

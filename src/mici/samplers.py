@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import queue
 import tempfile
 from contextlib import ExitStack, nullcontext
@@ -11,7 +12,7 @@ from pathlib import Path
 from pickle import PicklingError
 from queue import Queue
 from typing import TYPE_CHECKING, NamedTuple, TypeVar
-from warnings import DeprecationWarning, warn
+from warnings import warn
 
 import numpy as np
 from numpy.random import default_rng
@@ -38,6 +39,7 @@ from mici.transitions import (
 
 if TYPE_CHECKING:
     from collections.abc import Container, Generator, Iterable, Sequence
+    from typing import Literal
 
     from numpy.typing import ArrayLike, DTypeLike, NDArray
 
@@ -771,22 +773,35 @@ def _sample_chains_parallel(
 
 
 def _check_n_process_and_n_worker_args(
-    n_process: int | None, n_worker: int | None
-) -> int | None:
+    n_process: int | Literal["auto"], n_worker: int | Literal["auto"] | None
+) -> int:
     if n_process is not None:
-        if n_worker is None:
+        if n_worker == 1:
+            # n_worker left as default and n_process explicitly set - assume this means
+            # code is using old deprecated interface and raise DeprecationWarning, and
+            # use
             msg = (
                 "n_process argument is deprecated and will be removed in future. "
                 "Please use n_worker argument instead."
             )
             warn(msg, DeprecationWarning, stacklevel=2)
-            return n_process
-        if n_process != n_worker:
+            n_worker = n_process
+        elif n_process != n_worker:
+            # In this case both n_process and n_worker have been change from their
+            # defaults by user and with different values so raise error as unclear what
+            # to do
             msg = (
                 "n_process is a deprecated alias for n_worker. Setting both "
                 "arguments is ambiguous. Please use only n_worker."
             )
             raise ValueError(msg)
+    if n_worker == "auto":
+        try:
+            # os.process_cpu_count only added in Python 3.13 so try to use but
+            # fallback to os.cpu_count if not available
+            n_worker = os.process_cpu_count()
+        except NameError:
+            n_worker = os.cpu_count()
     return n_worker
 
 
@@ -866,8 +881,8 @@ class MarkovChainMonteCarloMethod:
         trace_funcs: Sequence[TraceFunction] | None = None,
         adapters: dict[str, Sequence[Adapter]] | None = None,
         stager: Stager | None = None,
-        n_worker: int | None = 1,
-        n_process: int | None = 1,
+        n_worker: int | Literal["auto"] = 1,
+        n_process: int | Literal["auto"] | None = None,
         use_thread_pool: bool = False,
         trace_warm_up: bool = False,
         max_threads_per_worker: int | None = None,
@@ -938,8 +953,10 @@ class MarkovChainMonteCarloMethod:
                 :py:class:`multiprocessing.pool.ThreadPool` object will be used to
                 dynamically assign the chains across multiple workers, with the pool
                 type determined by the value of the :code:`use_thread_pool` argument. If
-                set to :code:`None` then the number of workers will be set to the output
-                of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
+                set to :code:`"auto""` then the number of workers will be set to the
+                output of :py:func:`os.cpu_count()` (on Python 3.12 and below) or
+                :py:func:`os.process_cpu_count()` (on Python 3.13 and above). Default
+                is :code:`n_worker=1`.
             n_process: Deprecated alias for :code:`n_worker`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
@@ -1331,8 +1348,10 @@ class HamiltonianMonteCarlo(MarkovChainMonteCarloMethod):
                 :py:class:`multiprocessing.pool.ThreadPool` object will be used to
                 dynamically assign the chains across multiple workers, with the pool
                 type determined by the value of the :code:`use_thread_pool` argument. If
-                set to :code:`None` then the number of workers will be set to the output
-                of :py:func:`os.cpu_count()`. Default is :code:`n_worker=1`.
+                set to :code:`"auto""` then the number of workers will be set to the
+                output of :py:func:`os.cpu_count()` (on Python 3.12 and below) or
+                :py:func:`os.process_cpu_count()` (on Python 3.13 and above). Default
+                is :code:`n_worker=1`.
             n_process: Deprecated alias for :code:`n_worker`.
             use_thread_pool: Whether to use a pool of threads (:code:`True`) rather than
                 a pool of processes (:code:`False`) to run chain in parallel over. For
