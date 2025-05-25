@@ -113,15 +113,52 @@ def test_random_state_raises_deprecation_warning():
         mici.samplers.MarkovChainMonteCarloMethod(rng=rng, transitions={})
 
 
+def test_sample_chains_with_n_process_raises_deprecation_warning(
+    system,
+    integrator,
+    rng,
+):
+    n_chain = 2
+    init_states = rng.standard_normal((n_chain, 1))
+    sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
+    with pytest.deprecated_call():
+        sampler.sample_chains(
+            n_warm_up_iter=1,
+            n_main_iter=1,
+            init_states=init_states,
+            n_process=n_chain,
+        )
+
+
 class MarkovChainMonteCarloMethodTests:
     def test_sampler_attributes(self, sampler, rng):
         assert sampler.rng is rng
         assert isinstance(sampler.transitions, dict)
 
-    @pytest.mark.parametrize("n_warm_up_iter", [0, 2])
-    @pytest.mark.parametrize("n_main_iter", [0, 2])
-    @pytest.mark.parametrize("trace_warm_up", [True, False])
-    @pytest.mark.parametrize("n_process", [1, N_CHAIN])
+    @pytest.fixture
+    def stager(self, request):
+        if request.param is None:
+            return None
+        if request.param == "WarmUpStager":
+            return mici.stagers.WarmUpStager()
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
+
+    @pytest.mark.parametrize(
+        ("n_warm_up_iter", "n_main_iter", "trace_warm_up", "adapters", "stager"),
+        [
+            (0, 0, False, "empty", None),
+            (2, 0, False, "step_size", "WarmUpStager"),
+            (2, 0, True, None, None),
+            (0, 2, False, "step_size", None),
+            (2, 2, False, None, "WarmUpStager"),
+        ],
+        indirect=("adapters", "stager"),
+    )
+    @pytest.mark.parametrize(
+        ("n_worker", "use_thread_pool"),
+        [(1, False), (N_CHAIN, False), (N_CHAIN, True), ("auto", False)],
+    )
     def test_sample_chains(
         self,
         sampler,
@@ -130,7 +167,10 @@ class MarkovChainMonteCarloMethodTests:
         init_states,
         trace_funcs,
         trace_warm_up,
-        n_process,
+        n_worker,
+        use_thread_pool,
+        adapters,
+        stager,
         kwargs,
     ):
         final_states, traces, stats = sampler.sample_chains(
@@ -139,7 +179,10 @@ class MarkovChainMonteCarloMethodTests:
             init_states=init_states,
             trace_funcs=trace_funcs,
             trace_warm_up=trace_warm_up,
-            n_process=n_process,
+            n_worker=n_worker,
+            use_thread_pool=use_thread_pool,
+            adapters=adapters,
+            stager=stager,
             **kwargs,
         )
         trace_vars = {}
@@ -210,23 +253,14 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def monitor_stats(self, request):
         return request.param
 
-    @pytest.fixture(params=(None, "empty", "DualAveragingStepSizeAdapter"))
+    @pytest.fixture
     def adapters(self, request):
         if request.param is None:
             return None
         if request.param == "empty":
             return {}
-        if request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "step_size":
             return {"integration": [mici.adapters.DualAveragingStepSizeAdapter()]}
-        msg = f"Invalid param {request.param}"
-        raise ValueError(msg)
-
-    @pytest.fixture(params=(None, "WarmUpStager"))
-    def stager(self, request):
-        if request.param is None:
-            return None
-        if request.param == "WarmUpStager":
-            return mici.stagers.WarmUpStager()
         msg = f"Invalid param {request.param}"
         raise ValueError(msg)
 
@@ -245,16 +279,12 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def kwargs(
         self,
         monitor_stats,
-        adapters,
-        stager,
         force_memmap_and_memmap_path,
         display_progress,
     ):
         force_memmap, memmap_path = force_memmap_and_memmap_path
         return {
             "monitor_stats": monitor_stats,
-            "adapters": adapters,
-            "stager": stager,
             "force_memmap": force_memmap,
             "memmap_path": memmap_path,
             "display_progress": display_progress,
@@ -295,22 +325,22 @@ class HamiltonianMCMCTests(MarkovChainMonteCarloMethodTests):
     def monitor_stats(self, request):
         return request.param
 
-    @pytest.fixture(params=(None, "DualAveragingStepSizeAdapter"))
+    @pytest.fixture
     def adapters(self, request):
         if request.param is None:
             return None
-        if request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "empty":
+            return []
+        if request.param == "step_size":
             return [mici.adapters.DualAveragingStepSizeAdapter()]
         msg = f"Invalid param {request.param}"
         raise ValueError(msg)
 
     @pytest.fixture
-    def kwargs(self, monitor_stats, adapters):
+    def kwargs(self, monitor_stats):
         kwargs = {}
         if monitor_stats is not None:
             kwargs["monitor_stats"] = monitor_stats
-        if adapters is not None:
-            kwargs["adapters"] = adapters
         return kwargs
 
     @pytest.fixture
