@@ -135,9 +135,25 @@ class MarkovChainMonteCarloMethodTests:
         assert sampler.rng is rng
         assert isinstance(sampler.transitions, dict)
 
+    @pytest.fixture
+    def stager(self, request):
+        if request.param is None:
+            return None
+        if request.param == "WarmUpStager":
+            return mici.stagers.WarmUpStager()
+        msg = f"Invalid param {request.param}"
+        raise ValueError(msg)
+
     @pytest.mark.parametrize(
-        ("n_warm_up_iter", "n_main_iter", "trace_warm_up"),
-        [(0, 0, False), (2, 0, False), (2, 0, True), (0, 2, False), (2, 2, False)],
+        ("n_warm_up_iter", "n_main_iter", "trace_warm_up", "adapters", "stager"),
+        [
+            (0, 0, False, "empty", None),
+            (2, 0, False, "step_size", "WarmUpStager"),
+            (2, 0, True, None, None),
+            (0, 2, False, "step_size", None),
+            (2, 2, False, None, "WarmUpStager"),
+        ],
+        indirect=("adapters", "stager"),
     )
     @pytest.mark.parametrize(
         ("n_worker", "use_thread_pool"),
@@ -153,6 +169,8 @@ class MarkovChainMonteCarloMethodTests:
         trace_warm_up,
         n_worker,
         use_thread_pool,
+        adapters,
+        stager,
         kwargs,
     ):
         final_states, traces, stats = sampler.sample_chains(
@@ -163,6 +181,8 @@ class MarkovChainMonteCarloMethodTests:
             trace_warm_up=trace_warm_up,
             n_worker=n_worker,
             use_thread_pool=use_thread_pool,
+            adapters=adapters,
+            stager=stager,
             **kwargs,
         )
         trace_vars = {}
@@ -233,23 +253,14 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def monitor_stats(self, request):
         return request.param
 
-    @pytest.fixture(params=(None, "empty", "DualAveragingStepSizeAdapter"))
+    @pytest.fixture
     def adapters(self, request):
         if request.param is None:
             return None
         if request.param == "empty":
             return {}
-        if request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "step_size":
             return {"integration": [mici.adapters.DualAveragingStepSizeAdapter()]}
-        msg = f"Invalid param {request.param}"
-        raise ValueError(msg)
-
-    @pytest.fixture(params=(None, "WarmUpStager"))
-    def stager(self, request):
-        if request.param is None:
-            return None
-        if request.param == "WarmUpStager":
-            return mici.stagers.WarmUpStager()
         msg = f"Invalid param {request.param}"
         raise ValueError(msg)
 
@@ -268,16 +279,12 @@ class TestMarkovChainMonteCarloMethod(MarkovChainMonteCarloMethodTests):
     def kwargs(
         self,
         monitor_stats,
-        adapters,
-        stager,
         force_memmap_and_memmap_path,
         display_progress,
     ):
         force_memmap, memmap_path = force_memmap_and_memmap_path
         return {
             "monitor_stats": monitor_stats,
-            "adapters": adapters,
-            "stager": stager,
             "force_memmap": force_memmap,
             "memmap_path": memmap_path,
             "display_progress": display_progress,
@@ -318,22 +325,22 @@ class HamiltonianMCMCTests(MarkovChainMonteCarloMethodTests):
     def monitor_stats(self, request):
         return request.param
 
-    @pytest.fixture(params=(None, "DualAveragingStepSizeAdapter"))
+    @pytest.fixture
     def adapters(self, request):
         if request.param is None:
             return None
-        if request.param == "DualAveragingStepSizeAdapter":
+        if request.param == "empty":
+            return []
+        if request.param == "step_size":
             return [mici.adapters.DualAveragingStepSizeAdapter()]
         msg = f"Invalid param {request.param}"
         raise ValueError(msg)
 
     @pytest.fixture
-    def kwargs(self, monitor_stats, adapters):
+    def kwargs(self, monitor_stats):
         kwargs = {}
         if monitor_stats is not None:
             kwargs["monitor_stats"] = monitor_stats
-        if adapters is not None:
-            kwargs["adapters"] = adapters
         return kwargs
 
     @pytest.fixture
