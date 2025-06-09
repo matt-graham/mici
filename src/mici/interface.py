@@ -4,8 +4,8 @@ Functions for generating approximate samples from target distributions using Mar
 chain Monte Carlo methods. These functions abstract away the details of constructing
 the relevant Mici class objects, at the expense of less fine-grained control over the
 algorithms used. For more complex use-cases, directly construct relevant classes from
-the :py:mod:`mici.samplers`, :py:mod:`mici.systems` and :py:mod:`mici.integrators`
-modules and using their object-oriented interfaces.
+the :py:mod:`.samplers`, :py:mod:`.systems` and :py:mod:`.integrators` modules and using
+their object-oriented interfaces.
 """
 
 from __future__ import annotations
@@ -70,24 +70,21 @@ def sample_hmc_chains(
 
     Args:
         n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending on
-            the :py:class:`mici.stagers.Stager` instance specified by the :code:`stager`
+            the :py:class:`.stagers.Stager` instance specified by the :code:`stager`
             argument the warm up iterations may be split between one or more adaptive
             stages. If zero, only a single non-adaptive stage is used.
         n_main_iter: Number of iterations (samples to draw) per chain during main
             (non-adaptive) sampling stage.
         init_states: Initial chain states. Each state can be either an array  specifying
-            the state position component or a :py:class:`mici.states.ChainState`
-            instance. If an array is passed or the :code:`mom` attribute of the state is
-            not set, a momentum component will be independently sampled from its
-            conditional distribution. One chain will be run for each state in the
-            iterable.
+            the state position component or a :py:class:`.states.ChainState` instance.
+            If an array is passed or the :code:`mom` attribute of the state is not set,
+            a momentum component will be independently sampled from its conditional
+            distribution. One chain will be run for each state in the iterable.
         neg_log_dens: Function which given a position array returns the negative
             logarithm of an unnormalized probability density on the position space with
             respect to a reference measure, with the corresponding distribution on the
             position space being the target distribution it is wished to draw
             approximate samples from.
-
-    Keyword Args:
         backend: Name of automatic differentiation backend to use. See
             :py:mod:`.autodiff` subpackage documentation for details of available
             backends. If `None` (the default) no automatic differentiation fallback will
@@ -104,15 +101,17 @@ def sample_hmc_chains(
             to construct the derivative of `neg_log_dens` automatically.
         system_class: The Hamiltonian system class to use.
         integrator_class: The symplectic integrator class to use.
-        sampler_class: The Markov chain Monte Carlo sampler class to use.
+        sampler_class: The Hamiltonian Monte Carlo sampler class to use.
         system_kwargs: Any additional keyword arguments to system class initialiser.
         integrator_kwargs: Any additional keyword arguments to integrator class
             intitialiser.
         sampler_kwargs: Any additional keyword arguments to sampler class
             initialiser.
+
+    Keyword Args:
         **kwargs: Additional keyword arguments to pass to the
-            :py:meth:`mici.samplers.HamiltonianMonteCarlo.sample_chains` method called
-            to sample the chains.
+            :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method called to
+            sample the chains.
 
     Returns:
         Named tuple :code:`(final_states, traces, statistics)` corresponding to states
@@ -174,7 +173,7 @@ def sample_constrained_hmc_chains(
 
     Samples one or more Markov chains with given initial states, with a stationary
     distribution on an implicitly-defined manifold embedded in an ambient Euclidean
-    space,  specified by functions evaluating the negative log density of the target
+    space, specified by functions evaluating the negative log density of the target
     distribution and specified by a constraint function for which the zero level-set of
     specifies the manifold the distribution is supported on. Each chain has zero or more
     adaptive warm-up iterations, during which the parameters of the chain transitions
@@ -188,17 +187,16 @@ def sample_constrained_hmc_chains(
 
     Args:
         n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending on
-            the :py:class:`mici.stagers.Stager` instance specified by the :code:`stager`
+            the :py:class:`.stagers.Stager` instance specified by the :code:`stager`
             argument the warm up iterations may be split between one or more adaptive
             stages. If zero, only a single non-adaptive stage is used.
         n_main_iter: Number of iterations (samples to draw) per chain during main
             (non-adaptive) sampling stage.
         init_states: Initial chain states. Each state can be either an array  specifying
-            the state position component or a :py:class:`mici.states.ChainState`
-            instance. If an array is passed or the :code:`mom` attribute of the state is
-            not set, a momentum component will be independently sampled from its
-            conditional distribution. One chain will be run for each state in the
-            iterable.
+            the state position component or a :py:class:`.states.ChainState` instance.
+            If an array is passed or the :code:`mom` attribute of the state is not set,
+            a momentum component will be independently sampled from its conditional
+            distribution. One chain will be run for each state in the iterable.
         neg_log_dens: Function which given a position array returns the negative
             logarithm of an unnormalized probability density on the position space with
             respect to a reference measure, with the corresponding distribution on the
@@ -207,8 +205,6 @@ def sample_constrained_hmc_chains(
         constr: Function which given a position array return as a 1D array the value
             of the (vector-valued) constraint function, the zero level-set of which
             implicitly defines the manifold the dynamic is simulated on.
-
-    Keyword Args:
         backend: Name of automatic differentiation backend to use. See
             :py:mod:`.autodiff` subpackage documentation for details of available
             backends. If `None` (the default) no automatic differentiation fallback will
@@ -261,14 +257,16 @@ def sample_constrained_hmc_chains(
             event :code:`constr(pos) == 0` (:code:`False`).
         system_class: The Hamiltonian system class to use.
         integrator_class: The symplectic integrator class to use.
-        sampler_class: The Markov chain Monte Carlo sampler class to use.
+        sampler_class: The Hamiltonian Monte Carlo sampler class to use.
         system_kwargs: Any additional keyword arguments to system class initialiser.
         integrator_kwargs: Any additional keyword arguments to integrator class
             intitialiser.
         sampler_kwargs: Any additional keyword arguments to sampler class
             initialiser.
+
+    Keyword Args:
         **kwargs: Additional keyword arguments to pass to the
-            :py:meth:`mici.samplers.HamiltonianMonteCarlo.sample_chains` method called
+            :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method called
             to sample the chains.
 
     Returns:
