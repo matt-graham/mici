@@ -86,9 +86,9 @@ class IntegratorTests:
             f"initial momentum = {init_state.mom},\n"
             f"final momentum   = {state.mom}."
         )
-        assert (
-            state.dir == init_state.dir
-        ), "integrator not returning on reversal to initial direction."
+        assert state.dir == init_state.dir, (
+            "integrator not returning on reversal to initial direction."
+        )
 
     @pytest.mark.parametrize("n_step", N_STEPS_HAMILTONIAN)
     def test_approx_hamiltonian_conservation(self, integrator, init_state, n_step):
@@ -119,9 +119,9 @@ class IntegratorTests:
         assert np.all(
             init_state.mom == init_mom,
         ), "integrator modifiying passed state.mom attribute"
-        assert (
-            init_state.dir == init_dir
-        ), "integrator modifiying passed state.dir attribute"
+        assert init_state.dir == init_dir, (
+            "integrator modifiying passed state.dir attribute"
+        )
 
 
 class LinearSystemIntegratorTests(IntegratorTests):

@@ -281,7 +281,7 @@ class SequenceProgressBar(ProgressBar):
         return (
             f"{mean_time:.2f}s/{self._unit}"
             if mean_time > 1
-            else f"{1/mean_time:.2f}{self._unit}/s"
+            else f"{1 / mean_time:.2f}{self._unit}/s"
         )
 
     @property
@@ -348,8 +348,7 @@ class SequenceProgressBar(ProgressBar):
     def prefix(self) -> str:
         """Text to prefix progress bar with."""
         return (
-            f'{self.description + ": "if self.description else ""}'
-            f"{self.perc_complete}"
+            f"{self.description + ': ' if self.description else ''}{self.perc_complete}"
         )
 
     @property
@@ -359,7 +358,7 @@ class SequenceProgressBar(ProgressBar):
             f"{self.counter}/{self.n_iter} "
             f"[{self.elapsed_time}<{self.est_remaining_time}, "
             f"{self.iter_rate}"
-            f'{", " + self.stats if self._stats_dict else ""}]'
+            f"{', ' + self.stats if self._stats_dict else ''}]"
         )
 
     def reset(self) -> None:
@@ -391,10 +390,8 @@ class SequenceProgressBar(ProgressBar):
             if iter_dict is not None:
                 _update_stats_running_means(iter_count, self._stats_dict, iter_dict)
             self._elapsed_time = timer() - self._start_time
-        if (
-            refresh
-            and iter_count == self.n_iter
-            or (timer() - self._last_refresh_time > self._min_refresh_time)
+        if (refresh and iter_count == self.n_iter) or (
+            timer() - self._last_refresh_time > self._min_refresh_time
         ):
             self.refresh()
             self._last_refresh_time = timer()
@@ -418,7 +415,7 @@ class SequenceProgressBar(ProgressBar):
           <label style="margin-right: 8px; flex-shrink: 0;
                         font-size: var(--jp-code-font-size, 13px);
                         font-family: var(--jp-code-font-family, monospace);">
-            {html.escape(self.prefix).replace(' ', '&nbsp;')}
+            {html.escape(self.prefix).replace(" ", "&nbsp;")}
           </label>
           <div role="progressbar" aria-valuenow="{self.prop_complete}"
                aria-valuemin="0" aria-valuemax="1"
@@ -511,7 +508,7 @@ class LabelledSequenceProgressBar(ProgressBar):
     @property
     def prefix(self) -> str:
         """Text to prefix progress bar with."""
-        return f'{self.description + ": " if self.description else ""}'
+        return f"{self.description + ': ' if self.description else ''}"
 
     @property
     def postfix(self) -> str:
@@ -601,7 +598,7 @@ class LabelledSequenceProgressBar(ProgressBar):
           <label style="flex-shrink: 0;
                         font-size: var(--jp-code-font-size, 13px);
                         font-family: var(--jp-code-font-family, monospace);">
-            {html.escape(self.prefix).replace(' ', '&nbsp;')}
+            {html.escape(self.prefix).replace(" ", "&nbsp;")}
           </label>
         """
         template_string = """

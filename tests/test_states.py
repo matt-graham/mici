@@ -137,46 +137,46 @@ def test_cache_in_state(state_vars):
         mocked_method,
         bound_memoized_method,
     ) in _mock_memoized_one_output_system_methods(system, state_vars):
-        assert (
-            mocked_method.call_count == 0
-        ), "method to be memoized should not be called by decorator"
+        assert mocked_method.call_count == 0, (
+            "method to be memoized should not be called by decorator"
+        )
         ret_val_1 = bound_memoized_method(state)
         assert np.all(
             ret_val_1 == func(state),
         ), "return value of memoized method should be same as func"
-        assert (
-            mocked_method.call_count == 1
-        ), "memoized method should be executed once on initial call"
+        assert mocked_method.call_count == 1, (
+            "memoized method should be executed once on initial call"
+        )
         cache_key = mici.states._cache_key_func(system, mocked_method)
-        assert (
-            call_counts[cache_key] == mocked_method.call_count
-        ), f"state call counts value for {cache_key} incorrect"
+        assert call_counts[cache_key] == mocked_method.call_count, (
+            f"state call counts value for {cache_key} incorrect"
+        )
         assert cache_key in state._cache, f"state cache dict should contain {cache_key}"
-        assert (
-            state._cache[cache_key] is ret_val_1
-        ), f"cached value for key {cache_key} is incorrect"
+        assert state._cache[cache_key] is ret_val_1, (
+            f"cached value for key {cache_key} is incorrect"
+        )
         ret_val_2 = bound_memoized_method(state)
-        assert (
-            mocked_method.call_count == 1
-        ), "memoized method should not be executed again on second call"
-        assert (
-            call_counts[cache_key] == mocked_method.call_count
-        ), f"state call counts value for {cache_key} incorrect"
-        assert (
-            ret_val_1 is ret_val_2
-        ), "state cache should return same value when state unchanged"
+        assert mocked_method.call_count == 1, (
+            "memoized method should not be executed again on second call"
+        )
+        assert call_counts[cache_key] == mocked_method.call_count, (
+            f"state call counts value for {cache_key} incorrect"
+        )
+        assert ret_val_1 is ret_val_2, (
+            "state cache should return same value when state unchanged"
+        )
         for var_name in var_names:
             setattr(state, var_name, state_vars[var_name])
-            assert (
-                state._cache[cache_key] is None
-            ), f"cached value for key {cache_key} should be None"
+            assert state._cache[cache_key] is None, (
+                f"cached value for key {cache_key} should be None"
+            )
         ret_val_3 = bound_memoized_method(state)
         assert (
             mocked_method.call_count == 2  # noqa: PLR2004
         ), f"memoized method should be recalled after {var_names} update"
-        assert (
-            call_counts[cache_key] == mocked_method.call_count
-        ), f"state call counts value for {cache_key} incorrect"
+        assert call_counts[cache_key] == mocked_method.call_count, (
+            f"state call counts value for {cache_key} incorrect"
+        )
         assert np.all(
             ret_val_3 == func(state),
         ), "return value of memoized method should be same as unmemoized"
@@ -274,77 +274,77 @@ def test_cache_in_state_with_aux(state_vars):
         bound_memoized_method,
         bound_memoized_aux_method,
     ) in _mock_memoized_aux_output_system_methods(system, state_vars):
-        assert (
-            mocked_method.call_count == 0
-        ), "method to be memoized should not be called by decorator"
+        assert mocked_method.call_count == 0, (
+            "method to be memoized should not be called by decorator"
+        )
         ret_val_1 = bound_memoized_method(state)
         assert np.all(
             ret_val_1 == prim_func(state),
         ), "return value of memoized method should be same as prim_func"
-        assert (
-            mocked_method.call_count == 1
-        ), "memoized method should be executed once on first call"
-        assert (
-            mocked_aux_method.call_count == 0
-        ), "memoized aux method should not have been executed"
+        assert mocked_method.call_count == 1, (
+            "memoized method should be executed once on first call"
+        )
+        assert mocked_aux_method.call_count == 0, (
+            "memoized aux method should not have been executed"
+        )
         prim_cache_key = mici.states._cache_key_func(system, mocked_method)
         aux_cache_key = mici.states._cache_key_func(system, mocked_aux_method)
-        assert (
-            call_counts[prim_cache_key] == mocked_method.call_count
-        ), f"state call counts value for {prim_cache_key} incorrect"
-        assert (
-            call_counts[aux_cache_key] == mocked_aux_method.call_count
-        ), f"state call counts value for {aux_cache_key} incorrect"
-        assert (
-            prim_cache_key in state._cache
-        ), f"state cache dict should contain {prim_cache_key}"
-        assert (
-            aux_cache_key in state._cache
-        ), f"state cache dict should contain {aux_cache_key}"
-        assert (
-            state._cache[prim_cache_key] is ret_val_1
-        ), f"cached value for key {prim_cache_key} is incorrect"
+        assert call_counts[prim_cache_key] == mocked_method.call_count, (
+            f"state call counts value for {prim_cache_key} incorrect"
+        )
+        assert call_counts[aux_cache_key] == mocked_aux_method.call_count, (
+            f"state call counts value for {aux_cache_key} incorrect"
+        )
+        assert prim_cache_key in state._cache, (
+            f"state cache dict should contain {prim_cache_key}"
+        )
+        assert aux_cache_key in state._cache, (
+            f"state cache dict should contain {aux_cache_key}"
+        )
+        assert state._cache[prim_cache_key] is ret_val_1, (
+            f"cached value for key {prim_cache_key} is incorrect"
+        )
         assert np.all(
             state._cache[aux_cache_key] == aux_func(state),
         ), f"cached value for key {aux_cache_key} is incorrect"
         aux_ret_val = bound_memoized_aux_method(state)
-        assert (
-            mocked_aux_method.call_count == 0
-        ), "memoized aux method should not have been executed"
-        assert (
-            call_counts[aux_cache_key] == mocked_aux_method.call_count
-        ), f"state call counts value for {aux_cache_key} incorrect"
+        assert mocked_aux_method.call_count == 0, (
+            "memoized aux method should not have been executed"
+        )
+        assert call_counts[aux_cache_key] == mocked_aux_method.call_count, (
+            f"state call counts value for {aux_cache_key} incorrect"
+        )
         assert np.all(
             aux_ret_val == aux_func(state),
         ), "return value of aux memoized method is incorrect"
         ret_val_2 = bound_memoized_method(state)
-        assert (
-            mocked_method.call_count == 1
-        ), "memoized method should not be executed again on second call"
-        assert (
-            call_counts[prim_cache_key] == mocked_method.call_count
-        ), f"state call counts value for {prim_cache_key} incorrect"
-        assert (
-            call_counts[aux_cache_key] == mocked_aux_method.call_count
-        ), f"state call counts value for {aux_cache_key} incorrect"
-        assert (
-            ret_val_1 is ret_val_2
-        ), "state cache should return same value when state unchanged"
+        assert mocked_method.call_count == 1, (
+            "memoized method should not be executed again on second call"
+        )
+        assert call_counts[prim_cache_key] == mocked_method.call_count, (
+            f"state call counts value for {prim_cache_key} incorrect"
+        )
+        assert call_counts[aux_cache_key] == mocked_aux_method.call_count, (
+            f"state call counts value for {aux_cache_key} incorrect"
+        )
+        assert ret_val_1 is ret_val_2, (
+            "state cache should return same value when state unchanged"
+        )
         for var_name in var_names:
             setattr(state, var_name, state_vars[var_name])
-            assert (
-                state._cache[prim_cache_key] is None
-            ), f"cached value for key {prim_cache_key} should be None"
-            assert (
-                state._cache[aux_cache_key] is None
-            ), f"cached value for key {aux_cache_key} should be None"
+            assert state._cache[prim_cache_key] is None, (
+                f"cached value for key {prim_cache_key} should be None"
+            )
+            assert state._cache[aux_cache_key] is None, (
+                f"cached value for key {aux_cache_key} should be None"
+            )
         ret_val_3 = bound_memoized_method(state)
         assert (
             mocked_method.call_count == 2  # noqa: PLR2004
         ), f"memoized method should be recalled after {var_names} update"
-        assert (
-            call_counts[prim_cache_key] == mocked_method.call_count
-        ), f"state call counts value for {prim_cache_key} incorrect"
+        assert call_counts[prim_cache_key] == mocked_method.call_count, (
+            f"state call counts value for {prim_cache_key} incorrect"
+        )
         assert np.all(
             state._cache[aux_cache_key] == aux_func(state),
         ), f"cached value for key {aux_cache_key} is incorrect"
