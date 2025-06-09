@@ -532,7 +532,7 @@ class IdentityMatrix(PositiveDefiniteMatrix, ImplicitArrayMatrix):
 
     @property
     def diagonal(self) -> NDArray:
-        return np.ones(self.shape[0])
+        return np.ones(self.shape[0] if self.shape[0] is not None else ())
 
     def _construct_array(self) -> NDArray:
         if self.shape[0] is None:
@@ -642,7 +642,9 @@ class ScaledIdentityMatrix(SymmetricMatrix, DifferentiableMatrix, ImplicitArrayM
 
     @property
     def diagonal(self) -> NDArray:
-        return self._scalar * np.ones(self.shape[0])
+        return self._scalar * np.ones(
+            self.shape[0] if self.shape[0] is not None else ()
+        )
 
     def _construct_array(self) -> NDArray:
         if self.shape[0] is None:
