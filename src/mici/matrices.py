@@ -952,7 +952,7 @@ class InverseTriangularMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash_array(self._inverse_array)
 
     def _check_equality(self, other: InverseTriangularMatrix) -> bool:
-        return np.array_equal(self._inverse_array, other._inverse_array)  # noqa: SLF001
+        return np.array_equal(self._inverse_array, other._inverse_array)
 
 
 class _BaseTriangularFactoredDefiniteMatrix(SymmetricMatrix, InvertibleMatrix):
@@ -1408,7 +1408,7 @@ class InverseLUFactoredSquareMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash_array(self._inv_array)
 
     def _check_equality(self, other: InverseLUFactoredSquareMatrix) -> bool:
-        return np.array_equal(self._inv_array, other._inv_array)  # noqa: SLF001
+        return np.array_equal(self._inv_array, other._inv_array)
 
 
 class DenseSymmetricMatrix(SymmetricMatrix, InvertibleMatrix, ExplicitArrayMatrix):
@@ -1521,8 +1521,8 @@ class ScaledOrthogonalMatrix(InvertibleMatrix, ImplicitArrayMatrix):
         return hash((self._scalar, hash_array(self._orth_array)))
 
     def _check_equality(self, other: ScaledOrthogonalMatrix) -> bool:
-        return self._scalar == other._scalar and (  # noqa: SLF001
-            np.array_equal(self._orth_array, other._orth_array)  # noqa: SLF001
+        return self._scalar == other._scalar and (
+            np.array_equal(self._orth_array, other._orth_array)
         )
 
 

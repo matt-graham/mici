@@ -309,7 +309,7 @@ def _construct_chain_iterators(
     return [
         chain_iterator_class(
             range(n_iter),
-            description=f"Chain {c+1}/{n_chain}",
+            description=f"Chain {c + 1}/{n_chain}",
             position=(c + position_offset, n_chain + position_offset),
         )
         for c in range(n_chain)
