@@ -319,21 +319,9 @@ def neg_log_dens(q):
     return snp.log1p(r * snp.cos(ϕ) / R) - snp.log1p(snp.sin(4 * θ) * snp.cos(ϕ) * α)
 
 
-# Specify constrained Hamiltonian system with default identity metric
-system = mici.systems.DenseConstrainedEuclideanMetricSystem(
-    neg_log_dens,
-    constr,
-    backend="symnum",
-)
-
-# System is constrained therefore use constrained leapfrog integrator
-integrator = mici.integrators.ConstrainedLeapfrogIntegrator(system)
-
 # Seed a random number generator
 rng = np.random.default_rng(seed=1234)
 
-# Use dynamic integration-time HMC implementation as MCMC sampler
-sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
 
 # Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²
 # x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)
@@ -355,13 +343,17 @@ def trace_func(state):
     return {"x": x, "y": y, "z": z}
 
 
-# Sample 4 chains in parallel with 500 adaptive warm up iterations in which the
+# Sample chains in parallel with 500 adaptive warm up iterations in which the
 # integrator step size is tuned, followed by 2000 non-adaptive iterations
-final_states, traces, stats = sampler.sample_chains(
+final_states, traces, stats = mici.sample_constrained_hmc_chains(
     n_warm_up_iter=500,
     n_main_iter=2000,
     init_states=q_init,
-    n_worker=4,
+    neg_log_dens=neg_leg_dens,
+    constr=constr,
+    backend="symnum",
+    seed=rng,
+    n_worker=n_chain,
     trace_funcs=[trace_func],
 )
 
