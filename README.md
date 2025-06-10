@@ -149,7 +149,7 @@ API documentation for the package is available
 [here](https://matt-graham.github.io/mici/). Mici provides both a [high-level functional
 interface](https://matt-graham.github.io/mici/mici.interface.html) and a more
 customizable but verbose object-oriented interface. The functions
-[`mici.sample_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
+[`mici.sample_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_hmc_chains)
 and
 [`mici.sample_constrained_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
 in the high-level interface, allow straightforward sampling from distributions on
