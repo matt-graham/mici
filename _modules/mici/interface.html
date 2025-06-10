@@ -1,0 +1,714 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mici.interface &#8212; Mici 0.2.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/mici/interface';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
+    <img src="../../_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../mici.html">
+    mici package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../mici.html">
+    mici package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/matt-graham/mici" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">mici.interface</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for mici.interface</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Higher-level functional interface to Mici.</span>
+
+<span class="sd">Functions for generating approximate samples from target distributions using Markov</span>
+<span class="sd">chain Monte Carlo methods. These functions abstract away the details of constructing</span>
+<span class="sd">the relevant Mici class objects, at the expense of less fine-grained control over the</span>
+<span class="sd">algorithms used. For more complex use-cases, directly construct relevant classes from</span>
+<span class="sd">the :py:mod:`.samplers`, :py:mod:`.systems` and :py:mod:`.integrators` modules and using</span>
+<span class="sd">their object-oriented interfaces.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">mici</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mici.types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">ArrayFunction</span><span class="p">,</span>
+        <span class="n">GradientFunction</span><span class="p">,</span>
+        <span class="n">JacobianFunction</span><span class="p">,</span>
+        <span class="n">MatrixHessianProductFunction</span><span class="p">,</span>
+        <span class="n">ScalarFunction</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_preprocess_kwargs</span><span class="p">(</span><span class="o">*</span><span class="n">kwargs_dicts</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">({}</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">kwargs_dicts</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sample_hmc_chains">
+<a class="viewcode-back" href="../../mici.interface.html#mici.sample_hmc_chains">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_hmc_chains</span><span class="p">(</span>
+    <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">mici</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">ChainState</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">typing</span><span class="o">.</span><span class="n">NDArray</span><span class="p">],</span>
+    <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">system_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">System</span><span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">EuclideanMetricSystem</span><span class="p">,</span>
+    <span class="n">integrator_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">Integrator</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">LeapfrogIntegrator</span><span class="p">,</span>
+    <span class="n">sampler_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">HamiltonianMonteCarlo</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">DynamicMultinomialHMC</span><span class="p">,</span>
+    <span class="n">system_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">integrator_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sampler_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">HMCSampleChainsOutputs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample Hamiltonian Monte Carlo chains for a given target distribution.</span>
+
+<span class="sd">    Samples one or more Markov chains with given initial states, with a stationary</span>
+<span class="sd">    distribution specified by a function evaluating the negative log density of the</span>
+<span class="sd">    target distribution on an unconstrained Euclidean space. Each chain has zero or more</span>
+<span class="sd">    adaptive warm-up iterations, during which the parameters of the chain transitions</span>
+<span class="sd">    can be automatically tuned.</span>
+
+<span class="sd">    This function allows changing the types of the system, integrator and sampler</span>
+<span class="sd">    classes used from their defaults and passing additional keyword arguments to their</span>
+<span class="sd">    initialisers. For finer-grained control and more complex use cases it is recommended</span>
+<span class="sd">    to initialise the objects directly and use the</span>
+<span class="sd">    :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method of the resulting</span>
+<span class="sd">    sampler object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_warm_up_iter: Number of adaptive warm up iterations per chain. If zero, only a</span>
+<span class="sd">            single non-adaptive stage is used.</span>
+<span class="sd">        n_main_iter: Number of iterations (samples to draw) per chain during main</span>
+<span class="sd">            (non-adaptive) sampling stage.</span>
+<span class="sd">        init_states: Initial chain states. Each state can be either an array  specifying</span>
+<span class="sd">            the state position component or a :py:class:`.states.ChainState` instance.</span>
+<span class="sd">            If an array is passed or the :code:`mom` attribute of the state is not set,</span>
+<span class="sd">            a momentum component will be independently sampled from its conditional</span>
+<span class="sd">            distribution. One chain will be run for each state in the iterable.</span>
+<span class="sd">        neg_log_dens: Function which given a position array returns the negative</span>
+<span class="sd">            logarithm of an unnormalized probability density on the position space with</span>
+<span class="sd">            respect to a reference measure, with the corresponding distribution on the</span>
+<span class="sd">            position space being the target distribution it is wished to draw</span>
+<span class="sd">            approximate samples from.</span>
+<span class="sd">        backend: Name of automatic differentiation backend to use. See</span>
+<span class="sd">            :py:mod:`.autodiff` subpackage documentation for details of available</span>
+<span class="sd">            backends. If :code:`None` (the default) no automatic differentiation</span>
+<span class="sd">            fallback will be used and so all derivative functions must be specified</span>
+<span class="sd">            explicitly.</span>
+<span class="sd">        seed: Integer value to seed NumPy random generator with, or :code:`None` to use</span>
+<span class="sd">            default (non-fixed) seeding scheme, or an already seeded</span>
+<span class="sd">            :py:class:`numpy.random.Generator` instance.</span>
+<span class="sd">        grad_neg_log_dens: Function which given a position array returns the derivative</span>
+<span class="sd">            of :code:`neg_log_dens` with respect to the position array argument.</span>
+<span class="sd">            Optionally the function may instead return a 2-tuple of values with the</span>
+<span class="sd">            first being the array corresponding to the derivative and the second being</span>
+<span class="sd">            the value of the :code:`neg_log_dens` evaluated at the passed position</span>
+<span class="sd">            array. If `None` is passed (the default) an automatic differentiation</span>
+<span class="sd">            fallback will be used to attempt to construct the derivative of</span>
+<span class="sd">            :code:`neg_log_dens` automatically.</span>
+<span class="sd">        system_class: The Hamiltonian system class to use. One of the subclasses of</span>
+<span class="sd">            :py:class:`.systems.System` in the :py:mod:`.systems` module.</span>
+<span class="sd">        integrator_class: The symplectic integrator class to use. One of the subclasses</span>
+<span class="sd">            of :py:class:`.integrators.Integrator` in the :py:mod:`.integrators` module.</span>
+<span class="sd">        sampler_class: The Hamiltonian Monte Carlo sampler class to use. One of the</span>
+<span class="sd">            subclasses of :py:class:`.samplers.HamiltonianMonteCarlo` class in the</span>
+<span class="sd">            :py:mod:`.samplers` module.</span>
+<span class="sd">        system_kwargs: Any additional keyword arguments to system class initialiser.</span>
+<span class="sd">        integrator_kwargs: Any additional keyword arguments to integrator class</span>
+<span class="sd">            intitialiser.</span>
+<span class="sd">        sampler_kwargs: Any additional keyword arguments to sampler class</span>
+<span class="sd">            initialiser.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        **kwargs: Additional keyword arguments to pass to the</span>
+<span class="sd">            :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method called to</span>
+<span class="sd">            sample the chains.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Named tuple :code:`(final_states, traces, statistics)` corresponding to states</span>
+<span class="sd">        of chains after final iteration, dictionary of chain trace arrays and dictionary</span>
+<span class="sd">        of chain statistics dictionaries.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">system_kwargs</span><span class="p">,</span> <span class="n">integrator_kwargs</span><span class="p">,</span> <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="n">_preprocess_kwargs</span><span class="p">(</span>
+        <span class="n">system_kwargs</span><span class="p">,</span> <span class="n">integrator_kwargs</span><span class="p">,</span> <span class="n">sampler_kwargs</span>
+    <span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">system_class</span><span class="p">(</span>
+        <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
+        <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">system_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">integrator</span> <span class="o">=</span> <span class="n">integrator_class</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="o">**</span><span class="n">integrator_kwargs</span><span class="p">)</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">sampler_class</span><span class="p">(</span>
+        <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="o">**</span><span class="n">sampler_kwargs</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sampler</span><span class="o">.</span><span class="n">sample_chains</span><span class="p">(</span>
+        <span class="n">n_warm_up_iter</span><span class="o">=</span><span class="n">n_warm_up_iter</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="o">=</span><span class="n">n_main_iter</span><span class="p">,</span>
+        <span class="n">init_states</span><span class="o">=</span><span class="n">init_states</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sample_constrained_hmc_chains">
+<a class="viewcode-back" href="../../mici.interface.html#mici.sample_constrained_hmc_chains">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sample_constrained_hmc_chains</span><span class="p">(</span>
+    <span class="n">n_warm_up_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">n_main_iter</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">init_states</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">mici</span><span class="o">.</span><span class="n">states</span><span class="o">.</span><span class="n">ChainState</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">typing</span><span class="o">.</span><span class="n">NDArray</span><span class="p">],</span>
+    <span class="n">neg_log_dens</span><span class="p">:</span> <span class="n">ScalarFunction</span><span class="p">,</span>
+    <span class="n">constr</span><span class="p">:</span> <span class="n">ArrayFunction</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">grad_neg_log_dens</span><span class="p">:</span> <span class="n">GradientFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">jacob_constr</span><span class="p">:</span> <span class="n">JacobianFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">mhp_constr</span><span class="p">:</span> <span class="n">MatrixHessianProductFunction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dens_wrt_hausdorff</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">system_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">System</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">systems</span><span class="o">.</span><span class="n">DenseConstrainedEuclideanMetricSystem</span><span class="p">,</span>
+    <span class="n">integrator_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">Integrator</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">integrators</span><span class="o">.</span><span class="n">ConstrainedLeapfrogIntegrator</span><span class="p">,</span>
+    <span class="n">sampler_class</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span>
+        <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">HamiltonianMonteCarlo</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">DynamicMultinomialHMC</span><span class="p">,</span>
+    <span class="n">system_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">integrator_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sampler_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mici</span><span class="o">.</span><span class="n">samplers</span><span class="o">.</span><span class="n">HMCSampleChainsOutputs</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample constrained Hamiltonian Monte Carlo chains for a given target distribution.</span>
+
+<span class="sd">    Samples one or more Markov chains with given initial states, with a stationary</span>
+<span class="sd">    distribution on an implicitly-defined manifold embedded in an ambient Euclidean</span>
+<span class="sd">    space, specified by functions evaluating the negative log density of the target</span>
+<span class="sd">    distribution and specified by a constraint function for which the zero level-set of</span>
+<span class="sd">    specifies the manifold the distribution is supported on. Each chain has zero or more</span>
+<span class="sd">    adaptive warm-up iterations, during which the parameters of the chain transitions</span>
+<span class="sd">    can be automatically tuned.</span>
+
+<span class="sd">    This function allows changing the types of the system, integrator and sampler</span>
+<span class="sd">    classes used from their defaults and passing additional keyword arguments to their</span>
+<span class="sd">    initialisers. For finer-grained control and more complex use cases it is recommended</span>
+<span class="sd">    to initialise the objects directly and use the :code:`sample_chains` method of the</span>
+<span class="sd">    resulting sampler object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending on</span>
+<span class="sd">            the :py:class:`.stagers.Stager` instance specified by the :code:`stager`</span>
+<span class="sd">            argument the warm up iterations may be split between one or more adaptive</span>
+<span class="sd">            stages. If zero, only a single non-adaptive stage is used.</span>
+<span class="sd">        n_main_iter: Number of iterations (samples to draw) per chain during main</span>
+<span class="sd">            (non-adaptive) sampling stage.</span>
+<span class="sd">        init_states: Initial chain states. Each state can be either an array  specifying</span>
+<span class="sd">            the state position component or a :py:class:`.states.ChainState` instance.</span>
+<span class="sd">            If an array is passed or the :code:`mom` attribute of the state is not set,</span>
+<span class="sd">            a momentum component will be independently sampled from its conditional</span>
+<span class="sd">            distribution. One chain will be run for each state in the iterable.</span>
+<span class="sd">        neg_log_dens: Function which given a position array returns the negative</span>
+<span class="sd">            logarithm of an unnormalized probability density on the position space with</span>
+<span class="sd">            respect to a reference measure, with the corresponding distribution on the</span>
+<span class="sd">            position space being the target distribution it is wished to draw</span>
+<span class="sd">            approximate samples from.</span>
+<span class="sd">        constr: Function which given a position array return as a 1D array the value</span>
+<span class="sd">            of the (vector-valued) constraint function, the zero level-set of which</span>
+<span class="sd">            implicitly defines the manifold the dynamic is simulated on.</span>
+<span class="sd">        backend: Name of automatic differentiation backend to use. See</span>
+<span class="sd">            :py:mod:`.autodiff` subpackage documentation for details of available</span>
+<span class="sd">            backends. If :code:`None` (the default) no automatic differentiation</span>
+<span class="sd">            fallback will be used and so all derivative functions must be specified</span>
+<span class="sd">            explicitly.</span>
+<span class="sd">        seed: Integer value to seed NumPy random generator with, or :code:`None` to use</span>
+<span class="sd">            default (non-fixed) seeding scheme, or an already seeded</span>
+<span class="sd">            :py:class:`numpy.random.Generator` instance.</span>
+<span class="sd">        grad_neg_log_dens: Function which given a position array returns the derivative</span>
+<span class="sd">            of :code:`neg_log_dens` with respect to the position array argument.</span>
+<span class="sd">            Optionally the function may instead return a 2-tuple of values with the</span>
+<span class="sd">            first being the array corresponding to the derivative and the second being</span>
+<span class="sd">            the value of the :code:`neg_log_dens` evaluated at the passed position</span>
+<span class="sd">            array. If :code:`None` is passed (the default) an automatic differentiation</span>
+<span class="sd">            fallback will be used to attempt to construct the derivative of</span>
+<span class="sd">            :code:`neg_log_dens` automatically.</span>
+<span class="sd">        jacob_constr: Function which given a position array computes the Jacobian</span>
+<span class="sd">            (matrix / 2D array of partial derivatives) of the output of the constraint</span>
+<span class="sd">            function :code:`c = constr(q)` with respect to the position array argument</span>
+<span class="sd">            :code:`q`, returning the computed Jacobian as a 2D array :code:`jacob` with</span>
+<span class="sd">            :code:`jacob[i, j] = ∂c[i] / ∂q[j]`. Optionally the function may instead</span>
+<span class="sd">            return a 2-tuple of values with the first being the array corresponding to</span>
+<span class="sd">            the Jacobian and the second being the value of :code:`constr` evaluated at</span>
+<span class="sd">            the passed position array. If :code:`None` is passed (the default) an</span>
+<span class="sd">            automatic differentiation fallback will be used to attempt to construct a</span>
+<span class="sd">            function to compute the Jacobian (and value) of :code:`constr`</span>
+<span class="sd">            automatically.</span>
+<span class="sd">        mhp_constr: Function which given a position array returns another function</span>
+<span class="sd">            which takes a 2D array as an argument and returns the</span>
+<span class="sd">            *matrix-Hessian-product* (MHP) of the constraint function :code:`constr`</span>
+<span class="sd">            with respect to the position array argument. The MHP is here defined as a</span>
+<span class="sd">            function of a :code:`(dim_constr, dim_pos)` shaped 2D array :code:`m` as</span>
+<span class="sd">            :code:`mhp(m) = sum(m[:, :, None] * hess[:, :, :], axis=(0, 1))` where</span>
+<span class="sd">            :code:`hess` is the :code:`(dim_constr, dim_pos, dim_pos)` shaped</span>
+<span class="sd">            vector-Hessian of :code:`c = constr(q)` with respect to :code:`q` i.e. the</span>
+<span class="sd">            array of second-order partial derivatives of such that :code:`hess[i, j, k]</span>
+<span class="sd">            = ∂²c[i] / (∂q[j] ∂q[k])`. Optionally the function may instead return a</span>
+<span class="sd">            3-tuple of values with the first a function to compute a MHP of</span>
+<span class="sd">            :code:`constr`, the second a 2D array corresponding to the Jacobian of</span>
+<span class="sd">            :code:`constr`, and the third the value of :code:`constr`, all evaluated at</span>
+<span class="sd">            the passed position array. If :code:`None` is passed (the default) an</span>
+<span class="sd">            automatic differentiation fallback will be used to attempt to construct a</span>
+<span class="sd">            function which calculates the MHP (and Jacobian and value) of :code:`constr`</span>
+<span class="sd">            automatically. Only used if :code:`dens_wrt_hausdorff == False`.</span>
+<span class="sd">        dens_wrt_hausdorff: If :code:`constr` is specified, whether the</span>
+<span class="sd">            :code:`neg_log_dens` function specifies the (negative logarithm) of the</span>
+<span class="sd">            density of the target distribution with respect to the Hausdorff measure on</span>
+<span class="sd">            the manifold directly (:code:`True`) or alternatively the negative logarithm</span>
+<span class="sd">            of a density of a prior distriubtion on the unconstrained (ambient) position</span>
+<span class="sd">            space with respect to the Lebesgue measure, with the target distribution</span>
+<span class="sd">            then corresponding to the posterior distribution when conditioning on the</span>
+<span class="sd">            event :code:`constr(pos) == 0` (:code:`False`).</span>
+<span class="sd">        system_class: The Hamiltonian system class to use. One of the subclasses of</span>
+<span class="sd">            :py:class:`.systems.System` in the :py:mod:`.systems` module.</span>
+<span class="sd">        integrator_class: The symplectic integrator class to use. One of the subclasses</span>
+<span class="sd">            of :py:class:`.integrators.Integrator` in the :py:mod:`.integrators` module.</span>
+<span class="sd">        sampler_class: The Hamiltonian Monte Carlo sampler class to use. One of the</span>
+<span class="sd">            subclasses of :py:class:`.samplers.HamiltonianMonteCarlo` class in the</span>
+<span class="sd">            :py:mod:`.samplers` module.</span>
+<span class="sd">        system_kwargs: Any additional keyword arguments to system class initialiser.</span>
+<span class="sd">        integrator_kwargs: Any additional keyword arguments to integrator class</span>
+<span class="sd">            intitialiser.</span>
+<span class="sd">        sampler_kwargs: Any additional keyword arguments to sampler class</span>
+<span class="sd">            initialiser.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        **kwargs: Additional keyword arguments to pass to the</span>
+<span class="sd">            :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method called</span>
+<span class="sd">            to sample the chains.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Named tuple :code:`(final_states, traces, statistics)` corresponding to</span>
+<span class="sd">        states of chains after final iteration, dictionary of chain trace arrays</span>
+<span class="sd">        and dictionary of chain statistics dictionaries.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">system_kwargs</span><span class="p">,</span> <span class="n">integrator_kwargs</span><span class="p">,</span> <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="n">_preprocess_kwargs</span><span class="p">(</span>
+        <span class="n">system_kwargs</span><span class="p">,</span> <span class="n">integrator_kwargs</span><span class="p">,</span> <span class="n">sampler_kwargs</span>
+    <span class="p">)</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">system_class</span><span class="p">(</span>
+        <span class="n">neg_log_dens</span><span class="o">=</span><span class="n">neg_log_dens</span><span class="p">,</span>
+        <span class="n">grad_neg_log_dens</span><span class="o">=</span><span class="n">grad_neg_log_dens</span><span class="p">,</span>
+        <span class="n">constr</span><span class="o">=</span><span class="n">constr</span><span class="p">,</span>
+        <span class="n">jacob_constr</span><span class="o">=</span><span class="n">jacob_constr</span><span class="p">,</span>
+        <span class="n">mhp_constr</span><span class="o">=</span><span class="n">mhp_constr</span><span class="p">,</span>
+        <span class="n">dens_wrt_hausdorff</span><span class="o">=</span><span class="n">dens_wrt_hausdorff</span><span class="p">,</span>
+        <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">system_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">integrator</span> <span class="o">=</span> <span class="n">integrator_class</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="o">**</span><span class="n">integrator_kwargs</span><span class="p">)</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">sampler_class</span><span class="p">(</span>
+        <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="o">**</span><span class="n">sampler_kwargs</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">sampler</span><span class="o">.</span><span class="n">sample_chains</span><span class="p">(</span>
+        <span class="n">n_warm_up_iter</span><span class="o">=</span><span class="n">n_warm_up_iter</span><span class="p">,</span>
+        <span class="n">n_main_iter</span><span class="o">=</span><span class="n">n_main_iter</span><span class="p">,</span>
+        <span class="n">init_states</span><span class="o">=</span><span class="n">init_states</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2023, Matt Graham.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
