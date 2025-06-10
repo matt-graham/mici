@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mici.systems module &#8212; Mici 0.2.0 documentation</title>
+    <title>mici.systems module &#8212; Mici 0.1.dev1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=6aee1ebc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -115,8 +115,8 @@
       
     
     
-    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
+    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.1.dev1 documentation - Home"/>
+    <img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.1.dev1 documentation - Home"/>
   
   
 </a></div>
@@ -376,15 +376,15 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric_chol_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 2D array
+<li><p><strong>metric_chol_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array returns a 2D array
 with zeros above the diagonal corresponding to the lower-triangular
 Cholesky-factor of the positive definite metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_chol_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_chol_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProductFunction" title="mici.types.VectorJacobianProductFunction"><em>VectorJacobianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a lower-triangular 2D array as an argument (any
 values in the array above the diagonal are ignored) and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_chol_func</cite> with respect to
@@ -407,7 +407,7 @@ automatic differentiation fallback will be used to attempt to construct
 a function which calculates the VJP (and value) of <cite>metric_chol_func</cite>
 automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -750,7 +750,7 @@ pp.5105-5164.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the constrained
 position space with respect to the Hausdorff measure on the constraint
 manifold (if <code class="code docutils literal notranslate"><span class="pre">dens_wrt_hausdorff</span> <span class="pre">==</span> <span class="pre">True</span></code>) or alternatively the
@@ -772,10 +772,10 @@ square-root of the determinant of the Gram matrix defined by
 where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
 <code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the
 metric on the ambient space.</p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+<li><p><strong>constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<a class="reference internal" href="mici.types.html#mici.types.MetricLike" title="mici.types.MetricLike"><em>MetricLike</em></a><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
 passed (the default), the identity matrix will be used. If a 1D array is
@@ -796,7 +796,7 @@ to the posterior distribution when conditioning on the event
 the base Hausdorff measure on the manifold depends on the metric defined
 on the ambient space, with the Hausdorff measure being defined with
 respect to the metric induced on the manifold from this ambient metric.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -805,7 +805,7 @@ passed position array. If <code class="code docutils literal notranslate"><span 
 automatic differentiation fallback will be used to attempt to construct
 a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
 automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.JacobianFunction" title="mici.types.JacobianFunction"><em>JacobianFunction</em></a><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
 array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
@@ -1273,12 +1273,12 @@ position is tractable to compute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -1639,7 +1639,7 @@ systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the constrained
 position space with respect to the Hausdorff measure on the constraint
 manifold (if <code class="code docutils literal notranslate"><span class="pre">dens_wrt_hausdorff</span> <span class="pre">==</span> <span class="pre">True</span></code>) or alternatively the
@@ -1661,10 +1661,10 @@ square-root of the determinant of the Gram matrix defined by
 where <code class="code docutils literal notranslate"><span class="pre">jacob_constr</span></code> is the Jacobian of the constraint function
 <code class="code docutils literal notranslate"><span class="pre">constr</span></code> and <code class="code docutils literal notranslate"><span class="pre">metric</span></code> is the matrix representation of the
 metric on the ambient space.</p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+<li><p><strong>constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<a class="reference internal" href="mici.types.html#mici.types.MetricLike" title="mici.types.MetricLike"><em>MetricLike</em></a><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is
 passed (the default), the identity matrix will be used. If a 1D array is
@@ -1685,7 +1685,7 @@ to the posterior distribution when conditioning on the event
 the base Hausdorff measure on the manifold depends on the metric defined
 on the ambient space, with the Hausdorff measure being defined with
 respect to the metric induced on the manifold from this ambient metric.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -1694,7 +1694,7 @@ passed position array. If <code class="code docutils literal notranslate"><span 
 automatic differentiation fallback will be used to attempt to construct
 a function to compute the derivative (and value) of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code>
 automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.JacobianFunction" title="mici.types.JacobianFunction"><em>JacobianFunction</em></a><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position
 array argument <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array
@@ -1706,7 +1706,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>mhp_constr</strong> (<em>MatrixHessianProductFunction</em><em> | </em><em>None</em>) – Function which given a position array returns another function
+<li><p><strong>mhp_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixHessianProductFunction" title="mici.types.MatrixHessianProductFunction"><em>MatrixHessianProductFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns another function
 which takes a 2D array as an argument and returns the
 <em>matrix-Hessian-product</em> (MHP) of the constraint function <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 with respect to the position array argument. The MHP is here defined as
@@ -2167,17 +2167,17 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 2D array
+<li><p><strong>metric_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array returns a 2D array
 corresponding to the positive definite metric matrix representation. The
 returned matrices (2D arrays) are assumed to be positive-definite for
 all input positions and a <cite>LinAlgError</cite> exception may be raised if this
 fails to be the case.</p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProductFunction" title="mici.types.VectorJacobianProductFunction"><em>VectorJacobianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a 2D array as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_func</cite> with respect to the
 position array argument. The VJP is here defined as a function of a 2D
@@ -2198,7 +2198,7 @@ passed position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -2502,15 +2502,15 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric_diagonal_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns a 1D
+<li><p><strong>metric_diagonal_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array returns a 1D
 array with strictly positive values corresponding to the diagonal values
 (left-to-right) of the diagonal metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_diagonal_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns
+<li><p><strong>vjp_metric_diagonal_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProductFunction" title="mici.types.VectorJacobianProductFunction"><em>VectorJacobianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns
 another function which takes a 1D array as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_diagonal_func</cite> with respect
 to the position array argument. The VJP is here defined as a function of
@@ -2532,7 +2532,7 @@ default) an automatic differentiation fallback will be used to attempt
 to construct a function which calculates the VJP (and value) of
 <cite>metric_diagonal_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -2841,12 +2841,12 @@ distribution with respect to the Lebesgue measure.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<a class="reference internal" href="mici.types.html#mici.types.MetricLike" title="mici.types.MetricLike"><em>MetricLike</em></a><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 position space and covariance of Gaussian marginal distribution on
 momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
 will be used. If a 1D array is passed then this is assumed to specify a
@@ -2856,7 +2856,7 @@ a metric with a dense positive definite matrix representation specified
 by the array. Otherwise if the value is a subclass of
 <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
 the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3111,7 +3111,7 @@ systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – <p>Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – <p>Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the unconstrained
 (ambient) position space with respect to the standard Gaussian measure.
 The density function is taken to specify a prior distribution on the
@@ -3130,10 +3130,10 @@ matrix defined by.</p>
 and <cite>metric</cite> is the matrix representation of the metric on the ambient
 space.</p>
 </p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+<li><p><strong>constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
-<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<a class="reference internal" href="mici.types.html#mici.types.MetricLike" title="mici.types.MetricLike"><em>MetricLike</em></a><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 <em>unconstrained</em> position space and covariance of Gaussian marginal
 distribution on <em>unconstrained</em> momentum vector. If <cite>None</cite> is passed
 (the default), the identity matrix will be used. If a 1D array is passed
@@ -3143,7 +3143,7 @@ passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if a
 subclass of <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to
 directly specify the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3151,7 +3151,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 to compute the derivative (and value) of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.JacobianFunction" title="mici.types.JacobianFunction"><em>JacobianFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the
 constraint function <cite>c = constr(q)</cite> with respect to the position array
 argument <cite>q</cite>, returning the computed Jacobian as a 2D array <cite>jacob</cite> with</p>
@@ -3165,7 +3165,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <cite>neg_log_dens</cite> automatically.</p>
 </p></li>
-<li><p><strong>mhp_constr</strong> (<em>MatrixHessianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another function
+<li><p><strong>mhp_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixHessianProductFunction" title="mici.types.MatrixHessianProductFunction"><em>MatrixHessianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns another function
 which takes a 2D array as an argument and returns the
 <em>matrix-Hessian-product</em> (MHP) of the constraint function <cite>constr</cite> with
 respect to the position array argument. The MHP is here defined as a
@@ -3649,12 +3649,12 @@ Monte Carlo. Statistics and Computing, 24(3), pp.339-349.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the standard Gaussian measure on the position space,
 with the corresponding distribution on the position space being the
 target distribution it is wished to draw approximate samples from.</p></li>
-<li><p><strong>metric</strong> (<em>MetricLike</em><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
+<li><p><strong>metric</strong> (<a class="reference internal" href="mici.types.html#mici.types.MetricLike" title="mici.types.MetricLike"><em>MetricLike</em></a><em> | </em><em>None</em>) – Matrix object corresponding to matrix representation of metric on
 position space and covariance of Gaussian marginal distribution on
 momentum vector. If <cite>None</cite> is passed (the default), the identity matrix
 will be used. If a 1D array is passed then this is assumed to specify a
@@ -3664,7 +3664,7 @@ a metric with a dense positive definite matrix representation specified
 by the array. Otherwise if the value is a subclass of
 <cite>mici.matrices.PositiveDefiniteMatrix</cite> it is assumed to directly specify
 the metric matrix representation.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -3945,7 +3945,7 @@ Series B (Statistical Methodology), 73(2), pp.123-214.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
@@ -3969,11 +3969,11 @@ properties (see documentation of <cite>mici.matrices.PositiveDefiniteMatrix</cit
 and <cite>mici.matrices.DifferentiableMatrix</cite> for definitions of the expected
 behaviour of these methods).</p>
 </p></li>
-<li><p><strong>metric_func</strong> (<em>ArrayFunction</em>) – Function which given a position array returns an array
+<li><p><strong>metric_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array returns an array
 containing the parameter value of the metric matrix representation
 passed as the single positional argument to the <cite>metric_matrix_class</cite>
 initializer.</p></li>
-<li><p><strong>vjp_metric_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
+<li><p><strong>vjp_metric_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProductFunction" title="mici.types.VectorJacobianProductFunction"><em>VectorJacobianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes an array as an argument and returns the
 <strong>vector-Jacobian-product</strong> (VJP) of <cite>metric_func</cite> with respect to the
 position array argument. The VJP is here defined as a function of an
@@ -3994,7 +3994,7 @@ passed position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct a function
 which calculates the VJP (and value) of <cite>metric_func</cite> automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -4300,15 +4300,15 @@ Riemannian-metric Hamiltonian systems.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric_scalar_func</strong> (<em>ScalarFunction</em>) – Function which given a position array returns a strictly
+<li><p><strong>metric_scalar_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns a strictly
 positive scalar corresponding to the parameter value of the scaled
 identity metric matrix representation.</p></li>
-<li><p><strong>vjp_metric_scalar_func</strong> (<em>VectorJacobianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns
+<li><p><strong>vjp_metric_scalar_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProductFunction" title="mici.types.VectorJacobianProductFunction"><em>VectorJacobianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns
 another function which takes a scalar as an argument and returns the
 <em>vector-Jacobian-product</em> (VJP) of <cite>metric_scalar_func</cite> with respect to
 the position array argument. The VJP is here defined as a function of a
@@ -4330,7 +4330,7 @@ automatic differentiation fallback will be used to attempt to construct
 a function which calculates the VJP (and value) of <cite>metric_scalar_func</cite>
 automatically.</p>
 </p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -4657,12 +4657,12 @@ Monte Carlo. In Geometric science of information (pp. 327-334).</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -4670,7 +4670,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>hess_neg_log_dens</strong> (<em>HessianFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the Hessian
+<li><p><strong>hess_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.HessianFunction" title="mici.types.HessianFunction"><em>HessianFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the Hessian
 of <cite>neg_log_dens</cite> with respect to the position array argument as a 2D
 array. Optionally the function may instead return a 3-tuple of values
 with the first a 2D array containting the Hessian of <cite>neg_log_dens</cite>, the
@@ -4680,7 +4680,7 @@ array. If <cite>None</cite> is passed (the default) an automatic differentiation
 fallback will be used to attempt to construct a function which
 calculates the Hessian (and gradient and value) of <cite>neg_log_dens</cite>
 automatically.</p></li>
-<li><p><strong>mtp_neg_log_dens</strong> (<em>MatrixTressianProductFunction</em><em> | </em><em>None</em>) – <p>Function which given a position array returns another
+<li><p><strong>mtp_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixTressianProductFunction" title="mici.types.MatrixTressianProductFunction"><em>MatrixTressianProductFunction</em></a><em> | </em><em>None</em>) – <p>Function which given a position array returns another
 function which takes a 2D array (matrix) as an argument and returns the
 <em>matrix-Tressian-product</em> (MTP) of <cite>neg_log_dens</cite> with respect to the
 position array argument. The MTP is here defined as a function of a
@@ -5057,12 +5057,12 @@ distribution it is wished to draw approximate samples from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the
@@ -5307,12 +5307,12 @@ distribution it is wished to draw approximate samples from.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space
 with respect to a reference measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the
 derivative of <cite>neg_log_dens</cite> with respect to the position array
 argument. Optionally the function may instead return a 2-tuple of values
 with the first being the array corresponding to the derivative and the

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mici package &#8212; Mici 0.2.0 documentation</title>
+    <title>mici package &#8212; Mici 0.1.dev1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=938c9ccc"></script>
+    <script src="_static/documentation_options.js?v=6aee1ebc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'mici';</script>
@@ -114,8 +114,8 @@
       
     
     
-    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.2.0 documentation - Home"/>
-    <img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.2.0 documentation - Home"/>
+    <img src="_static/mici-logo-rectangular.svg" class="logo__image only-light" alt="Mici 0.1.dev1 documentation - Home"/>
+    <img src="_static/mici-logo-rectangular-light-text.svg" class="logo__image only-dark pst-js-only" alt="Mici 0.1.dev1 documentation - Home"/>
   
   
 </a></div>
@@ -388,12 +388,12 @@ the state position component or a <a class="reference internal" href="mici.state
 If an array is passed or the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set,
 a momentum component will be independently sampled from its conditional
 distribution. One chain will be run for each state in the iterable.</p></li>
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space with
 respect to a reference measure, with the corresponding distribution on the
 position space being the target distribution it is wished to draw
 approximate samples from.</p></li>
-<li><p><strong>constr</strong> (<em>ArrayFunction</em>) – Function which given a position array return as a 1D array the value
+<li><p><strong>constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.ArrayFunction" title="mici.types.ArrayFunction"><em>ArrayFunction</em></a>) – Function which given a position array return as a 1D array the value
 of the (vector-valued) constraint function, the zero level-set of which
 implicitly defines the manifold the dynamic is simulated on.</p></li>
 <li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
@@ -404,7 +404,7 @@ explicitly.</p></li>
 <li><p><strong>seed</strong> (<em>np.random.Generator</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Integer value to seed NumPy random generator with, or <code class="code docutils literal notranslate"><span class="pre">None</span></code> to use
 default (non-fixed) seeding scheme, or an already seeded
 <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code></a> instance.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the derivative
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the derivative
 of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array argument.
 Optionally the function may instead return a 2-tuple of values with the
 first being the array corresponding to the derivative and the second being
@@ -412,7 +412,7 @@ the value of the <code class="code docutils literal notranslate"><span class="pr
 array. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> is passed (the default) an automatic differentiation
 fallback will be used to attempt to construct the derivative of
 <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> automatically.</p></li>
-<li><p><strong>jacob_constr</strong> (<em>JacobianFunction</em><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
+<li><p><strong>jacob_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.JacobianFunction" title="mici.types.JacobianFunction"><em>JacobianFunction</em></a><em> | </em><em>None</em>) – Function which given a position array computes the Jacobian
 (matrix / 2D array of partial derivatives) of the output of the constraint
 function <code class="code docutils literal notranslate"><span class="pre">c</span> <span class="pre">=</span> <span class="pre">constr(q)</span></code> with respect to the position array argument
 <code class="code docutils literal notranslate"><span class="pre">q</span></code>, returning the computed Jacobian as a 2D array <code class="code docutils literal notranslate"><span class="pre">jacob</span></code> with
@@ -423,7 +423,7 @@ the passed position array. If <code class="code docutils literal notranslate"><s
 automatic differentiation fallback will be used to attempt to construct a
 function to compute the Jacobian (and value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>mhp_constr</strong> (<em>MatrixHessianProductFunction</em><em> | </em><em>None</em>) – Function which given a position array returns another function
+<li><p><strong>mhp_constr</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixHessianProductFunction" title="mici.types.MatrixHessianProductFunction"><em>MatrixHessianProductFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns another function
 which takes a 2D array as an argument and returns the
 <em>matrix-Hessian-product</em> (MHP) of the constraint function <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 with respect to the position array argument. The MHP is here defined as a
@@ -505,7 +505,7 @@ the state position component or a <a class="reference internal" href="mici.state
 If an array is passed or the <code class="code docutils literal notranslate"><span class="pre">mom</span></code> attribute of the state is not set,
 a momentum component will be independently sampled from its conditional
 distribution. One chain will be run for each state in the iterable.</p></li>
-<li><p><strong>neg_log_dens</strong> (<em>ScalarFunction</em>) – Function which given a position array returns the negative
+<li><p><strong>neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarFunction" title="mici.types.ScalarFunction"><em>ScalarFunction</em></a>) – Function which given a position array returns the negative
 logarithm of an unnormalized probability density on the position space with
 respect to a reference measure, with the corresponding distribution on the
 position space being the target distribution it is wished to draw
@@ -518,7 +518,7 @@ explicitly.</p></li>
 <li><p><strong>seed</strong> (<em>np.random.Generator</em><em> | </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em> | </em><em>None</em>) – Integer value to seed NumPy random generator with, or <code class="code docutils literal notranslate"><span class="pre">None</span></code> to use
 default (non-fixed) seeding scheme, or an already seeded
 <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code></a> instance.</p></li>
-<li><p><strong>grad_neg_log_dens</strong> (<em>GradientFunction</em><em> | </em><em>None</em>) – Function which given a position array returns the derivative
+<li><p><strong>grad_neg_log_dens</strong> (<a class="reference internal" href="mici.types.html#mici.types.GradientFunction" title="mici.types.GradientFunction"><em>GradientFunction</em></a><em> | </em><em>None</em>) – Function which given a position array returns the derivative
 of <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> with respect to the position array argument.
 Optionally the function may instead return a 2-tuple of values with the
 first being the array corresponding to the derivative and the second being
