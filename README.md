@@ -146,10 +146,22 @@ implementation.
 ## Overview of package
 
 API documentation for the package is available
-[here](https://matt-graham.github.io/mici/). The three main user-facing
-modules within the `mici` package are the `systems`, `integrators` and
-`samplers` modules and you will generally need to create an instance of one
-class from each module.
+[here](https://matt-graham.github.io/mici/). Mici provides both a [high-level functional
+interface](https://matt-graham.github.io/mici/mici.interface.html) and a more
+customizable but verbose object-oriented interface. The functions
+[`mici.sample_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
+and
+[`mici.sample_constrained_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
+in the high-level interface, allow straightforward sampling from distributions on
+unconstrained and constrained spaces respectively. These functions default to using an
+adaptive HMC sampler which dynamically sets trajectory lengths, which should work well
+for many problems.
+
+Alternatively users can explicitly create instances of the underlying classes used to
+implement MCMC sampling schemes in Mici to allow greater control over their behaviour.
+The three main user-facing modules within the `mici` package are the `systems`,
+`integrators` and `samplers` modules and you will generally need to create an instance
+of one class from each module when using the object-oriented interface.
 
 [`mici.systems`](https://matt-graham.github.io/mici/mici.systems.html) -
 Hamiltonian systems encapsulating model functions and their derivatives
@@ -212,7 +224,10 @@ samplers for peforming inference
 
 ## Notebooks
 
-The manifold MCMC methods implemented in Mici have been used in several research projects. Below links are provided to a selection of Jupyter notebooks associated with these projects as demonstrations of how to use Mici and to illustrate some of the settings in which manifold MCMC methods can be computationally advantageous.
+The manifold MCMC methods implemented in Mici have been used in several research
+projects. Below links are provided to a selection of Jupyter notebooks associated with
+these projects as demonstrations of how to use Mici and to illustrate some of the
+settings in which manifold MCMC methods can be computationally advantageous.
 
 <table>
   <tr>
@@ -319,21 +334,9 @@ def neg_log_dens(q):
     return snp.log1p(r * snp.cos(ϕ) / R) - snp.log1p(snp.sin(4 * θ) * snp.cos(ϕ) * α)
 
 
-# Specify constrained Hamiltonian system with default identity metric
-system = mici.systems.DenseConstrainedEuclideanMetricSystem(
-    neg_log_dens,
-    constr,
-    backend="symnum",
-)
-
-# System is constrained therefore use constrained leapfrog integrator
-integrator = mici.integrators.ConstrainedLeapfrogIntegrator(system)
-
 # Seed a random number generator
 rng = np.random.default_rng(seed=1234)
 
-# Use dynamic integration-time HMC implementation as MCMC sampler
-sampler = mici.samplers.DynamicMultinomialHMC(system, integrator, rng)
 
 # Sample initial positions on torus using parameterisation (θ, ϕ) ∈ [0, 2π)²
 # x, y, z = (R + r * cos(ϕ)) * cos(θ), (R + r * cos(ϕ)) * sin(θ), r * sin(ϕ)
@@ -355,13 +358,17 @@ def trace_func(state):
     return {"x": x, "y": y, "z": z}
 
 
-# Sample 4 chains in parallel with 500 adaptive warm up iterations in which the
+# Sample chains in parallel with 500 adaptive warm up iterations in which the
 # integrator step size is tuned, followed by 2000 non-adaptive iterations
-final_states, traces, stats = sampler.sample_chains(
+final_states, traces, stats = mici.sample_constrained_hmc_chains(
     n_warm_up_iter=500,
     n_main_iter=2000,
     init_states=q_init,
-    n_worker=4,
+    neg_log_dens=neg_leg_dens,
+    constr=constr,
+    backend="symnum",
+    seed=rng,
+    n_worker=n_chain,
     trace_funcs=[trace_func],
 )
 
