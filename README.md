@@ -146,10 +146,22 @@ implementation.
 ## Overview of package
 
 API documentation for the package is available
-[here](https://matt-graham.github.io/mici/). The three main user-facing
-modules within the `mici` package are the `systems`, `integrators` and
-`samplers` modules and you will generally need to create an instance of one
-class from each module.
+[here](https://matt-graham.github.io/mici/). Mici provides both a [high-level functional
+interface](https://matt-graham.github.io/mici/mici.interface.html) and a more
+customizable but verbose object-oriented interface. The functions
+[`mici.sample_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
+and
+[`mici.sample_constrained_hmc_chains`](https://matt-graham.github.io/mici/mici.html#mici.sample_constrained_hmc_chains)
+in the high-level interface, allow straightforward sampling from distributions on
+unconstrained and constrained spaces respectively. These functions default to using an
+adaptive HMC sampler which dynamically sets trajectory lengths, which should work well
+for many problems.
+
+Alternatively users can explicitly create instances of the underlying classes used to
+implement MCMC sampling schemes in Mici to allow greater control over their behaviour.
+The three main user-facing modules within the `mici` package are the `systems`,
+`integrators` and `samplers` modules and you will generally need to create an instance
+of one class from each module when using the object-oriented interface.
 
 [`mici.systems`](https://matt-graham.github.io/mici/mici.systems.html) -
 Hamiltonian systems encapsulating model functions and their derivatives
@@ -212,7 +224,10 @@ samplers for peforming inference
 
 ## Notebooks
 
-The manifold MCMC methods implemented in Mici have been used in several research projects. Below links are provided to a selection of Jupyter notebooks associated with these projects as demonstrations of how to use Mici and to illustrate some of the settings in which manifold MCMC methods can be computationally advantageous.
+The manifold MCMC methods implemented in Mici have been used in several research
+projects. Below links are provided to a selection of Jupyter notebooks associated with
+these projects as demonstrations of how to use Mici and to illustrate some of the
+settings in which manifold MCMC methods can be computationally advantageous.
 
 <table>
   <tr>
