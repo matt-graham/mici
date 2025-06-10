@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     )
 
 
-def _preprocess_kwargs(*kwargs_dicts: dict) -> tuple[dict]:
+def _preprocess_kwargs(*kwargs_dicts: dict | None) -> tuple[dict]:
     return tuple({} if d is None else d for d in kwargs_dicts)
 
 
@@ -65,14 +65,13 @@ def sample_hmc_chains(
     This function allows changing the types of the system, integrator and sampler
     classes used from their defaults and passing additional keyword arguments to their
     initialisers. For finer-grained control and more complex use cases it is recommended
-    to initialise the objects directly and use the :code:`sample_chains` method of the
-    resulting sampler object.
+    to initialise the objects directly and use the
+    :py:meth:`.samplers.HamiltonianMonteCarlo.sample_chains` method of the resulting
+    sampler object.
 
     Args:
-        n_warm_up_iter: Number of adaptive warm up iterations per chain. Depending on
-            the :py:class:`.stagers.Stager` instance specified by the :code:`stager`
-            argument the warm up iterations may be split between one or more adaptive
-            stages. If zero, only a single non-adaptive stage is used.
+        n_warm_up_iter: Number of adaptive warm up iterations per chain. If zero, only a
+            single non-adaptive stage is used.
         n_main_iter: Number of iterations (samples to draw) per chain during main
             (non-adaptive) sampling stage.
         init_states: Initial chain states. Each state can be either an array  specifying
@@ -87,21 +86,27 @@ def sample_hmc_chains(
             approximate samples from.
         backend: Name of automatic differentiation backend to use. See
             :py:mod:`.autodiff` subpackage documentation for details of available
-            backends. If `None` (the default) no automatic differentiation fallback will
-            be used and so all derivative functions must be specified explicitly.
+            backends. If :code:`None` (the default) no automatic differentiation
+            fallback will be used and so all derivative functions must be specified
+            explicitly.
         seed: Integer value to seed NumPy random generator with, or :code:`None` to use
             default (non-fixed) seeding scheme, or an already seeded
             :py:class:`numpy.random.Generator` instance.
         grad_neg_log_dens: Function which given a position array returns the derivative
-            of `neg_log_dens` with respect to the position array argument. Optionally
-            the function may instead return a 2-tuple of values with the first being the
-            array corresponding to the derivative and the second being the value of the
-            `neg_log_dens` evaluated at the passed position array. If `None` is passed
-            (the default) an automatic differentiation fallback will be used to attempt
-            to construct the derivative of `neg_log_dens` automatically.
-        system_class: The Hamiltonian system class to use.
-        integrator_class: The symplectic integrator class to use.
-        sampler_class: The Hamiltonian Monte Carlo sampler class to use.
+            of :code:`neg_log_dens` with respect to the position array argument.
+            Optionally the function may instead return a 2-tuple of values with the
+            first being the array corresponding to the derivative and the second being
+            the value of the :code:`neg_log_dens` evaluated at the passed position
+            array. If `None` is passed (the default) an automatic differentiation
+            fallback will be used to attempt to construct the derivative of
+            :code:`neg_log_dens` automatically.
+        system_class: The Hamiltonian system class to use. One of the subclasses of
+            :py:class:`.systems.System` in the :py:mod:`.systems` module.
+        integrator_class: The symplectic integrator class to use. One of the subclasses
+            of :py:class:`.integrators.Integrator` in the :py:mod:`.integrators` module.
+        sampler_class: The Hamiltonian Monte Carlo sampler class to use. One of the
+            subclasses of :py:class:`.samplers.HamiltonianMonteCarlo` class in the
+            :py:mod:`.samplers` module.
         system_kwargs: Any additional keyword arguments to system class initialiser.
         integrator_kwargs: Any additional keyword arguments to integrator class
             intitialiser.
@@ -207,18 +212,20 @@ def sample_constrained_hmc_chains(
             implicitly defines the manifold the dynamic is simulated on.
         backend: Name of automatic differentiation backend to use. See
             :py:mod:`.autodiff` subpackage documentation for details of available
-            backends. If `None` (the default) no automatic differentiation fallback will
-            be used and so all derivative functions must be specified explicitly.
+            backends. If :code:`None` (the default) no automatic differentiation
+            fallback will be used and so all derivative functions must be specified
+            explicitly.
         seed: Integer value to seed NumPy random generator with, or :code:`None` to use
             default (non-fixed) seeding scheme, or an already seeded
             :py:class:`numpy.random.Generator` instance.
         grad_neg_log_dens: Function which given a position array returns the derivative
-            of `neg_log_dens` with respect to the position array argument. Optionally
-            the function may instead return a 2-tuple of values with the first being the
-            array corresponding to the derivative and the second being the value of the
-            `neg_log_dens` evaluated at the passed position array. If `None` is passed
-            (the default) an automatic differentiation fallback will be used to attempt
-            to construct the derivative of `neg_log_dens` automatically.
+            of :code:`neg_log_dens` with respect to the position array argument.
+            Optionally the function may instead return a 2-tuple of values with the
+            first being the array corresponding to the derivative and the second being
+            the value of the :code:`neg_log_dens` evaluated at the passed position
+            array. If :code:`None` is passed (the default) an automatic differentiation
+            fallback will be used to attempt to construct the derivative of
+            :code:`neg_log_dens` automatically.
         jacob_constr: Function which given a position array computes the Jacobian
             (matrix / 2D array of partial derivatives) of the output of the constraint
             function :code:`c = constr(q)` with respect to the position array argument
@@ -255,9 +262,13 @@ def sample_constrained_hmc_chains(
             space with respect to the Lebesgue measure, with the target distribution
             then corresponding to the posterior distribution when conditioning on the
             event :code:`constr(pos) == 0` (:code:`False`).
-        system_class: The Hamiltonian system class to use.
-        integrator_class: The symplectic integrator class to use.
-        sampler_class: The Hamiltonian Monte Carlo sampler class to use.
+        system_class: The Hamiltonian system class to use. One of the subclasses of
+            :py:class:`.systems.System` in the :py:mod:`.systems` module.
+        integrator_class: The symplectic integrator class to use. One of the subclasses
+            of :py:class:`.integrators.Integrator` in the :py:mod:`.integrators` module.
+        sampler_class: The Hamiltonian Monte Carlo sampler class to use. One of the
+            subclasses of :py:class:`.samplers.HamiltonianMonteCarlo` class in the
+            :py:mod:`.samplers` module.
         system_kwargs: Any additional keyword arguments to system class initialiser.
         integrator_kwargs: Any additional keyword arguments to integrator class
             intitialiser.
