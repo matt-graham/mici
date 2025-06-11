@@ -303,10 +303,13 @@ distribution and Jacobian of constraint function), sample four chains in paralle
 diagnostics and use [Matplotlib](https://matplotlib.org/) to plot the samples.
 
 ```Python
+import arviz
+import matplotlib.pyplot as plt
 import mici
 import numpy as np
 import symnum
 import symnum.numpy as snp
+import matplotlib.animation as animation
 
 # Define fixed model parameters
 R = 1.0  # toroidal radius ∈ (0, ∞)
@@ -364,7 +367,7 @@ final_states, traces, stats = mici.sample_constrained_hmc_chains(
     n_warm_up_iter=500,
     n_main_iter=2000,
     init_states=q_init,
-    neg_log_dens=neg_leg_dens,
+    neg_log_dens=neg_log_dens,
     constr=constr,
     backend="symnum",
     seed=rng,
