@@ -303,11 +303,13 @@ distribution and Jacobian of constraint function), sample four chains in paralle
 diagnostics and use [Matplotlib](https://matplotlib.org/) to plot the samples.
 
 ```Python
+import arviz
 import matplotlib.pyplot as plt
 import mici
 import numpy as np
 import symnum
 import symnum.numpy as snp
+import matplotlib.animation as animation
 
 # Define fixed model parameters
 R = 1.0  # toroidal radius ∈ (0, ∞)
