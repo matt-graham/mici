@@ -25,13 +25,14 @@ def test_stats_running_means():
 @pytest.mark.parametrize("in_ipython_shell", [True, False])
 def test_in_interactive_shell(monkeypatch, ipython_available, in_ipython_shell):
     monkeypatch.setattr("mici.progressbars.IPYTHON_AVAILABLE", ipython_available)
-    if in_ipython_shell:
-        ipython_mock = mock.Mock()
-        ipython_mock.__module__ = "ipykernel.zmqshell"
-        ipython_mock.__class__.__name__ = "ZMQInteractiveShell"
-    else:
-        ipython_mock = None
-    monkeypatch.setattr("mici.progressbars.get_ipython", lambda: ipython_mock)
+    if ipython_available:
+        if in_ipython_shell:
+            ipython_mock = mock.Mock()
+            ipython_mock.__module__ = "ipykernel.zmqshell"
+            ipython_mock.__class__.__name__ = "ZMQInteractiveShell"
+        else:
+            ipython_mock = None
+        monkeypatch.setattr("mici.progressbars.get_ipython", lambda: ipython_mock)
     assert mici.progressbars._in_interactive_shell() == (
         ipython_available and in_ipython_shell
     )
