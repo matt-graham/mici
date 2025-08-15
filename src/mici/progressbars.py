@@ -40,6 +40,8 @@ def _in_interactive_shell() -> bool:
         return True
     try:
         ipython = get_ipython()
+        if ipython is None:
+            return False
         ipython_module = ipython.__module__
         ipython_class = ipython.__class__.__name__
     except NameError:
