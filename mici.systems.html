@@ -39,9 +39,9 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="_static/documentation_options.js?v=6aee1ebc"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'mici.systems';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -364,7 +364,7 @@
 <p>Hamiltonian systems encapsulating energy functions and their derivatives.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.CholeskyFactoredRiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">CholeskyFactoredRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_chol_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_chol_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#CholeskyFactoredRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">CholeskyFactoredRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_chol_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_chol_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#CholeskyFactoredRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.CholeskyFactoredRiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.RiemannianMetricSystem" title="mici.systems.RiemannianMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RiemannianMetricSystem</span></code></a></p>
 <p>Riemannian-metric system with Cholesky-factored matrix representation.</p>
 <p>Hamiltonian system with a position dependent metric matrix representation which is
@@ -415,7 +415,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -537,7 +537,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -554,7 +554,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -568,7 +568,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -589,7 +589,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -642,7 +642,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -689,7 +689,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VectorJacobianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProduct" title="mici.types.VectorJacobianProduct"><em>VectorJacobianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -698,7 +698,7 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem" title="mici.systems.ConstrainedTractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedTractableFlowSystem</span></code></a>, <a class="reference internal" href="#mici.systems.EuclideanMetricSystem" title="mici.systems.EuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanMetricSystem</span></code></a></p>
 <p>Base class for Euclidean Hamiltonian systems subject to constraints.</p>
 <p>The (constrained) position space is assumed to be a differentiable manifold embedded
@@ -785,7 +785,7 @@ is passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if the
 value is a <a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.matrices.PositiveDefiniteMatrix</span></code></a> subclass it
 is assumed to directly specify the metric matrix representation.</p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
 (negative logarithm) of the density of the target distribution with
 respect to the Hausdorff measure on the manifold directly (<code class="code docutils literal notranslate"><span class="pre">True</span></code>)
 or alternatively the negative logarithm of a density of a prior
@@ -817,7 +817,7 @@ is passed (the default) an automatic differentiation fallback will be
 used to attempt to construct a function to compute the Jacobian (and
 value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -901,7 +901,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval flow simulated for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -913,7 +913,7 @@ momentum output of <a class="reference internal" href="#mici.systems.Constrained
 momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -954,7 +954,7 @@ momentum component of the initial input state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">grad_log_det_sqrt_gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">grad_log_det_sqrt_gram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.grad_log_det_sqrt_gram" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of half log-determinant of Gram matrix with respect to position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1023,7 +1023,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1040,7 +1040,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1054,7 +1054,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1075,7 +1075,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1089,7 +1089,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1134,7 +1134,7 @@ the ambient space.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedEuclideanMetricSystem.jacob_constr_inner_product" title="Link to this definition">#</a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
 <p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
 potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
@@ -1142,10 +1142,10 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
+<li><p><strong>jacob_constr_1</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -1154,7 +1154,7 @@ between rows of two constraint Jacobians.</p></li>
 rows.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1168,7 +1168,7 @@ rows.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>ScalarLike</p>
+<dd class="field-even"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1185,7 +1185,7 @@ rows.</p>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1235,7 +1235,7 @@ co-tangent space of.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedTractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ConstrainedTractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.TractableFlowSystem" title="mici.systems.TractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowSystem</span></code></a></p>
 <p>Base class for Hamiltonian systems subject to constraints with tractable flows.</p>
 <p>The (constrained) position space is assumed to be a differentiable manifold embedded
@@ -1286,7 +1286,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -1296,7 +1296,7 @@ explicitly.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.constr">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.constr" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.constr" title="Link to this definition">#</a></dt>
 <dd><p>Constraint function at the current position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1323,14 +1323,14 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_dmom">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dmom" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dmom" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to momentum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1347,7 +1347,7 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_dpos">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dpos" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_dpos" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1364,13 +1364,13 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_flow_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.dh2_flow_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.dh2_flow_dmom" title="Link to this definition">#</a></dt>
 <dd><p>Derivatives of <a class="reference internal" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="mici.systems.ConstrainedTractableFlowSystem.h2_flow"><code class="xref py py-meth docutils literal notranslate"><span class="pre">h2_flow()</span></code></a> flow map with respect to momentum argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval flow simulated for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1382,7 +1382,7 @@ momentum output of <a class="reference internal" href="#mici.systems.Constrained
 momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1450,7 +1450,7 @@ momentum component of the initial input state.</p>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1467,7 +1467,7 @@ momentum component of the initial input state.</p>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1481,7 +1481,7 @@ momentum component of the initial input state.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1492,7 +1492,7 @@ momentum component of the initial input state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h2">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2" title="Link to this definition">#</a></dt>
 <dd><p>Hamiltonian component depending on momentum and optionally position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1502,21 +1502,21 @@ momentum component of the initial input state.</p>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.h2_flow">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.h2_flow" title="Link to this definition">#</a></dt>
 <dd><p>Apply exact flow map corresponding to <cite>h2</cite> Hamiltonian component.</p>
 <p><cite>state</cite> argument is modified in place.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1527,7 +1527,7 @@ momentum component of the initial input state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.jacob_constr">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">jacob_constr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr" title="Link to this definition">#</a></dt>
 <dd><p>Jacobian of constraint function at the current position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1544,7 +1544,7 @@ momentum component of the initial input state.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">jacob_constr_inner_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jacob_constr_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_product_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.jacob_constr_inner_product"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.jacob_constr_inner_product" title="Link to this definition">#</a></dt>
 <dd><p>Compute inner product of rows of constraint Jacobian matrices.</p>
 <p>Computes <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span> <span class="pre">&#64;</span> <span class="pre">inner_product_matrix</span> <span class="pre">&#64;</span> <span class="pre">jacob_constr_2.T</span></code>
 potentially exploiting any structure / sparsity in <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code>,
@@ -1552,10 +1552,10 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
+<li><p><strong>jacob_constr_1</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -1564,7 +1564,7 @@ between rows of two constraint Jacobians.</p></li>
 rows.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1581,14 +1581,14 @@ rows.</p>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">project_onto_cotangent_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.project_onto_cotangent_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">project_onto_cotangent_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ConstrainedTractableFlowSystem.project_onto_cotangent_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ConstrainedTractableFlowSystem.project_onto_cotangent_space" title="Link to this definition">#</a></dt>
 <dd><p>Project a momentum on to the co-tangent space at a position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1631,7 +1631,7 @@ co-tangent space of.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.DenseConstrainedEuclideanMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dens_wrt_hausdorff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a></p>
 <p>Euclidean Hamiltonian system subject to a dense set of constraints.</p>
 <p>See <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a> for more details about constrained
@@ -1674,7 +1674,7 @@ is passed then this is assumed to specify a metric with a dense positive
 definite matrix representation specified by the array. Otherwise if the
 value is a <a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">mici.matrices.PositiveDefiniteMatrix</span></code></a> subclass it
 is assumed to directly specify the metric matrix representation.</p></li>
-<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
+<li><p><strong>dens_wrt_hausdorff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether the <code class="code docutils literal notranslate"><span class="pre">neg_log_dens</span></code> function specifies the
 (negative logarithm) of the density of the target distribution with
 respect to the Hausdorff measure on the manifold directly (<code class="code docutils literal notranslate"><span class="pre">True</span></code>)
 or alternatively the negative logarithm of a density of a prior
@@ -1724,7 +1724,7 @@ the Jacobian of <code class="code docutils literal notranslate"><span class="pre
 fallback will be used to attempt to construct a function which
 calculates the MHP (and Jacobian and value) of <code class="code docutils literal notranslate"><span class="pre">constr</span></code>
 automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -1808,7 +1808,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval flow simulated for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1820,7 +1820,7 @@ momentum output of <a class="reference internal" href="#mici.systems.DenseConstr
 momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1930,7 +1930,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1947,7 +1947,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1961,7 +1961,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1982,7 +1982,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1996,7 +1996,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2049,10 +2049,10 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
+<li><p><strong>jacob_constr_1</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -2061,7 +2061,7 @@ between rows of two constraint Jacobians.</p></li>
 rows.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2075,7 +2075,7 @@ rows.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>ScalarLike</p>
+<dd class="field-even"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2088,7 +2088,7 @@ rows.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>MatrixHessianProduct</p>
+<dd class="field-even"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixHessianProduct" title="mici.types.MatrixHessianProduct"><em>MatrixHessianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2105,7 +2105,7 @@ rows.</p>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2155,7 +2155,7 @@ co-tangent space of.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.DenseRiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DenseRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseRiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DenseRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DenseRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DenseRiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.RiemannianMetricSystem" title="mici.systems.RiemannianMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RiemannianMetricSystem</span></code></a></p>
 <p>Riemannian-metric system with dense matrix representation.</p>
 <p>Hamiltonian system with a position dependent metric matrix representation which is
@@ -2206,7 +2206,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -2328,7 +2328,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2345,7 +2345,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2359,7 +2359,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2380,7 +2380,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2433,7 +2433,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2480,7 +2480,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VectorJacobianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProduct" title="mici.types.VectorJacobianProduct"><em>VectorJacobianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2489,7 +2489,7 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.DiagonalRiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DiagonalRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_diagonal_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_diagonal_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DiagonalRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DiagonalRiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">DiagonalRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_diagonal_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_diagonal_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#DiagonalRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.DiagonalRiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.RiemannianMetricSystem" title="mici.systems.RiemannianMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RiemannianMetricSystem</span></code></a></p>
 <p>Riemannian-metric system with diagonal matrix representation.</p>
 <p>Hamiltonian system with a position dependent diagonal metric matrix representation
@@ -2540,7 +2540,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -2662,7 +2662,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2679,7 +2679,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2693,7 +2693,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2714,7 +2714,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2767,7 +2767,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2814,7 +2814,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VectorJacobianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProduct" title="mici.types.VectorJacobianProduct"><em>VectorJacobianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2823,7 +2823,7 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.EuclideanMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">EuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#EuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.EuclideanMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">EuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#EuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.EuclideanMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.TractableFlowSystem" title="mici.systems.TractableFlowSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">TractableFlowSystem</span></code></a></p>
 <p>Hamiltonian system with a Euclidean metric on the position space.</p>
 <p>Here Euclidean metric is defined to mean a metric with a fixed positive definite
@@ -2864,7 +2864,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -2884,7 +2884,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2986,7 +2986,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3003,7 +3003,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3017,7 +3017,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3038,7 +3038,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3052,7 +3052,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3073,7 +3073,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3102,7 +3102,7 @@ explicitly.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.GaussianDenseConstrainedEuclideanMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">GaussianDenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianDenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">GaussianDenseConstrainedEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constr</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jacob_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mhp_constr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianDenseConstrainedEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianDenseConstrainedEuclideanMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.GaussianEuclideanMetricSystem" title="mici.systems.GaussianEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussianEuclideanMetricSystem</span></code></a>, <a class="reference internal" href="#mici.systems.DenseConstrainedEuclideanMetricSystem" title="mici.systems.DenseConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseConstrainedEuclideanMetricSystem</span></code></a></p>
 <p>Gaussian Euclidean Hamiltonian system subject to a dense set of constraints.</p>
 <p>See <a class="reference internal" href="#mici.systems.ConstrainedEuclideanMetricSystem" title="mici.systems.ConstrainedEuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConstrainedEuclideanMetricSystem</span></code></a> for more details about constrained
@@ -3187,7 +3187,7 @@ passed (the default) an automatic differentiation fallback will be used
 to attempt to construct a function which calculates the MHP (and
 Jacobian and value) of <cite>constr</cite> automatically.</p>
 </p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -3271,7 +3271,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to evaluate derivatives of flow map at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval flow simulated for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval flow simulated for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -3283,7 +3283,7 @@ momentum output of <a class="reference internal" href="#mici.systems.GaussianDen
 momentum component of the initial input state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>[<a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>, <a class="reference internal" href="mici.matrices.html#mici.matrices.Matrix" title="mici.matrices.Matrix"><em>Matrix</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -3393,7 +3393,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3410,7 +3410,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3424,7 +3424,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3445,7 +3445,7 @@ the ambient space.</p>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3459,7 +3459,7 @@ the ambient space.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3512,10 +3512,10 @@ potentially exploiting any structure / sparsity in <code class="code docutils li
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>jacob_constr_1</strong> (<em>MatrixLike</em>) – First constraint Jacobian in product.</p></li>
+<li><p><strong>jacob_constr_1</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a>) – First constraint Jacobian in product.</p></li>
 <li><p><strong>inner_product_matrix</strong> (<a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a>) – Positive-definite matrix defining inner-product
 between rows of two constraint Jacobians.</p></li>
-<li><p><strong>jacob_constr_2</strong> (<em>MatrixLike</em><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
+<li><p><strong>jacob_constr_2</strong> (<a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a><em> | </em><em>None</em>) – Second constraint Jacobian in product. Defaults to
 <code class="code docutils literal notranslate"><span class="pre">jacob_constr_1</span></code> if set to <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
@@ -3524,7 +3524,7 @@ between rows of two constraint Jacobians.</p></li>
 rows.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixLike" title="mici.types.MatrixLike"><em>MatrixLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3538,7 +3538,7 @@ rows.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>ScalarLike</p>
+<dd class="field-even"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3551,7 +3551,7 @@ rows.</p>
 <dd class="field-odd"><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>)</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>MatrixHessianProduct</p>
+<dd class="field-even"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixHessianProduct" title="mici.types.MatrixHessianProduct"><em>MatrixHessianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3568,7 +3568,7 @@ rows.</p>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3618,7 +3618,7 @@ co-tangent space of.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.GaussianEuclideanMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">GaussianEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianEuclideanMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">GaussianEuclideanMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#GaussianEuclideanMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.GaussianEuclideanMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.EuclideanMetricSystem" title="mici.systems.EuclideanMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">EuclideanMetricSystem</span></code></a></p>
 <p>Euclidean Hamiltonian system with a tractable Gaussian component.</p>
 <p>Here Euclidean metric is defined to mean a metric with a fixed positive definite
@@ -3672,7 +3672,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -3692,7 +3692,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3794,7 +3794,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3811,7 +3811,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3825,7 +3825,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3846,7 +3846,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3860,7 +3860,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -3881,7 +3881,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3910,7 +3910,7 @@ explicitly.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.RiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">RiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_matrix_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#RiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.RiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">RiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_matrix_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#RiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.RiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.System" title="mici.systems.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a></p>
 <p>Riemannian Hamiltonian system with a position-dependent metric.</p>
 <p>This class allows for metric matrix representations of any generic type. In most
@@ -3950,7 +3950,7 @@ logarithm of an unnormalized probability density on the position space
 with respect to the Lebesgue measure, with the corresponding
 distribution on the position space being the target distribution it is
 wished to draw approximate samples from.</p></li>
-<li><p><strong>metric_matrix_class</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><em>type</em></a><em>[</em><a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – <p>Class (or factory function returning an instance of the
+<li><p><strong>metric_matrix_class</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><a class="reference internal" href="mici.matrices.html#mici.matrices.PositiveDefiniteMatrix" title="mici.matrices.PositiveDefiniteMatrix"><em>PositiveDefiniteMatrix</em></a><em>]</em>) – <p>Class (or factory function returning an instance of the
 class) which defines type of matrix representation of metric. The class
 initializer should take a single positional argument which will be
 passed the array outputted by <cite>metric_func</cite>, and which is assumed to be
@@ -4002,9 +4002,9 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>metric_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – An optional dictionary of any additional keyword arguments to
+<li><p><strong>metric_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – An optional dictionary of any additional keyword arguments to
 the initializer of <cite>metric_matrix_class</cite>.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4126,7 +4126,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4143,7 +4143,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4157,7 +4157,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4178,7 +4178,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4231,7 +4231,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4278,7 +4278,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VectorJacobianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProduct" title="mici.types.VectorJacobianProduct"><em>VectorJacobianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4287,7 +4287,7 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.ScalarRiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ScalarRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_scalar_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_scalar_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ScalarRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ScalarRiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">ScalarRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_scalar_func</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">vjp_metric_scalar_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#ScalarRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.ScalarRiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.RiemannianMetricSystem" title="mici.systems.RiemannianMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RiemannianMetricSystem</span></code></a></p>
 <p>Riemannian-metric system with scaled identity matrix representation.</p>
 <p>Hamiltonian system with a position dependent scaled identity metric matrix
@@ -4338,7 +4338,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4460,7 +4460,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4477,7 +4477,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4491,7 +4491,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4512,7 +4512,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4565,7 +4565,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4612,7 +4612,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>VectorJacobianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.VectorJacobianProduct" title="mici.types.VectorJacobianProduct"><em>VectorJacobianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4621,7 +4621,7 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.SoftAbsRiemannianMetricSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">SoftAbsRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hess_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mtp_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softabs_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#SoftAbsRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.SoftAbsRiemannianMetricSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">SoftAbsRiemannianMetricSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hess_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mtp_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softabs_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#SoftAbsRiemannianMetricSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.SoftAbsRiemannianMetricSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.RiemannianMetricSystem" title="mici.systems.RiemannianMetricSystem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RiemannianMetricSystem</span></code></a></p>
 <p>SoftAbs Riemmanian metric Hamiltonian system.</p>
 <p>Hamiltonian system with a position dependent metric matrix representation which is
@@ -4703,11 +4703,11 @@ passed (the default) an automatic differentiation fallback will be used
 to attempt to construct a function which calculates the MTP (and Hesisan
 and gradient and value) of <cite>neg_log_dens</cite> automatically.</p>
 </p></li>
-<li><p><strong>softabs_coeff</strong> (<em>ScalarLike</em>) – Positive regularisation coefficient for smooth approximation
+<li><p><strong>softabs_coeff</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Positive regularisation coefficient for smooth approximation
 to absolute value used to regularize Hessian eigenvalues in metric
 matrix representation. As the value tends to infinity the approximation
 becomes increasingly close to the absolute function.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -4829,7 +4829,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4846,7 +4846,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4860,7 +4860,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -4881,7 +4881,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4966,7 +4966,7 @@ scalar-valued function such that</p>
 array of shape <cite>state.pos.shape</cite> containing the computed MTP value.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixTressianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixTressianProduct" title="mici.types.MatrixTressianProduct"><em>MatrixTressianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -4983,7 +4983,7 @@ array of shape <cite>state.pos.shape</cite> containing the computed MTP value.</
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5030,7 +5030,7 @@ partial derivatives of the function such that</p>
 <dd class="field-even"><p>Vector-Jacobian-product function.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MatrixTressianProduct</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.MatrixTressianProduct" title="mici.types.MatrixTressianProduct"><em>MatrixTressianProduct</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5039,8 +5039,8 @@ partial derivatives of the function such that</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.System">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">System</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">System</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Base class for Hamiltonian systems.</p>
 <p>The Hamiltonian function <span class="math notranslate nohighlight">\(h\)</span> is assumed to have the general form</p>
 <div class="math notranslate nohighlight">
@@ -5070,7 +5070,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -5090,14 +5090,14 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.System.dh2_dmom">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.dh2_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.dh2_dmom" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.dh2_dmom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.dh2_dmom" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to momentum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5114,7 +5114,7 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.System.dh2_dpos">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.dh2_dpos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.dh2_dpos" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.dh2_dpos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.dh2_dpos" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5192,7 +5192,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5209,7 +5209,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5223,7 +5223,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -5234,7 +5234,7 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.System.h2">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.h2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.h2" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.h2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.h2" title="Link to this definition">#</a></dt>
 <dd><p>Hamiltonian component depending on momentum and optionally position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5244,7 +5244,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5261,14 +5261,14 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.System.sample_momentum">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.sample_momentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.sample_momentum" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#System.sample_momentum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.System.sample_momentum" title="Link to this definition">#</a></dt>
 <dd><p>Sample a momentum from its conditional distribution given a position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5290,7 +5290,7 @@ explicitly.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">TractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.systems.</span></span><span class="sig-name descname"><span class="pre">TractableFlowSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neg_log_dens</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_neg_log_dens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.systems.System" title="mici.systems.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a></p>
 <p>Base class for Hamiltonian systems with tractable component flows.</p>
 <p>The Hamiltonian function <span class="math notranslate nohighlight">\(h\)</span> is assumed to have the general form</p>
@@ -5320,7 +5320,7 @@ second being the value of the <cite>neg_log_dens</cite> evaluated at the passed
 position array. If <cite>None</cite> is passed (the default) an automatic
 differentiation fallback will be used to attempt to construct the
 derivative of <cite>neg_log_dens</cite> automatically.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Name of automatic differentiation backend to use. See
 <a class="reference internal" href="mici.autodiff.html#module-mici.autodiff" title="mici.autodiff"><code class="xref py py-mod docutils literal notranslate"><span class="pre">autodiff</span></code></a> subpackage documentation for details of available
 backends. If <cite>None</cite> (the default) no automatic differentiation fallback
 will be used and so all derivative functions must be specified
@@ -5340,14 +5340,14 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed <cite>h1</cite> derivative.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_dmom">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dmom" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dmom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dmom" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to momentum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5364,7 +5364,7 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.dh2_dpos">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dpos" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dh2_dpos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.dh2_dpos" title="Link to this definition">#</a></dt>
 <dd><p>Derivative of <cite>h2</cite> Hamiltonian component with respect to position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5442,7 +5442,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of Hamiltonian.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5459,7 +5459,7 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h1</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -5473,7 +5473,7 @@ explicitly.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -5484,7 +5484,7 @@ explicitly.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h2">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">h2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2" title="Link to this definition">#</a></dt>
 <dd><p>Hamiltonian component depending on momentum and optionally position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5494,21 +5494,21 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of <cite>h2</cite> Hamiltonian component.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.h2_flow">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem.h2_flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2_flow" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">h2_flow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/systems.html#TractableFlowSystem.h2_flow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.systems.TractableFlowSystem.h2_flow" title="Link to this definition">#</a></dt>
 <dd><p>Apply exact flow map corresponding to <cite>h2</cite> Hamiltonian component.</p>
 <p><cite>state</cite> argument is modified in place.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – State to start flow at.</p></li>
-<li><p><strong>dt</strong> (<em>ScalarLike</em>) – Time interval to simulate flow for.</p></li>
+<li><p><strong>dt</strong> (<a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a>) – Time interval to simulate flow for.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -5529,14 +5529,14 @@ explicitly.</p></li>
 <dd class="field-even"><p>Value of computed negative log density.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ScalarLike</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.ScalarLike" title="mici.types.ScalarLike"><em>ScalarLike</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.systems.TractableFlowSystem.sample_momentum">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.sample_momentum" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">sample_momentum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#mici.systems.TractableFlowSystem.sample_momentum" title="Link to this definition">#</a></dt>
 <dd><p>Sample a momentum from its conditional distribution given a position.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -5922,7 +5922,7 @@ explicitly.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

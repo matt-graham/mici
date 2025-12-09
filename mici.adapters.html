@@ -39,8 +39,8 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="_static/documentation_options.js?v=6aee1ebc"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'mici.adapters';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -363,8 +363,8 @@
 <p>Methods for adaptively setting algorithmic parameters of transitions.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.Adapter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">Adapter</span></span><a class="reference internal" href="_modules/mici/adapters.html#Adapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">Adapter</span></span><a class="reference internal" href="_modules/mici/adapters.html#Adapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Abstract adapter for implementing schemes to adapt transition parameters.</p>
 <p>Adaptation schemes are assumed to be based on updating a collection of adaptation
 variables (collectively termed the adapter state here) after each chain transition
@@ -374,7 +374,7 @@ transitions, the final adapter state may be used to perform a final update to th
 transition parameters.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.finalize">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.finalize" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rngs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.finalize" title="Link to this definition">#</a></dt>
 <dd><p>Update transition parameters based on final adapter state or states.</p>
 <p>Optionally, if multiple adapter states are available, e.g. from a set of
 independent adaptive chains, then these adaptation information from all the
@@ -382,7 +382,7 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
@@ -404,7 +404,7 @@ be updated due to adaptation if required.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.initialize">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.initialize" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">initialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.initialize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.initialize" title="Link to this definition">#</a></dt>
 <dd><p>Initialize adapter state prior to starting adaptive transitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -420,14 +420,14 @@ child objects may be updated in-place by the method.</p></li>
 <dd class="field-even"><p>Initial adapter state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>AdapterState</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.is_fast">
-<em class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#mici.adapters.Adapter.is_fast" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_fast</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#mici.adapters.Adapter.is_fast" title="Link to this definition">#</a></dt>
 <dd><p>Whether the adapter is ‘fast’ or ‘slow’.</p>
 <p>An adapter which requires only local information to adapt the transition
 parameters should be classified as fast while one which requires more global
@@ -437,17 +437,17 @@ information and so more chain iterations should be classified as slow i.e.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="mici.adapters.Adapter.update">
-<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.update" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trans_stats</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#Adapter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.Adapter.update" title="Link to this definition">#</a></dt>
 <dd><p>Update adapter state after sampling from transition being adapted.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_state</strong> (<em>AdapterState</em>) – Current adapter state. Entries will be updated in-place by the
+<li><p><strong>adapt_state</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a>) – Current adapter state. Entries will be updated in-place by the
 method.</p></li>
 <li><p><strong>chain_state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state following sampling from transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
-<li><p><strong>trans_stats</strong> (<em>TransitionStatistics</em>) – Dictionary of statistics associated with transition being
+<li><p><strong>trans_stats</strong> (<a class="reference internal" href="mici.types.html#mici.types.TransitionStatistics" title="mici.types.TransitionStatistics"><em>TransitionStatistics</em></a>) – Dictionary of statistics associated with transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
@@ -464,7 +464,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">DualAveragingStepSizeAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_stat_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_stat_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_decay_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_init_step_size_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reducer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">DualAveragingStepSizeAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapt_stat_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adapt_stat_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reg_coefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_decay_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_init_step_size_iters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step_size_reducer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#DualAveragingStepSizeAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dual averaging integrator step size adapter.</p>
 <p>Implementation of the dual algorithm step size adaptation algorithm described in
@@ -484,13 +484,13 @@ Mathematical programming 120(1), pp.221-259.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Target value for the transition statistic
+<li><p><strong>adapt_stat_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Target value for the transition statistic
 being controlled during adaptation.</p></li>
-<li><p><strong>adapt_stat_func</strong> (<em>AdaptationStatisticFunction</em><em> | </em><em>None</em>) – Function which given a dictionary of transition statistics
+<li><p><strong>adapt_stat_func</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdaptationStatisticFunction" title="mici.types.AdaptationStatisticFunction"><em>AdaptationStatisticFunction</em></a><em> | </em><em>None</em>) – Function which given a dictionary of transition statistics
 outputs the value of the statistic to control during adaptation. By
 default this is set to a function which simply selects the
 :code:’accept_stat’ value in the statistics dictionary.</p></li>
-<li><p><strong>log_step_size_reg_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em> | </em><em>None</em>) – Value to regularize the controlled output
+<li><p><strong>log_step_size_reg_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em> | </em><em>None</em>) – Value to regularize the controlled output
 (logarithm of the integrator step size) towards. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> set to
 <code class="code docutils literal notranslate"><span class="pre">log(10</span> <span class="pre">*</span> <span class="pre">init_step_size)</span></code> where <code class="code docutils literal notranslate"><span class="pre">init_step_size</span></code> is the
 initial ‘reasonable’ step size found by a coarse search as recommended
@@ -498,26 +498,26 @@ in Hoffman and Gelman (2014). This has the effect of giving the dual
 averaging algorithm a tendency towards testing step sizes larger than
 the initial value, with typically integrating with a larger step size
 having a lower computational cost.</p></li>
-<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Coefficient controlling amount of
+<li><p><strong>log_step_size_reg_coefficient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Coefficient controlling amount of
 regularisation of controlled output (logarithm of the integrator step
 size) towards <code class="code docutils literal notranslate"><span class="pre">log_step_size_reg_target</span></code>. Defaults to 0.05 as
 recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
+<li><p><strong>iter_decay_coeff</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Coefficient controlling exponent of decay in schedule
 weighting stochastic updates to smoothed log step size estimate. Should
 be in the interval (0.5, 1] to ensure asymptotic convergence of
 adaptation. A value of 1 gives equal weight to the whole history of
 updates while setting to a smaller value increasingly highly weights
 recent updates, giving a tendency to ‘forget’ early updates.
 Defaults to 0.75 as recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Offset used for the iteration based weighting of the adaptation
+<li><p><strong>iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Offset used for the iteration based weighting of the adaptation
 statistic error estimate. Should be set to a non-negative value. A value
 &gt; 0 has the effect of stabilising early iterations. Defaults to the
 value of 10 as recommended in Hoffman and Gelman (2014).</p></li>
-<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Maximum number of iterations to use in initial
+<li><p><strong>max_init_step_size_iters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Maximum number of iterations to use in initial
 search for a reasonable step size with an
 <a class="reference internal" href="mici.errors.html#mici.errors.AdaptationError" title="mici.errors.AdaptationError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">mici.errors.AdaptationError</span></code></a> exception raised if a suitable
 step size is not found within this many iterations.</p></li>
-<li><p><strong>log_step_size_reducer</strong> (<em>ReducerFunction</em><em> | </em><em>None</em>) – Reduction to apply to final per-chain step sizes
+<li><p><strong>log_step_size_reducer</strong> (<a class="reference internal" href="mici.types.html#mici.types.ReducerFunction" title="mici.types.ReducerFunction"><em>ReducerFunction</em></a><em> | </em><em>None</em>) – Reduction to apply to final per-chain step sizes
 estimates to produce overall integrator step size for main chain stages.
 The specified function should accept a sequence of logarithms of
 estimated step sizes and output a non-negative step size to use. If
@@ -536,7 +536,7 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
@@ -574,14 +574,14 @@ child objects may be updated in-place by the method.</p></li>
 <dd class="field-even"><p>Initial adapter state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>AdapterState</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.DualAveragingStepSizeAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.is_fast" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#mici.adapters.DualAveragingStepSizeAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -591,12 +591,12 @@ child objects may be updated in-place by the method.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_state</strong> (<em>AdapterState</em>) – Current adapter state. Entries will be updated in-place by the
+<li><p><strong>adapt_state</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a>) – Current adapter state. Entries will be updated in-place by the
 method.</p></li>
 <li><p><strong>chain_state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state following sampling from transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
-<li><p><strong>trans_stats</strong> (<em>TransitionStatistics</em>) – Dictionary of statistics associated with transition being
+<li><p><strong>trans_stats</strong> (<a class="reference internal" href="mici.types.html#mici.types.TransitionStatistics" title="mici.types.TransitionStatistics"><em>TransitionStatistics</em></a>) – Dictionary of statistics associated with transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
@@ -613,7 +613,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineCovarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineCovarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineCovarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Dense metric adapter using online covariance estimates.</p>
 <p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
@@ -643,11 +643,11 @@ probabilistic programming language. Journal of Statistical Software, 76(1).</p><
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Iteration offset used for calculating iteration
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Iteration offset used for calculating iteration
 dependent weighting between regularisation target and current covariance
 estimate. Higher values cause stronger regularisation during initial
 iterations.</p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Positive scalar defining value variance estimates are
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Positive scalar defining value variance estimates are
 regularized towards.</p></li>
 </ul>
 </dd>
@@ -662,7 +662,7 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
@@ -700,14 +700,14 @@ child objects may be updated in-place by the method.</p></li>
 <dd class="field-even"><p>Initial adapter state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>AdapterState</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.OnlineCovarianceMetricAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#mici.adapters.OnlineCovarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -717,12 +717,12 @@ child objects may be updated in-place by the method.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_state</strong> (<em>AdapterState</em>) – Current adapter state. Entries will be updated in-place by the
+<li><p><strong>adapt_state</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a>) – Current adapter state. Entries will be updated in-place by the
 method.</p></li>
 <li><p><strong>chain_state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state following sampling from transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
-<li><p><strong>trans_stats</strong> (<em>TransitionStatistics</em>) – Dictionary of statistics associated with transition being
+<li><p><strong>trans_stats</strong> (<a class="reference internal" href="mici.types.html#mici.types.TransitionStatistics" title="mici.types.TransitionStatistics"><em>TransitionStatistics</em></a>) – Dictionary of statistics associated with transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
@@ -739,7 +739,7 @@ child objects may be updated in-place by the method.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineVarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">mici.adapters.</span></span><span class="sig-name descname"><span class="pre">OnlineVarianceMetricAdapter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reg_iter_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reg_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mici/adapters.html#OnlineVarianceMetricAdapter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mici.adapters.Adapter" title="mici.adapters.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
 <p>Diagonal metric adapter using online variance estimates.</p>
 <p>Uses Welford’s algorithm (Welford, 1962) to stably compute an online estimate of the
@@ -766,12 +766,12 @@ probabilistic programming language. Journal of Statistical Software, 76(1).</p><
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – Iteration offset used for calculating iteration dependent
+<li><p><strong>reg_iter_offset</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Iteration offset used for calculating iteration dependent
 weighting between regularisation target and current covariance estimate.
 Higher values cause stronger regularisation during initial iterations. A
 value of zero corresponds to no regularisation; this should only be used
 if the sample covariance is guaranteed to be positive definite.</p></li>
-<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Positive scalar defining value variance estimates are regularized
+<li><p><strong>reg_scale</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Positive scalar defining value variance estimates are regularized
 towards.</p></li>
 </ul>
 </dd>
@@ -786,7 +786,7 @@ chains may be combined to set the transition parameter(s).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_states</strong> (<em>AdapterState</em><em> | </em><em>Iterable</em><em>[</em><em>AdapterState</em><em>]</em>) – Final adapter state or a list of per chain adapter states.
+<li><p><strong>adapt_states</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a><em>]</em>) – Final adapter state or a list of per chain adapter states.
 Arrays / buffers associated with the adapter state entries may be
 recycled to reduce memory usage - if so  the corresponding entries will
 be removed from the adapter state dictionary / dictionaries.</p></li>
@@ -824,14 +824,14 @@ child objects may be updated in-place by the method.</p></li>
 <dd class="field-even"><p>Initial adapter state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>AdapterState</p>
+<dd class="field-odd"><p><a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="mici.adapters.OnlineVarianceMetricAdapter.is_fast">
-<span class="sig-name descname"><span class="pre">is_fast</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_fast</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#mici.adapters.OnlineVarianceMetricAdapter.is_fast" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -841,12 +841,12 @@ child objects may be updated in-place by the method.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>adapt_state</strong> (<em>AdapterState</em>) – Current adapter state. Entries will be updated in-place by the
+<li><p><strong>adapt_state</strong> (<a class="reference internal" href="mici.types.html#mici.types.AdapterState" title="mici.types.AdapterState"><em>AdapterState</em></a>) – Current adapter state. Entries will be updated in-place by the
 method.</p></li>
 <li><p><strong>chain_state</strong> (<a class="reference internal" href="mici.states.html#mici.states.ChainState" title="mici.states.ChainState"><em>ChainState</em></a>) – Current chain state following sampling from transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
-<li><p><strong>trans_stats</strong> (<em>TransitionStatistics</em>) – Dictionary of statistics associated with transition being
+<li><p><strong>trans_stats</strong> (<a class="reference internal" href="mici.types.html#mici.types.TransitionStatistics" title="mici.types.TransitionStatistics"><em>TransitionStatistics</em></a>) – Dictionary of statistics associated with transition being
 adapted. May be used to calculate adapter state updates but should not
 be mutated by method.</p></li>
 <li><p><strong>transition</strong> (<a class="reference internal" href="mici.transitions.html#mici.transitions.Transition" title="mici.transitions.Transition"><em>Transition</em></a>) – Markov transition being adapted. Attributes of the transition or
@@ -867,13 +867,13 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Compute arithmetic mean of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Arithmetic mean of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -884,13 +884,13 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Function to extract default statistic used for step-size adaptation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>stats</strong> (<em>TransitionStatistics</em>) – Dictionary of transition statistics.</p>
+<dd class="field-odd"><p><strong>stats</strong> (<a class="reference internal" href="mici.types.html#mici.types.TransitionStatistics" title="mici.types.TransitionStatistics"><em>TransitionStatistics</em></a>) – Dictionary of transition statistics.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Acceptance statistic.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -901,13 +901,13 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Compute geometric mean of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Geometric mean of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -918,13 +918,13 @@ child objects may be updated in-place by the method.</p></li>
 <dd><p>Compute minimum of step sizes from their logs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
+<dd class="field-odd"><p><strong>log_step_sizes</strong> (<em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Logarithms of per-chain estimated step sizes.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Minimum of estimated step sizes.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1056,7 +1056,7 @@ child objects may be updated in-place by the method.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>
