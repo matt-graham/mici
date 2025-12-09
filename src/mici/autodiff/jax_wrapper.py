@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, ParamSpec, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, NamedTuple, ParamSpec, TypeAlias, TypeVar
 
 import numpy as np
 
@@ -106,13 +106,17 @@ def grad_and_value(func: ScalarFunction) -> GradientFunction:
     return grad_and_value_func
 
 
-def _detuple_vjp(vjp_func: jax.tree_util.Partial) -> jax.tree_util.Partial:
-    """Transform a VJP of function with one return value so it returns an array."""
-    return jax.tree_util.Partial(
-        lambda *args, **kwargs: vjp_func.func(*args, **kwargs)[0],
-        *vjp_func.args,
-        **vjp_func.keywords,
-    )
+class DetupledVJP(NamedTuple):
+    """
+    VJP of function with one return value which returns an array rather than tuple.
+
+    Implemented as a NamedTuple so it can automatically be handled as a PyTree.
+    """
+
+    vjp: Callable
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> JaxArray:
+        return self.vjp(*args, **kwargs)[0]
 
 
 def vjp_and_value(func: ArrayFunction) -> VectorJacobianProductFunction:
@@ -132,7 +136,7 @@ def vjp_and_value(func: ArrayFunction) -> VectorJacobianProductFunction:
 
     def vjp_and_value_func(x: ArrayLike) -> tuple[VectorJacobianProduct, ArrayLike]:
         value, vjp = jax.vjp(func, x)
-        return _detuple_vjp(vjp), value
+        return DetupledVJP(vjp), value
 
     return vjp_and_value_func
 
@@ -168,7 +172,7 @@ def mhp_jacobian_and_value(func: ArrayFunction) -> MatrixHessianProductFunction:
         x: ArrayLike,
     ) -> tuple[MatrixHessianProduct, ArrayLike, ArrayLike]:
         jac, mhp, value = jax.vjp(jacobian_and_value(func), x, has_aux=True)
-        return _detuple_vjp(mhp), jac, value
+        return DetupledVJP(mhp), jac, value
 
     return mhp_jacobian_and_value_func
 
@@ -214,6 +218,6 @@ def mtp_hessian_grad_and_value(func: ScalarFunction) -> MatrixTressianProductFun
         x: ArrayLike,
     ) -> tuple[MatrixTressianProduct, ArrayLike, ArrayLike, ScalarLike]:
         hessian, mtp, (grad, value) = jax.vjp(hessian_and_aux_func, x, has_aux=True)
-        return _detuple_vjp(mtp), hessian, grad, value
+        return DetupledVJP(mtp), hessian, grad, value
 
     return mtp_hessian_grad_and_value_func
