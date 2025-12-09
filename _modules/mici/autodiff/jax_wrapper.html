@@ -329,7 +329,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">ParamSpec</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">ParamSpec</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -440,13 +440,23 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_detuple_vjp</span><span class="p">(</span><span class="n">vjp_func</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform a VJP of function with one return value so it returns an array.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">tree_util</span><span class="o">.</span><span class="n">Partial</span><span class="p">(</span>
-        <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">vjp_func</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
-        <span class="o">*</span><span class="n">vjp_func</span><span class="o">.</span><span class="n">args</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">vjp_func</span><span class="o">.</span><span class="n">keywords</span><span class="p">,</span>
-    <span class="p">)</span>
+<div class="viewcode-block" id="DetupledVJP">
+<a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.DetupledVJP">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DetupledVJP</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    VJP of function with one return value which returns an array rather than tuple.</span>
+
+<span class="sd">    Implemented as a NamedTuple so it can automatically be handled as a PyTree.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">vjp</span><span class="p">:</span> <span class="n">Callable</span>
+
+<div class="viewcode-block" id="DetupledVJP.__call__">
+<a class="viewcode-back" href="../../../mici.autodiff.jax_wrapper.html#mici.autodiff.jax_wrapper.DetupledVJP.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaxArray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="vjp_and_value">
@@ -468,7 +478,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">vjp_and_value_func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">VectorJacobianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">vjp</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">vjp</span><span class="p">),</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">DetupledVJP</span><span class="p">(</span><span class="n">vjp</span><span class="p">),</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">vjp_and_value_func</span></div>
 
@@ -510,7 +520,7 @@
         <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixHessianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">]:</span>
         <span class="n">jac</span><span class="p">,</span> <span class="n">mhp</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">jacobian_and_value</span><span class="p">(</span><span class="n">func</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">mhp</span><span class="p">),</span> <span class="n">jac</span><span class="p">,</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">DetupledVJP</span><span class="p">(</span><span class="n">mhp</span><span class="p">),</span> <span class="n">jac</span><span class="p">,</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">mhp_jacobian_and_value_func</span></div>
 
@@ -562,7 +572,7 @@
         <span class="n">x</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">MatrixTressianProduct</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">ScalarLike</span><span class="p">]:</span>
         <span class="n">hessian</span><span class="p">,</span> <span class="n">mtp</span><span class="p">,</span> <span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">=</span> <span class="n">jax</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">hessian_and_aux_func</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">has_aux</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_detuple_vjp</span><span class="p">(</span><span class="n">mtp</span><span class="p">),</span> <span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">DetupledVJP</span><span class="p">(</span><span class="n">mtp</span><span class="p">),</span> <span class="n">hessian</span><span class="p">,</span> <span class="n">grad</span><span class="p">,</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">mtp_hessian_grad_and_value_func</span></div>
 
