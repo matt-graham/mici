@@ -7,6 +7,7 @@ import os
 from typing import TYPE_CHECKING
 
 import numpy as np
+from packaging.version import parse as parse_version
 
 import mici
 
@@ -25,6 +26,29 @@ if TYPE_CHECKING:
         ScalarLike,
         TraceFunction,
     )
+
+
+def _preprocess_stats(
+    traces: dict[str, list[ArrayLike]],
+    stats: dict[str, list[ArrayLike]],
+    energy_key: str,
+    lp_key: str,
+) -> dict[str, list[ArrayLike]]:
+    """Preprocess statistics dictionary to normalize variable names."""
+    stats = stats.copy()
+    stats["n_steps"] = stats.pop("n_step")
+    stats["acceptance_rate"] = stats.pop("accept_stat")
+    if energy_key is not None and energy_key in traces:
+        stats["energy"] = traces[energy_key]
+    if lp_key is not None and lp_key in traces:
+        stats["lp"] = traces[lp_key]
+    return stats
+
+
+def _stack_arrays(data_dict: dict[str, list[ArrayLike]]) -> dict[str, ArrayLike]:
+    return {
+        key: np.stack(per_chain_arrays) for key, per_chain_arrays in data_dict.items()
+    }
 
 
 def convert_to_inference_data(
@@ -61,16 +85,61 @@ def convert_to_inference_data(
     """
     import arviz
 
-    stats = stats.copy()
-    stats["n_steps"] = stats.pop("n_step")
-    stats["acceptance_rate"] = stats.pop("accept_stat")
-    if energy_key is not None and energy_key in traces:
-        stats["energy"] = traces[energy_key]
-    if lp_key is not None and lp_key in traces:
-        stats["lp"] = traces[lp_key]
+    if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+        msg = "InferenceData was removed in ArviZ v1.0+ in favour of xarray.DataTree"
+        raise RuntimeError(msg)
+
+    sample_stats = _preprocess_stats(traces, stats, energy_key, lp_key)
     return arviz.InferenceData(
         posterior=arviz.dict_to_dataset(traces, library=mici),
-        sample_stats=arviz.dict_to_dataset(stats, library=mici),
+        sample_stats=arviz.dict_to_dataset(sample_stats, library=mici),
+    )
+
+
+def convert_to_data_tree(
+    traces: dict[str, list[ArrayLike]],
+    stats: dict[str, list[ArrayLike]],
+    energy_key: str | None = "energy",
+    lp_key: str | None = "lp",
+) -> arviz.InferenceData:
+    """Convert Mici :code:`sample_chains` output to ArviZ :py:class:`xarray.DataTree`.
+
+    Args:
+        traces: Traces output from Mici
+            :py:meth:`mici.samplers.MarkovChainMonteCarloMethod.sample_chains` call. A
+            dictionary of variables traced over sampled chains with the dictionary keys
+            the variable names and the values a list of arrays, one array per sampled
+            chain, with the first array dimension corresponding to the draw index and
+            any remaining dimensions, the variable dimensions.
+        stats: Statistics output from Mici `sample_chains` call. A dictionary of chain
+            statistics traced over sampled chains with the dictionary keys the
+            statistics names and the values a list of arrays, one array per sampled
+            chain, with the array dimension corresponding to the draw index.
+        energy_key: The key of an entry in the `traces` dictionary corresponding the
+            value of the Hamiltonian energy for the accepted proposal (up to an additive
+            constant). If present the corresponding values will be added to the
+            `sample_stats` group of the returned `InferenceData` object.
+        lp_key: The key of an entry in the `traces` dictionary corresponding the value
+            of the joint log posterior density for the model (up to an additive
+            constant). If present the corresponding values will be added to the
+            `sample_stats` group of the returned `InferenceData` object.
+
+    Returns:
+        DataTree object with traced chain data stored in the `posterior`
+        group and additional chain statistics in the `sample_stats` group.
+    """
+    import arviz
+
+    if parse_version(arviz.__version__) < parse_version("1.0.0"):
+        msg = "xarray.DataTree support requires ArviZ v1.0+"
+        raise RuntimeError(msg)
+
+    sample_stats = _preprocess_stats(traces, stats, energy_key, lp_key)
+    return arviz.from_dict(
+        {
+            "posterior": _stack_arrays(traces),
+            "sample_stats": _stack_arrays(sample_stats),
+        }
     )
 
 
