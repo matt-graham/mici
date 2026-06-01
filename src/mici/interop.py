@@ -96,7 +96,7 @@ def convert_to_inference_data(
     )
 
 
-def convert_to_datatree(
+def convert_to_data_tree(
     traces: dict[str, list[ArrayLike]],
     stats: dict[str, list[ArrayLike]],
     energy_key: str | None = "energy",

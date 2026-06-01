@@ -87,19 +87,19 @@ if ARVIZ_AVAILABLE:
         with pytest.raises(RuntimeError, match=r"InferenceData was removed"):
             mici.interop.convert_to_inference_data(traces, stats)
 
-    def test_convert_to_datatree(traces, stats):
+    def test_convert_to_data_tree(traces, stats):
         if parse_version(arviz.__version__) < parse_version("1.0.0"):
             pytest.skip("DataTree only available in ArviZ versions >= 1.0")
-        data_tree = mici.interop.convert_to_datatree(traces, stats)
+        data_tree = mici.interop.convert_to_data_tree(traces, stats)
         _check_arviz_data_object(data_tree, traces)
 
-    def test_convert_to_datatree_raises(traces, stats):
+    def test_convert_to_data_tree_raises(traces, stats):
         if parse_version(arviz.__version__) >= parse_version("1.0.0"):
             pytest.skip(
                 "DataTree available in ArviZ versions >= 1.0 so error not expected"
             )
         with pytest.raises(RuntimeError, match=r"xarray\.DataTree support"):
-            mici.interop.convert_to_datatree(traces, stats)
+            mici.interop.convert_to_data_tree(traces, stats)
 
 
 if PYMC_AVAILABLE:
