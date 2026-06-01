@@ -7,6 +7,7 @@ import os
 from typing import TYPE_CHECKING
 
 import numpy as np
+from packaging.version import parse as parse_version
 
 import mici
 
@@ -60,6 +61,10 @@ def convert_to_inference_data(
         group and additional chain statistics in the `sample_stats` group.
     """
     import arviz
+
+    if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+        msg = "InferenceData was removed in ArviZ v1.0+ in favour of xarray.DataTree"
+        raise RuntimeError(msg)
 
     stats = stats.copy()
     stats["n_steps"] = stats.pop("n_step")

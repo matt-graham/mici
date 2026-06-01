@@ -2,6 +2,7 @@ import importlib
 
 import numpy as np
 import pytest
+from packaging.version import parse as parse_version
 
 import mici
 
@@ -38,19 +39,29 @@ def rng():
     return np.random.default_rng(SEED)
 
 
+@pytest.fixture
+def traces(rng):
+    return {
+        "a": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
+        "b": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
+        "energy": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
+        "lp": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
+    }
+
+
+@pytest.fixture
+def stats(rng):
+    return {
+        "accept_stat": list(rng.uniform(0, 1, (NUM_CHAIN, NUM_SAMPLE))),
+        "n_step": list(rng.integers(0, 10, (NUM_CHAIN, NUM_SAMPLE))),
+    }
+
+
 if ARVIZ_AVAILABLE:
 
-    def test_convert_to_inference_data(rng):
-        traces = {
-            "a": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
-            "b": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
-            "energy": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
-            "lp": list(rng.standard_normal((NUM_CHAIN, NUM_SAMPLE))),
-        }
-        stats = {
-            "accept_stat": list(rng.uniform(0, 1, (NUM_CHAIN, NUM_SAMPLE))),
-            "n_step": list(rng.integers(0, 10, (NUM_CHAIN, NUM_SAMPLE))),
-        }
+    def test_convert_to_inference_data(traces, stats):
+        if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+            pytest.skip("arviz.InferenceData only available in versions < 1.0")
         inference_data = mici.interop.convert_to_inference_data(traces, stats)
         assert isinstance(inference_data, arviz.InferenceData)
         groups = inference_data.groups()
@@ -66,6 +77,14 @@ if ARVIZ_AVAILABLE:
             "energy",
             "lp",
         }
+
+    def test_convert_to_inference_data_raises(traces, stats):
+        if parse_version(arviz.__version__) <= parse_version("1.0.0"):
+            pytest.skip(
+                "arviz.InferenceData available in versions < 1.0 so error not expected"
+            )
+        with pytest.raises(RuntimeError, match="InferenceData was removed"):
+            mici.interop.convert_to_inference_data(traces, stats)
 
 
 if PYMC_AVAILABLE:
@@ -98,6 +117,8 @@ if PYMC_AVAILABLE:
     if ARVIZ_AVAILABLE:
 
         def test_sample_pymc_model_inference_data(pymc_model):
+            if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+                pytest.skip("arviz.InferenceData only available in versions < 1.0")
             inference_data = mici.interop.sample_pymc_model(
                 model=pymc_model,
                 chains=NUM_CHAIN,
@@ -153,6 +174,8 @@ if STAN_AVAILABLE:
     if ARVIZ_AVAILABLE:
 
         def test_sample_stan_model_inference_data(stan_model_code_data_and_params):
+            if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+                pytest.skip("arviz.InferenceData only available in versions < 1.0")
             model_code, data, params = stan_model_code_data_and_params
             inference_data = mici.interop.sample_stan_model(
                 model_code=model_code,
