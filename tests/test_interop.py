@@ -59,32 +59,47 @@ def stats(rng):
 
 if ARVIZ_AVAILABLE:
 
-    def test_convert_to_inference_data(traces, stats):
-        if parse_version(arviz.__version__) >= parse_version("1.0.0"):
-            pytest.skip("arviz.InferenceData only available in versions < 1.0")
-        inference_data = mici.interop.convert_to_inference_data(traces, stats)
-        assert isinstance(inference_data, arviz.InferenceData)
-        groups = inference_data.groups()
-        assert "posterior" in groups
-        assert "sample_stats" in groups
-        for group in groups:
-            assert inference_data[group].coords["chain"].size == NUM_CHAIN
-            assert inference_data[group].coords["draw"].size == NUM_SAMPLE
-        assert set(inference_data.posterior.keys()) == set(traces.keys())
-        assert set(inference_data.sample_stats.keys()) == {
+    def _check_arviz_data_object(data, traces):
+        for group in ("posterior", "sample_stats"):
+            assert group in data
+            assert data[group].coords["chain"].size == NUM_CHAIN
+            assert data[group].coords["draw"].size == NUM_SAMPLE
+        assert set(data.posterior.keys()) == set(traces.keys())
+        assert set(data.sample_stats.keys()) == {
             "acceptance_rate",
             "n_steps",
             "energy",
             "lp",
         }
 
+    def test_convert_to_inference_data(traces, stats):
+        if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+            pytest.skip("arviz.InferenceData only available in versions < 1.0")
+        inference_data = mici.interop.convert_to_inference_data(traces, stats)
+        assert isinstance(inference_data, arviz.InferenceData)
+        _check_arviz_data_object(inference_data, traces)
+
     def test_convert_to_inference_data_raises(traces, stats):
         if parse_version(arviz.__version__) <= parse_version("1.0.0"):
             pytest.skip(
                 "arviz.InferenceData available in versions < 1.0 so error not expected"
             )
-        with pytest.raises(RuntimeError, match="InferenceData was removed"):
+        with pytest.raises(RuntimeError, match=r"InferenceData was removed"):
             mici.interop.convert_to_inference_data(traces, stats)
+
+    def test_convert_to_datatree(traces, stats):
+        if parse_version(arviz.__version__) < parse_version("1.0.0"):
+            pytest.skip("DataTree only available in ArviZ versions >= 1.0")
+        data_tree = mici.interop.convert_to_datatree(traces, stats)
+        _check_arviz_data_object(data_tree, traces)
+
+    def test_convert_to_datatree_raises(traces, stats):
+        if parse_version(arviz.__version__) >= parse_version("1.0.0"):
+            pytest.skip(
+                "DataTree available in ArviZ versions >= 1.0 so error not expected"
+            )
+        with pytest.raises(RuntimeError, match=r"xarray\.DataTree support"):
+            mici.interop.convert_to_datatree(traces, stats)
 
 
 if PYMC_AVAILABLE:
